@@ -243,4 +243,20 @@ export class ApiService {
     const risorsa: string[] = ['categorie-locandine']; // Imposto l'endpoint /categorie-locandine
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
+
+   public getCatalogoRighe(
+ lingua: string,
+ tipo: string,
+ limit: number = 4,
+ offset: number = 0
+ ): Observable<IRispostaServer> {
+ const risorsa: string[] = ['catalogo-righe'];
+ const parametri = {
+ lingua: String(lingua),
+ tipo: String(tipo),
+ limit: String(limit),
+ offset: String(offset),
+ };
+ return this.richiestaGenerica(risorsa, 'GET', parametri);
+ }
 }

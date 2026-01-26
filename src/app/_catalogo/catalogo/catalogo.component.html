@@ -15,15 +15,15 @@
 </ul>
 <div class="catalogo-contenuto">
   <section id="locandine_container">
-    <ng-container *ngFor="let riga of righeDemo; trackBy: tracciaRigaCategoria">
-      <app-riga-categoria
-        #rigaCatalogo
-        [categoria]="riga.category"
-        [locandine]="riga.posters"
-        [tickResetPagine]="tickResetPagine"
-      >
-      </app-riga-categoria>
-    </ng-container>
-  </section>
+   <ng-container *ngFor="let riga of righeDemo; trackBy: tracciaRigaCategoria">
+     <app-riga-categoria
+       #rigaCatalogo
+       [categoria]="riga.category"
+       [locandine]="riga.posters"
+       [tickResetPagine]="tickResetPagine"
+     >
+     </app-riga-categoria>
+   </ng-container>
+ </section>
   <app-footer></app-footer>
 </div>
