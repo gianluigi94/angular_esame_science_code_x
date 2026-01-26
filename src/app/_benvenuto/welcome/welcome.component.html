@@ -1,0 +1,16 @@
+
+<!-- html della prima pagina che incontra l'utente -->
+
+<!-- scena 3d con animazioni di ingresso, con animazioni allo scroll e che comunica al loader quando è pronta  -->
+<app-saturno
+  [usaAnimazioniIngresso]="true"
+  [usaAnimazioniScroll]="true"
+  (saturnLoadDone)="saturnLoadDone.emit()">
+</app-saturno>
+<!-- contenuto principale della pagina di benvenuto, mostrato allo scroll -->
+<app-main-intro></app-main-intro>
+<!-- il tag semantico del footer si trova all'interno di questo componente -->
+<app-footer></app-footer>
+
+
+

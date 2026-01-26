@@ -1,0 +1,35 @@
+
+//codice stile per immagine + sfondi
+.immagine_container{
+  position: fixed;
+  height: 100vh;
+  width: 100dvw;
+  perspective: 800px;
+  background-color: #000c18;
+  overflow: hidden;
+
+}
+img {
+  // position: fixed;
+
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100%;
+  object-fit: cover;
+  transform: rotateX(35deg);
+  transform-origin: center top;
+  display: block;
+  color: #c8cca5;
+  @media (max-width: 485px) {
+    transform: rotateX(20deg);
+  }
+}
+
+
+
+
+
+
+
+

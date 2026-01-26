@@ -1,0 +1,200 @@
+.main_intro {
+
+  // margin-top: -150px;
+  height: 100vh;
+  width: 100dvw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  // @media (orientation: landscape) and (min-aspect-ratio: 7/5) and (max-width: 985px) {
+  //   margin-top: -50px;
+  // }
+
+  @media (max-width: 800px) and (max-height:560px) and (orientation: landscape){
+    margin-top: -50px;
+  }
+
+  .container_intro {
+
+    height: 270px;
+    width: 270px;
+    margin-top: 80px;
+    position: relative;
+    @media (max-width: 900px) {
+      margin-top: 20px;
+    }
+    @media (orientation: landscape) and (min-aspect-ratio: 7/5) and (max-width: 985px) {
+      opacity: 0!important;
+    }
+
+    @media (max-width: 1520px) and (max-height:560px) and (orientation: landscape){
+      opacity: 0!important;
+    }
+
+    // background-color: rgba(208, 145, 19, 0.275);
+    gap: 40px;
+    .motivi {
+      //  opacity: 0;
+      will-change: transform;
+      backface-visibility: hidden;
+      // background-color: rgb(25, 159, 72);
+      position: absolute;
+      margin-top: -70px;
+      color: white;
+      text-align: center;
+      justify-content: center;
+      font-size: 17px;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      img {
+        height: 200px;
+        width: 180px;
+        margin-right: 10px;
+        @media (max-width: 900px) {
+          height: 100px;
+        width: 90px;
+        }
+      }
+      p {
+
+        padding: 0 10px;
+        text-shadow: 1px 1px 2px #c7ae80;
+        font-size: 20px;
+        font-family: 'Quantico', serif;
+        -webkit-font-smoothing: antialiased;
+        @media (max-width: 900px) {
+          font-size: 15px;
+        padding: 0;
+        }
+      }
+    }
+  }
+  form {
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    @media (max-width: 710px) {
+      flex-direction: column;
+      width: 100%;
+    }
+    input {
+
+      width: 470px;
+      height: 40px;
+      background: linear-gradient(135deg, #000000c1, #000000c1);
+      border: none;
+      border-radius: 7px;
+      font-size: 20px;
+      padding: 0px 10px;
+      color: aliceblue;
+      box-shadow: 0 0 10px #999da0;
+      @media (max-width: 710px) {
+        width: 80%;
+
+      }
+    }
+    button {
+      width: 120px;
+      font-size: 18px;
+
+      height: 42px;
+      border-radius: 7px;
+      border: none;
+      background: linear-gradient(135deg, #e79c50, #c97a2b);
+      color: white;
+      box-shadow: 0 0 10px #999da0;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      margin-left: 5px;
+      font-weight: 600;
+      z-index: 99999;
+      @media (max-width: 710px) {
+        margin-top: 20px;
+      width: 50%;
+
+      }
+    }
+  }
+
+  #cta {
+    color: white;
+    font-size: 30px;
+    padding-top: 100px;
+    padding-bottom: 20px;
+    text-shadow: 1px 1px 6px #1f1909;
+    font-family: 'Quantico', serif;
+    max-width: 95%;
+    font-weight: 400;
+      @media (max-width: 910px) {
+        font-size:30px;
+        max-width: 80%;
+        text-align: center;
+      }
+      @media (max-width: 710px) {
+        font-size:20px;
+
+      }
+  }
+}
+
+
+
+
+
+
+
+@supports (-moz-appearance: none) {
+  @media (max-width: 800px) {
+
+    input {
+      box-shadow: none!important;
+    }
+    button {
+      box-shadow: none!important;
+    }
+
+    p {
+      text-shadow: none!important;
+    }
+    #cta {
+      text-shadow: none!important;
+    }
+  }
+}
+@supports (-moz-appearance: none) {
+  @media (orientation: landscape) and (min-aspect-ratio: 7/5) and (max-width: 985px) {
+
+    input {
+      box-shadow: none!important;
+    }
+
+    p {
+      text-shadow: none!important;
+    }
+
+    button {
+      box-shadow: none!important;
+    }
+    #cta {
+      text-shadow: none!important;
+    }
+  }
+
+}
+
+@supports (-moz-appearance: none) {
+  .main_intro .container_intro .motivi {
+    transform: none !important; // niente scale in Firefox
+  }
+}
+@supports (-moz-appearance: none) {
+  .main_intro .container_intro .motivi p {
+    font-size: 25px !important;
+  }
+}

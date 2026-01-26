@@ -1,0 +1,26 @@
+<!-- contenitore dei toast per notifiche con testo dinamico in base alla lingua, cambia in base a (t) tipo e funzionalità, anche il colore è differente -->
+ <!-- Ciclo la lista dei toast attivi nel for: i toast vengono aggiunti solo su richiesta,  ma possono essercene più di uno contemporaneamente -->
+
+<div class="toast-wrapper">
+  <div
+    class="toast"
+    *ngFor="let t of toasts"
+    [ngClass]="[t.tipo, t.mostraSpinner === true ? 'con-spinner' : '']"
+  >
+  <!-- spinner per solo il toast che notifica il login di sucesso -->
+    <app-spinner *ngIf="t.mostraSpinner === true"></app-spinner>
+
+    <span class="toast-testo">
+      {{ t.testo }}
+    </span>
+<!-- link solo per i toast di fine sessione che incoraggiano a ricaricare l'app -->
+    <a
+      *ngIf="t.azione === 'ripeti_accesso'"
+      href="javascript:void(0)"
+      (click)="onRipetiAccesso($event)"
+      class="toast-link"
+    >
+      {{ 'ui.toast.sessione.link' | translate }}
+    </a>
+  </div>
+</div>

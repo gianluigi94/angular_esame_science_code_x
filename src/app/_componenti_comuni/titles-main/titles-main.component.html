@@ -1,0 +1,23 @@
+<!-- titolo dell'applicazione, può essere sia piccolo in alto come logo, ma spostarsi a grande, centrale e con x animata come titolo di benvenuto.  -->
+<div class="title-container">
+  <div class="home-container">
+    <!-- titolo principale ricchiuso in un link per ritornare alla 'home' -->
+    <a class="title-link" [routerLink]="['/']">
+      <h1 id="titles" class="main-title" [attr.translate]="'no'">
+        <span class="first" data-titolo-first>Science <br> code</span>
+<!-- due x con due gif diverse una normale per pc una più leggera per telefono o pc scarsi -->
+        <span id="x_low" *ngIf="isLowPerf" #xRef class="x x-low" data-titolo-x>X</span>
+        <span id="x_hegh" *ngIf="!isLowPerf" #xRef class="x x-high" data-titolo-x>X</span>
+      </h1>
+    </a>
+<!-- sottotitolo rettivo alla lingua-->
+      <h3 class="subtitle" [innerHTML]="'ui.main.sottotitolo' | translate"></h3>
+<!-- p che funge da cta e mi invita a scrollare, reattivo alla lingua  -->
+      <p class="scrol">
+        <span class="down">▼</span>
+        {{ 'ui.main.scendi' | translate }}
+        <span class="down">▼</span>
+      </p>
+
+    </div>
+</div>

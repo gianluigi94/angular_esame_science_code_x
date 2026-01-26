@@ -1,0 +1,81 @@
+@font-face {
+  font-family: "Cinzel";
+  src: url("assets/fonts/Cinzel/Cinzel-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900; // range dei pesi
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Quantico";
+  src: url("assets/fonts/Quantico/Quantico-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Quantico";
+  src: url("assets/fonts/Quantico/Quantico-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Quantico";
+  src: url("assets/fonts/Quantico/Quantico-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Quantico";
+  src: url("assets/fonts/Quantico/Quantico-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #e5ae09 transparent;
+}
+body,
+html {
+  overflow: hidden;
+  height: 100dvh;
+  background-color: #04011a;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+}
+
+html.scrollable,
+body.scrollable {
+    overflow: visible;
+
+}
+
+
+app-main {
+  position: fixed;
+
+  z-index: 5;
+  height: 100vh;
+  width: 100vw;
+}
+
+.main-scroll {
+  display: block;
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+strong {
+  color: rgb(199, 174, 128);
+}
+
+
+

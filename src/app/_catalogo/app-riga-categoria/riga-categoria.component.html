@@ -1,0 +1,51 @@
+<div class="contenitore-carosello" [ngClass]="{ 'piu_visti': categoria === 'i_piu_visti' }">
+
+  <div class="intestazione-categoria">
+    <h3 class="titolo-categoria">{{ categoria }}</h3>
+ </div>
+
+  <div class="fascia-carosello" [style.transform]="trasformazioneWrapper">
+
+     <div
+   class="locandina"
+   #elementoLocandina
+   *ngFor="let src of locandine; let i = index; trackBy: tracciaLocandina"
+   (mouseenter)="onMouseEnterLocandina()"
+   (mouseleave)="onMouseLeaveLocandina()"
+ >
+      <span class="numero">{{ (indicePagina * locandineVisibili) + i + 1 }}</span>
+
+      <div class="sparisci">
+        <img [src]="src" alt="locandina" />
+      </div>
+
+
+    <div class="doppio_audio">
+      <app-bottone-audio></app-bottone-audio>
+      <!-- qui sopra puoi aggiungere il tuo "elemento aggiuntivo" quando serve -->
+    </div>
+
+    <app-bottone-preferiti [titolo]="src"></app-bottone-preferiti>
+
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="button">
+  <button class="bottone-carosello avanti" *ngIf="indicePagina < numeroMassimoPagine"
+    (click)="paginaSuccessiva()"
+    aria-label="scroll"
+    title="scroll">
+    &#9654;
+  </button>
+
+  <button class="bottone-carosello indietro" *ngIf="indicePagina > 0"
+    (click)="paginaPrecedente()"
+    aria-label="scroll"
+    title="scroll">
+    &#9664;
+  </button>
+</div>

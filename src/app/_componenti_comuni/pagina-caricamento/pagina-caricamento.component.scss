@@ -1,0 +1,79 @@
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgb(4, 1, 26);
+
+  height: 100vh;
+  width: 100vw;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &.avvio-catalogo {
+    z-index: 21;
+      background-color: rgb(4, 1, 26);
+
+  }
+
+  app-sfondo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 105;
+    opacity: 0.5;
+    filter: blur(8px);
+  }
+
+  .sfumatura {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 108;
+    background: linear-gradient(
+        to right,
+        transparent,
+        transparent,
+        transparent,
+        rgba(0, 0, 0, 0.186),
+        rgba(0, 0, 0, 0.344),
+        rgba(0, 0, 0, 0.748)
+      ),
+      linear-gradient(
+        to bottom,
+        transparent,
+        transparent,
+        transparent,
+        rgba(0, 0, 0, 0.664)
+      );
+    height: 100%;
+    width: 100%;
+  }
+
+  .sfumatura.rossa {
+    background: linear-gradient(
+        to right,
+        transparent,
+        transparent,
+        transparent,
+        rgba(0, 0, 0, 0.186),
+        rgba(0, 0, 0, 0.344),
+        rgba(0, 0, 0, 0.748)
+      ),
+      linear-gradient(
+        to bottom,
+        transparent,
+        transparent,
+        transparent,
+        rgba(0, 0, 0, 0.664)
+      );
+  }
+
+  app-spinner {
+    transform: scale(1.5);
+    position: absolute;
+    right: 55px;
+    bottom: 45px;
+    z-index: 110;
+  }
+}

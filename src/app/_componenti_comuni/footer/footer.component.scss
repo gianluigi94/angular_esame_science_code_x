@@ -1,0 +1,30 @@
+footer {
+  background: linear-gradient(135deg, #31303d, #292950, #31303d);
+  z-index: 360;
+  width: 100dvw;
+  height: 27px;
+  color: rgb(181, 181, 181);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  span {
+    color: rgb(199, 174, 128);
+  }
+
+  a {
+    color: rgb(199, 174, 128);
+    padding-right: 10px;
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .link_cont {
+    margin-left: 18px;
+    margin-right: 0;
+    font-size: 13px;
+
+  }
+}

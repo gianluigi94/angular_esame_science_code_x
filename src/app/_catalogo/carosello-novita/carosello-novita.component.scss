@@ -1,0 +1,307 @@
+.contenitore-carosello {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  transition: height 0.5s ease-in-out;
+  will-change: transform;
+
+  &.offuscato {
+    .diapositiva img {
+      opacity: 0;
+    }
+  }
+
+  &.non-top {
+    height: 80vh;
+  }
+}
+
+
+.scorrimento-carosello {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+
+  .diapositiva {
+    min-width: 100%;
+    height: 100%;
+    will-change: transform;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+      will-change: transform;
+    }
+  }
+}
+
+video-js {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity var(--durata-fade-visivo, 0.4s) ease;
+
+  &.nascosto {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+
+}
+
+:host ::ng-deep .senza-controlli {
+  .vjs-control-bar,
+  .vjs-big-play-button,
+  .vjs-loading-spinner,
+  .vjs-error-display,
+  .vjs-text-track-display {
+    display: none !important;
+  }
+
+  .vjs-tech {
+    object-fit: cover;
+  }
+}
+
+
+.comandi-carosello {
+  position: absolute;
+  top: 52%;
+  right: 70px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.5s ease-in-out, top 0.5s ease-in-out;
+  &.rimpiciolito_salito_destra {
+    top: 32%;
+    transform: scale(0.85);
+  }
+  .riga-alta {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    button {
+      padding: 6px 12px;
+      font-size: 20px;
+      font-weight: bolder;
+      background: rgba(59, 59, 59, 0.341);
+      color: #dddcdc;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.2);
+      }
+
+      &:disabled {
+        opacity: .5;
+        cursor: default;
+        transform: none;
+      }
+    }
+
+    .etichetta-novita {
+      font-size: 62px;
+      text-shadow: 0 0 10px #000;
+      font-weight: bold;
+      color: #e5ae09;
+      font-family: "Quantico", sans-serif;
+      letter-spacing: 1px;
+      font-style: italic;
+    }
+  }
+
+  .riga-bassa {
+    margin-top: -5px !important;
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+
+    button {
+      position: relative;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background-color: #cccccc8d;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      box-shadow: 0 4px 3px #000;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: -8px;
+        left: -8px;
+        right: -8px;
+        bottom: -8px;
+        background: transparent;
+        pointer-events: auto;
+      }
+
+      &:hover:not(.attivo) {
+        transform: scale(1.4);
+      }
+
+      &.attivo {
+        background-color: #e5ae09;
+        transform: scale(1.5);
+      }
+    }
+  }
+}
+
+.sfumatura {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, #070217 0%, #0000 75%, #0000 100%),
+    linear-gradient(to right, #0a0322 0%, #0a0322 6%, #230316df 26%, #0000 80%, #0000 100%);
+}
+.sinistra-titoli { //contenitore con immagine titolo e sottotitolo
+  z-index: 16;
+  position: absolute;
+  top: 15%;
+  left: -120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.5s ease-in-out, top 0.5s ease-in-out;
+  padding-left: 25PX;
+
+  &.rimpiciolito_salito_sinistra {
+    top: 8%;
+    transform: scale(0.85, 0.75);
+  }
+
+  .contenitore-titolo {
+    height: 45%;
+    width: 47%;
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.2s ease, transform 0s ease;
+    will-change: opacity, transform;
+    backface-visibility: hidden;
+
+    &.nascosto { // quando i non si vedono per poter creare un animazione
+      opacity: 0;
+      transform: translatex(-28px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .titolo_locandina {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .sottotitolo {
+    width: fit-content;
+    max-width: 50vw;
+    font-size: 19px;
+    color: #fff;
+    text-align: start;
+    font-family: "Cinzel";
+    font-style: italic;
+    font-weight: bold;
+    text-shadow: 0 0 10px #0b58d3;
+    transition-property: opacity, transform, text-shadow;
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    will-change: opacity, transform;
+    backface-visibility: hidden;
+    position: relative;
+
+    &.nascosto {
+      // quando il sottotitolo è nascosto
+      opacity: 0;
+      transform: translatex(-28px);
+      text-shadow: 0 0 2px #0b58d3;
+    }
+  }
+}
+
+
+
+.play {
+        font-size: 35px;
+        margin-left: 10px;
+        display: inline-block;
+        cursor: pointer;
+        border-radius: 50%;
+        padding: 1px 3px 0 9px;
+        text-shadow: none;
+        transition: transform 0.3s ease;
+
+        background: rgba(59, 59, 59, 0.34);
+        border: 1px solid #ec820a;
+        color: #ec820a !important;
+
+        &:hover {
+          transform: scale(1.2);
+        }
+      }
+:host ::ng-deep #video-carosello-novita.video-js {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:host ::ng-deep #video-carosello-novita.video-js .vjs-tech {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+:host ::ng-deep #video-carosello-novita.video-js .vjs-poster {
+  background-size: cover !important;
+}
+
+:host ::ng-deep #video-carosello-novita .vjs-modal-dialog,
+:host ::ng-deep #video-carosello-novita .vjs-text-track-settings,
+:host ::ng-deep #video-carosello-novita .vjs-dialog {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+ .overlay-hover {
+   position: absolute;
+   inset: 0;
+   z-index: 1;
+   pointer-events: none;
+      opacity: 0;
+   transition: opacity var(--durata-fade-visivo, 0.4s) ease;
+   will-change: opacity;
+
+   img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+     display: block;
+   }
+      &.visibile {
+     opacity: 1;
+   }
+ }

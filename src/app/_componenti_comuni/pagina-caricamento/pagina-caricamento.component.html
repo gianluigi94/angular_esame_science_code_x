@@ -1,0 +1,10 @@
+
+<!-- pagina 'fissa' che copre i caricamenti o fa da sfondo ai toast di errore o fine sessione  -->
+<div class="loading-overlay" [class.avvio-catalogo]="stileAvvioCatalogo">
+  <!-- spinner non presente se ricarico /catalogo -->
+  <app-spinner *ngIf="mostraSpinner"></app-spinner>
+<!-- lo sfondo è disattivato per firefox perche viene caricato qualche ms dopo -->
+  <app-sfondo *ngIf="!stileAvvioCatalogo && !isFirefox"></app-sfondo>
+<!-- sfumatura css non su firefox -->
+  <span class="sfumatura" *ngIf="!isFirefox" [class.rossa]="stileAvvioCatalogo"></span>
+</div>

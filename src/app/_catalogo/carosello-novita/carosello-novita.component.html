@@ -1,0 +1,185 @@
+<!-- contenitore che contiene il carosello, cambia stile se non sono i cima alla pagina, e diventa legermente ofuscato quando scollano le immgini  -->
+<div
+  class="contenitore-carosello"
+  *ngIf="immagini.length > 0"
+  [class.offuscato]="mostraVideo"
+  [class.non-top]="!alTop"
+>
+<!-- contenitore che contiene la diapositiva che scrolla -->
+  <div
+    class="scorrimento-carosello"
+    [style.transform]="stileTrasformazione"
+    [style.transition]="
+      transizioneAttiva ? 'transform 0.5s ease-in-out' : 'none'
+    "
+  >
+
+
+
+  <!-- immagine con alt dinamico alla lingua -->
+   <!-- CLONE DELL'ULTIMA SLIDE PER EFFETTO INFINITO -->
+    <div class="diapositiva">
+      <img
+        aria-hidden="true"
+        [src]="immagini[immagini.length - 1]"
+        [attr.alt]="
+          'ui.carosello.altSfondo'
+            | translate
+              : {
+                  titolo: titoliAlt[immagini.length - 1] || ''
+                }
+        "
+      />
+    </div>
+  <!-- immagine con alt dinamico alla lingua -->
+
+    <div class="diapositiva" *ngFor="let immagine of immagini; let i = index">
+      <img
+        [src]="immagine"
+        aria-hidden="true"
+        (load)="segnalaSfondoCaricato(i)"
+        [attr.alt]="
+          'ui.carosello.altSfondo'
+            | translate
+              : {
+                  titolo: titoliAlt[i] || ''
+                }
+        "
+      />
+    </div>
+  <!-- immagine con alt dinamico alla lingua -->
+   <!-- CLONE DELLA PRIMA SLIDE PER EFFETTO INFINITO -->
+
+    <div class="diapositiva">
+      <img
+        aria-hidden="true"
+        [src]="immagini[0]"
+        [attr.alt]="
+          'ui.carosello.altSfondo'
+            | translate
+              : {
+                  titolo: titoliAlt[0] || ''
+                }
+        "
+      />
+    </div>
+  </div>
+
+    <div
+   class="overlay-hover"
+   [class.visibile]="mostraImmagineHover"
+   aria-hidden="true"
+ >
+   <img [src]="immagineHoverFissa" alt="" />
+ </div>
+
+  <!-- comanidi del carosello che cambiano stile se non sono in cima -->
+  <div class="comandi-carosello" [class.rimpiciolito_salito_destra]="!alTop">
+    <div class="riga-alta">
+      <!-- i bottoni hanno aria e title dinamici con la locandina e la lingua  -->
+<!-- bottoni indietro  -->
+      <button
+        (click)="vaiIndietro()"
+        [disabled]="scorrimentoInCorso"
+        [attr.aria-label]="
+          'ui.carosello.prev_btn.title'
+            | translate : { titolo: getPrevTitolo() }
+        "
+        [attr.title]="
+          'ui.carosello.prev_btn.title'
+            | translate : { titolo: getPrevTitolo() }
+        "
+      >
+        &#9664;
+      </button>
+<!-- scritta novità dinamica con la lingua -->
+      <span
+        class="etichetta-novita"
+        [innerHTML]="'ui.carosello.novita.label' | translate"
+      ></span>
+<!-- bottone per andare avanti -->
+      <button
+        (click)="vaiAvanti()"
+        [disabled]="scorrimentoInCorso"
+        [attr.aria-label]="
+          'ui.carosello.next_btn.title'
+            | translate : { titolo: getNextTitolo() }
+        "
+        [attr.title]="
+          'ui.carosello.next_btn.title'
+            | translate : { titolo: getNextTitolo() }
+        "
+      >
+        &#9654;
+      </button>
+    </div>
+
+    <div class="riga-bassa">
+      <!-- bottoni per andare una slide precisa -->
+       <!-- aria e tilte dinamici con il cambio lingua e della slide -->
+      <button
+        *ngFor="let _ of immagini; let i = index"
+        [class.attivo]="i + 1 === indiceCorrente"
+        (click)="selezionaIndice(i)"
+        [disabled]="scorrimentoInCorso"
+        [attr.aria-label]="
+          'ui.carosello.slide.label'
+            | translate
+              : {
+                  titolo: titoliAlt[i] || ''
+                }
+        "
+        [attr.title]="
+          'ui.carosello.slide.label'
+            | translate
+              : {
+                  titolo: titoliAlt[i] || ''
+                }
+        "
+      ></button>
+    </div>
+  </div>
+  <!-- sfumatura css -->
+  <span class="sfumatura"></span>
+
+  <!-- tag esclusivo per il player video con video-js -->
+  <video-js
+    #riproduttore
+    id="video-carosello-novita"
+    class="video-js sovrapposto senza-controlli"
+    [class.nascosto]="!mostraVideo"
+    [style.--durata-fade-visivo]="durataFadeVisivoMs + 'ms'"
+    preload="auto"
+    playsinline
+  >
+    {{ "ui.carosello.video_nosupport" | translate }}
+  </video-js>
+
+  <!-- immagine dei titoli che cambiano con il cambiare della slide del carosello, cambia stille se non in cima, alt cambia con lngua, segnala al loader se sono cariche. entra con animazione -->
+  <div class="sinistra-titoli" [class.rimpiciolito_salito_sinistra]="!alTop">
+    <div class="contenitore-titolo" [class.nascosto]="!titoloVisibile">
+      <img
+        aria-hidden="true"
+        class="titolo_locandina"
+        [src]="imgTitoloOverlay"
+        (load)="segnalaTitoloCaricato()"
+        [attr.alt]="
+          'ui.carosello.altTitolo' | translate : { titolo: titoloOverlay || '' }
+        "
+      />
+    </div>
+<!-- sottotitolo che cambia con il cambio della slide e della lingua, entra con animazione  -->
+    <p class="sottotitolo" [class.nascosto]="!sottotitoloVisibile">
+      {{ sottotitoloOverlay }}
+      <!-- span play con title dinamico alla lingua -->
+      <span
+        class="play"
+        [attr.title]="
+          'ui.carosello.slide_tooltip.title'
+            | translate : { titolo: titoloOverlay || '' }
+        "
+        >&#9658;</span
+      >
+    </p>
+  </div>
+</div>

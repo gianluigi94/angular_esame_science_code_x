@@ -1,0 +1,19 @@
+<!-- semplice footer con link che hanno un title e un contenuto dinamico con le traduzioni -->
+<footer id="main_footer">
+  <p id="footer-p">
+    <a
+      routerLink="/privacy"
+      [innerHTML]="'ui.footer.privacy.label' | translate"
+      [title]="'ui.footer.privacy.title' | translate">
+    </a>
+
+    © 2025 Science&nbsp;Code<span>X</span>
+
+    <a
+      class="link_cont"
+      routerLink="/contact"
+      [innerHTML]="'ui.footer.contatti.label' | translate"
+      [title]="'ui.footer.contatti.title' | translate">
+    </a>
+  </p>
+</footer>

@@ -1,0 +1,134 @@
+<!-- html della pagina di login (form) -->
+
+<!-- scena 3D, ma senza animazioni di entrata o reattivi allo scrol  -->
+<app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false">
+</app-saturno>
+
+<section class="login-contenuto" #loginContenuto>
+  <!-- mostro il contenuto interno solo se il token è nullo -->
+  <ng-container *ngIf="(auth | async)?.tk === null">
+    <!-- definisco il form di login collegandolo al reactive form e intercetto l'invio per chiamare accedi() -->
+    <form class="form-login" [formGroup]="reactiveForm" (ngSubmit)="accedi()">
+<!-- titolo che cambia al cambio lingua -->
+     <h2>
+  {{ 'ui.accesso.titolo.1' | translate }}
+  <span>{{ 'ui.accesso.titolo.2' | translate }}</span>
+</h2>
+
+
+      <!-- mostro una label sopra il campo utente, traducendone il testo e aggiungendo la classe di errore quando il controllo è invalido ed è stato toccato oppure ho già inviato il form -->
+
+      <p class="label-sopra" [ngClass]="{
+          'is-invalid':
+            reactiveForm.controls['utente'].invalid &&
+            (reactiveForm.controls['utente'].touched || formInviato)
+        }"
+        [innerHTML]="'ui.accesso.utente.label' | translate">
+      </p>
+
+      <div class="campo-form">
+        <!-- definisco l'input di testo per l'utente collegandolo al controllo del reactive form e applico la classe di errore se è invalido ed è stato toccato oppure ho già inviato il form -->
+
+        <input type="text" placeholder=" " name="utente" id="utente" formControlName="utente" [ngClass]="{
+            'is-invalid':
+              reactiveForm.controls['utente'].invalid &&
+              (reactiveForm.controls['utente'].touched || formInviato)
+          }" />
+  <!-- mostro la label collegata all'input utente, la traduco come testo del placeholder e la marco come non valida quando il controllo è invalido ed è stato toccato oppure ho già inviato il form -->
+
+        <label for="utente" [ngClass]="{
+            'is-invalid':
+              reactiveForm.controls['utente'].invalid &&
+              (reactiveForm.controls['utente'].touched || formInviato)
+          }"
+          [innerHTML]="'ui.accesso.utente.placeholder' | translate">
+        </label>
+      </div>
+
+<!-- errore cambpo che cambia al cambio lingua, viene mostrato solo se il campo è invaldo -->
+      <p class="errore-campo" *ngIf="
+          reactiveForm.controls['utente'].invalid &&
+          (reactiveForm.controls['utente'].touched || formInviato)
+        " [innerHTML]="'ui.accesso.utente.error' | translate">
+      </p>
+<!-- mostro la label sopra il campo password e applico la classe di errore quando il controllo password è invalido ed è stato toccato-->
+
+      <p class="label-sopra" [ngClass]="{
+          'is-invalid':
+            reactiveForm.controls['password'].invalid &&
+            (reactiveForm.controls['password'].touched || formInviato)
+        }">
+        Password
+      </p>
+
+      <div class="campo-form password-wrapper">
+
+        <!-- definisco l'input password collegato al reactive form, cambio il tipo tra testo e password in base a mostraPassword e applico la classe di errore se il controllo è invalido ed è stato toccato -->
+
+        <input [type]="mostraPassword ? 'text' : 'password'" placeholder=" " name="password" id="password"
+          formControlName="password" [ngClass]="{
+            'is-invalid': reactiveForm.controls['password'].invalid &&
+                          (reactiveForm.controls['password'].touched ||
+                           formInviato)
+          }">
+<!-- creo un pulsante che alterna la visibilità della password invertendo mostraPassword e aggiorno l'etichetta accessibile in base allo stato -->
+
+        <button type="button" class="toggle-password" (click)="mostraPassword = !mostraPassword"
+          [attr.aria-label]="mostraPassword ? 'Nascondi password' : 'Mostra password'">
+
+          <!-- Occhio aperto quando la password è visibile -->
+          <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+            aria-hidden="true" fill="#c4c4c4">
+            <path
+              d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z" />
+            <circle cx="12" cy="12" r="2.5" />
+          </svg>
+
+          <!-- Occhio sbarrato quando la password è nascosta -->
+          <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+            aria-hidden="true" fill="#c4c4c4">
+            <path
+              d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z" />
+            <circle cx="12" cy="12" r="2.5" />
+            <!-- Barra diagonale -->
+            <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+<!-- mostro la label collegata all'input password, la traduco come testo del placeholder e la evidenzio come non valida quando il controllo è invalido ed è stato toccato oppure ho già inviato il form -->
+
+        <label for="password" [ngClass]="{
+            'is-invalid': reactiveForm.controls['password'].invalid &&
+                          (reactiveForm.controls['password'].touched ||
+                           formInviato)
+          }"
+          [innerHTML]="'ui.accesso.password.placeholder' | translate">
+        </label>
+      </div>
+
+<!-- errore cambpo che cambia al cambio lingua, viene mostrato solo se il campo è invaldo -->
+      <p class="errore-campo" *ngIf="
+          reactiveForm.controls['password'].invalid &&
+          (reactiveForm.controls['password'].touched || formInviato)
+        " [innerHTML]="'ui.accesso.password.error' | translate">
+      </p>
+      <!-- creo la casella 'resta collegato' collegandola al reactive form e mostro il testo tradotto accanto al checkbox -->
+
+      <label class="check">
+        <input type="checkbox" formControlName="restaCollegato" />
+        <span [innerHTML]="'ui.accesso.collegato' | translate"></span>
+      </label>
+<!-- creo il pulsante di invio, lo disabilito se il form non è valido o se stoControllando è attivo, e alterno tra testo tradotto e spinner in base allo stato di controllo -->
+
+      <button class="accedi_btn" type="submit" [disabled]="!reactiveForm.valid || stoControllando">
+        <span *ngIf="!stoControllando" [innerHTML]="'ui.accesso.bottone.label' | translate"></span>
+        <app-spinner *ngIf="stoControllando"></app-spinner>
+      </button>
+
+
+
+
+    </form>
+  </ng-container>
+</section>
+
+<app-footer></app-footer>

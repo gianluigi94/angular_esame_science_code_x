@@ -1,0 +1,50 @@
+app-header{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw  ;
+  z-index: 10;
+}
+
+app-carosello-novita{
+  position: fixed;
+  top: 0;
+  left: 0;
+
+}
+
+
+.menuu{
+  opacity: 0;
+  background-color: rgb(190, 200, 7);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999999999;
+}
+
+p{
+  color: white;
+
+}
+.catalogo-contenuto {
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-top: 82vh;
+  max-width: 100%;
+
+}
+
+app-riga-categoria {
+
+  display: block;
+  will-change: opacity, transform;
+  transform-origin: center center;
+  // pointer-events: none !important;
+}
+
+// #locandine_container {
+//    pointer-events: none !important;
+//  }

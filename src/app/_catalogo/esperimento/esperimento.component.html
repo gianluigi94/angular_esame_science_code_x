@@ -1,0 +1,19 @@
+<div class="esperimento-wrap">
+  <h2>Esperimento - Locandine categorie</h2>
+
+  <p class="errore" *ngIf="errore">{{ errore }}</p>
+
+  <ng-container *ngIf="locandine$ | async as locandine">
+    <p *ngIf="!locandine.length && !errore">Nessuna locandina trovata.</p>
+
+    <div class="griglia" *ngIf="locandine.length">
+      <div class="card" *ngFor="let x of locandine; trackBy: tracciaLocandina">
+        <img [src]="x.img_locandina" [alt]="'Categoria ' + x.id_categoria + ' ' + x.lingua" loading="lazy" />
+        <div class="meta">
+          <div>ID: {{ x.id_categoria }}</div>
+          <div>Lingua: {{ x.lingua }}</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

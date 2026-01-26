@@ -1,0 +1,10 @@
+{
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#d93b07",
+        "titleBar.activeBackground": "#d90707",
+        "titleBar.activeForeground": "#FBF9FE"
+    },
+    "typescript.suggest.objectLiteralMethodSnippets.enabled": true,
+    "editor.bracketPairColorization.enabled": false,
+    "workbench.editor.limit.enabled": true
+}

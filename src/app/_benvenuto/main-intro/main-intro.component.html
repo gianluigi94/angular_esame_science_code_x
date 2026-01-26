@@ -1,0 +1,38 @@
+  <!-- html della seconda sezione della pagina di benvenuto (quando scrollo) -->
+  <div class="main_intro">
+<!-- cta per l'email dinamico con traduzione -->
+  <p id="cta" [innerHTML]="'ui.main.cta' | translate"></p>
+    <form id="email_form" action="">
+      <input type="email" placeholder="Email">
+      <button type="submit" [innerHTML]="'ui.main.email_button' | translate"></button>
+    </form>
+
+    <div class="container_intro">
+
+      <!-- contenitori con animazioni che appaiono in ripetizione , dinamici con la traduzione -->
+
+      <!-- motivo: multidispositivo -->
+      <div id="container_three" class="motivi">
+        <img src="assets/img/tv.webp" [attr.alt]="'ui.cta_1.icon.alt' | translate">
+        <p [innerHTML]="'ui.cta_1' | translate">
+        </p>
+
+      </div>
+
+      <!-- motivo: ottimi media -->
+      <div id="container_one" class="motivi">
+        <img src="assets/img/stelle.webp" [attr.alt]="'ui.cta_2.icon.alt' | translate">
+        <p [innerHTML]="'ui.cta_2' | translate">
+        </p>
+      </div>
+
+      <!-- motivo: vasta scelta -->
+      <div id="container_two" class="motivi">
+        <img src="assets/img/pellicola.webp" [attr.alt]="'ui.cta_3.icon.alt' | translate">
+        <p [innerHTML]="'ui.cta_3' | translate">
+        </p>
+      </div>
+
+
+    </div>
+  </div>

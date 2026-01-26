@@ -1,0 +1,26 @@
+app-sfondo {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  height: 100vh;
+  width: 100vw;
+  height: 100dvh;
+  width: 100dvw;
+  top: 0;
+  left: 0;
+}
+
+app-header {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 22;
+}
+
+app-toast-container{
+  z-index: 9999999999999999999999999999999999999999999999999999999999999999;
+}
+
+

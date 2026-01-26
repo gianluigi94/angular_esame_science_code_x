@@ -1,0 +1,53 @@
+// div canvas
+#three-container {
+  position: fixed;
+  pointer-events: none;
+  z-index: 2;
+  height: 100dvh;
+  width: 100dvw;
+  top: 0;
+  left: 0;
+  touch-action: none;
+  background: linear-gradient(
+      to right,
+      transparent,
+      transparent,
+      transparent,
+      rgba(213, 13, 13, 0.037),
+      rgba(18, 2, 28, 0.344),
+      rgba(13, 1, 18, 0.748)
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      transparent,
+      transparent,
+      rgba(0, 0, 0, 0.664)
+    );
+  @media (max-width: 485px) {
+    background: linear-gradient(
+        to right,
+        transparent,
+        transparent,
+        rgba(0, 0, 0, 0.173),
+        black
+      ),
+      linear-gradient(
+        to bottom,
+        transparent,
+        transparent,
+        transparent,
+        rgba(0, 0, 0, 0.9)
+      );
+  }
+}
+
+#saturno-scrolle {
+  position: relative;
+  height: 105vh;
+  width: 100%;
+}
+:host-context(html.scrollable) #saturno-scrolle,
+:host-context(body.scrollable) #saturno-scrolle {
+  height: 100vh;
+}

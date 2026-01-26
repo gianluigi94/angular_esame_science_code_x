@@ -1,0 +1,35 @@
+<!-- importo header, dentro si trova anche il tag semantico header, la header cambia dinamicamente nella parte di app in cui sono  -->
+<app-header></app-header>
+
+<!-- importo lo sfondo che mi servirà su tutte le zone dell'app  -->
+<app-sfondo></app-sfondo>
+
+<!-- importo titoli/logo che sono presenti in tutta l'app, nella versione semplice o 'animata' -->
+<app-titles-main></app-titles-main>
+
+<!-- pagina gestita da angular, main e sopprattutto il footer cambiano a seconda della rotta in cui mi trovo e sono gesti diversamente-->
+<router-outlet></router-outlet>
+
+<!-- importo i toast che possono comparire ovunque  -->
+<app-toast-container></app-toast-container>
+
+<!-- la pagina di bloccante che si visualizza nel caricamento, o quando c'è un errore: impedisce la navigazione quando cade una sessione, fa da sfondo all errore fatale, deve caricare scena 3d e traduzioni e deve aspettare che se vado in /catalogo, il carosello sia pronto   -->
+ <!-- esiste una versione per firefox 'senza sfondo' perche quest'ultimo appariva qualche ms di ritardo  -->
+  <!-- esiste una versione più semplice senza sfondo, senza spinner e con z-index sotto all'header, per quando ricarico /catalogo e voglio una visuale più snella -->
+<app-pagina-caricamento
+  *ngIf="!caricamentoDisabilitato && (
+         forzaLoaderExtra
+         || (erroreFatale$ | async)
+         || !(traduzioniPronte$ | async)
+         || !(sessioneVerificata$ | async)
+         || !(saturnoPronto$ | async)
+         || (deveCaricareImmaginiCarosello && !(caroselloPronto$ | async))
+       )"
+  [mostraSpinner]="!(erroreFatale$ | async) && !loaderAvvioCatalogo"
+  [stileAvvioCatalogo]="loaderAvvioCatalogo"
+  [isFirefox]="isFirefox">
+</app-pagina-caricamento>
+
+
+
+
