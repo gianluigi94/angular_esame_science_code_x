@@ -1,15 +1,8 @@
-import {
-  Component,
-  Input,
-  OnChanges,
-  SimpleChanges,
-  OnInit,
-  OnDestroy,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { HoverLocandinaService } from './categoria_services/hover-locandina.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { Subscription } from 'rxjs';
+import { TipoContenutoService } from './categoria_services/tipo-contenuto.service';
 @Component({
   selector: 'app-riga-categoria',
   templateUrl: './riga-categoria.component.html',
@@ -18,7 +11,10 @@ import { Subscription } from 'rxjs';
 export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   @Input() locandine: string[] = [];
   @Input() categoria = '';
+  @Input() tickResetPagine = 0;
 
+   @ViewChildren('elementoLocandina', { read: ElementRef })
+ elementiLocandina!: QueryList<ElementRef>;
   locandineVisibili = 5;
   indicePagina = 0;
   numeroMassimoPagine = 0;
@@ -27,6 +23,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
 
   sottoscrizioni = new Subscription();
   idCiclo = 0;
+  cicloTrackBy = 0;
   motivoCopertura = '';
   attendoAggiornamentoLocandine = false;
   inAttesaImmagini = false;
@@ -46,10 +43,14 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   constructor(
     public servizioHoverLocandina: HoverLocandinaService,
     public cambioLingua: CambioLinguaService,
-    public riferitore: ChangeDetectorRef,
+     public tipoContenuto: TipoContenutoService,
+ public riferitore: ChangeDetectorRef,
   ) {}
 
   ngOnChanges(_changes: SimpleChanges): void {
+     if (_changes['tickResetPagine']) {
+ this.indicePagina = 0;
+ }
     this.calcolaNumeroMassimoPagine();
     if (this.indicePagina > this.numeroMassimoPagine) this.indicePagina = 0;
     this.aggiornaTrasformazioneWrapper();
@@ -64,6 +65,9 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
         this.avviaAttesaImmaginiLingua(this.idCiclo);
       }
     }
+     if (this.mostraSpinner && this.motivoCopertura === 'tipo') {
+ this.assicuraCoperturaCompleta(this.idCiclo, 0);
+ }
   }
 
   ngOnInit(): void {
@@ -88,6 +92,19 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
  this.avviaAttesaImmaginiLingua(this.idCiclo);
       }),
     );
+
+
+ this.sottoscrizioni.add(
+ this.tipoContenuto.cambioTipoAvviato$.subscribe(({ id }) => {
+ this.avviaCopertura('tipo', id);
+ }),
+ );
+
+ this.sottoscrizioni.add(
+ this.tipoContenuto.cambioTipoApplicato$.subscribe(({ id }) => {
+ this.fineCoperturaDopoMinimo(id);
+ }),
+ );
   }
 
   ngOnDestroy(): void {
@@ -139,13 +156,18 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     }, this.ritardoUscitaHoverMs);
   }
 
-  tracciaLocandina(_indice: number, src: string): string {
-    return String(src || '');
-  }
+  tracciaLocandina(indice: number, src: string): string {
+ const base = String(src || '');
+ if (this.mostraSpinner && this.motivoCopertura === 'tipo') {
+ return this.cicloTrackBy + '|' + indice + '|' + base;
+ }
+ return base;
+}
 
-  avviaCopertura(motivo: string): void {
-    this.idCiclo += 1;
+  avviaCopertura(motivo: string, idForzato: number = 0): void {
+ this.idCiclo = idForzato ? idForzato : (this.idCiclo + 1);
     this.motivoCopertura = motivo;
+    if (motivo === 'tipo') this.cicloTrackBy += 1;
     this.azzeraTimer();
 
     this.inAttesaImmagini = false;
@@ -158,6 +180,12 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     try {
       this.riferitore.detectChanges();
     } catch {}
+
+
+ requestAnimationFrame(() => {
+ try { this.riferitore.detectChanges(); } catch {}
+ if (motivo === 'tipo') this.assicuraCoperturaCompleta(this.idCiclo, 0);
+ });
   }
 
   avviaAttesaImmaginiLingua(id: number): void {
@@ -219,4 +247,48 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
       this.timerNascondi = 0;
     }
   }
+
+
+  assicuraCoperturaCompleta(id: number, tentativi: number): void {
+  if (id !== this.idCiclo) return;
+  if (!this.mostraSpinner) return;
+
+  const lista = this.elementiLocandina ? this.elementiLocandina.toArray() : [];
+  if (!lista.length) {
+    if (tentativi >= 10) return;
+   requestAnimationFrame(() => this.assicuraCoperturaCompleta(id, tentativi + 1));
+    return;
+  }
+
+  let ok = true;
+  for (const ref of lista) {
+    const host = ref?.nativeElement;
+    const cover = host ? host.querySelector('.carica_img') : null;
+    if (!cover || !cover.classList || !cover.classList.contains('visibile')) {
+      ok = false;
+      break;
+    }
+  }
+
+  if (ok) return;
+  if (tentativi >= 10) return;
+
+  try { this.riferitore.detectChanges(); } catch {}
+  requestAnimationFrame(() => this.assicuraCoperturaCompleta(id, tentativi + 1));
+}
+
+fineCoperturaDopoMinimo(id: number): void {
+  if (id !== this.idCiclo) return;
+  if (this.timerNascondi) clearTimeout(this.timerNascondi);
+
+  // stesso feeling del vecchio: tipo piu' "snappy"
+  const manca = 100;
+
+  this.timerNascondi = setTimeout(() => {
+    if (id !== this.idCiclo) return;
+    this.mostraSpinner = false;
+    this.motivoCopertura = '';
+    try { this.riferitore.detectChanges(); } catch {}
+  }, manca);
+}
 }

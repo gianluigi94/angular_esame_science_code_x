@@ -22,7 +22,8 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     public cambioLingua: CambioLinguaService,
     public servizioAnimazioni: AnimazioniScomparsaService
   ) {}
-
+   tickResetPagine = 0;
+ timerCambioTipo: any = 0;
   sottoscrizioni = new Subscription();
   idCicloRighe = 0;
   categorieDb: any[] = [];
@@ -73,8 +74,9 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
         this.sottoscrizioni.add(
       this.tipoContenuto.tipoSelezionato$.subscribe((tipo) => {
         this.tipoSelezionato = tipo;
-        this.ricostruisciRighe();
-        this.forzaRottaCatalogoDaTipo();
+         this.tickResetPagine += 1;
+ this.avviaCambioTipoConAttese();
+ this.forzaRottaCatalogoDaTipo();
       })
     );
   }
@@ -82,6 +84,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.sottoscrizioni.unsubscribe();
     try { this.servizioAnimazioni.disconnettiOsservatori(); } catch {}
+    if (this.timerCambioTipo) { clearTimeout(this.timerCambioTipo); this.timerCambioTipo = 0; }
   }
 
   caricaCategorieDaDb(): void {
@@ -97,8 +100,8 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ricostruisciRighe(): void {
-    const id = ++this.idCicloRighe;
+   ricostruisciRighe(idForzato: number = 0, notificaTipoApplicato: boolean = false): void {
+ const id = idForzato ? idForzato : ++this.idCicloRighe;
     const codiceLingua = this.cambioLingua.leggiCodiceLingua(); // 'it' | 'en'
     const mappaNome = this.costruisciMappaNomeCategorie(codiceLingua);
     const mappaLocandine = this.costruisciMappaLocandineCategorie(codiceLingua, this.tipoSelezionato);
@@ -117,6 +120,11 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
  this.precaricaImmaginiRighe(nuoveRighe).then(() => {
  if (id !== this.idCicloRighe) return;
  this.aggiornaRigheInPlace(nuoveRighe);
+
+  // notifico "applicato": le righe faranno lo SCOPRI dopo il minimo
+ if (notificaTipoApplicato) {
+ this.tipoContenuto.notificaCambioTipoApplicato(this.tipoSelezionato, id);
+ }
  });
   }
 
@@ -291,5 +299,21 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
  while (t.length < s.length) t.push('');
  if (t.length > s.length) t.splice(s.length);
  for (let i = 0; i < s.length; i++) t[i] = s[i];
+ }
+
+  avviaCambioTipoConAttese(): void {
+ if (this.timerCambioTipo) { clearTimeout(this.timerCambioTipo); this.timerCambioTipo = 0; }
+
+ this.idCicloRighe += 1;
+ const id = this.idCicloRighe;
+
+ // 1) COPRO SUBITO
+ this.tipoContenuto.notificaCambioTipoAvviato(this.tipoSelezionato, id);
+
+ // 2) DOPO TOT aggiorno righe (ma la copertura rimane)
+ this.timerCambioTipo = setTimeout(() => {
+ this.timerCambioTipo = 0;
+ this.ricostruisciRighe(id, true);
+ }, 100);
  }
 }
