@@ -1,11 +1,21 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { HoverLocandinaService } from './categoria_services/hover-locandina.service';
+import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-riga-categoria',
   templateUrl: './riga-categoria.component.html',
   styleUrls: ['./riga-categoria.component.scss'],
 })
-export class RigaCategoriaComponent implements OnChanges {
+export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   @Input() locandine: string[] = [];
   @Input() categoria = '';
 
@@ -13,24 +23,84 @@ export class RigaCategoriaComponent implements OnChanges {
   indicePagina = 0;
   numeroMassimoPagine = 0;
   trasformazioneWrapper = '';
+  mostraSpinner = false;
 
+  sottoscrizioni = new Subscription();
+  idCiclo = 0;
+  motivoCopertura = '';
+  attendoAggiornamentoLocandine = false;
+  inAttesaImmagini = false;
+  totaleAtteso = 0;
+  conteggioCaricate = 0;
+  avvioSpinnerAt = 0;
+  permanenzaMinimaMs = 350;
+  fallbackMaxMs = 2000;
+  timerFallback: any = 0;
+  timerNascondi: any = 0;
 
-   ritardoHoverMs = 380;
-   ritardoUscitaHoverMs = 320;
-   timerEntrata: any = null;
-   timerUscita: any = null;
+  ritardoHoverMs = 380;
+  ritardoUscitaHoverMs = 320;
+  timerEntrata: any = null;
+  timerUscita: any = null;
 
-   constructor(public servizioHoverLocandina: HoverLocandinaService) {}
+  constructor(
+    public servizioHoverLocandina: HoverLocandinaService,
+    public cambioLingua: CambioLinguaService,
+    public riferitore: ChangeDetectorRef,
+  ) {}
 
   ngOnChanges(_changes: SimpleChanges): void {
     this.calcolaNumeroMassimoPagine();
     if (this.indicePagina > this.numeroMassimoPagine) this.indicePagina = 0;
     this.aggiornaTrasformazioneWrapper();
+
+    if (
+      _changes['locandine'] &&
+      this.mostraSpinner &&
+      this.motivoCopertura === 'lingua'
+    ) {
+      if (this.attendoAggiornamentoLocandine) {
+        this.attendoAggiornamentoLocandine = false;
+        this.avviaAttesaImmaginiLingua(this.idCiclo);
+      }
+    }
+  }
+
+  ngOnInit(): void {
+    try {
+      this.sottoscrizioni.unsubscribe();
+    } catch {}
+    this.sottoscrizioni = new Subscription();
+
+    this.sottoscrizioni.add(
+      this.cambioLingua.cambioLinguaAvviato$.subscribe(() => {
+        this.avviaCopertura('lingua');
+        this.attendoAggiornamentoLocandine = true;
+      }),
+    );
+
+    // quando la lingua e' stata applicata, mi preparo ad aspettare le nuove <img>
+    // (ma l'Input locandine potrebbe arrivare un attimo dopo -> gestito da attendoAggiornamentoLocandine)
+    this.sottoscrizioni.add(
+      this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+        if (!this.mostraSpinner) this.avviaCopertura('lingua');
+         this.attendoAggiornamentoLocandine = false;
+ this.avviaAttesaImmaginiLingua(this.idCiclo);
+      }),
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.sottoscrizioni.unsubscribe();
+    this.azzeraTimer();
   }
 
   calcolaNumeroMassimoPagine(): void {
     const totale = this.locandine.length;
-    this.numeroMassimoPagine = Math.max(Math.ceil(totale / this.locandineVisibili) - 1, 0);
+    this.numeroMassimoPagine = Math.max(
+      Math.ceil(totale / this.locandineVisibili) - 1,
+      0,
+    );
   }
 
   aggiornaTrasformazioneWrapper(): void {
@@ -51,27 +121,102 @@ export class RigaCategoriaComponent implements OnChanges {
     }
   }
 
+  onMouseEnterLocandina(): void {
+    if (this.timerUscita) clearTimeout(this.timerUscita);
+    if (this.timerEntrata) clearTimeout(this.timerEntrata);
 
-   onMouseEnterLocandina(): void {
-     if (this.timerUscita) clearTimeout(this.timerUscita);
-     if (this.timerEntrata) clearTimeout(this.timerEntrata);
+    this.timerEntrata = setTimeout(() => {
+      this.servizioHoverLocandina.emettiEntrata();
+    }, this.ritardoHoverMs);
+  }
 
-     this.timerEntrata = setTimeout(() => {
-       this.servizioHoverLocandina.emettiEntrata();
-     }, this.ritardoHoverMs);
-   }
+  onMouseLeaveLocandina(): void {
+    if (this.timerEntrata) clearTimeout(this.timerEntrata);
+    if (this.timerUscita) clearTimeout(this.timerUscita);
 
-   onMouseLeaveLocandina(): void {
-     if (this.timerEntrata) clearTimeout(this.timerEntrata);
-     if (this.timerUscita) clearTimeout(this.timerUscita);
+    this.timerUscita = setTimeout(() => {
+      this.servizioHoverLocandina.emettiUscita();
+    }, this.ritardoUscitaHoverMs);
+  }
 
-     this.timerUscita = setTimeout(() => {
-       this.servizioHoverLocandina.emettiUscita();
-     }, this.ritardoUscitaHoverMs);
-   }
+  tracciaLocandina(_indice: number, src: string): string {
+    return String(src || '');
+  }
 
+  avviaCopertura(motivo: string): void {
+    this.idCiclo += 1;
+    this.motivoCopertura = motivo;
+    this.azzeraTimer();
 
- tracciaLocandina(_indice: number, src: string): string {
- return String(src || '');
+    this.inAttesaImmagini = false;
+    this.totaleAtteso = 0;
+    this.conteggioCaricate = 0;
+
+    this.mostraSpinner = true;
+    this.avvioSpinnerAt = Date.now();
+
+    try {
+      this.riferitore.detectChanges();
+    } catch {}
+  }
+
+  avviaAttesaImmaginiLingua(id: number): void {
+    if (id !== this.idCiclo) return;
+    if (!this.mostraSpinner) return;
+
+    // se le locandine non sono ancora arrivate, esco: mi ri-attiva ngOnChanges
+    if (this.attendoAggiornamentoLocandine) return;
+
+    this.inAttesaImmagini = true;
+    this.totaleAtteso = (this.locandine || []).length;
+    this.conteggioCaricate = 0;
+
+ if (this.totaleAtteso === 0) {
+ this.fineSePronto(true, id);
+ return;
  }
+    if (this.timerFallback) clearTimeout(this.timerFallback);
+    this.timerFallback = setTimeout(
+      () => this.fineSePronto(true, id),
+      this.fallbackMaxMs,
+    );
+  }
+
+  immagineStabilizzata(): void {
+    if (!this.inAttesaImmagini) return;
+    this.conteggioCaricate += 1;
+    this.fineSePronto(false, this.idCiclo);
+  }
+
+  fineSePronto(forzatura: boolean, id: number): void {
+    if (id !== this.idCiclo) return;
+    const pronto = forzatura || this.conteggioCaricate >= this.totaleAtteso;
+    if (!pronto) return;
+
+    this.inAttesaImmagini = false;
+    if (this.timerNascondi) clearTimeout(this.timerNascondi);
+
+    const elapsed = Date.now() - (this.avvioSpinnerAt || 0);
+    const manca = Math.max(0, this.permanenzaMinimaMs - elapsed);
+
+    this.timerNascondi = setTimeout(() => {
+      if (id !== this.idCiclo) return;
+      this.mostraSpinner = false;
+      this.motivoCopertura = '';
+      try {
+        this.riferitore.detectChanges();
+      } catch {}
+    }, manca);
+  }
+
+  azzeraTimer(): void {
+    if (this.timerFallback) {
+      clearTimeout(this.timerFallback);
+      this.timerFallback = 0;
+    }
+    if (this.timerNascondi) {
+      clearTimeout(this.timerNascondi);
+      this.timerNascondi = 0;
+    }
+  }
 }

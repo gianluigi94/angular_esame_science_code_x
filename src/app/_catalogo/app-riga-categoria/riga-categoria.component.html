@@ -16,7 +16,18 @@
       <span class="numero">{{ (indicePagina * locandineVisibili) + i + 1 }}</span>
 
       <div class="sparisci">
-        <img [src]="src" alt="locandina" />
+         <img
+ [src]="src"
+ alt="locandina"
+ (load)="immagineStabilizzata()"
+ (error)="immagineStabilizzata()"
+ />
+        <span class="carica_img" [class.visibile]="mostraSpinner">
+          <div class="spinner_spinner">
+            <span class="ring1"></span>
+            <span class="ring2"></span>
+          </div>
+        </span>
       </div>
 
 
