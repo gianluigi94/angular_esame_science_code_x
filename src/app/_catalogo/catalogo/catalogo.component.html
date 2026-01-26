@@ -18,6 +18,7 @@
    <ng-container *ngFor="let riga of righeDemo; trackBy: tracciaRigaCategoria">
      <app-riga-categoria
        #rigaCatalogo
+       [attr.id]="'cat_' + riga.idCategoria"
        [categoria]="riga.category"
        [locandine]="riga.posters"
        [tickResetPagine]="tickResetPagine"

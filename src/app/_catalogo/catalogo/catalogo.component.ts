@@ -6,7 +6,7 @@ import { TipoContenuto, TipoContenutoService } from '../app-riga-categoria/categ
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { AnimazioniScomparsaService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/animazioni-scomparsa.service';
-
+import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 @Component({
   selector: 'app-catalogo',
   templateUrl: './catalogo.component.html',
@@ -19,14 +19,16 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     public router: Router,
     public location: Location,
     public cambioLingua: CambioLinguaService,
-    public servizioAnimazioni: AnimazioniScomparsaService
+     public servizioAnimazioni: AnimazioniScomparsaService,
+ public scorrimentoCatalogo: ScorrimentoCatalogoService
   ) {}
 
   tickResetPagine = 0;
   timerCambioTipo: any = 0;
   sottoscrizioni = new Subscription();
   idCicloRighe = 0;
-
+   timerCaricaFino: any = 0;
+ tokenScroll = 0;
   limiteRighe = 4;
   offsetRighe = 0;
   haAltreRighe = true;
@@ -80,7 +82,11 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
     this.forzaRottaCatalogoDaTipo();
     this.caricaPrimeRigheDaApi(0, false);
-
+     this.sottoscrizioni.add(
+ this.scorrimentoCatalogo.richieste$.subscribe((idCategoria: string) => {
+ this.gestisciScrollACategoria(idCategoria);
+ }),
+ );
     this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
         this.caricaPrimeRigheDaApi(0, false);
@@ -104,6 +110,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     try { this.servizioAnimazioni.disconnettiOsservatori(); } catch {}
     if (this.timerCambioTipo) { clearTimeout(this.timerCambioTipo); this.timerCambioTipo = 0; }
     if (this.timerSentinella) { clearTimeout(this.timerSentinella); this.timerSentinella = 0; }
+    if (this.timerCaricaFino) { clearTimeout(this.timerCaricaFino); this.timerCaricaFino = 0; }
     try { this.osservatoreSentinella?.disconnect(); } catch {}
     this.osservatoreSentinella = null;
   }
@@ -127,7 +134,43 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     if (val === 'serie') return '/catalogo/serie';
     return '/catalogo/film-serie';
   }
+  calcolaHash32(testo: string): number {
+    let h = 2166136261;
+    for (let i = 0; i < testo.length; i++) {
+      h ^= testo.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
 
+    slugDaPoster(url: string): string {
+    const u = String(url || '');
+    const file = (u.split('/').pop() || '').trim(); // locandina_it_slug.webp
+    if (!file) return u;
+
+    const senzaExt = file.replace(/\.webp$/i, '');
+    const parti = senzaExt.split('_');
+
+    // atteso: locandina + lingua + slug...
+    if (parti.length >= 3 && parti[0] === 'locandina') {
+      return parti.slice(2).join('_'); // slug (stabile tra lingue)
+    }
+
+    return senzaExt;
+  }
+
+  mescolaDeterministicaPosters(lista: string[], seed: string): string[] {
+    const s = String(seed || '');
+    const out = (lista || []).slice();
+    out.sort((a, b) => {
+      const sa = this.slugDaPoster(String(a || ''));
+      const sb = this.slugDaPoster(String(b || ''));
+      const ka = this.calcolaHash32(s + '|' + sa);
+      const kb = this.calcolaHash32(s + '|' + sb);
+      return ka - kb;
+    });
+    return out;
+  }
   precaricaImmaginiRighe(righe: { posters: string[] }[]): Promise<void> {
     const urls: string[] = [];
     for (const r of righe || []) {
@@ -220,7 +263,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
         this.timerSentinella = setTimeout(() => {
           this.timerSentinella = 0;
           this.caricaAltreQuattroRigheDaApi();
-        }, 20);
+        }, 800);
       }
     }, { root: null, threshold: 0.1 });
 
@@ -262,12 +305,18 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
  const nuoveRighe = itemsTotali
  .map((x: any) => {
- const posters = (Array.isArray(x?.locandine) ? x.locandine : [])
+ const idCategoria = String(x?.idCategoria || '');
+
+ let posters = (Array.isArray(x?.locandine) ? x.locandine : [])
  .map((p: any) => String(p?.src || ''))
  .filter((u: string) => !!u);
 
+ if (this.tipoSelezionato === 'film_serie' && posters.length) {
+ posters = this.mescolaDeterministicaPosters(posters, idCategoria);
+ }
+
  return {
- idCategoria: String(x?.idCategoria || ''),
+ idCategoria,
  category: String(x?.category || ''),
  posters: posters.length ? posters : this.locandineDemo,
  };
@@ -329,14 +378,20 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe((ris: any) => {
         const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
 
-        const nuoveRighe = items
+               const nuoveRighe = items
           .map((x: any) => {
-            const posters = (Array.isArray(x?.locandine) ? x.locandine : [])
+            const idCategoria = String(x?.idCategoria || '');
+
+            let posters = (Array.isArray(x?.locandine) ? x.locandine : [])
               .map((p: any) => String(p?.src || ''))
               .filter((u: string) => !!u);
 
+            if (this.tipoSelezionato === 'film_serie' && posters.length) {
+              posters = this.mescolaDeterministicaPosters(posters, idCategoria);
+            }
+
             return {
-              idCategoria: String(x?.idCategoria || ''),
+              idCategoria,
               category: String(x?.category || ''),
               posters: posters.length ? posters : this.locandineDemo,
             };
@@ -366,5 +421,162 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         });
       });
+  }
+
+    gestisciScrollACategoria(idCategoria: string): void {
+    const id = String(idCategoria || '').trim();
+    if (!id) return;
+
+    this.scorrimentoCatalogo.impostaSpinnerScroll(true);
+    this.utenteHaScrollato = true;
+
+    this.tokenScroll += 1;
+    const token = this.tokenScroll;
+
+    if (this.timerCaricaFino) {
+      clearTimeout(this.timerCaricaFino);
+      this.timerCaricaFino = 0;
+    }
+
+    this.caricaFinoACategoria(id, token).then((trovata: boolean) => {
+      if (!trovata) {
+        this.scorrimentoCatalogo.impostaSpinnerScroll(false);
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        const el = document.getElementById('cat_' + id);
+        if (!el) {
+          this.scorrimentoCatalogo.impostaSpinnerScroll(false);
+          return;
+        }
+
+        const rect = el.getBoundingClientRect();
+        const y = (window.scrollY || 0) + rect.top - Math.floor(window.innerHeight * 0.65);
+        this.scorrimentoCatalogo.impostaSpinnerScroll(false);
+        this.servizioAnimazioni.scrollaA(y, 0.35);
+        setTimeout(() => this.forzaControlloSentinella(), 380);
+      });
+    });
+  }
+
+  caricaFinoACategoria(idCategoria: string, token: number): Promise<boolean> {
+    const id = String(idCategoria || '').trim();
+    if (!id) return Promise.resolve(false);
+
+    const gia = this.righeDemo.some((r) => String(r?.idCategoria) === id);
+    if (gia) return Promise.resolve(true);
+    if (!this.haAltreRighe) return Promise.resolve(false);
+
+    const lingua = this.cambioLingua.leggiCodiceLingua();
+    const tipo = this.tipoSelezionato;
+
+    return new Promise<boolean>((resolve) => {
+      let finito = false;
+      const chiudi = (esito: boolean) => {
+        if (finito) return;
+        finito = true;
+        if (this.timerCaricaFino) {
+          clearTimeout(this.timerCaricaFino);
+          this.timerCaricaFino = 0;
+        }
+        resolve(esito);
+      };
+
+      const caricaUnBlocco = () => {
+        if (finito) return;
+        if (token !== this.tokenScroll) return;
+
+        const giaOra = this.righeDemo.some((r) => String(r?.idCategoria) === id);
+        if (giaOra) return chiudi(true);
+        if (!this.haAltreRighe) return chiudi(false);
+
+        if (this.caricamentoRighe) {
+          if (this.timerCaricaFino) clearTimeout(this.timerCaricaFino);
+          this.timerCaricaFino = setTimeout(caricaUnBlocco, 50);
+          return;
+        }
+
+        this.caricamentoRighe = true;
+        const offset = this.offsetRighe;
+        const limiteJump = this.limiteRighe;
+
+        this.api
+          .getCatalogoRighe(lingua, tipo, limiteJump, offset)
+          .pipe(take(1))
+          .subscribe({
+            next: (ris: any) => {
+              const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
+                            const nuoveRighe = items
+                .map((x: any) => {
+                  const idCategoriaRiga = String(x?.idCategoria || '');
+
+                  let posters = (Array.isArray(x?.locandine) ? x.locandine : [])
+                    .map((p: any) => String(p?.src || ''))
+                    .filter((u: string) => !!u);
+
+                  if (this.tipoSelezionato === 'film_serie' && posters.length) {
+                    posters = this.mescolaDeterministicaPosters(posters, idCategoriaRiga);
+                  }
+
+                  return {
+                    idCategoria: idCategoriaRiga,
+                    category: String(x?.category || ''),
+                    posters: posters.length ? posters : this.locandineDemo,
+                  };
+                })
+                .filter((x: any) => !!x.idCategoria);
+
+              // durante il salto NON blocco: pre-carico in background, ma aggiorno subito DOM
+              this.precaricaImmaginiRighe(nuoveRighe);
+
+              // evita duplicati
+              const giaMap: Record<string, boolean> = {};
+              for (const r of this.righeDemo) giaMap[String(r.idCategoria)] = true;
+              const soloNuove = nuoveRighe.filter((r: any) => !giaMap[String(r.idCategoria)]);
+
+              this.righeDemo.push(...soloNuove);
+              this.offsetRighe += nuoveRighe.length;
+
+              this.haAltreRighe = nuoveRighe.length === limiteJump;
+              if (!this.haAltreRighe) this.hoFinitoTutto = true;
+
+              this.caricamentoRighe = false;
+
+              try { (window as any).ScrollTrigger?.refresh?.(); } catch {}
+
+              const trovataOra = this.righeDemo.some((r) => String(r?.idCategoria) === id);
+              if (trovataOra) return chiudi(true);
+              if (!this.haAltreRighe) return chiudi(false);
+              if (this.timerCaricaFino) clearTimeout(this.timerCaricaFino);
+              this.timerCaricaFino = setTimeout(caricaUnBlocco, 0);
+            },
+            error: () => {
+              this.caricamentoRighe = false;
+              this.haAltreRighe = false;
+              this.hoFinitoTutto = true;
+              this.scorrimentoCatalogo.impostaSpinnerScroll(false);
+              chiudi(false);
+            },
+          });
+      };
+
+      caricaUnBlocco();
+    });
+  }
+
+  forzaControlloSentinella(): void {
+    if (!this.sentinellaPronta) return;
+    if (!this.haAltreRighe) return;
+    if (this.caricamentoRighe) return;
+
+    const host = this.sentinella?.nativeElement as HTMLElement;
+    if (!host) return;
+
+   const r = host.getBoundingClientRect();
+    const inVista = r.top <= window.innerHeight && r.bottom >= 0;
+    if (!inVista) return;
+
+    this.caricaAltreQuattroRigheDaApi();
   }
 }

@@ -122,4 +122,14 @@ export class AnimazioniScomparsaService {
       ease: 'power2.out'
     });
   }
+
+   scrollaA(y: number, durata: number = 0.35, onFine?: () => void): void {
+ const target = Math.max(0, Math.floor(Number(y) || 0));
+ gsap.to(window, {
+ duration: durata,
+ scrollTo: { y: target },
+ ease: 'power2.out',
+ onComplete: () => { try { onFine?.(); } catch {} }
+ });
+ }
 }

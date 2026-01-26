@@ -35,20 +35,21 @@
       <!-- tendina PROVISORIO-->
       <li class="tendina" [class.aperta]="menuCategorieAperto">
         <ul class="menu-tendina">
-          <li class="voce-tendina" (click)="onClickCategoria()">
-            Continua a guardare
-          </li>
-          <li class="voce-tendina" (click)="onClickCategoria()">I preferiti</li>
-          <li class="voce-tendina" (click)="onClickCategoria()">I piu visti</li>
+
           <li
             class="separatore-tendina"
             role="separator"
             aria-hidden="true"
           ></li>
-          <li class="voce-tendina" (click)="onClickCategoria()">
-            Altro esempio
-          </li>
+           <li
+ class="voce-tendina"
+ *ngFor="let voce of vociCategorieMenu"
+ (click)="onSelezionaCategoria(voce)"
+ >
+ {{ voce.label }}
+ </li>
         </ul>
+
       </li>
     </ul>
 
@@ -86,6 +87,7 @@
         </ul>
       </li>
     </ul>
+    <app-spinner class="scorolsp" *ngIf="spinnerScroll$ | async"></app-spinner>
 </div>
 
   </div>

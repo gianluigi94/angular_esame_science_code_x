@@ -42,7 +42,7 @@ app-riga-categoria {
   display: block;
   will-change: opacity, transform;
   transform-origin: center center;
-  // pointer-events: none !important;
+  min-height: 200px;
 }
 
 .sentinella {

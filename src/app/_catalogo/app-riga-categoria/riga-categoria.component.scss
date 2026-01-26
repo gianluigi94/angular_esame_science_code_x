@@ -7,6 +7,8 @@
   display: flex;
   flex-direction: column;
   font-family: "Quantico", serif;
+  min-height: 200px;
+
   .intestazione-categoria {
   display: flex;
  align-items: center;
@@ -42,6 +44,8 @@
       cursor: pointer;
       .sparisci {
    position: relative;
+  min-height: 150px;
+
  }
       &:hover {
 
