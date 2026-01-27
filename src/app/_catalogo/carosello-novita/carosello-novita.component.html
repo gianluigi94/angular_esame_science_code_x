@@ -67,10 +67,13 @@
 
     <div
    class="overlay-hover"
-   [class.visibile]="mostraImmagineHover"
+   [class.visibile]="mostraImmagineHover && immagineHoverPronta"
    aria-hidden="true"
  >
-   <img [src]="immagineHoverFissa" alt="" />
+    <img
+ [src]="immagineHoverFissa"
+ alt=""
+ />
  </div>
 
   <!-- comanidi del carosello che cambiano stile se non sono in cima -->

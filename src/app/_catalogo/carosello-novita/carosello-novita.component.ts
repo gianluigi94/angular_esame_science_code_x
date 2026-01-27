@@ -30,6 +30,9 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
   pausaPerHover = false;
      mostraImmagineHover = false;
    immagineHoverFissa = 'assets/carosello_locandine/carosello_abbraccia_il_vento.webp';
+   chiaveHoverImg = 0;
+    immagineHoverPronta = true;
+ tokenHoverImg = 0;
   alTop = true; // Tengo traccia se sono 'in cima' alla pagina (stato iniziale: sì)
   pausaPerScroll = false; // Segno se devo mettere in pausa per via dello scroll (inizialmente no)
   SCROLL_THRESHOLD = 10; // Imposto la soglia (in px) entro cui considero la pagina 'in cima'
@@ -135,10 +138,30 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
 
      this.subs.add(
        this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo }) => {
+ const eraAttivo = this.mostraImmagineHover;
  this.mostraImmagineHover = attivo;
 
  if (attivo) {
- if (urlSfondo) this.immagineHoverFissa = urlSfondo;
+  if (urlSfondo) {
+    if (!eraAttivo) this.immagineHoverPronta = false;
+ this.chiaveHoverImg += 1;
+
+ const token = ++this.tokenHoverImg;
+ const nuovaUrl = urlSfondo;
+ const img = new Image();
+ img.onload = () => {
+ if (token !== this.tokenHoverImg) return;
+ this.immagineHoverFissa = nuovaUrl;
+ this.immagineHoverPronta = true;
+ };
+ img.onerror = () => {
+ if (token !== this.tokenHoverImg) return;
+
+ this.immagineHoverFissa = nuovaUrl;
+ this.immagineHoverPronta = true;
+ };
+ img.src = nuovaUrl;
+ }
                    this.pausaPerHover = true;
 this.fermaAutoscroll();
           this.fermaAvvioPendete();   // blocco avvii trailer pendenti
@@ -152,7 +175,7 @@ this.fermaAutoscroll();
           });
          } else {
                      this.pausaPerHover = false;
-
+ this.tokenHoverImg += 1;
           // tolgo overlay e riparto con la logica normale (solo se posso)
           if (this.alTop && !this.pausaPerScroll && !this.pausaPerBlur && !this.pausaPerHover) {
              this.avviaTrailerCorrenteDopo(this.RITARDO_MOSTRA_PLAYER_MS);
