@@ -138,12 +138,14 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  onMouseEnterLocandina(): void {
+  onMouseEnterLocandina(src: string): void {
     if (this.timerUscita) clearTimeout(this.timerUscita);
     if (this.timerEntrata) clearTimeout(this.timerEntrata);
 
     this.timerEntrata = setTimeout(() => {
-      this.servizioHoverLocandina.emettiEntrata();
+       const slug = this.slugDaLocandina(src);
+ const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
+ this.servizioHoverLocandina.emettiEntrata(urlSfondo);
     }, this.ritardoHoverMs);
   }
 
@@ -152,7 +154,10 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     if (this.timerUscita) clearTimeout(this.timerUscita);
 
     this.timerUscita = setTimeout(() => {
-      this.servizioHoverLocandina.emettiUscita();
+
+ const ancoraSuLocandina = !!document.querySelector('.locandina:hover');
+ if (ancoraSuLocandina) return;
+ this.servizioHoverLocandina.emettiUscita();
     }, this.ritardoUscitaHoverMs);
   }
 
@@ -291,4 +296,12 @@ fineCoperturaDopoMinimo(id: number): void {
     try { this.riferitore.detectChanges(); } catch {}
   }, manca);
 }
+
+ slugDaLocandina(url: string): string {
+ const u = String(url || '');
+ const file = (u.split('/').pop() || '').trim(); // locandina_it_slug.webp
+ const m = file.match(/^locandina_(it|en)_(.+)\.webp$/i);
+ if (m && m[2]) return m[2];
+ return file.replace(/\.webp$/i, '');
+ }
 }

@@ -134,10 +134,11 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
 
 
      this.subs.add(
-       this.servizioHoverLocandina.osserva().subscribe((attivo) => {
-         this.mostraImmagineHover = attivo;
+       this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo }) => {
+ this.mostraImmagineHover = attivo;
 
-         if (attivo) {
+ if (attivo) {
+ if (urlSfondo) this.immagineHoverFissa = urlSfondo;
                    this.pausaPerHover = true;
 this.fermaAutoscroll();
           this.fermaAvvioPendete();   // blocco avvii trailer pendenti

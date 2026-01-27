@@ -10,7 +10,7 @@
    class="locandina"
    #elementoLocandina
    *ngFor="let src of locandine; let i = index; trackBy: tracciaLocandina"
-   (mouseenter)="onMouseEnterLocandina()"
+   (mouseenter)="onMouseEnterLocandina(src)"
    (mouseleave)="onMouseLeaveLocandina()"
  >
       <span class="numero">{{ (indicePagina * locandineVisibili) + i + 1 }}</span>

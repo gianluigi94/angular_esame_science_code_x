@@ -3,17 +3,20 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class HoverLocandinaService {
-  hoverAttivo$ = new BehaviorSubject<boolean>(false);
+   hoverLocandina$ = new BehaviorSubject<{ attivo: boolean; urlSfondo: string }>({
+ attivo: false,
+ urlSfondo: '',
+ });
 
-  osserva(): Observable<boolean> {
-    return this.hoverAttivo$.asObservable();
+   osserva(): Observable<{ attivo: boolean; urlSfondo: string }> {
+ return this.hoverLocandina$.asObservable();
   }
 
-  emettiEntrata(): void {
-    this.hoverAttivo$.next(true);
+   emettiEntrata(urlSfondo: string): void {
+ this.hoverLocandina$.next({ attivo: true, urlSfondo: String(urlSfondo || '') });
   }
 
   emettiUscita(): void {
-    this.hoverAttivo$.next(false);
+    this.hoverLocandina$.next({ attivo: false, urlSfondo: '' });
   }
 }
