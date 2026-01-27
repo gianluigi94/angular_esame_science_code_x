@@ -95,14 +95,14 @@ export class CaroselloScrollStateUtility {
  */
   static avviaAutoscroll(ctx: any): void { // Avvio (o ripianifico) l'autoscroll quando non sono al top
     if (ctx.alTop) return; // Se sono al top, non devo schedulare autoscroll
-
+    if (ctx.pausaPerHover) return;
     CaroselloScrollStateUtility.fermaAutoscroll(ctx); // Resetto sempre prima di schedulare un nuovo timeout
 
     ctx.timerAutoscroll = setTimeout(() => { // Schedulo il prossimo avanzamento automatico
       ctx.timerAutoscroll = null; // Azzero il riferimento al timer quando scatta
 
       if (ctx.alTop) return; // Esco se nel frattempo sono tornato al top
-
+      if (ctx.pausaPerHover) return;
       if (ctx.scorrimentoInCorso) { // Se sto gia' scorrendo, ripianifico e basta
         CaroselloScrollStateUtility.avviaAutoscroll(ctx); // Riparto con un nuovo timer invece di forzare lo scorrimento
         return; // Esco dopo aver ripianificato

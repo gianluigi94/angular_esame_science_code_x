@@ -46,7 +46,7 @@ export class CaroselloFocusUtility {
     ctx.pausaPerBlur = false; // Tolgo lo stato di pausa per blur
 
     if (!ctx.alTop) { // Se non sono in cima, riparto l'autoscroll
-      ctx.avviaAutoscroll(); // Riavvio il timer di autoscroll da zero
+      if (!ctx.pausaPerHover) ctx.avviaAutoscroll() // Riavvio il timer di autoscroll da zero
       return; // Esco per non avviare anche il trailer
     }
 

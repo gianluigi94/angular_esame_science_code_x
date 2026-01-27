@@ -32,7 +32,7 @@ export class CaroselloTopUtility {
       } catch {} // Resetto il tempo in modo safe
     });
 
-    ctx.avviaAutoscroll(); // Faccio ripartire da zero l'autoscroll quando non sono al top
+    if (!ctx.pausaPerHover) ctx.avviaAutoscroll();
   }
 
 

@@ -139,7 +139,7 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
 
          if (attivo) {
                    this.pausaPerHover = true;
-
+this.fermaAutoscroll();
           this.fermaAvvioPendete();   // blocco avvii trailer pendenti
           this.numeroSequenzaAvvio++; // invalido eventuali avvii in corso
 
@@ -156,6 +156,9 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
           if (this.alTop && !this.pausaPerScroll && !this.pausaPerBlur && !this.pausaPerHover) {
              this.avviaTrailerCorrenteDopo(this.RITARDO_MOSTRA_PLAYER_MS);
            }
+            if (!this.alTop && !this.pausaPerBlur && !this.pausaPerHover) {
+ this.avviaAutoscroll();
+ }
          }
        })
      );

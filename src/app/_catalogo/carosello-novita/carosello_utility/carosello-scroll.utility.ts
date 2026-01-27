@@ -43,7 +43,7 @@ export class CaroselloScrollUtility {
           // Se non sono al top (o sono in pausa scroll), non devo riprodurre video
           ctx.mostraVideo = false; // Nascondo il video
 
-          ctx.avviaAutoscroll(); // Se non sono al top, faccio ripartire da zero l'autoscroll
+          if (!ctx.pausaPerHover) ctx.avviaAutoscroll(); // Se non sono al top, faccio ripartire da zero l'autoscroll
         }
       };
 

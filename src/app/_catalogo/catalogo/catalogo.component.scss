@@ -34,15 +34,17 @@ p{
   left: 0;
   margin-top: 82vh;
   max-width: 100%;
+  pointer-events: none!important;
 
 }
 
 app-riga-categoria {
-
   display: block;
   will-change: opacity, transform;
   transform-origin: center center;
   min-height: 200px;
+    pointer-events: none!important;
+
 }
 
 .sentinella {
@@ -59,4 +61,5 @@ app-riga-categoria {
 
   section{
     margin-bottom: 35px;
+
   }
