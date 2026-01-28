@@ -171,7 +171,7 @@ video-js {
   pointer-events: none;
   background:
     linear-gradient(to top, #070217 0%, #0000 75%, #0000 100%),
-    linear-gradient(to right, #0a0322 0%, #0a0322 6%, #230316df 26%, #0000 80%, #0000 100%);
+    linear-gradient(to right, #08021b 0%, #08021b 9%, #190221db 26%, #0000 80%, #0000 100%);
 }
 .sinistra-titoli { //contenitore con immagine titolo e sottotitolo
   z-index: 16;
@@ -220,7 +220,9 @@ video-js {
     font-family: "Cinzel";
     font-style: italic;
     font-weight: bold;
-    text-shadow: 0 0 10px #0b58d3;
+           text-shadow: 0 0 10px #0b58d3;
+
+
     transition-property: opacity, transform, text-shadow;
     opacity: 1;
     transform: scale(1);
@@ -292,7 +294,7 @@ video-js {
    z-index: 3;
    pointer-events: none;
        opacity: 0;
- transform: scale(1.11);
+ transform: scale(1.12);
  transition:
  opacity 0.3s ease,
  transform 0.3s ease;
@@ -304,6 +306,7 @@ video-js {
      height: 100%;
      object-fit: cover;
      display: block;
+       will-change: opacity, transform;
    }
       &.visibile {
      opacity: 1;

@@ -145,11 +145,14 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
 
 
      this.subs.add(
-       this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo }) => {
+  this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer }) => {
  const eraAttivo = this.mostraImmagineHover;
  this.mostraImmagineHover = attivo;
 
  if (attivo) {
+  if (urlTrailer) {
+  this.trailerHoverProvvisorio = urlTrailer; // trailer hover corretto (lingua + slug)
+}
   if (urlSfondo) {
     if (!eraAttivo) this.immagineHoverPronta = false;
  this.chiaveHoverImg += 1;

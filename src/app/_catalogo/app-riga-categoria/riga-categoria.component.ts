@@ -143,10 +143,14 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     if (this.timerEntrata) clearTimeout(this.timerEntrata);
 
     this.timerEntrata = setTimeout(() => {
-       const slug = this.slugDaLocandina(src);
- const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
- this.servizioHoverLocandina.emettiEntrata(urlSfondo);
-    }, this.ritardoHoverMs);
+  const slug = this.slugDaLocandina(src);
+  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
+
+  const lang = this.cambioLingua.leggiCodiceLingua(); // 'it' | 'en'
+  const urlTrailer = this.urlTrailerHover(lang, slug);
+
+  this.servizioHoverLocandina.emettiEntrata(urlSfondo, urlTrailer);
+}, this.ritardoHoverMs);
   }
 
   onMouseLeaveLocandina(): void {
@@ -304,4 +308,11 @@ fineCoperturaDopoMinimo(id: number): void {
  if (m && m[2]) return m[2];
  return file.replace(/\.webp$/i, '');
  }
+
+ urlTrailerHover(lang: string, slug: string): string {
+  const l = String(lang || '').toLowerCase() === 'en' ? 'en' : 'it';
+  const folder = l === 'it' ? 'mp4-trailer-it' : 'mp4-trailer-en';
+  const prefix = l === 'it' ? 'trailer_ita_' : 'trailer_en_';
+  return `https://d2kd3i5q9rl184.cloudfront.net/${folder}/${prefix}${slug}.mp4`;
+}
 }

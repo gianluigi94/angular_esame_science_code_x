@@ -17,34 +17,49 @@ export class CaroselloPlayerUtility {
  * @param ctx Contesto del componente/carousel
  * @returns void
  */
-  static collegaFineTrailer(ctx: any): void {
-    try {
-      // Provo a pulire eventuali listener precedenti senza rischiare crash
-      if (!ctx.player) return; // Esco se il player non e' disponibile
-      ctx.player.off('ended'); // Rimuovo il listener 'ended' per evitare duplicati
-    } catch {}
+ static collegaFineTrailer(ctx: any): void {
+  try {
+    if (!ctx.player) return;
+    ctx.player.off('ended');
+  } catch {}
 
-    try {
-      // Provo ad agganciare il nuovo listener 'ended' in modo safe
-      ctx.player.on('ended', () => {
-        // Reagisco quando il trailer arriva alla fine
-        ctx.mostraVideo = false; // Nascondo il video appena finisce
-        ctx.fermaAvvioPendete(); // Annullo eventuali avvii pendenti schedulati
+  try {
+    ctx.player.on('ended', () => {
+      // Se il trailer finisce mentre sono in hover locandina:
+      // - non devo scrollare
+      // - devo far ricomparire la cover immagine
+      if (ctx.pausaPerHover) {
+        // blocco qualunque roba hover pendente (timer/token)
+        ctx.tokenHoverTrailer += 1;
+        if (ctx.timerMostraTrailerHover) clearTimeout(ctx.timerMostraTrailerHover);
+        ctx.timerMostraTrailerHover = null;
 
+        // mostro la cover e nascondo il video
+        ctx.mostraImmagineHover = true;
+        ctx.mostraVideo = false;
+
+        // stop dolce + reset (senza vaiAvanti)
+        ctx.fermaAvvioPendete();
         ctx.sfumaGuadagnoVerso(0, ctx.durataFadeAudioMs).finally(() => {
-          // Faccio fade-out e poi resetto il player
-          try {
-            ctx.player.pause();
-          } catch {} // Metto in pausa in modo safe
-          try {
-            ctx.player.currentTime(0);
-          } catch {} // Riporto a inizio in modo safe
-
-          ctx.vaiAvantiDaFineTrailer(); // Avanzo alla slide successiva quando il trailer e' terminato
+          try { ctx.player.pause(); } catch {}
+          try { ctx.player.currentTime(0); } catch {}
         });
+
+        return;
+      }
+
+      // Comportamento normale (trailer del carosello)
+      ctx.mostraVideo = false;
+      ctx.fermaAvvioPendete();
+
+      ctx.sfumaGuadagnoVerso(0, ctx.durataFadeAudioMs).finally(() => {
+        try { ctx.player.pause(); } catch {}
+        try { ctx.player.currentTime(0); } catch {}
+        ctx.vaiAvantiDaFineTrailer();
       });
-    } catch {}
-  }
+    });
+  } catch {}
+}
 
   /**
  * Inizializza il player video quando il riferimento DOM e' disponibile e non e' gia' stato inizializzato.
