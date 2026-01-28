@@ -119,25 +119,29 @@ export class CaroselloOverlayUtility {
     const attesaPreload =
       CaroselloDatiUtility.precaricaImmagine(nuovaImgTitolo); // Avvio il preload dell'immagine titolo e ne uso la promise come attesa
 
-    Promise.all([attesaFineFade, attesaPausaNero, attesaPreload]).then(() => {
-      // Attendo che fade, pausa e preload siano tutti completati
-      if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
+   Promise.all([attesaFineFade, attesaPausaNero, attesaPreload]).then(() => {
+  // Attendo che fade, pausa e preload siano tutti completati
+  if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
 
-      ctx.titoloOverlay = nuovoTitolo; // Applico il nuovo titolo all'overlay
-      ctx.imgTitoloOverlay = nuovaImgTitolo; // Applico la nuova immagine titolo all'overlay
-      ctx.sottotitoloOverlay = nuovoSottotitolo; // Applico il nuovo sottotitolo all'overlay
+  ctx.titoloOverlay = nuovoTitolo; // Applico il nuovo titolo all'overlay
+  ctx.imgTitoloOverlay = nuovaImgTitolo; // Applico la nuova immagine titolo all'overlay
+  ctx.sottotitoloOverlay = nuovoSottotitolo; // Applico il nuovo sottotitolo all'overlay
 
-      requestAnimationFrame(() => {
-        // Aspetto un frame per applicare la riaccensione della visibilita' in modo pulito
-        if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
-        ctx.inBlackoutTitoli = false; // Esco dal blackout ora che il contenuto e' pronto
+  // FIX: se il preload e' finito, considero il titolo pronto anche se il (load) non scatta
+  // (succede quando lo src resta identico, tipico passando velocemente tra locandine con dati "fittizi")
+  ctx.titoloPronto = true;
 
-        if (ctx.titoloPronto) {
-          // Se l'immagine titolo e' gia' pronta (o non esiste), posso mostrare i testi
-          ctx.titoloVisibile = true; // Rendo di nuovo visibile il titolo
-          ctx.sottotitoloVisibile = true; // Rendo di nuovo visibile il sottotitolo
-        }
-      });
-    });
+  requestAnimationFrame(() => {
+    // Aspetto un frame per applicare la riaccensione della visibilita' in modo pulito
+    if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
+    ctx.inBlackoutTitoli = false; // Esco dal blackout ora che il contenuto e' pronto
+
+    if (ctx.titoloPronto) {
+      // Ora posso mostrare i testi anche se il load non e' ripartito
+      ctx.titoloVisibile = true; // Rendo di nuovo visibile il titolo
+      ctx.sottotitoloVisibile = true; // Rendo di nuovo visibile il sottotitolo
+    }
+  });
+});
   }
 }

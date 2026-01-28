@@ -58,7 +58,9 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
   titoloOverlay = ''; // Tengo il titolo attualmente mostrato nell'overlay
   imgTitoloOverlay = ''; // Tengo l'immagine titolo attualmente mostrata nell'overlay
   sottotitoloOverlay = ''; // Tengo il sottotitolo attualmente mostrato nell'overlay
-
+   titoloHoverFisso = 'cavalli contro circuiti';
+ imgTitoloHoverFisso = 'https://www.sciencecodex.net/assets/titoli_en/titolo_en_cavalli_contro_circuiti.webp';
+ sottotitoloHoverFisso = 'sottotitolo di prova';
   titoloVisibile = true; // Decido se il titolo è visibile (stato iniziale: sì)
   sottotitoloVisibile = true; // Decido se il sottotitolo è visibile (stato iniziale: sì)
   durataFadeTitoliMs = 200; // Imposto la durata del fade dei titoli
@@ -143,7 +145,6 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
   ngOnInit(): void {
     this.caricaDati(); // Avvio il caricamento dati iniziali
 
-
      this.subs.add(
   this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer }) => {
  const eraAttivo = this.mostraImmagineHover;
@@ -184,6 +185,15 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
  img.src = nuovaUrl;
  }
                    this.pausaPerHover = true;
+
+ CaroselloOverlayUtility.impostaOverlay(
+   this,
+   this.titoloHoverFisso,
+   this.imgTitoloHoverFisso,
+   this.sottotitoloHoverFisso,
+   true
+ );
+
 this.fermaAutoscroll();
           this.fermaAvvioPendete();   // blocco avvii trailer pendenti
           this.numeroSequenzaAvvio++; // invalido eventuali avvii in corso
@@ -205,6 +215,9 @@ this.fermaAutoscroll();
           });
          } else {
                      this.pausaPerHover = false;
+
+ this.aggiornaOverlayPerIndiceCorrente(this.indiceCorrente, true);
+
  this.tokenHoverImg += 1;
 
   this.tokenHoverTrailer += 1;
@@ -229,7 +242,6 @@ this.fermaAutoscroll();
          }
        })
      );
-
     this.subs.add(
       // Registro questa subscription per poterla disiscrivere in destroy
       this.cambioLinguaService.cambioLinguaAvviato$.subscribe(() => {
