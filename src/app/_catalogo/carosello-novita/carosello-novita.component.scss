@@ -289,11 +289,15 @@ video-js {
  .overlay-hover {
    position: absolute;
    inset: 0;
-   z-index: 1;
+   z-index: 3;
    pointer-events: none;
-      opacity: 0;
-   transition: opacity var(--durata-fade-visivo, 0.4s) ease;
-   will-change: opacity;
+       opacity: 0;
+ transform: scale(1.11);
+ transition:
+ opacity 0.3s ease,
+ transform 0.3s ease;
+ will-change: opacity, transform;
+ backface-visibility: hidden;
 
    img {
      width: 100%;
@@ -303,5 +307,6 @@ video-js {
    }
       &.visibile {
      opacity: 1;
+     transform: scale(1.02);
    }
  }

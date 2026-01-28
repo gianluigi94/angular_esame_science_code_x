@@ -217,19 +217,23 @@ export class CaroselloVideoUtility {
     }
 
     ctx.player.one('playing', () => {
-      // Aggancio un handler one-shot quando il player entra davvero in playing
-      if (token !== ctx.numeroSequenzaAvvio) return; // Esco se il token non e' piu' valido
-      if (!ctx.alTop || ctx.pausaPerScroll || ctx.pausaPerBlur) return; // Esco se nel frattempo non posso riprodurre
-      ctx.audioConsentito = true; // Considero l'audio 'consentito' da quando la riproduzione e' realmente partita
-      try {
-        // Provo a riprendere l'AudioContext se e' sospeso
-        if (ctx.contestoAudio && ctx.contestoAudio.state === 'suspended') {
-          // Controllo se l'AudioContext e' sospeso
-          ctx.contestoAudio.resume().catch(() => {}); // Provo a fare resume senza bloccare e ignorando errori
-        }
-      } catch {} // Ignoro errori di resume per non bloccare
-      CaroselloAudioUtility.sfumaGuadagnoVerso(ctx, 1, ctx.durataFadeAudioMs); // Faccio fade-in del guadagno verso 1
-    });
+  if (token !== ctx.numeroSequenzaAvvio) return;
+  if (!ctx.alTop || ctx.pausaPerScroll || ctx.pausaPerBlur) return;
+
+  // audioConsentito deve diventare true SOLO se il video sta suonando NON mutato
+  try {
+    const el = CaroselloAudioUtility.ottieniElementoVideoRealePubblico(ctx);
+    if (el && !el.muted) ctx.audioConsentito = true;
+  } catch {}
+
+  try {
+    if (ctx.contestoAudio && ctx.contestoAudio.state === 'suspended') {
+      ctx.contestoAudio.resume().catch(() => {});
+    }
+  } catch {}
+
+  CaroselloAudioUtility.sfumaGuadagnoVerso(ctx, 1, ctx.durataFadeAudioMs);
+});
 
     // tenta play con audio; se non permesso -> fallback mutato + sblocco (come prima) // Elimino il commento vecchio mantenendo la logica sotto
     try {

@@ -17,6 +17,8 @@ export class CaroselloTopUtility {
 
     ctx.pausaPerScroll = true; // Segno che ora sono in pausa per scroll (non devo avviare video)
 
+     if (ctx.pausaPerHover) return;
+ if (ctx.stopDolceInCorso) return;
     ctx.fermaAvvioPendete(); // Annullo eventuali avvii pendenti del trailer
     ctx.numeroSequenzaAvvio++; // Invalido eventuali avvii in corso incrementando la sequenza
 
@@ -52,7 +54,8 @@ export class CaroselloTopUtility {
     ctx.pausaPerScroll = false; // Tolgo lo stato di pausa per scroll (posso tornare a riprodurre video)
 
     ctx.fermaAutoscroll(); // Stoppo e resetto il timer di autoscroll
-
+     if (ctx.pausaPerHover) return;
+ if (ctx.stopDolceInCorso) return;
     try {
       ctx.player.currentTime(0);
     } catch {} // Provo a riportare il trailer all'inizio in modo safe

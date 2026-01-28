@@ -263,7 +263,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
         this.timerSentinella = setTimeout(() => {
           this.timerSentinella = 0;
           this.caricaAltreQuattroRigheDaApi();
-        }, 800);
+        }, 400);
       }
     }, { root: null, threshold: 0.1 });
 

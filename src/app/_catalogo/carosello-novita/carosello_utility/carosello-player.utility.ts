@@ -99,6 +99,16 @@ export class CaroselloPlayerUtility {
     ); // Se c'e' errore, pianifico un controllo/riprova soft
 
     CaroselloPlayerUtility.collegaFineTrailer(ctx); // Collego la gestione di fine trailer
+
+ // Se l'utente era gia' in hover prima che il player fosse pronto, riprovo ora
+ try {
+ if (ctx.mostraImmagineHover && ctx.immagineHoverPronta) {
+  console.log('[HOVER] player pronto: rilancio hover trailer', { player: !!ctx.player });
+ ctx.preparaTrailerHoverDopoImmaginePronta();
+ return;
+ }
+ } catch {}
+
     ctx.provaAvvioInizialeTrailer(); // Provo ad avviare il trailer iniziale se le condizioni sono pronte
   }
 
