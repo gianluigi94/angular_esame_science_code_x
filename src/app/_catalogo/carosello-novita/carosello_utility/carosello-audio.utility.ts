@@ -118,51 +118,65 @@ export class CaroselloAudioUtility {
     if (ctx.handlerSbloccoAudio) return; // Esco se ho gia' un azione
 
     const handler = () => {
-      // Definisco l'handler che prova lo sblocco
-      CaroselloAudioUtility.rimuoviAscoltoSbloccoAudio(ctx); // Rimuovo subito i listener per non ripetere tentativi
+  // Definisco l'handler che prova lo sblocco
+  CaroselloAudioUtility.rimuoviAscoltoSbloccoAudio(ctx); // Rimuovo subito i listener per non ripetere tentativi
 
-      ctx.audioConsentito = true; // Considero l'audio 'consentito' dopo un click valido
+  ctx.audioConsentito = true; // Considero l'audio 'consentito' dopo un click valido
 
-      ctx.mostraVideo = false; // Nascondo il video mentre faccio reset e riavvio con audio
+  // NON spengo subito il video: in hover mi serve mantenerlo visibile
+  const sonoInHover = !!ctx.pausaPerHover;
 
-      try {
-        // Provo a fermare avvii pendenti prima del riavvio
-        ctx.fermaAvvioPendete(); // Annullo eventuali avvii trailer pendenti (e invalido eventuali sequenze vecchie)
-      } catch {}
+  try {
+    // Provo a fermare avvii pendenti prima del riavvio
+    ctx.fermaAvvioPendete(); // Annullo eventuali avvii trailer pendenti (e invalido eventuali sequenze vecchie)
+  } catch {}
 
-      try {
-        // Provo a fare resume del contesto audio se sospeso
-        if (ctx.contestoAudio && ctx.contestoAudio.state === 'suspended') {
-          // Controllo se l'AudioContext e' sospeso
-          ctx.contestoAudio.resume().catch(() => {}); // Provo resume senza bloccare
-        }
-      } catch {} // Ignoro errori
+  try {
+    // Provo a fare resume del contesto audio se sospeso
+    if (ctx.contestoAudio && ctx.contestoAudio.state === 'suspended') {
+      // Controllo se l'AudioContext e' sospeso
+      ctx.contestoAudio.resume().catch(() => {}); // Provo resume senza bloccare
+    }
+  } catch {} // Ignoro errori
 
-      try {
-        // Provo a impostare subito il gain a 0 per ripartire pulito
-        CaroselloAudioUtility.sfumaGuadagnoVerso(ctx, 0, 0); // Porto il guadagno a zero in modo immediato
-      } catch {} // Ignoro errori
+  try {
+    // Provo a impostare subito il gain a 0 per ripartire pulito
+    CaroselloAudioUtility.sfumaGuadagnoVerso(ctx, 0, 0); // Porto il guadagno a zero in modo immediato
+  } catch {} // Ignoro errori
 
-      try {
-        // Provo a fermare e resettare il player prima di riavviare
-        try {
-          ctx.player?.pause?.();
-        } catch {} // Metto in pausa in modo safe
-        try {
-          ctx.player?.currentTime?.(0);
-        } catch {} // Riporto all'inizio in modo safe
-      } catch {} // Ignoro errori
+  try {
+    // Provo a fermare e resettare il player prima di riavviare (REWIND SEMPRE)
+    try { ctx.player?.pause?.(); } catch {}
+    try { ctx.player?.currentTime?.(0); } catch {}
+  } catch {} // Ignoro errori
 
-      try {
-        // Provo a togliere il mute reale prima del riavvio
-        CaroselloAudioUtility.impostaMuteReale(ctx, false); // Tolgo il mute reale
-      } catch {} // Ignoro errori
+  try {
+    // Provo a togliere il mute reale prima del riavvio
+    CaroselloAudioUtility.impostaMuteReale(ctx, false); // Tolgo il mute reale
+  } catch {} // Ignoro errori
 
-      try {
-        // Riavvio il trailer corrente ora che ho un click valido (gesture utente)
-        ctx.avviaTrailerCorrenteDopo(0); // Riavvio subito il trailer corrente con audio (se le condizioni lo consentono)
-      } catch {} // Ignoro errori per non bloccare
-    };
+  if (sonoInHover) {
+       // CASO HOVER: nascondo il player per evitare "nero", e rimetto la cover mentre riavvio
+    try { ctx.mostraVideo = false; } catch {}
+    try { ctx.mostraImmagineHover = true; } catch {}
+    try { ctx.inizioImmagineHoverMs = Date.now(); } catch {}
+
+    try {
+      // riavvio il trailer hover da 0, ora con audio
+      ctx.preparaTrailerHoverDopoImmaginePronta();
+    } catch {}
+
+    return;
+  }
+
+  // CASO NORMALE: comportamento attuale
+  ctx.mostraVideo = false; // Nascondo il video mentre faccio reset e riavvio con audio
+
+  try {
+    // Riavvio il trailer corrente ora che ho un click valido (gesture utente)
+    ctx.avviaTrailerCorrenteDopo(0); // Riavvio subito il trailer corrente con audio (se le condizioni lo consentono)
+  } catch {} // Ignoro errori per non bloccare
+};
 
     ctx.handlerSbloccoAudio = handler; // Salvo il riferimento per poter rimuovere dopo
 

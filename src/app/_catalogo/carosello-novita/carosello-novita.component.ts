@@ -909,60 +909,31 @@ this.fermaAutoscroll();
  this.hoverTrailerInAttesa = false;
 
 
+const hoverValido = this.pausaPerHover && (this.mostraImmagineHover || this.mostraVideo) && this.immagineHoverPronta;
+if (!hoverValido) {
+  console.log('[HOVER] condizioni non valide, stop', { token });
+  return;
+}
 
- if (!this.pausaPerHover || !this.mostraImmagineHover || !this.immagineHoverPronta) {
- console.log('[HOVER] condizioni non valide, stop', { token });
- return;
- }
-
-
- const onCanPlay = () => {
- if (token !== this.tokenHoverTrailer) return;
+const onCanPlay = () => {
+  if (token !== this.tokenHoverTrailer) return;
   console.log('[HOVER] canplay', { token });
- const passati = Date.now() - this.inizioImmagineHoverMs;
- const restante = Math.max(0, this.MIN_MS_IMMAGINE_HOVER - passati);
 
- this.timerMostraTrailerHover = setTimeout(() => {
- if (token !== this.tokenHoverTrailer) return;
- if (!this.mostraImmagineHover || !this.immagineHoverPronta) return;
-console.log('[HOVER] show+play', { token });
-  // 1) mostro e faccio partire il trailer SUBITO (cosi sotto la cover c'e' gia' il video)
- this.mostraVideo = true;
-this.verificaRicollegamentoVideo();
+  // Se la cover e' visibile, rispetto il minimo tempo immagine; se gia' sparita (restart), parto subito.
+  const restante = this.mostraImmagineHover
+    ? Math.max(0, this.MIN_MS_IMMAGINE_HOVER - (Date.now() - this.inizioImmagineHoverMs))
+    : 0;
 
-// IMPORTANTISSIMO: preparo WebAudio e provo a "resumare" il contesto PRIMA del play,
-// altrimenti il video parte ma il gain resta a 0 (se era stato fade-out) e senti sempre silenzio.
-this.inizializzaWebAudioSuVideoReale();
-
-try {
-  if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
-    this.contestoAudio.resume().catch(() => {});
-  }
-} catch {}
-
-try {
-  if (this.nodoGuadagno && this.contestoAudio) {
-    const t0 = this.contestoAudio.currentTime;
-    this.nodoGuadagno.gain.cancelScheduledValues(t0);
-    this.nodoGuadagno.gain.setValueAtTime(0, t0);
-  }
-} catch {}
-
- if (this.audioBloccatoDaUtente) {
-   this.impostaMuteReale(true);
- } else {
-   this.impostaMuteReale(false);
- }
-try { this.player.currentTime(0); } catch {}
-
- const preparaSbloccoHover = () => {
-   if (this.audioBloccatoDaUtente) return;
-  const onClick = () => {
-    window.removeEventListener('click', onClick, true);
+  this.timerMostraTrailerHover = setTimeout(() => {
     if (token !== this.tokenHoverTrailer) return;
-    if (!this.pausaPerHover || !this.mostraVideo) return;
+    if (!this.pausaPerHover) return;
 
-    this.audioConsentito = true;
+    console.log('[HOVER] show+play', { token });
+
+    this.mostraVideo = true;
+    this.verificaRicollegamentoVideo();
+
+    this.inizializzaWebAudioSuVideoReale();
 
     try {
       if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
@@ -970,64 +941,99 @@ try { this.player.currentTime(0); } catch {}
       }
     } catch {}
 
-    this.impostaMuteReale(false);
-    this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
-  };
+    try {
+      if (this.nodoGuadagno && this.contestoAudio) {
+        const t0 = this.contestoAudio.currentTime;
+        this.nodoGuadagno.gain.cancelScheduledValues(t0);
+        this.nodoGuadagno.gain.setValueAtTime(0, t0);
+      }
+    } catch {}
 
-  window.addEventListener('click', onClick, { once: true, passive: true, capture: true });
-};
+    if (this.audioBloccatoDaUtente) this.impostaMuteReale(true);
+    else this.impostaMuteReale(false);
 
-try {
-  const p = this.player.play();
+    try { this.player.currentTime(0); } catch {}
 
-  if (p && typeof p.then === 'function') {
-    p.then(() => {
-      // Se davvero sta suonando non mutato, segno audioConsentito e faccio fade-in
-      try {
-        const el = this.ottieniElementoVideoReale();
-        if (el && !el.muted) this.audioConsentito = true;
-      } catch {}
+    const preparaSbloccoHover = () => {
+      if (this.audioBloccatoDaUtente) return;
 
-       if (!this.audioBloccatoDaUtente) this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
-    }).catch(() => {
-      console.log('[HOVER] play con audio bloccato, fallback mutato', { token });
-            // DOPO: se audio bloccato -> resto mutato e basta, senza sblocco
-       this.impostaMuteReale(true);
-       try { this.player.play(); } catch {}
-       this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
-       if (!this.audioBloccatoDaUtente) preparaSbloccoHover();
-    });
-  } else {
-    // Caso senza Promise: assumo partenza e faccio fade-in
+      const onClick = () => {
+        window.removeEventListener('click', onClick, true);
+        if (token !== this.tokenHoverTrailer) return;
+        if (!this.pausaPerHover) return;
+
+        // IMPORTANTISSIMO: stesso comportamento "giusto" del carosello -> rewind + restart con audio
+        this.audioConsentito = true;
+          // FIX: evito "nero" durante il restart -> nascondo player e mostro cover
+  try { this.mostraVideo = false; } catch {}
+  try { this.mostraImmagineHover = true; } catch {}
+  try { this.inizioImmagineHoverMs = Date.now(); } catch {}
+        try {
+          if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+            this.contestoAudio.resume().catch(() => {});
+          }
+        } catch {}
+
+        try { this.sfumaGuadagnoVerso(0, 0); } catch {}
+        try { this.player.pause(); } catch {}
+        try { this.player.currentTime(0); } catch {}
+        try { this.impostaMuteReale(false); } catch {}
+
+        // riavvio hover trailer (da 0) con audio
+        this.preparaTrailerHoverDopoImmaginePronta();
+      };
+
+      window.addEventListener('click', onClick, { once: true, passive: true, capture: true });
+    };
+
+    try {
+      const p = this.player.play();
+
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          try {
+            const el = this.ottieniElementoVideoReale();
+            if (el && !el.muted) this.audioConsentito = true;
+          } catch {}
+
+          if (!this.audioBloccatoDaUtente) this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
+        }).catch(() => {
+          console.log('[HOVER] play con audio bloccato, fallback mutato', { token });
+          this.impostaMuteReale(true);
+          try { this.player.play(); } catch {}
+          this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
+          preparaSbloccoHover();
+        });
+      } else {
         if (!this.audioBloccatoDaUtente) {
-       this.audioConsentito = true;
-       this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
-     } else {
-       this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
-     }
-  }
-} catch {
-  console.log('[HOVER] eccezione play, fallback mutato', { token });
-  this.impostaMuteReale(true);
-  try { this.player.play(); } catch {}
-  this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
+          this.audioConsentito = true;
+          this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
+        } else {
+          this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
+        }
+      }
+    } catch {
+      console.log('[HOVER] eccezione play, fallback mutato', { token });
+      this.impostaMuteReale(true);
+      try { this.player.play(); } catch {}
+      this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
+      preparaSbloccoHover();
+    }
 
-  if (!this.audioBloccatoDaUtente) preparaSbloccoHover();
-}
+    // Nascondo la cover solo se e' effettivamente visibile (altrimenti e' un restart)
+    if (this.mostraImmagineHover) {
+      requestAnimationFrame(() => {
+        if (token !== this.tokenHoverTrailer) return;
 
- // 2) avvio il fade-out della cover nel frame successivo (evita di intravedere il carosello)
-requestAnimationFrame(() => {
-if (token !== this.tokenHoverTrailer) return;
-
-
-setTimeout(() => {
-if (token !== this.tokenHoverTrailer) return;
-this.mostraImmagineHover = false;
-console.log('[HOVER] hide cover', { token });
-}, 200);
-});
-}, restante);
- };
+        setTimeout(() => {
+          if (token !== this.tokenHoverTrailer) return;
+          this.mostraImmagineHover = false;
+          console.log('[HOVER] hide cover', { token });
+        }, 200);
+      });
+    }
+  }, restante);
+};
 
  const avviaNuovoSrc = () => {
  if (token !== this.tokenHoverTrailer) return;
