@@ -33,7 +33,30 @@
 
     <div class="doppio_audio">
       <app-bottone-audio></app-bottone-audio>
-      <!-- qui sopra puoi aggiungere il tuo "elemento aggiuntivo" quando serve -->
+      <button
+          class="bottone-audio-provisorio"
+          title="Riattiva audio"
+          [style.display]=" 'inline-flex' "
+
+        >
+          <div class="contenitore-icona" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              class="icona"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M3 10v4h4l5 5V5l-5 5H3z"></path>
+              <path
+                d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"
+              ></path>
+              <path
+                d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-1 7-4.71 7-8.77s-2.99-7.77-7-8.77z"
+              ></path>
+            </svg>
+            <div class="sbarra" aria-hidden="true"></div>
+          </div>
+        </button>
     </div>
 
     <app-bottone-preferiti [titolo]="loc.titolo || loc.src"></app-bottone-preferiti>
