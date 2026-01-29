@@ -113,6 +113,8 @@ header {
     margin-right: 20px;
 
     .contenitore-ricerca {
+      pointer-events: auto;
+
       display: flex;
       align-items: center;
       gap: 1px;
@@ -311,6 +313,7 @@ header {
 
 .doppio_audio {
   position: relative;
+      pointer-events: auto;
 
   .bottone-audio-provisorio {
     position: absolute;

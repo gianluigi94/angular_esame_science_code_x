@@ -19,7 +19,7 @@ import { CaroselloPlayerUtility } from './carosello_utility/carosello-player.uti
 import { CaroselloScrollStateUtility } from './carosello_utility/carosello-scroll-state.utility';
 import { CaroselloCopertureUtility } from './carosello_utility/carosello-coperture.utility';
 import { HoverLocandinaService } from '../app-riga-categoria/categoria_services/hover-locandina.service';
-
+import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 @Component({
   selector: 'app-carosello-novita',
   templateUrl: './carosello-novita.component.html',
@@ -28,6 +28,7 @@ import { HoverLocandinaService } from '../app-riga-categoria/categoria_services/
 export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   pausaPerHover = false;
+  audioBloccatoDaUtente = false;
      mostraImmagineHover = false;
    immagineHoverFissa = 'assets/carosello_locandine/carosello_abbraccia_il_vento.webp';
    chiaveHoverImg = 0;
@@ -132,12 +133,13 @@ sottotitoloVisibile = true;
   private idCambioLinguaVideo = 0; // Uso un token incrementale per distinguere i cambi lingua video
   private promessaStopCambioLingua: Promise<void> | null = null; // Mi salvo la promise dello stop/fade legata al cambio lingua
 
-  constructor(
+   constructor(
     private caroselloNovitaService: CaroselloNovitaService,
     private cambioLinguaService: CambioLinguaService,
     private translate: TranslateService,
     private caricamentoCaroselloService: CaricamentoCaroselloService,
-    private servizioHoverLocandina: HoverLocandinaService
+    private servizioHoverLocandina: HoverLocandinaService,
+    private audioGlobaleService: AudioGlobaleService
   ) {}
 
 /**
@@ -151,7 +153,19 @@ sottotitoloVisibile = true;
  */
   ngOnInit(): void {
     this.caricaDati(); // Avvio il caricamento dati iniziali
+    this.subs.add(
+      this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
+        // Se l'utente ha scelto "senza audio", blocco TUTTO lo sblocco via click
+        this.audioBloccatoDaUtente = !consentito;
 
+        if (this.audioBloccatoDaUtente) {
+          this.audioConsentito = false;
+          try { this.rimuoviAscoltoSbloccoAudio(); } catch {}
+          try { this.impostaMuteReale(true); } catch {}
+          try { this.sfumaGuadagnoVerso(0, 0); } catch {}
+        }
+      })
+    );
      this.subs.add(
  this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer, descrizione, titolo, sottotitolo }) => {
  const eraAttivo = this.mostraImmagineHover;
@@ -912,10 +926,15 @@ try {
   }
 } catch {}
 
-this.impostaMuteReale(false); // PROVO SEMPRE con audio durante hover
+ if (this.audioBloccatoDaUtente) {
+   this.impostaMuteReale(true);
+ } else {
+   this.impostaMuteReale(false);
+ }
 try { this.player.currentTime(0); } catch {}
 
-const preparaSbloccoHover = () => {
+ const preparaSbloccoHover = () => {
+   if (this.audioBloccatoDaUtente) return;
   const onClick = () => {
     window.removeEventListener('click', onClick, true);
     if (token !== this.tokenHoverTrailer) return;
@@ -947,20 +966,23 @@ try {
         if (el && !el.muted) this.audioConsentito = true;
       } catch {}
 
-      this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
+       if (!this.audioBloccatoDaUtente) this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
     }).catch(() => {
       console.log('[HOVER] play con audio bloccato, fallback mutato', { token });
-      this.impostaMuteReale(true);
-      try { this.player.play(); } catch {}
-      this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
-
-      // Se l'audio e' bloccato, parto mutato e preparo lo sblocco con click (SENZA restart)
-      preparaSbloccoHover();
+            // DOPO: se audio bloccato -> resto mutato e basta, senza sblocco
+       this.impostaMuteReale(true);
+       try { this.player.play(); } catch {}
+       this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
+       if (!this.audioBloccatoDaUtente) preparaSbloccoHover();
     });
   } else {
     // Caso senza Promise: assumo partenza e faccio fade-in
-    this.audioConsentito = true;
-    this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
+        if (!this.audioBloccatoDaUtente) {
+       this.audioConsentito = true;
+       this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
+     } else {
+       this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
+     }
   }
 } catch {
   console.log('[HOVER] eccezione play, fallback mutato', { token });
@@ -968,7 +990,7 @@ try {
   try { this.player.play(); } catch {}
   this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
 
-  preparaSbloccoHover();
+  if (!this.audioBloccatoDaUtente) preparaSbloccoHover();
 }
 
  // 2) avvio il fade-out della cover nel frame successivo (evita di intravedere il carosello)

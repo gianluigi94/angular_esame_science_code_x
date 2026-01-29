@@ -114,6 +114,7 @@ export class CaroselloAudioUtility {
  * @returns void
  */
   static preparaSbloccoAudioSuInterazione(ctx: any): void {
+    if (ctx.audioBloccatoDaUtente) return;
     if (ctx.handlerSbloccoAudio) return; // Esco se ho gia' un azione
 
     const handler = () => {

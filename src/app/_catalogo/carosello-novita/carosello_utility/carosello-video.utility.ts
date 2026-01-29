@@ -235,21 +235,22 @@ export class CaroselloVideoUtility {
   CaroselloAudioUtility.sfumaGuadagnoVerso(ctx, 1, ctx.durataFadeAudioMs);
 });
 
-    // tenta play con audio; se non permesso -> fallback mutato + sblocco (come prima) // Elimino il commento vecchio mantenendo la logica sotto
-    try {
-      // Provo a partire con audio non mutato
-      CaroselloAudioUtility.impostaMuteReale(ctx, false); // Tolgo il mute reale prima del play
-      const p = ctx.player.play(); // Avvio la riproduzione e intercetto l'eventuale Promise
-      if (p && typeof p.then === 'function') {
-        // Se play() ritorna una Promise, posso gestire il fallimento
-        p.catch(() => {
-          // Se l'autoplay con audio e' bloccato
-          CaroselloAudioUtility.avviaMutatoConOpzioneSblocco(ctx, true); // Ripiego su avvio mutato con opzione sblocco audio
-        });
+    // DOPO: se l'utente ha scelto "senza audio" -> sempre muted, nessun click di sblocco
+    if (ctx.audioBloccatoDaUtente) {
+      CaroselloAudioUtility.avviaMutatoConOpzioneSblocco(ctx, false);
+    } else {
+      // comportamento normale: provo audio, se fallisce -> mutato  click sblocco
+      try {
+        CaroselloAudioUtility.impostaMuteReale(ctx, false);
+        const p = ctx.player.play();
+        if (p && typeof p.then === 'function') {
+          p.catch(() => {
+            CaroselloAudioUtility.avviaMutatoConOpzioneSblocco(ctx, true);
+          });
+        }
+      } catch {
+        CaroselloAudioUtility.avviaMutatoConOpzioneSblocco(ctx, true);
       }
-    } catch {
-      // Se play() o mute lanciano eccezione
-      CaroselloAudioUtility.avviaMutatoConOpzioneSblocco(ctx, true); // Ripiego su avvio mutato con opzione sblocco audio
     }
 
     if (!okCanPlay) ctx.pianificaControlloStallo(token); // Se canplay non e' arrivato entro timeout, pianifico un controllo stallo
