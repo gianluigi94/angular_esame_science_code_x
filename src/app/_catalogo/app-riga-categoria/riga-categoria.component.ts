@@ -144,12 +144,14 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
 
     this.timerEntrata = setTimeout(() => {
   const slug = this.slugDaLocandina(src);
-  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
+const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
 
-  const lang = this.cambioLingua.leggiCodiceLingua(); // 'it' | 'en'
-  const urlTrailer = this.urlTrailerHover(lang, slug);
+const lang = this.cambioLingua.leggiCodiceLingua(); // 'it' | 'en'
+const urlTrailer = this.urlTrailerHover(lang, slug);
 
-  this.servizioHoverLocandina.emettiEntrata(urlSfondo, urlTrailer);
+const descrizione = `film.${slug}`;
+
+this.servizioHoverLocandina.emettiEntrata(urlSfondo, urlTrailer, descrizione);
 }, this.ritardoHoverMs);
   }
 

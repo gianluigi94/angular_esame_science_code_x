@@ -203,9 +203,21 @@
     }
 
     static urlSfondoDaDescrizione(descrizione: string): string {
-    const d = String(descrizione || '').trim();
-    const slug = d.replace(/^film\./i, '').replace(/^serie\./i, '');
-    return `assets/carosello_locandine/carosello_${slug}.webp`;
-  }
+  const slug = (descrizione || '')
+    .trim()
+    .replace(/^film\./i,'')
+    .replace(/^serie\./i,'');
+  return `assets/carosello_locandine/carosello_${slug}.webp`;
+}
+
+static urlTitoloDaDescrizione(descrizione: string, lingua: string): string {
+  const slug = (descrizione || '')
+    .trim()
+    .replace(/^film\./i,'')
+    .replace(/^serie\./i,'');
+
+  const lang = (lingua || 'it').toLowerCase().startsWith('en') ? 'en' : 'it';
+  return `assets/titoli_${lang}/titolo_${lang}_${slug}.webp`;
+}
 
   }

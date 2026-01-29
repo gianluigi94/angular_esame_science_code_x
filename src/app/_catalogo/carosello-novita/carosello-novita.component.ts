@@ -55,14 +55,21 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
   sottotitoli: string[] = []; // Memorizzo i sottotitoli per ogni slide
   indiciSfondiCritici: number[] = []; // Tengo la lista degli indici sfondo 'critici' che devono essere pronti subito
 
-  titoloOverlay = ''; // Tengo il titolo attualmente mostrato nell'overlay
-  imgTitoloOverlay = ''; // Tengo l'immagine titolo attualmente mostrata nell'overlay
-  sottotitoloOverlay = ''; // Tengo il sottotitolo attualmente mostrato nell'overlay
-   titoloHoverFisso = 'cavalli contro circuiti';
- imgTitoloHoverFisso = 'https://www.sciencecodex.net/assets/titoli_en/titolo_en_cavalli_contro_circuiti.webp';
- sottotitoloHoverFisso = 'sottotitolo di prova';
-  titoloVisibile = true; // Decido se il titolo è visibile (stato iniziale: sì)
-  sottotitoloVisibile = true; // Decido se il sottotitolo è visibile (stato iniziale: sì)
+titoloOverlay = ''; // Tengo il titolo attualmente mostrato nell'overlay
+imgTitoloOverlay = ''; // Tengo l'immagine titolo attualmente mostrata nell'overlay
+sottotitoloOverlay = ''; // Tengo il sottotitolo attualmente mostrato nell'overlay
+titoloHoverFisso = 'cavalli contro circuiti';
+imgTitoloHoverFisso = 'https://www.sciencecodex.net/assets/titoli_en/titolo_en_cavalli_contro_circuiti.webp';
+sottotitoloHoverFisso = 'sottotitolo di prova';
+
+descrizioneHoverFissa = ''; // es: "film.cavalli_contro_circuiti"
+
+linguaCorrenteTitoli(): string {
+  try { return this.translate.currentLang || 'it'; } catch { return 'it'; }
+}
+
+titoloVisibile = true;
+sottotitoloVisibile = true;
   durataFadeTitoliMs = 200; // Imposto la durata del fade dei titoli
   pausaNeroTitoliMs = 50; // Imposto la pausa di 'nero' tra fade out e nuovo contenuto
 
@@ -146,7 +153,7 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
     this.caricaDati(); // Avvio il caricamento dati iniziali
 
      this.subs.add(
-  this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer }) => {
+  this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer, descrizione }) => {
  const eraAttivo = this.mostraImmagineHover;
  this.mostraImmagineHover = attivo;
 
@@ -184,15 +191,26 @@ export class CaroselloNovitaComponent implements OnInit, OnDestroy, AfterViewIni
  };
  img.src = nuovaUrl;
  }
-                   this.pausaPerHover = true;
+     this.pausaPerHover = true;
 
- CaroselloOverlayUtility.impostaOverlay(
-   this,
-   this.titoloHoverFisso,
-   this.imgTitoloHoverFisso,
-   this.sottotitoloHoverFisso,
-   true
- );
+// ricostruisco l'immagine titolo in base a lingua + descrizione hover
+// (serve che HoverLocandinaService mi passi anche 'descrizione')
+if (descrizione) this.descrizioneHoverFissa = descrizione;
+
+if (this.descrizioneHoverFissa) {
+  this.imgTitoloHoverFisso = CaroselloDatiUtility.urlTitoloDaDescrizione(
+    this.descrizioneHoverFissa,
+    this.linguaCorrenteTitoli()
+  );
+}
+
+CaroselloOverlayUtility.impostaOverlay(
+  this,
+  this.titoloHoverFisso,
+  this.imgTitoloHoverFisso,
+  this.sottotitoloHoverFisso,
+  true
+);
 
 this.fermaAutoscroll();
           this.fermaAvvioPendete();   // blocco avvii trailer pendenti
