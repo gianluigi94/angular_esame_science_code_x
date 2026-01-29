@@ -155,9 +155,10 @@ sottotitoloVisibile = true;
     this.caricaDati(); // Avvio il caricamento dati iniziali
   this.subs.add(
   this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
+    const eraBloccatoDaUtente = !!this.audioBloccatoDaUtente;
     // Se l'utente ha scelto "senza audio", blocco TUTTO lo sblocco via click
     this.audioBloccatoDaUtente = !consentito;
-
+    const audioAppenaRiattivato = eraBloccatoDaUtente && !this.audioBloccatoDaUtente;
     if (this.audioBloccatoDaUtente) {
       this.audioConsentito = false;
       try { this.rimuoviAscoltoSbloccoAudio(); } catch {}
@@ -173,19 +174,63 @@ sottotitoloVisibile = true;
       return; // stop qui: non fare altro in questa emissione
     }
 
-    // audio riattivato: il click sul bottone e' una gesture valida
-    try { this.inizializzaWebAudioSuVideoReale(); } catch {}
-    try {
-      if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
-        this.contestoAudio.resume().catch(() => {});
+   // audio riattivato: il click sul bottone e' una gesture valida
+try { this.inizializzaWebAudioSuVideoReale(); } catch {}
+try {
+  if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+    this.contestoAudio.resume().catch(() => {});
+  }
+} catch {}
+
+// Se l'utente ha appena attivato l'audio col pulsante: RIAVVIO "click-style" PRIMA di togliere il mute
+if (audioAppenaRiattivato) {
+  const sonoInHover = !!this.pausaPerHover;
+  let trailerInCorso = false;
+  try {
+    trailerInCorso = !!this.player && typeof this.player.paused === 'function' && !this.player.paused();
+  } catch {}
+
+  if (sonoInHover || trailerInCorso) {
+    // sicurezza: zero immediato per evitare qualunque "blip" audio
+    try { this.sfumaGuadagnoVerso(0, 0); } catch {}
+
+    try { this.fermaAvvioPendete(); } catch {}
+
+    if (sonoInHover) {
+      // CASO 2/3: hover trailer -> mostro cover, nascondo player (evito nero) e riavvio con audio
+      try { this.mostraVideo = false; } catch {}
+      try { this.mostraImmagineHover = true; } catch {}
+      try { this.inizioImmagineHoverMs = Date.now(); } catch {}
+    } else {
+      // CASO 1: trailer default -> nessuna cover, solo restart pulito
+      try { this.mostraVideo = false; } catch {}
+    }
+
+    this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
+      try { this.player?.pause?.(); } catch {}
+      try { this.player?.currentTime?.(0); } catch {}
+
+      // ORA tolgo il mute e segno audio consentito, subito prima di ripartire
+      try { this.impostaMuteReale(false); } catch {}
+      this.audioConsentito = true;
+
+      if (sonoInHover) {
+        try { this.preparaTrailerHoverDopoImmaginePronta(); } catch {}
+      } else {
+        try { this.avviaTrailerCorrenteDopo(0); } catch {}
       }
-    } catch {}
+    });
 
-    try { this.impostaMuteReale(false); } catch {}
-    this.audioConsentito = true;
+    return; // importantissimo: niente fade-in qui, lo fa la ripartenza
+  }
+}
 
-    // se in questo momento c'e' un trailer in play, rientro graduale
-    this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
+// Caso normale: non devo riavviare nulla, posso togliere il mute subito
+try { this.impostaMuteReale(false); } catch {}
+this.audioConsentito = true;
+
+// se in questo momento c'e' un trailer in play, rientro graduale
+this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
   })
 );
      this.subs.add(
