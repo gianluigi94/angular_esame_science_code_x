@@ -153,19 +153,41 @@ sottotitoloVisibile = true;
  */
   ngOnInit(): void {
     this.caricaDati(); // Avvio il caricamento dati iniziali
-    this.subs.add(
-      this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
-        // Se l'utente ha scelto "senza audio", blocco TUTTO lo sblocco via click
-        this.audioBloccatoDaUtente = !consentito;
+  this.subs.add(
+  this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
+    // Se l'utente ha scelto "senza audio", blocco TUTTO lo sblocco via click
+    this.audioBloccatoDaUtente = !consentito;
 
-        if (this.audioBloccatoDaUtente) {
-          this.audioConsentito = false;
-          try { this.rimuoviAscoltoSbloccoAudio(); } catch {}
-          try { this.impostaMuteReale(true); } catch {}
-          try { this.sfumaGuadagnoVerso(0, 0); } catch {}
-        }
-      })
-    );
+    if (this.audioBloccatoDaUtente) {
+      this.audioConsentito = false;
+      try { this.rimuoviAscoltoSbloccoAudio(); } catch {}
+
+      // mi assicuro che WebAudio sia agganciato cosi' il fade esiste davvero
+      try { this.inizializzaWebAudioSuVideoReale(); } catch {}
+
+      // IMPORTANTISSIMO: prima fade-out, poi mute (muted=true taglia di colpo)
+      this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
+        try { this.impostaMuteReale(true); } catch {}
+      });
+
+      return; // stop qui: non fare altro in questa emissione
+    }
+
+    // audio riattivato: il click sul bottone e' una gesture valida
+    try { this.inizializzaWebAudioSuVideoReale(); } catch {}
+    try {
+      if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+        this.contestoAudio.resume().catch(() => {});
+      }
+    } catch {}
+
+    try { this.impostaMuteReale(false); } catch {}
+    this.audioConsentito = true;
+
+    // se in questo momento c'e' un trailer in play, rientro graduale
+    this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
+  })
+);
      this.subs.add(
  this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer, descrizione, titolo, sottotitolo }) => {
  const eraAttivo = this.mostraImmagineHover;
