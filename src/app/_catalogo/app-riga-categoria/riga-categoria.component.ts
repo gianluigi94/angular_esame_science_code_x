@@ -9,7 +9,7 @@ import { TipoContenutoService } from './categoria_services/tipo-contenuto.servic
   styleUrls: ['./riga-categoria.component.scss'],
 })
 export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
-  @Input() locandine: string[] = [];
+ @Input() locandine: { src: string; titolo: string; sottotitolo: string }[] = [];
   @Input() categoria = '';
   @Input() tickResetPagine = 0;
 
@@ -138,12 +138,13 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  onMouseEnterLocandina(src: string): void {
+  onMouseEnterLocandina(loc: { src: string; titolo: string; sottotitolo: string }): void {
     if (this.timerUscita) clearTimeout(this.timerUscita);
     if (this.timerEntrata) clearTimeout(this.timerEntrata);
 
     this.timerEntrata = setTimeout(() => {
-  const slug = this.slugDaLocandina(src);
+  console.log('SOTTOTITOLO HOVER:', String(loc?.sottotitolo || ''));
+  const slug = this.slugDaLocandina(loc.src);
 const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
 
 const lang = this.cambioLingua.leggiCodiceLingua(); // 'it' | 'en'
@@ -151,7 +152,13 @@ const urlTrailer = this.urlTrailerHover(lang, slug);
 
 const descrizione = `film.${slug}`;
 
-this.servizioHoverLocandina.emettiEntrata(urlSfondo, urlTrailer, descrizione);
+ this.servizioHoverLocandina.emettiEntrata(
+   urlSfondo,
+   urlTrailer,
+   descrizione,
+   String(loc?.titolo || ''),
+   String(loc?.sottotitolo || ''),
+ );
 }, this.ritardoHoverMs);
   }
 
@@ -167,8 +174,8 @@ this.servizioHoverLocandina.emettiEntrata(urlSfondo, urlTrailer, descrizione);
     }, this.ritardoUscitaHoverMs);
   }
 
-  tracciaLocandina(indice: number, src: string): string {
- const base = String(src || '');
+  tracciaLocandina(indice: number, loc: { src: string }): string {
+ const base = String(loc?.src || '');
  if (this.mostraSpinner && this.motivoCopertura === 'tipo') {
  return this.cicloTrackBy + '|' + indice + '|' + base;
  }

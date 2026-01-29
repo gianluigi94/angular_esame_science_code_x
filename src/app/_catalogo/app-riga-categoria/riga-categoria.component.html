@@ -9,15 +9,15 @@
      <div
    class="locandina"
    #elementoLocandina
-   *ngFor="let src of locandine; let i = index; trackBy: tracciaLocandina"
-   (mouseenter)="onMouseEnterLocandina(src)"
+      *ngFor="let loc of locandine; let i = index; trackBy: tracciaLocandina"
+   (mouseenter)="onMouseEnterLocandina(loc)"
    (mouseleave)="onMouseLeaveLocandina()"
  >
       <span class="numero">{{ (indicePagina * locandineVisibili) + i + 1 }}</span>
 
       <div class="sparisci">
-         <img
- [src]="src"
+                <img
+ [src]="loc.src"
  alt="locandina"
  (load)="immagineStabilizzata()"
  (error)="immagineStabilizzata()"
@@ -36,7 +36,7 @@
       <!-- qui sopra puoi aggiungere il tuo "elemento aggiuntivo" quando serve -->
     </div>
 
-    <app-bottone-preferiti [titolo]="src"></app-bottone-preferiti>
+    <app-bottone-preferiti [titolo]="loc.titolo || loc.src"></app-bottone-preferiti>
 
 
     </div>

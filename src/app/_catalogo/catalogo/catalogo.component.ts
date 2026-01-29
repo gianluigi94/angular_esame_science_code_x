@@ -43,19 +43,14 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cinqueElementi = Array(5).fill(0);
 
-  locandinaDemo = 'assets/locandine_it/locandina_it_abbraccia_il_vento.webp';
-  locandineDemo: string[] = [
-    this.locandinaDemo,
-    this.locandinaDemo,
-    this.locandinaDemo,
-    this.locandinaDemo,
-    this.locandinaDemo,
-    this.locandinaDemo,
-    this.locandinaDemo,
-    this.locandinaDemo,
-  ];
+   locandinaDemo = 'assets/locandine_it/locandina_it_abbraccia_il_vento.webp';
+  locandineDemo: { src: string; titolo: string; sottotitolo: string }[] = Array(8).fill(0).map(() => ({
+    src: this.locandinaDemo,
+    titolo: '',
+    sottotitolo: '',
+  }));
 
-  righeDemo: { idCategoria: string; category: string; posters: string[] }[] = [];
+  righeDemo: { idCategoria: string; category: string; locandine: { src: string; titolo: string; sottotitolo: string }[] }[] = [];
   tipoSelezionato: TipoContenuto = 'film_serie';
 
   @ViewChild('sentinella', { read: ElementRef })
@@ -159,23 +154,23 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     return senzaExt;
   }
 
-  mescolaDeterministicaPosters(lista: string[], seed: string): string[] {
+  mescolaDeterministicaLocandine(lista: { src: string }[], seed: string): { src: string }[] {
     const s = String(seed || '');
     const out = (lista || []).slice();
     out.sort((a, b) => {
-      const sa = this.slugDaPoster(String(a || ''));
-      const sb = this.slugDaPoster(String(b || ''));
+            const sa = this.slugDaPoster(String(a?.src || ''));
+      const sb = this.slugDaPoster(String(b?.src || ''));
       const ka = this.calcolaHash32(s + '|' + sa);
       const kb = this.calcolaHash32(s + '|' + sb);
       return ka - kb;
     });
     return out;
   }
-  precaricaImmaginiRighe(righe: { posters: string[] }[]): Promise<void> {
+  precaricaImmaginiRighe(righe: { locandine: { src: string }[] }[]): Promise<void> {
     const urls: string[] = [];
     for (const r of righe || []) {
-      for (const u of r.posters || []) {
-        const s = String(u || '');
+            for (const u of r.locandine || []) {
+        const s = String(u?.src || '');
         if (s) urls.push(s);
       }
     }
@@ -307,18 +302,21 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
  .map((x: any) => {
  const idCategoria = String(x?.idCategoria || '');
 
- let posters = (Array.isArray(x?.locandine) ? x.locandine : [])
- .map((p: any) => String(p?.src || ''))
- .filter((u: string) => !!u);
-
- if (this.tipoSelezionato === 'film_serie' && posters.length) {
- posters = this.mescolaDeterministicaPosters(posters, idCategoria);
+  let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
+ .map((p: any) => ({
+   src: String(p?.src || ''),
+   titolo: String(p?.titolo || ''),
+   sottotitolo: String(p?.sottotitolo || ''),
+ }))
+ .filter((p: any) => !!p.src);
+  if (this.tipoSelezionato === 'film_serie' && locandine.length) {
+   locandine = this.mescolaDeterministicaLocandine(locandine as any, idCategoria) as any;
  }
 
  return {
  idCategoria,
  category: String(x?.category || ''),
- posters: posters.length ? posters : this.locandineDemo,
+ locandine: locandine.length ? (locandine as any) : this.locandineDemo,
  };
  })
  .filter((r: any) => !!r.idCategoria);
@@ -378,22 +376,26 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe((ris: any) => {
         const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
 
-               const nuoveRighe = items
+                    const nuoveRighe = items
           .map((x: any) => {
             const idCategoria = String(x?.idCategoria || '');
 
-            let posters = (Array.isArray(x?.locandine) ? x.locandine : [])
-              .map((p: any) => String(p?.src || ''))
-              .filter((u: string) => !!u);
+            let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
+              .map((p: any) => ({
+                src: String(p?.src || ''),
+                titolo: String(p?.titolo || ''),
+                sottotitolo: String(p?.sottotitolo || ''),
+              }))
+              .filter((p: any) => !!p.src);
 
-            if (this.tipoSelezionato === 'film_serie' && posters.length) {
-              posters = this.mescolaDeterministicaPosters(posters, idCategoria);
+            if (this.tipoSelezionato === 'film_serie' && locandine.length) {
+              locandine = this.mescolaDeterministicaLocandine(locandine as any, idCategoria) as any;
             }
 
             return {
               idCategoria,
               category: String(x?.category || ''),
-              posters: posters.length ? posters : this.locandineDemo,
+              locandine: locandine.length ? (locandine as any) : this.locandineDemo,
             };
           })
           .filter((r: any) => !!r.idCategoria);
@@ -507,22 +509,26 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
           .subscribe({
             next: (ris: any) => {
               const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
-                            const nuoveRighe = items
+                                     const nuoveRighe = items
                 .map((x: any) => {
                   const idCategoriaRiga = String(x?.idCategoria || '');
 
-                  let posters = (Array.isArray(x?.locandine) ? x.locandine : [])
-                    .map((p: any) => String(p?.src || ''))
-                    .filter((u: string) => !!u);
+                  let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
+                    .map((p: any) => ({
+                      src: String(p?.src || ''),
+                      titolo: String(p?.titolo || ''),
+                      sottotitolo: String(p?.sottotitolo || ''),
+                    }))
+                    .filter((p: any) => !!p.src);
 
-                  if (this.tipoSelezionato === 'film_serie' && posters.length) {
-                    posters = this.mescolaDeterministicaPosters(posters, idCategoriaRiga);
+                  if (this.tipoSelezionato === 'film_serie' && locandine.length) {
+                    locandine = this.mescolaDeterministicaLocandine(locandine as any, idCategoriaRiga) as any;
                   }
 
                   return {
                     idCategoria: idCategoriaRiga,
                     category: String(x?.category || ''),
-                    posters: posters.length ? posters : this.locandineDemo,
+                    locandine: locandine.length ? (locandine as any) : this.locandineDemo,
                   };
                 })
                 .filter((x: any) => !!x.idCategoria);

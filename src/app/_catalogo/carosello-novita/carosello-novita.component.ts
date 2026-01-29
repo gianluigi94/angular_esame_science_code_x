@@ -153,7 +153,7 @@ sottotitoloVisibile = true;
     this.caricaDati(); // Avvio il caricamento dati iniziali
 
      this.subs.add(
-  this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer, descrizione }) => {
+ this.servizioHoverLocandina.osserva().subscribe(({ attivo, urlSfondo, urlTrailer, descrizione, titolo, sottotitolo }) => {
  const eraAttivo = this.mostraImmagineHover;
  this.mostraImmagineHover = attivo;
 
@@ -197,6 +197,8 @@ sottotitoloVisibile = true;
 // (serve che HoverLocandinaService mi passi anche 'descrizione')
 if (descrizione) this.descrizioneHoverFissa = descrizione;
 
+ this.titoloHoverFisso = String(titolo || this.titoloHoverFisso || '');
+ this.sottotitoloHoverFisso = String(sottotitolo || '');
 if (this.descrizioneHoverFissa) {
   this.imgTitoloHoverFisso = CaroselloDatiUtility.urlTitoloDaDescrizione(
     this.descrizioneHoverFissa,
