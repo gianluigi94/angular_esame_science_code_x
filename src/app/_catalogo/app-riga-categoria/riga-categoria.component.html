@@ -16,12 +16,16 @@
       <span class="numero">{{ (indicePagina * locandineVisibili) + i + 1 }}</span>
 
       <div class="sparisci">
-                <img
- [src]="loc.src"
- alt="locandina"
- (load)="immagineStabilizzata()"
- (error)="immagineStabilizzata()"
- />
+        <img
+  [src]="loc.src"
+  [attr.alt]="('ui.locandinaimg.alt' | translate) + ' ' + (loc.titolo || loc.src)"
+  [attr.title]="titoloPulitoPerTooltip(('ui.carosello.slide_tooltip.title' | translate)) + ': ' + '&quot;' + (loc.titolo || loc.src) + '&quot;'"
+
+
+  (load)="immagineStabilizzata()"
+  (error)="immagineStabilizzata()"
+/>
+
         <span class="carica_img" [class.visibile]="mostraSpinner">
           <div class="spinner_spinner">
             <span class="ring1"></span>
@@ -35,7 +39,8 @@
       <app-bottone-audio></app-bottone-audio>
       <button
           class="bottone-audio-provisorio"
-          title="Riattiva audio"
+           [attr.aria-label]="'ui.tooltips.audio.unmute.title' | translate"
+  [attr.title]=" 'ui.tooltips.audio.unmute.title'  | translate"
           [style.display]="solo_brawser_blocca ? 'inline-flex' : 'none'"
 
         >

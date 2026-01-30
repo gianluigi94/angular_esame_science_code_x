@@ -3,8 +3,9 @@
 <button
   class="bottone-audio"
   (click)="alClic()"
-  aria-label="ddd"
-  [attr.aria-pressed]="!attivo"
+   [attr.aria-label]="(attivo ? 'ui.tooltips.audio.mute.title' : 'ui.tooltips.audio.unmute.title') | translate"
+  [attr.aria-pressed]="attivo"
+  [attr.title]="(attivo ? 'ui.tooltips.audio.mute.title' : 'ui.tooltips.audio.unmute.title') | translate"
 >
   <div class="contenitore-icona" aria-hidden="true">
     <!-- svg dell'audio -->

@@ -13,7 +13,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
  @Input() locandine: { src: string; titolo: string; sottotitolo: string }[] = [];
   @Input() categoria = '';
   @Input() tickResetPagine = 0;
-
+  @Input() titolo = '';
    @ViewChildren('elementoLocandina', { read: ElementRef })
  elementiLocandina!: QueryList<ElementRef>;
   locandineVisibili = 5;
@@ -333,4 +333,12 @@ fineCoperturaDopoMinimo(id: number): void {
   const prefix = l === 'it' ? 'trailer_ita_' : 'trailer_en_';
   return `https://d2kd3i5q9rl184.cloudfront.net/${folder}/${prefix}${slug}.mp4`;
 }
+
+titoloPulitoPerTooltip(testoTradotto: string): string {
+  return String(testoTradotto || '')
+    .replace('{{titolo}}', '')
+    .replace(/"/g, '')
+    .trim();
+}
+
 }

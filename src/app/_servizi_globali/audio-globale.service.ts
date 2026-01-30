@@ -26,6 +26,8 @@ export class AudioGlobaleService {
   }
   private sorgenteSoloBlocca = new BehaviorSubject<boolean>(false);
   soloBlocca$ = this.sorgenteSoloBlocca.asObservable();
+    handlerNascondiSoloBlocca: any = null;
+  soloBloccaListenerAttivo = false;
    leggiDaStorage(): boolean {
      try {
       const v = localStorage.getItem(this.chiaveStorage);
@@ -52,8 +54,39 @@ export class AudioGlobaleService {
     this.imposta(!this.statoCorrente);
   }
 
+    agganciaNascondiSoloBloccaAlPrimoClick(): void {
+    if (this.soloBloccaListenerAttivo) return;
+    this.soloBloccaListenerAttivo = true;
+
+    this.handlerNascondiSoloBlocca = () => {
+      this.setSoloBrowserBlocca(false);
+    };
+
+    // micro-delay per evitare che il click che ha "causato" la comparsa lo spenga subito
+    setTimeout(() => {
+      if (!this.solo_brawser_blocca) {
+        this.staccaNascondiSoloBlocca();
+        return;
+      }
+      document.addEventListener('click', this.handlerNascondiSoloBlocca, true);
+      document.addEventListener('touchstart', this.handlerNascondiSoloBlocca, true);
+    }, 0);
+  }
+
+  staccaNascondiSoloBlocca(): void {
+    if (!this.soloBloccaListenerAttivo) return;
+    this.soloBloccaListenerAttivo = false;
+    try { document.removeEventListener('click', this.handlerNascondiSoloBlocca, true); } catch {}
+    try { document.removeEventListener('touchstart', this.handlerNascondiSoloBlocca, true); } catch {}
+    this.handlerNascondiSoloBlocca = null;
+  }
+
+
     setSoloBrowserBlocca(v: boolean): void {
     this.solo_brawser_blocca = v;
     this.sorgenteSoloBlocca.next(v);
+
+        if (v) this.agganciaNascondiSoloBloccaAlPrimoClick();
+    else this.staccaNascondiSoloBlocca()
   }
 }

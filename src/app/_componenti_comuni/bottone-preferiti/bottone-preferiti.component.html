@@ -2,8 +2,8 @@
   type="button"
   (click)="togglePreferito()"
   aria-hidden="false"
-   [attr.aria-label]="(('TOOLTIPS.FAVORITES.' + (preferito ? 'REMOVE' : 'ADD')) | translate) + ' – ' + titolo"
-  [attr.title]="(('TOOLTIPS.FAVORITES.' + (preferito ? 'REMOVE' : 'ADD')) | translate) + ' : ' + titolo"
+   [attr.aria-label]="((preferito ? 'ui.tooltips.favorites.remove.title' : 'ui.tooltips.favorites.add.title') | translate) + ' - ' + titolo"
+ [attr.title]="((preferito ? 'ui.tooltips.favorites.remove.title' : 'ui.tooltips.favorites.add.title') | translate) + ' : ' + titolo"
   [attr.aria-pressed]="preferito"
   [class.preferito]="preferito">
 
