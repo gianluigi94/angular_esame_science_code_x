@@ -113,12 +113,17 @@ export class CaroselloPlayerUtility {
       ctx.pianificaControlloStallo(ctx.numeroSequenzaAvvio)
     ); // Se c'e' errore, pianifico un controllo/riprova soft
 
+    // Ogni volta che il video parte davvero (anche hover), intercetto il tipo di blocco audio
+    ctx.player.on('playing', () => {
+      try {
+        ctx.intercetta_tipo_blocco_audio?.();
+      } catch {}
+    });
     CaroselloPlayerUtility.collegaFineTrailer(ctx); // Collego la gestione di fine trailer
 
  // Se l'utente era gia' in hover prima che il player fosse pronto, riprovo ora
  try {
  if (ctx.mostraImmagineHover && ctx.immagineHoverPronta) {
-  console.log('[HOVER] player pronto: rilancio hover trailer', { player: !!ctx.player });
  ctx.preparaTrailerHoverDopoImmaginePronta();
  return;
  }

@@ -22,10 +22,7 @@ export class AudioGlobaleService {
         this.sorgenteStato.next(nuovo);
       }
     });
-   const sbloccaDopoPrimoGesto = () => this.setSoloBrowserBlocca(false);
-   window.addEventListener('pointerdown', sbloccaDopoPrimoGesto, { once: true });
-   window.addEventListener('keydown',      sbloccaDopoPrimoGesto, { once: true });
-   window.addEventListener('touchstart',   sbloccaDopoPrimoGesto, { once: true });
+
   }
   private sorgenteSoloBlocca = new BehaviorSubject<boolean>(false);
   soloBlocca$ = this.sorgenteSoloBlocca.asObservable();

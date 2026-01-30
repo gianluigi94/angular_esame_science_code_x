@@ -3,6 +3,7 @@ import { HoverLocandinaService } from './categoria_services/hover-locandina.serv
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { Subscription } from 'rxjs';
 import { TipoContenutoService } from './categoria_services/tipo-contenuto.service';
+import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 @Component({
   selector: 'app-riga-categoria',
   templateUrl: './riga-categoria.component.html',
@@ -20,7 +21,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   numeroMassimoPagine = 0;
   trasformazioneWrapper = '';
   mostraSpinner = false;
-
+  solo_brawser_blocca = false;
   sottoscrizioni = new Subscription();
   idCiclo = 0;
   cicloTrackBy = 0;
@@ -43,6 +44,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   constructor(
     public servizioHoverLocandina: HoverLocandinaService,
     public cambioLingua: CambioLinguaService,
+    private audioGlobaleService: AudioGlobaleService,
      public tipoContenuto: TipoContenutoService,
  public riferitore: ChangeDetectorRef,
   ) {}
@@ -105,6 +107,14 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
  this.fineCoperturaDopoMinimo(id);
  }),
  );
+
+
+  this.sottoscrizioni.add(
+    this.audioGlobaleService.soloBlocca$.subscribe((v) => {
+      this.solo_brawser_blocca = !!v;
+      try { this.riferitore.detectChanges(); } catch {}
+    }),
+  );
   }
 
   ngOnDestroy(): void {
@@ -143,7 +153,6 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     if (this.timerEntrata) clearTimeout(this.timerEntrata);
 
     this.timerEntrata = setTimeout(() => {
-  console.log('SOTTOTITOLO HOVER:', String(loc?.sottotitolo || ''));
   const slug = this.slugDaLocandina(loc.src);
 const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
 

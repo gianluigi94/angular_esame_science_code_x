@@ -14,7 +14,7 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { TipoContenuto, TipoContenutoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/tipo-contenuto.service';
 import { Location } from '@angular/common';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
-
+import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
@@ -27,7 +27,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   menuTipoAperto = false; // mi segno se il menu tipo contenuto è aperto
   linguaInCambio: boolean = false; // mi segno se sto eseguendo un cambio lingua (per bloccare interazioni e mostrare spinner)
 
-  solo_brawser_blocca = true; // capisco se è solo l'audio bloccato dall brawser e non dall'utente
+  solo_brawser_blocca = false; // capisco se è solo l'audio bloccato dall brawser e non dall'utente
   disabilitaLingua = false; // mi imposto se devo disabilitare il cambio lingua in UI
 
   spinnerScroll$!: Observable<boolean>;
@@ -60,7 +60,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private tipoContenuto: TipoContenutoService,
     private statoSessione: StatoSessioneClientService,
     private erroreGlobale: ErroreGlobaleService,
-    public scorrimentoCatalogo: ScorrimentoCatalogoService
+    public scorrimentoCatalogo: ScorrimentoCatalogoService,
+    private audioGlobaleService: AudioGlobaleService
   ) {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
     this.cambioLinguaService = cambioLinguaService; // mi salvo il servizio di cambio lingua nella proprieta' del componente
@@ -112,10 +113,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
         if (this.authVisuale?.tk) this.caricaCategorieMenu();
       });
+
   }
 
   ngOnInit(): void {
     if (this.authVisuale?.tk) this.caricaCategorieMenu();
+        this.audioGlobaleService.soloBlocca$
+      .pipe(takeUntil(this.distruggi$))
+      .subscribe((v) => {
+        this.solo_brawser_blocca = !!v;
+      });
   }
 
   /**
@@ -203,15 +210,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Gestisce il clic che sblocca temporaneamente un blocco imposto dal browser.
-   *
-   * @returns void
-   */
-  clickSbloccoProvvisorio(): void {
-    if (this.logoutInCorso) return;
-    this.solo_brawser_blocca = false;
-  }
+
 
   /**
    * Gestisce il comando di scollegamento dell'utente.
