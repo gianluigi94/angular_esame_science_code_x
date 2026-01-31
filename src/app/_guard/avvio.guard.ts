@@ -57,7 +57,7 @@ export class AvvioGuard implements CanActivate { //(forse deprecato, ma funziona
       return true; // per tutte le altre pagine permetto la navigazione
     } else {
       // entro qui se non sono autenticato
-      if (url.startsWith('/catalogo')) {
+      if (url.startsWith('/catalogo') || url.startsWith('/catalog')) {
         // se provo ad andare nel catalogo senza login
         return this.router.parseUrl('/benvenuto'); // mi rimando alla pagina di benvenuto
       }

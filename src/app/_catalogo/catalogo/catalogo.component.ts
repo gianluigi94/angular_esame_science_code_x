@@ -75,7 +75,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
-    this.forzaRottaCatalogoDaTipo();
+    this.forzaRottaCatalogoDaLinguaETipo();
     this.caricaPrimeRigheDaApi(0, false);
      this.sottoscrizioni.add(
  this.scorrimentoCatalogo.richieste$.subscribe((idCategoria: string) => {
@@ -84,6 +84,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
  );
     this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+        this.forzaRottaCatalogoDaLinguaETipo(false);
         this.caricaPrimeRigheDaApi(0, false);
       })
     );
@@ -95,7 +96,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
           this.tipoSelezionato = tipo;
           this.tickResetPagine += 1;
           this.avviaCambioTipoConAttese();
-          this.forzaRottaCatalogoDaTipo();
+          this.forzaRottaCatalogoDaLinguaETipo(true);
         })
     );
   }
@@ -114,20 +115,40 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     return riga.idCategoria;
   }
 
-  forzaRottaCatalogoDaTipo(): void {
-    const url = this.router.url || '';
-    const base = url.split('?')[0].split('#')[0];
-    const eCatalogoNudo = base === '/catalogo' || base === '/catalogo/';
-    if (!eCatalogoNudo) return;
-
-    const target = this.pathCatalogoDaTipo(this.tipoSelezionato);
-    if (target !== base) this.location.go(target);
+    baseCatalogoDaLingua(): string {
+    const codice = this.cambioLingua.leggiCodiceLingua();
+    return codice === 'it' ? '/catalogo' : '/catalog';
   }
 
-  pathCatalogoDaTipo(val: TipoContenuto): string {
-    if (val === 'film') return '/catalogo/film';
-    if (val === 'serie') return '/catalogo/serie';
-    return '/catalogo/film-serie';
+  sottoPathDaTipo(val: TipoContenuto): string {
+    if (val === 'film') return '/film';
+    if (val === 'serie') return '/serie';
+    return '/film-serie';
+  }
+
+  forzaRottaCatalogoDaLinguaETipo(preservaBaseDaUrl: boolean = false): void {
+    const full = this.location.path(true) || '';
+    const soloPath = full.split('?')[0].split('#')[0];
+    const tail = full.substring(soloPath.length); // include ?query e/o #hash
+
+    const matchBase = soloPath.match(/^\/(catalogo|catalog)(\/.*)?$/);
+    if (!matchBase) return;
+
+       const baseCorrenteDaUrl = matchBase[1] === 'catalogo' ? '/catalogo' : '/catalog';
+   const nuovaBase = preservaBaseDaUrl ? baseCorrenteDaUrl : this.baseCatalogoDaLingua();
+    const resto = soloPath.replace(/^\/(catalogo|catalog)/, ''); // '' oppure '/...'
+
+    const eRootCatalogo = resto === '' || resto === '/';
+    const eVistaPrincipale = /^\/(film|serie|film-serie)\/?$/.test(resto);
+
+    const nuovoResto = (eRootCatalogo || eVistaPrincipale)
+      ? this.sottoPathDaTipo(this.tipoSelezionato)
+      : resto;
+
+    const targetPath = (nuovaBase + nuovoResto).replace(/\/+$/,'');
+    const currentPath = soloPath.replace(/\/+$/,'');
+
+    if (targetPath !== currentPath) this.location.go(targetPath + tail);
   }
   calcolaHash32(testo: string): number {
     let h = 2166136261;

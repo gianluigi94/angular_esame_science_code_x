@@ -337,10 +337,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.tipoContenuto.impostaTipo(val);
     this.location.go(this.pathCatalogoDaTipo(val));
   }
-
+ baseCatalogoDaUrl(): string {
+   const full = this.location.path(true) || '';
+   const soloPath = full.split('?')[0].split('#')[0];
+   const matchBase = soloPath.match(/^\/(catalogo|catalog)(\/|$)/);
+   if (matchBase?.[1] === 'catalog') return '/catalog';
+   if (matchBase?.[1] === 'catalogo') return '/catalogo';
+   // fallback (se per qualche motivo non sono nel catalogo)
+   return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? '/catalogo' : '/catalog';
+ }
   pathCatalogoDaTipo(val: TipoContenuto): string {
-    if (val === 'film') return '/catalogo/film';
-    if (val === 'serie') return '/catalogo/serie';
-    return '/catalogo/film-serie';
+      const base = this.baseCatalogoDaUrl(); // preserva catalog vs catalogo dall'URL corrente
+  if (val === 'film') return base + '/film';
+  if (val === 'serie') return base + '/serie';
+  return base + '/film-serie';
   }
 }

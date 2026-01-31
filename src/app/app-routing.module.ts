@@ -26,6 +26,14 @@ const routes: Routes = [
     loadChildren: () =>
       import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule), //scarico in lazy catalogo
   },
+
+
+  {
+    path: 'catalog',
+    canActivate: [AvvioGuard],
+    loadChildren: () =>
+      import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
+  },
   {
     path: '**',
     redirectTo: 'benvenuto', //per ora no pagina errore

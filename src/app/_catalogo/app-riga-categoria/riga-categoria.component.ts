@@ -90,8 +90,9 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
         if (!this.mostraSpinner) this.avviaCopertura('lingua');
-         this.attendoAggiornamentoLocandine = false;
- this.avviaAttesaImmaginiLingua(this.idCiclo);
+            if (this.attendoAggiornamentoLocandine) return;
+    // se invece sono gia' arrivate (ordine eventi diverso), posso partire subito
+    this.avviaAttesaImmaginiLingua(this.idCiclo);
       }),
     );
 

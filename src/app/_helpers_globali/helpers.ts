@@ -52,18 +52,24 @@ export function pulisciUrl(url: string): string { // funzione che mi pulisce un 
  */
  export function isCatalogoHome(url: string): boolean {
    const path = pulisciUrl(url || '');
-   return (
-     path === '/catalogo' ||
-     path === '/catalogo/' ||
-     path === '/catalogo/film' ||
-     path === '/catalogo/serie' ||
-     path === '/catalogo/film-serie'
-   );
+    return (
+    path === '/catalogo' ||
+    path === '/catalogo/' ||
+    path === '/catalogo/film' ||
+    path === '/catalogo/serie' ||
+    path === '/catalogo/film-serie' ||
+    path === '/catalog' ||
+    path === '/catalog/' ||
+    path === '/catalog/film' ||
+    path === '/catalog/serie' ||
+    path === '/catalog/film-serie'
+  );
  }
 
 
 export function isAreaCatalogo(url: string): boolean { // funzione che mi dice se l'url sta dentro l'area catalogo (qualsiasi sotto-rotta)
-  return pulisciUrl(url).startsWith('/catalogo'); // controllo se l'url pulito inizia con '/catalogo'
+    const path = pulisciUrl(url || '');
+  return path.startsWith('/catalogo') || path.startsWith('/catalog');
 }
 
 export function impostaLangHtml(documento: Document, codice: string): void { // funzione che mi imposta l'attributo lang del tag <html>

@@ -137,8 +137,8 @@ export class AppComponent implements OnInit {
         // Qui aggiorno le regole del loader e del carosello ad ogni navigazione, poi gestisco un toast di 'bentornato' e mi metto in ascolto degli errori fatali
         const disabilitaLoader = // Calcolo se devo disabilitare il loader in base alla rotta corrente e a quella precedente
           url.startsWith('/benvenuto/login') || // Disabilito il loader se sono nella pagina di login
-          (url.startsWith('/catalogo') && // Disabilito il loader anche se entro nel catalogo
-            precedente.startsWith('/benvenuto/login')); // ...ma solo se arrivo al catalogo partendo dal login
+            ((url.startsWith('/catalogo') || url.startsWith('/catalog')) &&
+    precedente.startsWith('/benvenuto/login'));
 
         this.caricamentoDisabilitato = disabilitaLoader; // Salvo nello stato interno se il loader è disabilitato
         this.caricamentoDisabilitato$.next(disabilitaLoader); // Notifico nello stream che il loader è (o non è) disabilitato

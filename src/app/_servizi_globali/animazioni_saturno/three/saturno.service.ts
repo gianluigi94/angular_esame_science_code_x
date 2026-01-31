@@ -384,12 +384,12 @@ public initializeSaturn(usaAnimazioniWelcome: boolean = true): Promise<void> {
 
 if (this.scenaInizializzata && this.scene && this.camera && this.renderer) {
 
-    const url = this.router.url;
+   const url = this.leggiUrlAttuale();
 
 
 
 
-if (url.startsWith('/catalogo') && this.catalogoGiaAnimato) {
+if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato) {
   this.animateService.fadeOutSaturnoESfondo(0);
   this.animateService.enablePageScroll();
   this.spegniSaturno();
@@ -437,7 +437,7 @@ if (url.startsWith('/catalogo') && this.catalogoGiaAnimato) {
     this.animateService.setTitoloCentraleGlobal();
     this.animateService.setXGif();
 
-  } else if (url.startsWith('/catalogo')) {
+  } else if (this.eRottaCatalogo(url)) {
 
   const anticipoMs = 400;
 
@@ -620,8 +620,7 @@ const isWelcomeRoute =
   (url === '/benvenuto' || url.startsWith('/benvenuto/')) &&
   !isLoginRoute;
 
-const isCatalogRoute =
-  usaAnimazioniWelcome && url.startsWith('/catalogo');
+const isCatalogRoute = usaAnimazioniWelcome && this.eRottaCatalogo(url);
 
 const ricaricaCatalogo = usaAnimazioniWelcome && this.isReloadCatalogo();
 
@@ -1097,12 +1096,17 @@ public flashErrorLight(): void {
       const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
       const path = (window.location.pathname || '').split('?')[0].split('#')[0];
 
-     const eCatalogoHome =
+          const eCatalogoHome =
        path === '/catalogo' ||
        path === '/catalogo/' ||
        path === '/catalogo/film' ||
        path === '/catalogo/serie' ||
-       path === '/catalogo/film-serie';
+       path === '/catalogo/film-serie' ||
+       path === '/catalog' ||
+       path === '/catalog/' ||
+       path === '/catalog/film' ||
+       path === '/catalog/serie' ||
+       path === '/catalog/film-serie';
 
      return (tipo === 'reload' && eCatalogoHome);
     } catch {
@@ -1110,5 +1114,20 @@ public flashErrorLight(): void {
     }
   }
 
+  private leggiUrlAttuale(): string {
+    const p = String(window.location.pathname || '');
+    const q = String(window.location.search || '');
+    const h = String(window.location.hash || '');
+    return p + q + h;
+  }
 
+  private eRottaCatalogo(url: string): boolean {
+    const u = String(url || '');
+    return u.startsWith('/catalogo') || u.startsWith('/catalog');
+  }
+
+  private eRottaWelcome(url: string): boolean {
+    const u = String(url || '');
+    return u === '/benvenuto' || u.startsWith('/benvenuto/');
+  }
 }
