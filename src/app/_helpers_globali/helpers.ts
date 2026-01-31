@@ -60,9 +60,9 @@ export function pulisciUrl(url: string): string { // funzione che mi pulisce un 
     path === '/catalogo/film-serie' ||
     path === '/catalog' ||
     path === '/catalog/' ||
-    path === '/catalog/film' ||
-    path === '/catalog/serie' ||
-    path === '/catalog/film-serie'
+    path === '/catalog/movies' ||
+    path === '/catalog/series' ||
+    path === '/catalog/movies-series'
   );
  }
 

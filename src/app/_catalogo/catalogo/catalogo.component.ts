@@ -121,9 +121,11 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   sottoPathDaTipo(val: TipoContenuto): string {
-    if (val === 'film') return '/film';
-    if (val === 'serie') return '/serie';
-    return '/film-serie';
+      const codice = this.cambioLingua.leggiCodiceLingua();
+  const en = codice === 'en';
+  if (val === 'film') return en ? '/movies' : '/film';
+  if (val === 'serie') return en ? '/series' : '/serie';
+  return en ? '/movies-series' : '/film-serie';
   }
 
   forzaRottaCatalogoDaLinguaETipo(preservaBaseDaUrl: boolean = false): void {
@@ -139,7 +141,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     const resto = soloPath.replace(/^\/(catalogo|catalog)/, ''); // '' oppure '/...'
 
     const eRootCatalogo = resto === '' || resto === '/';
-    const eVistaPrincipale = /^\/(film|serie|film-serie)\/?$/.test(resto);
+    const eVistaPrincipale = /^\/(film|serie|film-serie|movies|series|movies-series)\/?$/.test(resto);
 
     const nuovoResto = (eRootCatalogo || eVistaPrincipale)
       ? this.sottoPathDaTipo(this.tipoSelezionato)

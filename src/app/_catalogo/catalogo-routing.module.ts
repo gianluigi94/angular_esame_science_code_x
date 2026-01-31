@@ -23,11 +23,22 @@ const routes: Routes = [
     path: 'serie',
     component: CatalogoComponent,
   },
-
     {
     path: 'film-serie',
     component: CatalogoComponent,
    },
+     {
+    path: 'movies',
+    component: CatalogoComponent,
+  },
+  {
+    path: 'series',
+    component: CatalogoComponent,
+  },
+  {
+    path: 'movies-series',
+    component: CatalogoComponent,
+  },
 ];
 
 @NgModule({

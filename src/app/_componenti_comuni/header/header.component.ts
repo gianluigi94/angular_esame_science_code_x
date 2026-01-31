@@ -348,8 +348,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
  }
   pathCatalogoDaTipo(val: TipoContenuto): string {
       const base = this.baseCatalogoDaUrl(); // preserva catalog vs catalogo dall'URL corrente
-  if (val === 'film') return base + '/film';
-  if (val === 'serie') return base + '/serie';
-  return base + '/film-serie';
+    const en = base === '/catalog';
+  if (val === 'film') return base + (en ? '/movies' : '/film');
+  if (val === 'serie') return base + (en ? '/series' : '/serie');
+  return base + (en ? '/movies-series' : '/film-serie');
   }
 }
