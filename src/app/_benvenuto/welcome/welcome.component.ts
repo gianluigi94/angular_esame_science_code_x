@@ -40,7 +40,12 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       .subscribe((evento: any) => {
         // reagisco a ogni navigazione completata
         const url = evento.urlAfterRedirects || evento.url; // prendo l'url finale dopo eventuali reindirizzamenti
-        const isLogin = url.endsWith('/login'); // capisco se sono sulla pagina login controllando la fine dell'url
+                const path = (url || '').split('?')[0].split('#')[0];
+        const isLogin =
+          path === '/benvenuto/login' ||
+          path === '/benvenuto/login/' ||
+          path === '/benvenuto/accedi' ||
+          path === '/benvenuto/accedi/';
 
         this.usaAnimazioniIngresso = !isLogin; // disattivo le animazioni di ingresso quando sono sul login
         this.usaAnimazioniScroll = !isLogin; // disattivo le animazioni di scroll quando sono sul login

@@ -32,7 +32,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
   private distruggi$ = new Subject<void>(); //  segnale che uso per chiudere le sottoscrizioni quando distruggo il componente
 
   saltaAnimazioneUscita: boolean = false; // flag per decidere se saltare l'animazione di uscita, ad esempio dopo un login riuscito
-
+  saltaAnimazioniIngresso: boolean = false;
   constructor(
     private fb: FormBuilder,
     private authService: Authservice,
@@ -44,6 +44,9 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     private translate: TranslateService,
     private loginUscitaService: LoginUscitaService
   ) {
+        this.saltaAnimazioniIngresso =
+      !!this.router.getCurrentNavigation()?.extras?.state?.['saltaAnimazioniLogin'];
+
     this.reactiveForm = this.fb.group({
       // costruisco il reactive form raggruppando i controlli e le loro regole di validazione
       utente: [
@@ -83,6 +86,11 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
  * @returns void
  */
   ngAfterViewInit(): void {
+        if (this.saltaAnimazioniIngresso) {
+      UtilityService.nascondiSottotitoloEScrol();
+      return;
+    }
+
     // entro qui quando il template e i componenti sono disponibili nel DOM
     if (this.loginContenuto?.nativeElement) {
       // controllo di avere davvero l'elemento del pannello login

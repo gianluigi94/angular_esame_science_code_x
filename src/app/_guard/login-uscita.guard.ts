@@ -45,6 +45,12 @@ export class LoginUscitaGuard implements CanDeactivate<LoginComponent> { //(fors
     _currentState: any, // ricevo lo stato attuale
     nextState?: any // ricevo lo stato di destinazione per capire dove sto andando
   ): boolean | Promise<boolean> { // dichiaro che posso restituire subito un booleano oppure una promessa
+        const saltaAnimazioniPerCambioLingua =
+      !!this.router.getCurrentNavigation()?.extras?.state?.['saltaAnimazioniLogin'];
+
+    if (saltaAnimazioniPerCambioLingua) {
+      return true;
+    }
 
     if (component.saltaAnimazioneUscita) { // se il componente mi dice di saltare l'animazione di uscita
       return true; // permetto l'uscita immediata senza fare altro

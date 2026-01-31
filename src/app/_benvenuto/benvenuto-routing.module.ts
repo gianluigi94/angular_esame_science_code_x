@@ -18,6 +18,11 @@ const routes: Routes = [
     component: LoginComponent,
     canDeactivate: [LoginUscitaGuard],
   },
+    {
+    path: 'accedi',
+    component: LoginComponent,
+    canDeactivate: [LoginUscitaGuard],
+  },
 ];
 
 @NgModule({

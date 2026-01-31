@@ -98,8 +98,7 @@ export class TitoloPaginaService {
     if (path === '/benvenuto' || path === '/benvenuto/') {
       // Controllo se sono nella pagina benvenuto
       titolo = codice === 'it' ? `Benvenuto - ${base}` : `Welcome - ${base}`;
-    } else if (path === '/benvenuto/login') {
-      // Controllo se sono nella pagina login
+        } else if (path === '/benvenuto/login' || path === '/benvenuto/accedi') {
       titolo = codice === 'it' ? `Accedi - ${base}` : `Sign in - ${base}`;
      } else if (path === '/catalogo' || path === '/catalogo/') {
       titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;

@@ -6,6 +6,7 @@ import { CaroselloNovitaService } from 'src/app/_catalogo/carosello-novita/caros
 import { NovitaInfo } from 'src/app/_interfacce/Inovita-info.interface';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
+import { Router } from '@angular/router';
 @Injectable({ providedIn: 'root' }) // Rendo questo servizio disponibile in tutta l'app
 export class CambioLinguaService {
   linguaUtente = 'inglese'; // Salvo la lingua scelta dall'utente in formato testuale, inglese default
@@ -22,6 +23,7 @@ export class CambioLinguaService {
     private traduzioniService: TraduzioniService,
     private injector: Injector,
     private authService: Authservice,
+    private router: Router,
     private toastService: ToastService
   ) {
     this.impostaLinguaIniziale(); // Imposto subito la lingua e icona iniziali leggendo localStorage o lingua del browser
@@ -66,6 +68,7 @@ export class CambioLinguaService {
     this.iconaLingua$.next(this.iconaLingua); // Notifico subito la nuova icona
 
     const codice = this.leggiCodiceLingua(); // Calcolo il codice lingua 'it' o 'en'
+    this.sincLoginPathConLingua(codice);
     this.toastService.chiudiTutti(); // Chiudo tutti i toast per non lasciarli in una lingua sbagliata
     this.cambioLinguaAvviato$.next(codice); // Notifico che ho iniziato il cambio lingua con quel codice
 
@@ -215,5 +218,25 @@ export class CambioLinguaService {
  */
   private prendiCaroselloNovitaService(): CaroselloNovitaService | null {
     return this.injector.get(CaroselloNovitaService, null); // Chiedo all'injector il servizio e ritorno null se non è disponibile
+  }
+
+    private sincLoginPathConLingua(codice: string): void {
+    const full = this.router.url || '';
+    const path = full.split('?')[0].split('#')[0];
+
+    const sonoNelLogin =
+      path === '/benvenuto/login' ||
+      path === '/benvenuto/login/' ||
+      path === '/benvenuto/accedi' ||
+      path === '/benvenuto/accedi/';
+
+    if (!sonoNelLogin) return;
+
+    const target = codice === 'it' ? '/benvenuto/accedi' : '/benvenuto/login';
+
+    this.router.navigateByUrl(target, {
+      replaceUrl: true,
+      state: { saltaAnimazioniLogin: true },
+    });
   }
 }

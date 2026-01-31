@@ -416,7 +416,7 @@ if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato) {
   const durata = 0.85;
   const durataCatalogo = 1.6;
 
-  if (url.startsWith('/benvenuto/login')) {
+  if (this.eRottaLogin(url)) {
     // 🔹 titolo: da centrato → alto-sinistra + X arancione
     this.animateService.animateTitoloVersoAltoGlobal();
     this.animateService.setXNormale();
@@ -571,7 +571,7 @@ if (!usaAnimazioniWelcome) {
   lightIntensity = 2.8;
 
   const url = this.router.url;
-  if (url.startsWith('/benvenuto/login')) {
+  if (this.eRottaLogin(url)) {
   lightZ = 0.1001;     // LOGIN_LATERALE
 } else if (url === '/benvenuto' || url.startsWith('/benvenuto/')) {
   lightZ = 10.1001;    // WELCOME_ALTO
@@ -613,7 +613,7 @@ this.planetMesh = planetMesh;
 this.saturnoPosizioniService.applicaPoseAScena(scene, 'WELCOME_ALTO');
 
 const url = this.router.url;
-const isLoginRoute = url.startsWith('/benvenuto/login');
+const isLoginRoute = this.eRottaLogin(url);
 
 const isWelcomeRoute =
   usaAnimazioniWelcome &&
@@ -625,7 +625,7 @@ const isCatalogRoute = usaAnimazioniWelcome && this.eRottaCatalogo(url);
 const ricaricaCatalogo = usaAnimazioniWelcome && this.isReloadCatalogo();
 
 
-if (url.startsWith('/benvenuto/login')) {
+if (this.eRottaLogin(url)) {
   const durata = 0.9;
 
   // 🔹 titolo: da centrato → alto-sinistra + X arancione
@@ -1129,5 +1129,15 @@ public flashErrorLight(): void {
   private eRottaWelcome(url: string): boolean {
     const u = String(url || '');
     return u === '/benvenuto' || u.startsWith('/benvenuto/');
+  }
+
+    private eRottaLogin(url: string): boolean {
+    const path = String(url || '').split('?')[0].split('#')[0];
+    return (
+      path === '/benvenuto/login' ||
+      path === '/benvenuto/login/' ||
+      path === '/benvenuto/accedi' ||
+      path === '/benvenuto/accedi/'
+    );
   }
 }
