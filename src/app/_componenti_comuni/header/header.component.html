@@ -291,7 +291,7 @@
           ' ' +
           ('ui.accesso.titolo.2' | translate)
         "
-        [routerLink]="isIt ? '/benvenuto/accedi' : '/benvenuto/login'"
+        [routerLink]="isIt ? '/benvenuto/accedi' : '/welcome/login'"
         [class.preparazione]="!headerPronto"
         [class.nascosto]="paginaLogin"
         [attr.aria-disabled]="paginaLogin || !headerPronto ? 'true' : null"

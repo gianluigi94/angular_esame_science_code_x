@@ -68,7 +68,7 @@ export class CambioLinguaService {
     this.iconaLingua$.next(this.iconaLingua); // Notifico subito la nuova icona
 
     const codice = this.leggiCodiceLingua(); // Calcolo il codice lingua 'it' o 'en'
-    this.sincLoginPathConLingua(codice);
+    this.sincBenvenutoPathConLingua(codice);
     this.toastService.chiudiTutti(); // Chiudo tutti i toast per non lasciarli in una lingua sbagliata
     this.cambioLinguaAvviato$.next(codice); // Notifico che ho iniziato il cambio lingua con quel codice
 
@@ -108,7 +108,13 @@ export class CambioLinguaService {
   leggiCodiceLingua(): string {
     return this.linguaUtente === 'italiano' ? 'it' : 'en'; // Ritorno 'it' se la lingua è italiano, altrimenti 'en'
   }
+  baseBenvenutoDaLingua(codice: string): string {
+    return String(codice || '').toLowerCase() === 'it' ? '/benvenuto' : '/welcome';
+  }
 
+  sottoPathLoginDaLingua(codice: string): string {
+    return String(codice || '').toLowerCase() === 'it' ? 'accedi' : 'login';
+  }
   /**
  * Precarica le immagini 'img_titolo' presenti nella mappa delle novità.
  *
@@ -220,19 +226,23 @@ export class CambioLinguaService {
     return this.injector.get(CaroselloNovitaService, null); // Chiedo all'injector il servizio e ritorno null se non è disponibile
   }
 
-    private sincLoginPathConLingua(codice: string): void {
+      private sincBenvenutoPathConLingua(codice: string): void {
     const full = this.router.url || '';
     const path = full.split('?')[0].split('#')[0];
 
-    const sonoNelLogin =
-      path === '/benvenuto/login' ||
-      path === '/benvenuto/login/' ||
-      path === '/benvenuto/accedi' ||
-      path === '/benvenuto/accedi/';
+        const m = path.match(/^\/(benvenuto|welcome)(\/.*)?$/);
+    if (!m) return;
 
-    if (!sonoNelLogin) return;
-
-    const target = codice === 'it' ? '/benvenuto/accedi' : '/benvenuto/login';
+    const base = this.baseBenvenutoDaLingua(codice);
+        let tail = m[2] || '';
+    // normalizzo la foglia login/accedi se presente
+    tail = tail.replace(/^\/(login|accedi)(\/|$)/, (match, _leaf, slash) => {
+      const leaf = this.sottoPathLoginDaLingua(codice);
+      return '/' + leaf + (slash || '');
+    });
+    const target = (base + tail).replace(/\/+$/,'');
+    const current = String(path || '').replace(/\/+$/,'');
+    if (target === current) return;
 
     this.router.navigateByUrl(target, {
       replaceUrl: true,

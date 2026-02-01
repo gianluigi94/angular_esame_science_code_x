@@ -61,11 +61,13 @@ export class LoginUscitaGuard implements CanDeactivate<LoginComponent> { //(fors
       this.router.getCurrentNavigation()?.finalUrl?.toString() || // se non c'è, provo a leggere l'URL finale dalla navigazione corrente
       ''; // se non trovo nulla, mi assicuro di avere una stringa vuota
 
-    const vaInBenvenuto = // decido se la destinazione è una pagina di benvenuto
-      targetUrl === '/' || // considero benvenuto anche la root
-      targetUrl === '' || // considero benvenuto anche l'url vuoto
-      targetUrl === '/benvenuto' || // considero benvenuto la rotta esatta
-      targetUrl.startsWith('/benvenuto'); // considero benvenuto anche qualsiasi sotto-rotta
+         const vaInBenvenuto =
+       targetUrl === '/' ||
+       targetUrl === '' ||
+       targetUrl === '/benvenuto' ||
+       targetUrl.startsWith('/benvenuto') ||
+       targetUrl === '/welcome' ||
+       targetUrl.startsWith('/welcome');
 
     if (vaInBenvenuto) { // se sto tornando alle pagine di benvenuto
       const scene = this.saturnoService.getScene(); // recupero la scena 3D attuale per poterla animare

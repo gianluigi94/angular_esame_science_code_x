@@ -95,10 +95,16 @@ export class TitoloPaginaService {
     const base = 'ScienceCode X'; // Definisco il nome base del sito da mettere sempre nel titolo
     let titolo = base; // Imposto un titolo di default
 
-    if (path === '/benvenuto' || path === '/benvenuto/') {
+         if (
+       path === '/benvenuto' || path === '/benvenuto/' ||
+       path === '/welcome'   || path === '/welcome/'
+     ) {
       // Controllo se sono nella pagina benvenuto
       titolo = codice === 'it' ? `Benvenuto - ${base}` : `Welcome - ${base}`;
-        } else if (path === '/benvenuto/login' || path === '/benvenuto/accedi') {
+             } else if (
+       path === '/benvenuto/login' || path === '/benvenuto/accedi' ||
+       path === '/welcome/login'   || path === '/welcome/accedi'
+     ) {
       titolo = codice === 'it' ? `Accedi - ${base}` : `Sign in - ${base}`;
      } else if (path === '/catalogo' || path === '/catalogo/') {
       titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;

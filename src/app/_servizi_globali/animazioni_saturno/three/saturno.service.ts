@@ -428,7 +428,7 @@ if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato) {
       this.directionalLight || undefined
     );
 
- } else if (url === '/benvenuto' || url.startsWith('/benvenuto/')) {
+ } else if (this.eRottaWelcome(url)) {
     // 🔹 Rientro nella pagina di benvenuto con scena già costruita:
     //    - titolo di nuovo centrale
     //    - X in versione GIF
@@ -573,7 +573,7 @@ if (!usaAnimazioniWelcome) {
   const url = this.router.url;
   if (this.eRottaLogin(url)) {
   lightZ = 0.1001;     // LOGIN_LATERALE
-} else if (url === '/benvenuto' || url.startsWith('/benvenuto/')) {
+} else if (this.eRottaWelcome(url)) {
   lightZ = 10.1001;    // WELCOME_ALTO
 } else {
   lightZ = 5.1001;     // WELCOME_BASSO / fallback
@@ -617,7 +617,7 @@ const isLoginRoute = this.eRottaLogin(url);
 
 const isWelcomeRoute =
   usaAnimazioniWelcome &&
-  (url === '/benvenuto' || url.startsWith('/benvenuto/')) &&
+  this.eRottaWelcome(url) &&
   !isLoginRoute;
 
 const isCatalogRoute = usaAnimazioniWelcome && this.eRottaCatalogo(url);
@@ -1094,16 +1094,18 @@ public flashErrorLight(): void {
     try {
       const nav = performance.getEntriesByType('navigation') as any[];
       const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
-      const path = (window.location.pathname || '').split('?')[0].split('#')[0];
+            const raw = (window.location.pathname || '').split('?')[0].split('#')[0];
+      const path = raw.replace(/\/+$/,'') || '/';
 
           const eCatalogoHome =
        path === '/catalogo' ||
-       path === '/catalogo/' ||
        path === '/catalogo/film' ||
        path === '/catalogo/serie' ||
        path === '/catalogo/film-serie' ||
-       path === '/catalog' ||
        path === '/catalog/' ||
+             path === '/catalog/movies' ||
+       path === '/catalog/series' ||
+       path === '/catalog/movies-series' ||
        path === '/catalog/film' ||
        path === '/catalog/serie' ||
        path === '/catalog/film-serie';
@@ -1123,12 +1125,12 @@ public flashErrorLight(): void {
 
   private eRottaCatalogo(url: string): boolean {
     const u = String(url || '');
-    return u.startsWith('/catalogo') || u.startsWith('/catalog');
+    return /^\/(catalogo|catalog)(\/|$)/.test(u);
   }
 
   private eRottaWelcome(url: string): boolean {
     const u = String(url || '');
-    return u === '/benvenuto' || u.startsWith('/benvenuto/');
+    return u === '/benvenuto' || u.startsWith('/benvenuto/') || u === '/welcome' || u.startsWith('/welcome/');
   }
 
     private eRottaLogin(url: string): boolean {
@@ -1137,7 +1139,11 @@ public flashErrorLight(): void {
       path === '/benvenuto/login' ||
       path === '/benvenuto/login/' ||
       path === '/benvenuto/accedi' ||
-      path === '/benvenuto/accedi/'
+            path === '/benvenuto/accedi/' ||
+      path === '/welcome/login' ||
+      path === '/welcome/login/' ||
+      path === '/welcome/accedi' ||
+      path === '/welcome/accedi/'
     );
   }
 }

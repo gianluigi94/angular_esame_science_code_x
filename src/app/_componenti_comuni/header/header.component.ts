@@ -68,9 +68,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.iconaLingua$ = this.cambioLinguaService.iconaLingua$; // mi aggancio all'evento dell'icona della lingua per mostrarla in modo reattivo
     this.spinnerScroll$ = this.scorrimentoCatalogo.spinnerScroll$;
 
-       this.paginaLogin =
-      this.router.url.startsWith('/benvenuto/login') ||
-      this.router.url.startsWith('/benvenuto/accedi');
+
+     this.paginaLogin =
+       this.router.url.startsWith('/benvenuto/login') ||
+       this.router.url.startsWith('/benvenuto/accedi') ||
+       this.router.url.startsWith('/welcome/login') ||
+       this.router.url.startsWith('/welcome/accedi');
 
     this.router.events // ascolto gli eventi del router per aggiornare lo stato quando cambio pagina
       .pipe(
@@ -79,9 +82,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
       )
       .subscribe((ev: NavigationEnd) => {
         const url = ev.urlAfterRedirects || ev.url; // prendo l'url definitivo dopo eventuali reindirizzamenti
-                this.paginaLogin =
-          url.startsWith('/benvenuto/login') ||
-          url.startsWith('/benvenuto/accedi');
+                         this.paginaLogin =
+           url.startsWith('/benvenuto/login') ||
+           url.startsWith('/benvenuto/accedi') ||
+           url.startsWith('/welcome/login') ||
+           url.startsWith('/welcome/accedi');
         this.headerPronto = true; // segno che l'header puo' essere mostrato senza 'flash' dopo un reload
       });
 

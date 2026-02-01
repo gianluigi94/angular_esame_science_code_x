@@ -47,10 +47,17 @@ export class AvvioGuard implements CanActivate { //(forse deprecato, ma funziona
     }
 
     const url = state.url; // salvo l'URL richiesto per usarlo nelle regole di accesso
+        const linguaUtente = localStorage.getItem('lingua_utente') || '';
+    const codice = linguaUtente === 'italiano' ? 'it' : 'en';
+    const baseBenvenuto = codice === 'it' ? '/benvenuto' : '/welcome';
 
+        const path = String(url || '').split('?')[0].split('#')[0];
+    const eBenvenuto = path.startsWith('/benvenuto');
+    const eWelcome = path.startsWith('/welcome');
+    const eAreaWelcome = eBenvenuto || eWelcome;
     if (autenticato) {
       // entro qui se risulto già autenticato
-      if (url === '/' || url === '' || url.startsWith('/benvenuto')) {
+      if (url === '/' || url === '' || url.startsWith('/benvenuto') || url.startsWith('/welcome')) {
         // se sto andando alla home vuota o alle pagine di benvenuto, non mi serve restarci
         return this.router.parseUrl('/catalogo'); // reindirizzo direttamente al catalogo
       }
@@ -59,11 +66,24 @@ export class AvvioGuard implements CanActivate { //(forse deprecato, ma funziona
       // entro qui se non sono autenticato
       if (url.startsWith('/catalogo') || url.startsWith('/catalog')) {
         // se provo ad andare nel catalogo senza login
-        return this.router.parseUrl('/benvenuto'); // mi rimando alla pagina di benvenuto
+        return this.router.parseUrl(baseBenvenuto); // mi rimando alla pagina di benvenuto (coerente con lingua)
       }
       if (url === '/' || url === '') {
         // se qualcuno apre a mano la root vuota
-        return this.router.parseUrl('/benvenuto'); // lo porto comunque al benvenuto
+        return this.router.parseUrl(baseBenvenuto); // lo porto comunque al benvenuto (coerente con lingua)
+      }
+
+
+      // 🔹 se sono nella welcome area ma con base NON coerente con la lingua, correggo
+      if (eAreaWelcome && !path.startsWith(baseBenvenuto)) {
+        // mantengo la sottorotta, ma normalizzo login/accedi
+        let tail = path.replace(/^\/(benvenuto|welcome)/, '');
+        tail = tail.replace(/^\/(login|accedi)(\/|$)/, (m, _leaf, slash) => {
+          const leaf = codice === 'it' ? 'accedi' : 'login';
+          return '/' + leaf + (slash || '');
+        });
+       const target = (baseBenvenuto + tail).replace(/\/+$/,'') || baseBenvenuto;
+        return this.router.parseUrl(target);
       }
       return true; // negli altri casi lascio proseguire la navigazione
     }

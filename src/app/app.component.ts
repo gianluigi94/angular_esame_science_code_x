@@ -104,9 +104,11 @@ export class AppComponent implements OnInit {
     });
 
     // Qui decido se mostrare il loader e se caricare il carosello in base all'URL, e mi aggancio ai cambi rotta per aggiornare tutto durante la navigazione
-        this.caricamentoDisabilitato =
+            this.caricamentoDisabilitato =
       urlIniziale.startsWith('/benvenuto/login') ||
-      urlIniziale.startsWith('/benvenuto/accedi');
+      urlIniziale.startsWith('/benvenuto/accedi') ||
+      urlIniziale.startsWith('/welcome/login') ||
+      urlIniziale.startsWith('/welcome/accedi');
     this.caricamentoDisabilitato$.next(this.caricamentoDisabilitato); // Propago subito lo stato del loader disabilitato nello stream
 
     this.deveCaricareImmaginiCarosello = isCatalogoHome(urlIniziale);
@@ -131,17 +133,29 @@ export class AppComponent implements OnInit {
         const precedente = this.ultimaUrl; // Mi salvo l'URL precedente prima di aggiornarlo
         this.ultimaUrl = url; // Aggiorno l'ultima URL con quella nuova
 
-        if (url.startsWith('/benvenuto/login') || url.startsWith('/benvenuto/accedi')) {
+                if (
+          url.startsWith('/benvenuto/login') ||
+          url.startsWith('/benvenuto/accedi') ||
+          url.startsWith('/welcome/login') ||
+          url.startsWith('/welcome/accedi')
+        ) {
           // Se entro nella pagina di login
           this.toastService.chiudi('toast_benvenuto'); // Chiudo l'eventuale toast 'benvenuto' per non lasciarlo aperto
         }
 
         // Qui aggiorno le regole del loader e del carosello ad ogni navigazione, poi gestisco un toast di 'bentornato' e mi metto in ascolto degli errori fatali
-                const disabilitaLoader =
+                      const disabilitaLoader =
           url.startsWith('/benvenuto/login') ||
           url.startsWith('/benvenuto/accedi') ||
+          url.startsWith('/welcome/login') ||
+          url.startsWith('/welcome/accedi') ||
           ((url.startsWith('/catalogo') || url.startsWith('/catalog')) &&
-            (precedente.startsWith('/benvenuto/login') || precedente.startsWith('/benvenuto/accedi')));
+            (
+              precedente.startsWith('/benvenuto/login') ||
+              precedente.startsWith('/benvenuto/accedi') ||
+              precedente.startsWith('/welcome/login') ||
+              precedente.startsWith('/welcome/accedi')
+            ));
 
         this.caricamentoDisabilitato = disabilitaLoader; // Salvo nello stato interno se il loader è disabilitato
         this.caricamentoDisabilitato$.next(disabilitaLoader); // Notifico nello stream che il loader è (o non è) disabilitato
