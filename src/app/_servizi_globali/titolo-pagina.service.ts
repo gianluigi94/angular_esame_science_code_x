@@ -39,26 +39,28 @@ export class TitoloPaginaService {
        this.aggiornaTitolo(url);
 
            // se entro nel catalogo, riallineo SEMPRE il titolo al tipo corrente (anche se l'URL e' /catalogo)
-    const path = this.pulisciUrl(url);
-    if (path === '/catalogo' || path === '/catalogo/' || path.startsWith('/catalogo/')) {
-      this.aggiornaTitolo(this.pathDaTipoCorrente());
-    }
+  const path = this.pulisciUrlSenzaLingua(url);
+if (path === '/catalogo' || path === '/catalogo/' || path.startsWith('/catalogo/') ||
+    path === '/catalog'  || path === '/catalog/'  || path.startsWith('/catalog/')) {
+  this.aggiornaTitolo(this.pathDaTipoCorrente());
+}
      });
 
     this.cambioLinguaService.cambioLinguaApplicata$.subscribe(() => {
-  const path = this.pulisciUrl(this.router.url || '');
-  if (path === '/catalogo' || path === '/catalogo/' || path.startsWith('/catalogo/')) {
-    this.aggiornaTitolo(this.pathDaTipoCorrente());
-    return;
-  }
-  this.aggiornaTitolo(this.router.url || '');
+  const path = this.pulisciUrlSenzaLingua(this.router.url || '');
+if (path === '/catalogo' || path === '/catalogo/' || path.startsWith('/catalogo/') ||
+    path === '/catalog'  || path === '/catalog/'  || path.startsWith('/catalog/')) {
+  this.aggiornaTitolo(this.pathDaTipoCorrente());
+  return;
+}
+this.aggiornaTitolo(this.router.url || '');
  });
 
 
    this.tipoContenuto.tipoSelezionato$.subscribe((tipo) => {
     // aggiorno il titolo solo se sono nel catalogo (altrimenti rischi titoli "sbagliati" in altre pagine)
-    const base = this.pulisciUrl(this.router.url || '');
-    if (!base.startsWith('/catalogo')) return;
+    const base = this.pulisciUrlSenzaLingua(this.router.url || '');
+if (!base.startsWith('/catalogo') && !base.startsWith('/catalog')) return;
      const fintoPath =
        tipo === 'film' ? '/catalogo/film'
        : tipo === 'serie' ? '/catalogo/serie'
@@ -68,14 +70,17 @@ export class TitoloPaginaService {
  }
 
  pathInizialePerTitolo(): string {
-   const path = this.pulisciUrl(this.router.url || '');
-   const eCatalogoNudo = path === '/catalogo' || path === '/catalogo/';
+   const path = this.pulisciUrlSenzaLingua(this.router.url || '');
+const eCatalogoNudo =
+  path === '/catalogo' || path === '/catalogo/' ||
+  path === '/catalog'  || path === '/catalog/';
    if (!eCatalogoNudo) return this.router.url || '';
 
    const tipo = this.tipoContenuto.leggiTipo();
-   if (tipo === 'film') return '/catalogo/film';
-   if (tipo === 'serie') return '/catalogo/serie';
-   return '/catalogo/film-serie';
+  const base = path.startsWith('/catalog') ? '/catalog' : '/catalogo';
+if (tipo === 'film') return base + (base === '/catalog' ? '/movies' : '/film');
+if (tipo === 'serie') return base + (base === '/catalog' ? '/series' : '/serie');
+return base + (base === '/catalog' ? '/movies-series' : '/film-serie');
  }
 
 
@@ -90,31 +95,34 @@ export class TitoloPaginaService {
    */
   private aggiornaTitolo(url: string): void {
     const codice = this.cambioLinguaService.leggiCodiceLingua(); // Leggo il codice lingua '
-    const path = this.pulisciUrl(url); // Pulisco l'URL da query e hash
+    const path = this.pulisciUrlSenzaLingua(url); // Pulisco l'URL da query e hash
 
     const base = 'ScienceCode X'; // Definisco il nome base del sito da mettere sempre nel titolo
     let titolo = base; // Imposto un titolo di default
+if (
+  path === '/benvenuto' || path === '/benvenuto/' ||
+  path === '/welcome'   || path === '/welcome/'
+) {
+  titolo = codice === 'it' ? `Benvenuto - ${base}` : `Welcome - ${base}`;
 
-         if (
-       path === '/benvenuto' || path === '/benvenuto/' ||
-       path === '/welcome'   || path === '/welcome/'
-     ) {
-      // Controllo se sono nella pagina benvenuto
-      titolo = codice === 'it' ? `Benvenuto - ${base}` : `Welcome - ${base}`;
-             } else if (
-       path === '/benvenuto/login' || path === '/benvenuto/accedi' ||
-       path === '/welcome/login'   || path === '/welcome/accedi'
-     ) {
-      titolo = codice === 'it' ? `Accedi - ${base}` : `Sign in - ${base}`;
-     } else if (path === '/catalogo' || path === '/catalogo/') {
-      titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;
-    } else if (path === '/catalogo/film') {
-      titolo = codice === 'it' ? `Tutti i film - ${base}` : `All Movies - ${base}`;
-    } else if (path === '/catalogo/serie') {
-      titolo = codice === 'it' ? `Tutte le serie - ${base}` : `All Series - ${base}`;
-    } else if (path === '/catalogo/film-serie') {
-      titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;
-    }
+} else if (
+  path === '/benvenuto/login' || path === '/benvenuto/accedi' ||
+  path === '/welcome/login'   || path === '/welcome/accedi'
+) {
+  titolo = codice === 'it' ? `Accedi - ${base}` : `Sign in - ${base}`;
+
+} else if (path === '/catalogo' || path === '/catalogo/' || path === '/catalog' || path === '/catalog/') {
+  titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;
+
+} else if (path === '/catalogo/film' || path === '/catalog/movies') {
+  titolo = codice === 'it' ? `Tutti i film - ${base}` : `All Movies - ${base}`;
+
+} else if (path === '/catalogo/serie' || path === '/catalog/series') {
+  titolo = codice === 'it' ? `Tutte le serie - ${base}` : `All Series - ${base}`;
+
+} else if (path === '/catalogo/film-serie' || path === '/catalog/movies-series') {
+  titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;
+}
 
 
     this.title.setTitle(titolo); // Imposto il titolo del browser con quello calcolato
@@ -136,5 +144,9 @@ export class TitoloPaginaService {
     if (tipo === 'serie') return '/catalogo/serie';
     return '/catalogo/film-serie';
   }
+ private pulisciUrlSenzaLingua(url: string): string {
+   const path = this.pulisciUrl(url);
+   return path.replace(/^\/(it|en)(?=\/|$)/, '');
+ }
 
 }

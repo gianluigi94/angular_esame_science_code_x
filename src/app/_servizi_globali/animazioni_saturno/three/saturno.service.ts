@@ -1091,30 +1091,33 @@ public flashErrorLight(): void {
 }
 
   private isReloadCatalogo(): boolean {
-    try {
-      const nav = performance.getEntriesByType('navigation') as any[];
-      const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
-            const raw = (window.location.pathname || '').split('?')[0].split('#')[0];
-      const path = raw.replace(/\/+$/,'') || '/';
+  try {
+    const nav = performance.getEntriesByType('navigation') as any[];
+    const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
+    const raw = (window.location.pathname || '').split('?')[0].split('#')[0];
+    const pathIntero = (raw.replace(/\/+$/,'') || '/');
 
-          const eCatalogoHome =
-       path === '/catalogo' ||
-       path === '/catalogo/film' ||
-       path === '/catalogo/serie' ||
-       path === '/catalogo/film-serie' ||
-       path === '/catalog/' ||
-             path === '/catalog/movies' ||
-       path === '/catalog/series' ||
-       path === '/catalog/movies-series' ||
-       path === '/catalog/film' ||
-       path === '/catalog/serie' ||
-       path === '/catalog/film-serie';
+    // tolgo /it o /en se presente
+    const path = pathIntero.replace(/^\/(it|en)(?=\/|$)/, '');
 
-     return (tipo === 'reload' && eCatalogoHome);
-    } catch {
-      return false;
-    }
+    const eCatalogoHome =
+      path === '/catalogo' ||
+      path === '/catalogo/film' ||
+      path === '/catalogo/serie' ||
+      path === '/catalogo/film-serie' ||
+      path === '/catalog' ||
+      path === '/catalog/movies' ||
+      path === '/catalog/series' ||
+      path === '/catalog/movies-series' ||
+      path === '/catalog/film' ||
+      path === '/catalog/serie' ||
+      path === '/catalog/film-serie';
+
+    return (tipo === 'reload' && eCatalogoHome);
+  } catch {
+    return false;
   }
+}
 
   private leggiUrlAttuale(): string {
     const p = String(window.location.pathname || '');
@@ -1124,26 +1127,25 @@ public flashErrorLight(): void {
   }
 
   private eRottaCatalogo(url: string): boolean {
-    const u = String(url || '');
-    return /^\/(catalogo|catalog)(\/|$)/.test(u);
-  }
+  const u = String(url || '');
+  return /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(u);
+}
 
-  private eRottaWelcome(url: string): boolean {
-    const u = String(url || '');
-    return u === '/benvenuto' || u.startsWith('/benvenuto/') || u === '/welcome' || u.startsWith('/welcome/');
-  }
+private eRottaWelcome(url: string): boolean {
+  const u = String(url || '');
+  return (
+    u === '/it/benvenuto' || u.startsWith('/it/benvenuto/') ||
+    u === '/en/benvenuto' || u.startsWith('/en/benvenuto/') ||
+    u === '/it/welcome'   || u.startsWith('/it/welcome/') ||
+    u === '/en/welcome'   || u.startsWith('/en/welcome/')
+  );
+}
 
-    private eRottaLogin(url: string): boolean {
-    const path = String(url || '').split('?')[0].split('#')[0];
-    return (
-      path === '/benvenuto/login' ||
-      path === '/benvenuto/login/' ||
-      path === '/benvenuto/accedi' ||
-            path === '/benvenuto/accedi/' ||
-      path === '/welcome/login' ||
-      path === '/welcome/login/' ||
-      path === '/welcome/accedi' ||
-      path === '/welcome/accedi/'
-    );
-  }
+   private eRottaLogin(url: string): boolean {
+  const path = String(url || '').split('?')[0].split('#')[0];
+  return (
+    /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(path) ||
+    /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(path)
+  );
+}
 }

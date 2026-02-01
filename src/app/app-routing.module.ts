@@ -8,37 +8,44 @@ const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    canActivate: [AvvioGuard],
     component: RedirectVuotoComponent,
   },
-
-  //se il path è benventuto entra in gioco un guard che controlla se posso andarci
+  // slug lingua in radice
   {
-    path: 'benvenuto',
-    canActivate: [AvvioGuard],
-    loadChildren: () =>
-      import('./_benvenuto/benvenuto.module').then((m) => m.BenvenutoModule), //scarico in lazy benvenuto
-  },
-    {
-    path: 'welcome',
-    canActivate: [AvvioGuard],
-    loadChildren: () =>
-      import('./_benvenuto/benvenuto.module').then((m) => m.BenvenutoModule),
-  },
-  //se il path è catalogo entra in gioco un guard che controlla se posso andarci
-  {
-    path: 'catalogo',
-    canActivate: [AvvioGuard],
-    loadChildren: () =>
-      import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule), //scarico in lazy catalogo
-  },
-
-
-  {
-    path: 'catalog',
-    canActivate: [AvvioGuard],
-    loadChildren: () =>
-      import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
+    path: ':lingua',
+    children: [
+      // /it o /en -> AvvioGuard decide se mandare a catalogo o welcome
+      {
+        path: '',
+        pathMatch: 'full',
+        canActivate: [AvvioGuard],
+        component: RedirectVuotoComponent,
+      },
+      {
+        path: 'benvenuto',
+        canActivate: [AvvioGuard],
+        loadChildren: () =>
+          import('./_benvenuto/benvenuto.module').then((m) => m.BenvenutoModule),
+      },
+      {
+        path: 'welcome',
+        canActivate: [AvvioGuard],
+        loadChildren: () =>
+          import('./_benvenuto/benvenuto.module').then((m) => m.BenvenutoModule),
+      },
+      {
+        path: 'catalogo',
+        canActivate: [AvvioGuard],
+        loadChildren: () =>
+          import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
+      },
+      {
+        path: 'catalog',
+        canActivate: [AvvioGuard],
+        loadChildren: () =>
+          import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
+      },
+    ],
   },
   {
     path: '**',

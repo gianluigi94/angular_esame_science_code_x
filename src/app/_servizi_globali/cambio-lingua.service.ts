@@ -108,8 +108,14 @@ export class CambioLinguaService {
   leggiCodiceLingua(): string {
     return this.linguaUtente === 'italiano' ? 'it' : 'en'; // Ritorno 'it' se la lingua è italiano, altrimenti 'en'
   }
+    prefissoDaCodice(codice: string): string {
+    return String(codice || '').toLowerCase() === 'it' ? '/it' : '/en';
+  }
+
   baseBenvenutoDaLingua(codice: string): string {
-    return String(codice || '').toLowerCase() === 'it' ? '/benvenuto' : '/welcome';
+        const pref = this.prefissoDaCodice(codice);
+    const base = String(codice || '').toLowerCase() === 'it' ? '/benvenuto' : '/welcome';
+    return pref + base;
   }
 
   sottoPathLoginDaLingua(codice: string): string {
@@ -230,11 +236,11 @@ export class CambioLinguaService {
     const full = this.router.url || '';
     const path = full.split('?')[0].split('#')[0];
 
-        const m = path.match(/^\/(benvenuto|welcome)(\/.*)?$/);
+        const m = path.match(/^\/(it|en)\/(benvenuto|welcome)(\/.*)?$/);
     if (!m) return;
 
     const base = this.baseBenvenutoDaLingua(codice);
-        let tail = m[2] || '';
+        let tail = m[3] || '';
     // normalizzo la foglia login/accedi se presente
     tail = tail.replace(/^\/(login|accedi)(\/|$)/, (match, _leaf, slash) => {
       const leaf = this.sottoPathLoginDaLingua(codice);

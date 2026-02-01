@@ -262,7 +262,9 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
 
           setTimeout(() => {
             // rimando la navigazione al prossimo giro di esecuzione per non incastrarmi con aggiornamenti in corso
-            this.router.navigateByUrl('/catalogo'); // porto l'utente al catalogo dopo il login
+             this.router.navigateByUrl(this.pathCatalogoDopoLogin(), {
+   state: { saltaAnimazioniLogin: true },
+ }); // porto l'utente al catalogo dopo il login
           }, 0);
         } else {
           // entro qui se la risposta non contiene i dati attesi
@@ -330,4 +332,25 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     // gestisco la distruzione del componente per chiudere le sottoscrizioni collegate
     this.distruggi$.next(); // emetto il segnale di chiusura per far terminare tutte le pipe
   }
+
+   pathCatalogoDopoLogin(): string {
+   const url = (this.router.url || '').split('?')[0].split('#')[0];
+   const m = url.match(/^\/(it|en)(?=\/|$)/);
+   const codice = m?.[1] ? m[1] : (this.translate.currentLang === 'en' ? 'en' : 'it');
+
+   const pref = '/' + codice;
+   const base = codice === 'en' ? '/catalog' : '/catalogo';
+
+   // se vuoi andare direttamente al tipo corrente (consigliato)
+   // se non hai TipoContenutoService qui, togli tutto e ritorna prefbase
+   // e poi ci pensera' CatalogoComponent a riallineare l'URL.
+   const tipo = (localStorage.getItem('tipo_contenuto') as any) || 'film_serie'; // oppure leggi da tuo service se lo inietti
+   const sotto =
+     tipo === 'film' ? (codice === 'en' ? '/movies' : '/film') :
+     tipo === 'serie' ? (codice === 'en' ? '/series' : '/serie') :
+     (codice === 'en' ? '/movies-series' : '/film-serie');
+
+   return pref + base + sotto;
+ }
+
 }

@@ -49,42 +49,63 @@ export class AvvioGuard implements CanActivate { //(forse deprecato, ma funziona
     const url = state.url; // salvo l'URL richiesto per usarlo nelle regole di accesso
         const linguaUtente = localStorage.getItem('lingua_utente') || '';
     const codice = linguaUtente === 'italiano' ? 'it' : 'en';
-    const baseBenvenuto = codice === 'it' ? '/benvenuto' : '/welcome';
+        const prefisso = codice === 'it' ? '/it' : '/en';
+    const baseBenvenuto = prefisso + (codice === 'it' ? '/benvenuto' : '/welcome');
+    const baseCatalogo = prefisso + (codice === 'it' ? '/catalogo' : '/catalog');
 
         const path = String(url || '').split('?')[0].split('#')[0];
-    const eBenvenuto = path.startsWith('/benvenuto');
-    const eWelcome = path.startsWith('/welcome');
+        const eBenvenuto = path.startsWith('/it/benvenuto') || path.startsWith('/en/benvenuto');
+    const eWelcome = path.startsWith('/it/welcome') || path.startsWith('/en/welcome');
     const eAreaWelcome = eBenvenuto || eWelcome;
+
+
+        const eRootLingua = path === '/it' || path === '/it/' || path === '/en' || path === '/en/';
+
+    const eAreaCatalogo = path.startsWith('/it/catalogo') || path.startsWith('/en/catalogo') || path.startsWith('/it/catalog') || path.startsWith('/en/catalog');
+
+    const correggiWelcomeCoerente = (p: string): string => {
+      // p atteso: /it/benvenuto/... oppure /en/welcome/...
+      const m = p.match(/^\/(it|en)\/(benvenuto|welcome)(\/.*)?$/);
+      if (!m) return baseBenvenuto;
+
+      let tail = m[3] || '';
+      tail = tail.replace(/^\/(login|accedi)(\/|$)/, (mm, _leaf, slash) => {
+        const leaf = codice === 'it' ? 'accedi' : 'login';
+        return '/' + leaf + (slash || '');
+      });
+      const target = (baseBenvenuto + tail).replace(/\/+$/,'') || baseBenvenuto;
+      return target;
+    };
+
+    const correggiCatalogoCoerente = (p: string): string => {
+      // mantengo la sotto-rotta (es: /series) ma allineo prefisso + base (catalogo/catalog)
+      const m = p.match(/^\/(it|en)\/(catalogo|catalog)(\/.*)?$/);
+      if (!m) return baseCatalogo;
+      const tail = m[3] || '';
+      const target = (baseCatalogo + tail).replace(/\/+$/,'') || baseCatalogo;
+      return target;
+    };
+
     if (autenticato) {
-      // entro qui se risulto già autenticato
-      if (url === '/' || url === '' || url.startsWith('/benvenuto') || url.startsWith('/welcome')) {
-        // se sto andando alla home vuota o alle pagine di benvenuto, non mi serve restarci
-        return this.router.parseUrl('/catalogo'); // reindirizzo direttamente al catalogo
+
+      if (url === '/' || url === '' || eRootLingua || eAreaWelcome) {
+        return this.router.parseUrl(baseCatalogo);
       }
+
+      // se sono in catalogo ma con prefisso/base non coerenti, correggo
+      if (eAreaCatalogo && !path.startsWith(baseCatalogo)) {
+        return this.router.parseUrl(correggiCatalogoCoerente(path));
+      }
+
       return true; // per tutte le altre pagine permetto la navigazione
     } else {
-      // entro qui se non sono autenticato
-      if (url.startsWith('/catalogo') || url.startsWith('/catalog')) {
-        // se provo ad andare nel catalogo senza login
-        return this.router.parseUrl(baseBenvenuto); // mi rimando alla pagina di benvenuto (coerente con lingua)
-      }
-      if (url === '/' || url === '') {
-        // se qualcuno apre a mano la root vuota
-        return this.router.parseUrl(baseBenvenuto); // lo porto comunque al benvenuto (coerente con lingua)
-      }
+          if (eAreaCatalogo) return this.router.parseUrl(baseBenvenuto);
+      if (url === '/' || url === '' || eRootLingua) return this.router.parseUrl(baseBenvenuto);
+
 
 
       // 🔹 se sono nella welcome area ma con base NON coerente con la lingua, correggo
-      if (eAreaWelcome && !path.startsWith(baseBenvenuto)) {
-        // mantengo la sottorotta, ma normalizzo login/accedi
-        let tail = path.replace(/^\/(benvenuto|welcome)/, '');
-        tail = tail.replace(/^\/(login|accedi)(\/|$)/, (m, _leaf, slash) => {
-          const leaf = codice === 'it' ? 'accedi' : 'login';
-          return '/' + leaf + (slash || '');
-        });
-       const target = (baseBenvenuto + tail).replace(/\/+$/,'') || baseBenvenuto;
-        return this.router.parseUrl(target);
-      }
+    if (eAreaWelcome && !path.startsWith(baseBenvenuto)) return this.router.parseUrl(correggiWelcomeCoerente(path));
       return true; // negli altri casi lascio proseguire la navigazione
     }
   }

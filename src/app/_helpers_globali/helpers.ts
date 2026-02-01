@@ -52,24 +52,26 @@ export function pulisciUrl(url: string): string { // funzione che mi pulisce un 
  */
  export function isCatalogoHome(url: string): boolean {
    const path = pulisciUrl(url || '');
+   const p = path.replace(/^\/(it|en)(?=\/|$)/, '');
     return (
-    path === '/catalogo' ||
-    path === '/catalogo/' ||
-    path === '/catalogo/film' ||
-    path === '/catalogo/serie' ||
-    path === '/catalogo/film-serie' ||
-    path === '/catalog' ||
-    path === '/catalog/' ||
-    path === '/catalog/movies' ||
-    path === '/catalog/series' ||
-    path === '/catalog/movies-series'
+      p === '/catalogo' ||
+    p === '/catalogo/' ||
+    p === '/catalogo/film' ||
+    p === '/catalogo/serie' ||
+    p === '/catalogo/film-serie' ||
+    p === '/catalog' ||
+    p === '/catalog/' ||
+    p === '/catalog/movies' ||
+    p === '/catalog/series' ||
+    p === '/catalog/movies-series'
   );
  }
 
 
 export function isAreaCatalogo(url: string): boolean { // funzione che mi dice se l'url sta dentro l'area catalogo (qualsiasi sotto-rotta)
     const path = pulisciUrl(url || '');
-  return path.startsWith('/catalogo') || path.startsWith('/catalog');
+    const p = path.replace(/^\/(it|en)(?=\/|$)/, '');
+  return p.startsWith('/catalogo') || p.startsWith('/catalog');
 }
 
 export function impostaLangHtml(documento: Document, codice: string): void { // funzione che mi imposta l'attributo lang del tag <html>

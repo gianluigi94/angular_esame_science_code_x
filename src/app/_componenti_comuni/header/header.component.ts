@@ -69,11 +69,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.spinnerScroll$ = this.scorrimentoCatalogo.spinnerScroll$;
 
 
-     this.paginaLogin =
-       this.router.url.startsWith('/benvenuto/login') ||
-       this.router.url.startsWith('/benvenuto/accedi') ||
-       this.router.url.startsWith('/welcome/login') ||
-       this.router.url.startsWith('/welcome/accedi');
+      this.paginaLogin =
+   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(this.router.url || '');
 
     this.router.events // ascolto gli eventi del router per aggiornare lo stato quando cambio pagina
       .pipe(
@@ -82,11 +79,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       )
       .subscribe((ev: NavigationEnd) => {
         const url = ev.urlAfterRedirects || ev.url; // prendo l'url definitivo dopo eventuali reindirizzamenti
-                         this.paginaLogin =
-           url.startsWith('/benvenuto/login') ||
-           url.startsWith('/benvenuto/accedi') ||
-           url.startsWith('/welcome/login') ||
-           url.startsWith('/welcome/accedi');
+                          this.paginaLogin =
+   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url || '');
         this.headerPronto = true; // segno che l'header puo' essere mostrato senza 'flash' dopo un reload
       });
 
@@ -347,19 +341,42 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.location.go(this.pathCatalogoDaTipo(val));
   }
  baseCatalogoDaUrl(): string {
-   const full = this.location.path(true) || '';
-   const soloPath = full.split('?')[0].split('#')[0];
-   const matchBase = soloPath.match(/^\/(catalogo|catalog)(\/|$)/);
-   if (matchBase?.[1] === 'catalog') return '/catalog';
-   if (matchBase?.[1] === 'catalogo') return '/catalogo';
-   // fallback (se per qualche motivo non sono nel catalogo)
-   return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? '/catalogo' : '/catalog';
- }
+  const full = this.location.path(true) || this.router.url || '';
+  const soloPath = full.split('?')[0].split('#')[0];
+
+  const pref = this.prefissoLinguaDaUrl();
+  const senzaPref = soloPath.replace(/^\/(it|en)(?=\/|$)/, '');
+
+  const matchBase = senzaPref.match(/^\/(catalogo|catalog)(\/|$)/);
+  if (matchBase?.[1] === 'catalog') return pref + '/catalog';
+  if (matchBase?.[1] === 'catalogo') return pref + '/catalogo';
+
+  // fallback (se per qualche motivo non sono nel catalogo)
+  return pref + (this.cambioLinguaService.leggiCodiceLingua() === 'it' ? '/catalogo' : '/catalog');
+}
   pathCatalogoDaTipo(val: TipoContenuto): string {
-      const base = this.baseCatalogoDaUrl(); // preserva catalog vs catalogo dall'URL corrente
-    const en = base === '/catalog';
+  const base = this.baseCatalogoDaUrl();
+  const en = base.endsWith('/catalog');
   if (val === 'film') return base + (en ? '/movies' : '/film');
   if (val === 'serie') return base + (en ? '/series' : '/serie');
   return base + (en ? '/movies-series' : '/film-serie');
-  }
+}
+
+   prefissoLinguaDaUrl(): string {
+   const full = this.location.path(true) || this.router.url || '';
+   const soloPath = full.split('?')[0].split('#')[0];
+   const m = soloPath.match(/^\/(it|en)(?=\/|$)/);
+   if (m?.[1] === 'it') return '/it';
+   if (m?.[1] === 'en') return '/en';
+   // fallback: se non c'e' prefisso (es. dev o url vecchi), lo deduco dalla lingua corrente
+   return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? '/it' : '/en';
+ }
+
+ pathLoginDaLingua(): string {
+   const codice = this.cambioLinguaService.leggiCodiceLingua();
+   const pref = this.prefissoLinguaDaUrl();
+   if (codice === 'it') return pref + '/benvenuto/accedi';
+   return pref + '/welcome/login';
+ }
+
 }

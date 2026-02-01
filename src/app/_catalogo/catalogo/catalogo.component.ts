@@ -117,7 +117,9 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
     baseCatalogoDaLingua(): string {
     const codice = this.cambioLingua.leggiCodiceLingua();
-    return codice === 'it' ? '/catalogo' : '/catalog';
+    const pref = codice === 'it' ? '/it' : '/en';
+        const base = codice === 'it' ? '/catalogo' : '/catalog';
+    return pref + base;
   }
 
   sottoPathDaTipo(val: TipoContenuto): string {
@@ -133,12 +135,13 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     const soloPath = full.split('?')[0].split('#')[0];
     const tail = full.substring(soloPath.length); // include ?query e/o #hash
 
-    const matchBase = soloPath.match(/^\/(catalogo|catalog)(\/.*)?$/);
+    const matchBase = soloPath.match(/^\/(it|en)\/(catalogo|catalog)(\/.*)?$/);
     if (!matchBase) return;
+        const prefissoDaUrl = '/' + matchBase[1];
+    const baseCatalogoDaUrl = prefissoDaUrl + '/' + matchBase[2];
 
-       const baseCorrenteDaUrl = matchBase[1] === 'catalogo' ? '/catalogo' : '/catalog';
-   const nuovaBase = preservaBaseDaUrl ? baseCorrenteDaUrl : this.baseCatalogoDaLingua();
-    const resto = soloPath.replace(/^\/(catalogo|catalog)/, ''); // '' oppure '/...'
+          const nuovaBase = preservaBaseDaUrl ? baseCatalogoDaUrl : this.baseCatalogoDaLingua();
+    const resto = soloPath.replace(/^\/(it|en)\/(catalogo|catalog)/, '');
 
     const eRootCatalogo = resto === '' || resto === '/';
     const eVistaPrincipale = /^\/(film|serie|film-serie|movies|series|movies-series)\/?$/.test(resto);
