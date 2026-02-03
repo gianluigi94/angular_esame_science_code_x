@@ -7,6 +7,7 @@ import { NovitaInfo } from 'src/app/_interfacce/Inovita-info.interface';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 @Injectable({ providedIn: 'root' }) // Rendo questo servizio disponibile in tutta l'app
 export class CambioLinguaService {
   linguaUtente = 'inglese'; // Salvo la lingua scelta dall'utente in formato testuale, inglese default
@@ -24,6 +25,8 @@ export class CambioLinguaService {
     private injector: Injector,
     private authService: Authservice,
     private router: Router,
+
+     private location: Location,
     private toastService: ToastService
   ) {
     this.impostaLinguaIniziale(); // Imposto subito la lingua e icona iniziali leggendo localStorage o lingua del browser
@@ -69,6 +72,8 @@ export class CambioLinguaService {
 
     const codice = this.leggiCodiceLingua(); // Calcolo il codice lingua 'it' o 'en'
     this.sincBenvenutoPathConLingua(codice);
+
+    this.sincCatalogoPathConLingua(codice)
     this.toastService.chiudiTutti(); // Chiudo tutti i toast per non lasciarli in una lingua sbagliata
     this.cambioLinguaAvviato$.next(codice); // Notifico che ho iniziato il cambio lingua con quel codice
 
@@ -254,5 +259,53 @@ export class CambioLinguaService {
       replaceUrl: true,
       state: { saltaAnimazioniLogin: true },
     });
+  }
+
+    impostaLinguaDaCodice(codice: string, salva: boolean = false): void {
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
+    this.linguaUtente = c === 'it' ? 'italiano' : 'inglese';
+    this.iconaLingua = c === 'it' ? 'assets/it.svg' : 'assets/en.svg';
+    if (salva) localStorage.setItem('lingua_utente', this.linguaUtente);
+    this.iconaLingua$.next(this.iconaLingua);
+
+    this.traduzioniService.assicuraTraduzioni$(c).pipe(take(1)).subscribe(() => {
+      this.traduzioniService.usaLingua(c);
+    });
+  }
+
+    private sincCatalogoPathConLingua(codice: string): void {
+        const full =
+      this.location.path(true) ||
+      (window.location.pathname + window.location.search + window.location.hash) ||
+      '';
+    const soloPath = full.split('?')[0].split('#')[0];
+    const tail = full.substring(soloPath.length); // ?query/#hash
+
+    // solo area catalogo (include anche scheda)
+    const m = soloPath.match(/^\/(it|en)\/(catalogo|catalog)(\/.*)?$/);
+    if (!m) return;
+
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
+    const base = '/' + c + (c === 'it' ? '/catalogo' : '/catalog');
+
+    // resto dopo /it/catalogo oppure /en/catalog
+    let resto = (m[3] || '');
+
+    // mappa foglia lista/scheda: film<->movies, serie<->series, film-serie<->movies-series
+    const mapIt: any = { movies: 'film', series: 'serie', 'movies-series': 'film-serie' };
+    const mapEn: any = { film: 'movies', serie: 'series', 'film-serie': 'movies-series' };
+    const map = c === 'it' ? mapIt : mapEn;
+
+    resto = resto.replace(
+      /^\/(film|serie|film-serie|movies|series|movies-series)(?=\/|$)/i,
+      (_match, leaf) => '/' + (map[String(leaf).toLowerCase()] || String(leaf).toLowerCase()),
+    );
+
+    const target = (base + resto).replace(/\/+$/, '');
+    const current = soloPath.replace(/\/+$/, '');
+    if (target === current) return;
+
+    // IMPORTANTISSIMO: cambia URL senza navigare, quindi non ricrei componenti
+    this.location.replaceState(target + tail);
   }
 }

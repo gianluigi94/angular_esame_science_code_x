@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-
+import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 @Component({
   selector: 'app-redirect-vuoto',
   template: '',
 })
 export class RedirectVuotoComponent implements OnInit {
-  constructor(private router: Router) {}
+    constructor(
+    private router: Router,
+    private cambioLingua: CambioLinguaService,
+  ) {}
 
   ngOnInit(): void {
     // se sono gia' sotto /it o /en, non faccio nulla: ci pensa AvvioGuard sul path figlio ''
@@ -16,7 +19,7 @@ export class RedirectVuotoComponent implements OnInit {
     const salvata = localStorage.getItem('lingua_utente') || '';
     const codice = salvata === 'italiano' ? 'it' : salvata === 'inglese' ? 'en' : this.codiceDaBrowser();
     const prefisso = codice === 'it' ? '/it' : '/en';
-
+    this.cambioLingua.impostaLinguaDaCodice(codice, false);
     this.router.navigateByUrl(prefisso, { replaceUrl: true });
   }
 

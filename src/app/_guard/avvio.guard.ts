@@ -4,12 +4,16 @@ import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { Observable } from 'rxjs';
 import { Authservice } from '../_benvenuto/login/_login_service/auth.service';
-
+import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 @Injectable({ providedIn: 'root'})// Dico ad Angular che questa classe è un servizio iniettabile
 export class AvvioGuard implements CanActivate { //(forse deprecato, ma funzionante. devo informarmi)
   private static haGiaLoggatoStato = false; // mi tengo un flag condiviso per stampare lo stato di login una sola volta
 
-  constructor(private authService: Authservice, private router: Router) {} // mi inietto il servizio di autenticazione e il router per poter decidere i reindirizzamenti
+    constructor(
+    private authService: Authservice,
+    private router: Router,
+    private cambioLingua: CambioLinguaService,
+  ) {}
 
    /**
    * Determina se una rotta può essere attivata o se è necessario
@@ -45,17 +49,24 @@ export class AvvioGuard implements CanActivate { //(forse deprecato, ma funziona
       AvvioGuard.haGiaLoggatoStato = true; // segno che da ora in poi non devo più ristampare questa informazione
       console.log('FRONT END LOGGATO: ' + (autenticato ? 'trsue' : 'faslse'));
     }
+const url = state.url || '';
+        const linguaDaUrl = String(route.paramMap.get('lingua') || '').toLowerCase().trim();
+    const salvata = localStorage.getItem('lingua_utente') || '';
+    const codiceDaStorage = salvata === 'italiano' ? 'it' : salvata === 'inglese' ? 'en' : '';
+        const linguaUrlValida = linguaDaUrl === 'it' || linguaDaUrl === 'en';
+    const codice = linguaUrlValida ? linguaDaUrl : (codiceDaStorage || this.codiceDaBrowser());
 
-    const url = state.url; // salvo l'URL richiesto per usarlo nelle regole di accesso
-        const linguaUtente = localStorage.getItem('lingua_utente') || '';
-    const codice = linguaUtente === 'italiano' ? 'it' : 'en';
-        const prefisso = codice === 'it' ? '/it' : '/en';
+    const prefisso = codice === 'it' ? '/it' : '/en';
+
+        // allineo lo stato globale alla lingua effettiva che sto usando
+    // salvo in localStorage SOLO se la lingua arriva dall'URL (deep link) oppure se l'URL e' invalido
+    this.cambioLingua.impostaLinguaDaCodice(codice, linguaUrlValida);
     const baseBenvenuto = prefisso + (codice === 'it' ? '/benvenuto' : '/welcome');
     const baseCatalogo = prefisso + (codice === 'it' ? '/catalogo' : '/catalog');
 
         const path = String(url || '').split('?')[0].split('#')[0];
-        const eBenvenuto = path.startsWith('/it/benvenuto') || path.startsWith('/en/benvenuto');
-    const eWelcome = path.startsWith('/it/welcome') || path.startsWith('/en/welcome');
+        const eBenvenuto = path.startsWith('/' + codice + '/benvenuto');
+const eWelcome = path.startsWith('/' + codice + '/welcome');
     const eAreaWelcome = eBenvenuto || eWelcome;
 
 
@@ -108,5 +119,10 @@ export class AvvioGuard implements CanActivate { //(forse deprecato, ma funziona
     if (eAreaWelcome && !path.startsWith(baseBenvenuto)) return this.router.parseUrl(correggiWelcomeCoerente(path));
       return true; // negli altri casi lascio proseguire la navigazione
     }
+  }
+
+    codiceDaBrowser(): string {
+    const primaria = (navigator.languages?.[0] || navigator.language || '').toLowerCase().trim();
+    return primaria === 'it' || primaria.startsWith('it-') ? 'it' : 'en';
   }
 }

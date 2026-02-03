@@ -4,7 +4,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { CatalogoComponent } from './catalogo/catalogo.component';
 import { EsperimentoComponent } from './esperimento/esperimento.component';
-
+import { SchedaComponent } from './scheda/scheda.component';
 const routes: Routes = [
   {
     path: '',
@@ -39,6 +39,12 @@ const routes: Routes = [
     path: 'movies-series',
     component: CatalogoComponent,
   },
+    { path: 'film/:id', component: SchedaComponent },
+  { path: 'serie/:id', component: SchedaComponent },
+
+  // SCHEDA (EN)
+  { path: 'movies/:id', component: SchedaComponent },
+  { path: 'series/:id', component: SchedaComponent },
 ];
 
 @NgModule({

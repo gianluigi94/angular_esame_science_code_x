@@ -1,8 +1,21 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, ElementRef, QueryList, ViewChildren, HostListener, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  AfterViewInit,
+  ElementRef,
+  QueryList,
+  ViewChildren,
+  HostListener,
+  ViewChild,
+} from '@angular/core';
 import { Subscription, take, skip, distinctUntilChanged, forkJoin } from 'rxjs';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
-import { TipoContenuto, TipoContenutoService } from '../app-riga-categoria/categoria_services/tipo-contenuto.service';
+import {
+  TipoContenuto,
+  TipoContenutoService,
+} from '../app-riga-categoria/categoria_services/tipo-contenuto.service';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { AnimazioniScomparsaService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/animazioni-scomparsa.service';
@@ -10,7 +23,7 @@ import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_serv
 @Component({
   selector: 'app-catalogo',
   templateUrl: './catalogo.component.html',
-  styleUrls: ['./catalogo.component.scss']
+  styleUrls: ['./catalogo.component.scss'],
 })
 export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
@@ -19,16 +32,16 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     public router: Router,
     public location: Location,
     public cambioLingua: CambioLinguaService,
-     public servizioAnimazioni: AnimazioniScomparsaService,
- public scorrimentoCatalogo: ScorrimentoCatalogoService
+    public servizioAnimazioni: AnimazioniScomparsaService,
+    public scorrimentoCatalogo: ScorrimentoCatalogoService,
   ) {}
 
   tickResetPagine = 0;
   timerCambioTipo: any = 0;
   sottoscrizioni = new Subscription();
   idCicloRighe = 0;
-   timerCaricaFino: any = 0;
- tokenScroll = 0;
+  timerCaricaFino: any = 0;
+  tokenScroll = 0;
   limiteRighe = 4;
   offsetRighe = 0;
   haAltreRighe = true;
@@ -43,14 +56,16 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cinqueElementi = Array(5).fill(0);
 
-   locandinaDemo = 'assets/locandine_it/locandina_it_abbraccia_il_vento.webp';
-  locandineDemo: { src: string; titolo: string; sottotitolo: string }[] = Array(8).fill(0).map(() => ({
-    src: this.locandinaDemo,
-    titolo: '',
-    sottotitolo: '',
-  }));
+  locandinaDemo = 'assets/locandine_it/locandina_it_abbraccia_il_vento.webp';
+ locandineDemo: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[] = Array(8).fill(0).map(() => ({
+      src: this.locandinaDemo,
+      titolo: '',
+      sottotitolo: '',
+       tipo: '',
+    id_media: '',
+    }));
 
-  righeDemo: { idCategoria: string; category: string; locandine: { src: string; titolo: string; sottotitolo: string }[] }[] = [];
+ righeDemo: { idCategoria: string; category: string; locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[] }[] = [];
   tipoSelezionato: TipoContenuto = 'film_serie';
 
   @ViewChild('sentinella', { read: ElementRef })
@@ -77,16 +92,16 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
     this.forzaRottaCatalogoDaLinguaETipo();
     this.caricaPrimeRigheDaApi(0, false);
-     this.sottoscrizioni.add(
- this.scorrimentoCatalogo.richieste$.subscribe((idCategoria: string) => {
- this.gestisciScrollACategoria(idCategoria);
- }),
- );
+    this.sottoscrizioni.add(
+      this.scorrimentoCatalogo.richieste$.subscribe((idCategoria: string) => {
+        this.gestisciScrollACategoria(idCategoria);
+      }),
+    );
     this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
         this.forzaRottaCatalogoDaLinguaETipo(false);
         this.caricaPrimeRigheDaApi(0, false);
-      })
+      }),
     );
 
     this.sottoscrizioni.add(
@@ -97,17 +112,30 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
           this.tickResetPagine += 1;
           this.avviaCambioTipoConAttese();
           this.forzaRottaCatalogoDaLinguaETipo(true);
-        })
+        }),
     );
   }
 
   ngOnDestroy(): void {
     this.sottoscrizioni.unsubscribe();
-    try { this.servizioAnimazioni.disconnettiOsservatori(); } catch {}
-    if (this.timerCambioTipo) { clearTimeout(this.timerCambioTipo); this.timerCambioTipo = 0; }
-    if (this.timerSentinella) { clearTimeout(this.timerSentinella); this.timerSentinella = 0; }
-    if (this.timerCaricaFino) { clearTimeout(this.timerCaricaFino); this.timerCaricaFino = 0; }
-    try { this.osservatoreSentinella?.disconnect(); } catch {}
+    try {
+      this.servizioAnimazioni.disconnettiOsservatori();
+    } catch {}
+    if (this.timerCambioTipo) {
+      clearTimeout(this.timerCambioTipo);
+      this.timerCambioTipo = 0;
+    }
+    if (this.timerSentinella) {
+      clearTimeout(this.timerSentinella);
+      this.timerSentinella = 0;
+    }
+    if (this.timerCaricaFino) {
+      clearTimeout(this.timerCaricaFino);
+      this.timerCaricaFino = 0;
+    }
+    try {
+      this.osservatoreSentinella?.disconnect();
+    } catch {}
     this.osservatoreSentinella = null;
   }
 
@@ -115,19 +143,19 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     return riga.idCategoria;
   }
 
-    baseCatalogoDaLingua(): string {
+  baseCatalogoDaLingua(): string {
     const codice = this.cambioLingua.leggiCodiceLingua();
     const pref = codice === 'it' ? '/it' : '/en';
-        const base = codice === 'it' ? '/catalogo' : '/catalog';
+    const base = codice === 'it' ? '/catalogo' : '/catalog';
     return pref + base;
   }
 
   sottoPathDaTipo(val: TipoContenuto): string {
-      const codice = this.cambioLingua.leggiCodiceLingua();
-  const en = codice === 'en';
-  if (val === 'film') return en ? '/movies' : '/film';
-  if (val === 'serie') return en ? '/series' : '/serie';
-  return en ? '/movies-series' : '/film-serie';
+    const codice = this.cambioLingua.leggiCodiceLingua();
+    const en = codice === 'en';
+    if (val === 'film') return en ? '/movies' : '/film';
+    if (val === 'serie') return en ? '/series' : '/serie';
+    return en ? '/movies-series' : '/film-serie';
   }
 
   forzaRottaCatalogoDaLinguaETipo(preservaBaseDaUrl: boolean = false): void {
@@ -137,21 +165,25 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const matchBase = soloPath.match(/^\/(it|en)\/(catalogo|catalog)(\/.*)?$/);
     if (!matchBase) return;
-        const prefissoDaUrl = '/' + matchBase[1];
+    const prefissoDaUrl = '/' + matchBase[1];
     const baseCatalogoDaUrl = prefissoDaUrl + '/' + matchBase[2];
 
-          const nuovaBase = preservaBaseDaUrl ? baseCatalogoDaUrl : this.baseCatalogoDaLingua();
+    const nuovaBase = preservaBaseDaUrl
+      ? baseCatalogoDaUrl
+      : this.baseCatalogoDaLingua();
     const resto = soloPath.replace(/^\/(it|en)\/(catalogo|catalog)/, '');
 
     const eRootCatalogo = resto === '' || resto === '/';
-    const eVistaPrincipale = /^\/(film|serie|film-serie|movies|series|movies-series)\/?$/.test(resto);
+    const eVistaPrincipale =
+      /^\/(film|serie|film-serie|movies|series|movies-series)\/?$/.test(resto);
 
-    const nuovoResto = (eRootCatalogo || eVistaPrincipale)
-      ? this.sottoPathDaTipo(this.tipoSelezionato)
-      : resto;
+    const nuovoResto =
+      eRootCatalogo || eVistaPrincipale
+        ? this.sottoPathDaTipo(this.tipoSelezionato)
+        : resto;
 
-    const targetPath = (nuovaBase + nuovoResto).replace(/\/+$/,'');
-    const currentPath = soloPath.replace(/\/+$/,'');
+    const targetPath = (nuovaBase + nuovoResto).replace(/\/+$/, '');
+    const currentPath = soloPath.replace(/\/+$/, '');
 
     if (targetPath !== currentPath) this.location.go(targetPath + tail);
   }
@@ -164,7 +196,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     return h >>> 0;
   }
 
-    slugDaPoster(url: string): string {
+  slugDaPoster(url: string): string {
     const u = String(url || '');
     const file = (u.split('/').pop() || '').trim(); // locandina_it_slug.webp
     if (!file) return u;
@@ -180,11 +212,14 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     return senzaExt;
   }
 
-  mescolaDeterministicaLocandine(lista: { src: string }[], seed: string): { src: string }[] {
+  mescolaDeterministicaLocandine(
+    lista: { src: string }[],
+    seed: string,
+  ): { src: string }[] {
     const s = String(seed || '');
     const out = (lista || []).slice();
     out.sort((a, b) => {
-            const sa = this.slugDaPoster(String(a?.src || ''));
+      const sa = this.slugDaPoster(String(a?.src || ''));
       const sb = this.slugDaPoster(String(b?.src || ''));
       const ka = this.calcolaHash32(s + '|' + sa);
       const kb = this.calcolaHash32(s + '|' + sb);
@@ -192,10 +227,12 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     return out;
   }
-  precaricaImmaginiRighe(righe: { locandine: { src: string }[] }[]): Promise<void> {
+  precaricaImmaginiRighe(
+    righe: { locandine: { src: string }[] }[],
+  ): Promise<void> {
     const urls: string[] = [];
     for (const r of righe || []) {
-            for (const u of r.locandine || []) {
+      for (const u of r.locandine || []) {
         const s = String(u?.src || '');
         if (s) urls.push(s);
       }
@@ -220,9 +257,12 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     return Promise.all(promesse).then(() => {});
   }
 
-  aggiornaRigheInPlace(nuoveRighe: { idCategoria: string; category: string; posters: string[] }[]): void {
+  aggiornaRigheInPlace(
+    nuoveRighe: { idCategoria: string; category: string; posters: string[] }[],
+  ): void {
     const mappaEsistenti: Record<string, any> = {};
-    for (const r of this.righeDemo || []) mappaEsistenti[String(r.idCategoria)] = r;
+    for (const r of this.righeDemo || [])
+      mappaEsistenti[String(r.idCategoria)] = r;
 
     const ordine: any[] = [];
     for (const n of nuoveRighe) {
@@ -249,7 +289,10 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   avviaCambioTipoConAttese(): void {
-    if (this.timerCambioTipo) { clearTimeout(this.timerCambioTipo); this.timerCambioTipo = 0; }
+    if (this.timerCambioTipo) {
+      clearTimeout(this.timerCambioTipo);
+      this.timerCambioTipo = 0;
+    }
 
     this.idCicloRighe += 1;
     const id = this.idCicloRighe;
@@ -263,125 +306,162 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   inizializzaOsservatoreSentinella(): void {
-    try { this.osservatoreSentinella?.disconnect(); } catch {}
+    try {
+      this.osservatoreSentinella?.disconnect();
+    } catch {}
     this.osservatoreSentinella = null;
 
     const host = this.sentinella?.nativeElement;
     if (!host) return;
 
-    this.osservatoreSentinella = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
+    this.osservatoreSentinella = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
 
-        console.log('Sentinella raggiunta');
+          console.log('Sentinella raggiunta');
 
-        if (!this.sentinellaPronta) continue;
-        if (!this.utenteHaScrollato) continue;
-        if (!this.haAltreRighe) return;
-        if (this.caricamentoRighe) return;
+          if (!this.sentinellaPronta) continue;
+          if (!this.utenteHaScrollato) continue;
+          if (!this.haAltreRighe) return;
+          if (this.caricamentoRighe) return;
 
-        if (this.timerSentinella) clearTimeout(this.timerSentinella);
-        this.timerSentinella = setTimeout(() => {
-          this.timerSentinella = 0;
-          this.caricaAltreQuattroRigheDaApi();
-        }, 400);
-      }
-    }, { root: null, threshold: 0.1 });
+          if (this.timerSentinella) clearTimeout(this.timerSentinella);
+          this.timerSentinella = setTimeout(() => {
+            this.timerSentinella = 0;
+            this.caricaAltreQuattroRigheDaApi();
+          }, 400);
+        }
+      },
+      { root: null, threshold: 0.1 },
+    );
 
     this.osservatoreSentinella.observe(host);
   }
 
-  caricaPrimeRigheDaApi(idForzato: number = 0, notificaTipoApplicato: boolean = false): void {
-    const id = idForzato ? idForzato : (this.idCicloRighe + 1);
- if (!idForzato) this.idCicloRighe = id;
+  caricaPrimeRigheDaApi(
+    idForzato: number = 0,
+    notificaTipoApplicato: boolean = false,
+  ): void {
+    const id = idForzato ? idForzato : this.idCicloRighe + 1;
+    if (!idForzato) this.idCicloRighe = id;
 
- this.scrollYPrimaCambio = window.scrollY || 0;
+    this.scrollYPrimaCambio = window.scrollY || 0;
     const eroFinitoPrimaDelCambio = this.hoFinitoTutto;
- if (this.timerSentinella) { clearTimeout(this.timerSentinella); this.timerSentinella = 0; }
- try { this.osservatoreSentinella?.disconnect(); } catch {}
- this.osservatoreSentinella = null;
+    if (this.timerSentinella) {
+      clearTimeout(this.timerSentinella);
+      this.timerSentinella = 0;
+    }
+    try {
+      this.osservatoreSentinella?.disconnect();
+    } catch {}
+    this.osservatoreSentinella = null;
 
- const totaleDaRicaricare = this.offsetRighe > 0 ? this.offsetRighe : this.limiteRighe;
- const lingua = this.cambioLingua.leggiCodiceLingua();
- const tipo = this.tipoSelezionato;
+    const totaleDaRicaricare =
+      this.offsetRighe > 0 ? this.offsetRighe : this.limiteRighe;
+    const lingua = this.cambioLingua.leggiCodiceLingua();
+    const tipo = this.tipoSelezionato;
 
-  this.haAltreRighe = true;
- this.hoFinitoTutto = false;
- this.caricamentoRighe = true;
- this.sentinellaPronta = false;
- this.utenteHaScrollato = false;
+    this.haAltreRighe = true;
+    this.hoFinitoTutto = false;
+    this.caricamentoRighe = true;
+    this.sentinellaPronta = false;
+    this.utenteHaScrollato = false;
 
- const richieste: any[] = [];
- for (let off = 0; off < totaleDaRicaricare; off += this.limiteRighe) {
- const lim = Math.min(this.limiteRighe, totaleDaRicaricare - off);
- richieste.push(this.api.getCatalogoRighe(lingua, tipo, lim, off).pipe(take(1)));
- }
+    const richieste: any[] = [];
+    for (let off = 0; off < totaleDaRicaricare; off += this.limiteRighe) {
+      const lim = Math.min(this.limiteRighe, totaleDaRicaricare - off);
+      richieste.push(
+        this.api.getCatalogoRighe(lingua, tipo, lim, off).pipe(take(1)),
+      );
+    }
 
- forkJoin(richieste).subscribe((risposte: any[]) => {
- const itemsTotali: any[] = [];
- for (const ris of risposte || []) {
- const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
- itemsTotali.push(...items);
- }
+    forkJoin(richieste).subscribe((risposte: any[]) => {
+      const itemsTotali: any[] = [];
+      for (const ris of risposte || []) {
+        const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
+        itemsTotali.push(...items);
+      }
 
- const nuoveRighe = itemsTotali
- .map((x: any) => {
- const idCategoria = String(x?.idCategoria || '');
+      const nuoveRighe = itemsTotali
+        .map((x: any) => {
+          const idCategoria = String(x?.idCategoria || '');
 
-  let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
- .map((p: any) => ({
-   src: String(p?.src || ''),
-   titolo: String(p?.titolo || ''),
-   sottotitolo: String(p?.sottotitolo || ''),
- }))
- .filter((p: any) => !!p.src);
-  if (this.tipoSelezionato === 'film_serie' && locandine.length) {
-   locandine = this.mescolaDeterministicaLocandine(locandine as any, idCategoria) as any;
- }
+          let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
+            .map((p: any) => ({
+              src: String(p?.src || ''),
+              titolo: String(p?.titolo || ''),
+              sottotitolo: String(p?.sottotitolo || ''),
+              tipo: String(p?.tipo || ''), // 'film' | 'serie'
+              id_media: String(p?.id_media || ''), // id originale in tabella film/serie
+            }))
+            .filter((p: any) => !!p.src);
+          if (this.tipoSelezionato === 'film_serie' && locandine.length) {
+            locandine = this.mescolaDeterministicaLocandine(
+              locandine as any,
+              idCategoria,
+            ) as any;
+          }
 
- return {
- idCategoria,
- category: String(x?.category || ''),
- locandine: locandine.length ? (locandine as any) : this.locandineDemo,
- };
- })
- .filter((r: any) => !!r.idCategoria);
+          return {
+            idCategoria,
+            category: String(x?.category || ''),
+            locandine: locandine.length
+              ? (locandine as any)
+              : this.locandineDemo,
+          };
+        })
+        .filter((r: any) => !!r.idCategoria);
 
- this.precaricaImmaginiRighe(nuoveRighe).then(() => {
- if (id !== this.idCicloRighe) return;
+      this.precaricaImmaginiRighe(nuoveRighe).then(() => {
+        if (id !== this.idCicloRighe) return;
 
- this.righeDemo.splice(0, this.righeDemo.length, ...nuoveRighe);
- this.offsetRighe = nuoveRighe.length;
+        this.righeDemo.splice(0, this.righeDemo.length, ...nuoveRighe);
+        this.offsetRighe = nuoveRighe.length;
 
- const ultimo = risposte && risposte.length ? risposte[risposte.length - 1] : null;
- const itemsUltimo = Array.isArray(ultimo?.data?.items) ? ultimo.data.items : [];
- const limUltimo = Math.min(this.limiteRighe, totaleDaRicaricare - Math.max(0, (risposte.length - 1) * this.limiteRighe));
+        const ultimo =
+          risposte && risposte.length ? risposte[risposte.length - 1] : null;
+        const itemsUltimo = Array.isArray(ultimo?.data?.items)
+          ? ultimo.data.items
+          : [];
+        const limUltimo = Math.min(
+          this.limiteRighe,
+          totaleDaRicaricare -
+            Math.max(0, (risposte.length - 1) * this.limiteRighe),
+        );
 
- this.haAltreRighe = itemsUltimo.length === limUltimo;
- this.hoFinitoTutto = !this.haAltreRighe;
- this.caricamentoRighe = false;
-  this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
- if (!this.haAltreRighe) {
- try { this.osservatoreSentinella?.disconnect(); } catch {}
- this.osservatoreSentinella = null;
- }
+        this.haAltreRighe = itemsUltimo.length === limUltimo;
+        this.hoFinitoTutto = !this.haAltreRighe;
+        this.caricamentoRighe = false;
+        this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
+        if (!this.haAltreRighe) {
+          try {
+            this.osservatoreSentinella?.disconnect();
+          } catch {}
+          this.osservatoreSentinella = null;
+        }
 
- requestAnimationFrame(() => {
- window.scrollTo(0, this.scrollYPrimaCambio);
- if (eroFinitoPrimaDelCambio) this.hoFinitoTutto = true;
- this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
- if (this.sentinellaPronta) this.inizializzaOsservatoreSentinella();
-  if (this.hoFinitoTutto) {
- try { this.osservatoreSentinella?.disconnect(); } catch {}
- this.osservatoreSentinella = null;
- }
- });
+        requestAnimationFrame(() => {
+          window.scrollTo(0, this.scrollYPrimaCambio);
+          if (eroFinitoPrimaDelCambio) this.hoFinitoTutto = true;
+          this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
+          if (this.sentinellaPronta) this.inizializzaOsservatoreSentinella();
+          if (this.hoFinitoTutto) {
+            try {
+              this.osservatoreSentinella?.disconnect();
+            } catch {}
+            this.osservatoreSentinella = null;
+          }
+        });
 
- if (notificaTipoApplicato) {
- this.tipoContenuto.notificaCambioTipoApplicato(this.tipoSelezionato, id);
- }
- });
- });
+        if (notificaTipoApplicato) {
+          this.tipoContenuto.notificaCambioTipoApplicato(
+            this.tipoSelezionato,
+            id,
+          );
+        }
+      });
+    });
   }
 
   caricaAltreQuattroRigheDaApi(): void {
@@ -397,12 +477,13 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     const tipo = this.tipoSelezionato;
     const offset = this.offsetRighe;
 
-    this.api.getCatalogoRighe(lingua, tipo, this.limiteRighe, offset)
+    this.api
+      .getCatalogoRighe(lingua, tipo, this.limiteRighe, offset)
       .pipe(take(1))
       .subscribe((ris: any) => {
         const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
 
-                    const nuoveRighe = items
+        const nuoveRighe = items
           .map((x: any) => {
             const idCategoria = String(x?.idCategoria || '');
 
@@ -411,17 +492,24 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
                 src: String(p?.src || ''),
                 titolo: String(p?.titolo || ''),
                 sottotitolo: String(p?.sottotitolo || ''),
+                tipo: String(p?.tipo || ''), // 'film' | 'serie'
+                id_media: String(p?.id_media || ''), // id originale in tabella film/serie
               }))
               .filter((p: any) => !!p.src);
 
             if (this.tipoSelezionato === 'film_serie' && locandine.length) {
-              locandine = this.mescolaDeterministicaLocandine(locandine as any, idCategoria) as any;
+              locandine = this.mescolaDeterministicaLocandine(
+                locandine as any,
+                idCategoria,
+              ) as any;
             }
 
             return {
               idCategoria,
               category: String(x?.category || ''),
-              locandine: locandine.length ? (locandine as any) : this.locandineDemo,
+              locandine: locandine.length
+                ? (locandine as any)
+                : this.locandineDemo,
             };
           })
           .filter((r: any) => !!r.idCategoria);
@@ -431,7 +519,9 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
           const gia: Record<string, boolean> = {};
           for (const r of this.righeDemo) gia[String(r.idCategoria)] = true;
-          const soloNuove = nuoveRighe.filter((r: any) => !gia[String(r.idCategoria)]);
+          const soloNuove = nuoveRighe.filter(
+            (r: any) => !gia[String(r.idCategoria)],
+          );
 
           this.righeDemo.push(...soloNuove);
           this.offsetRighe += nuoveRighe.length;
@@ -444,14 +534,16 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
           this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
 
           if (!this.haAltreRighe) {
-            try { this.osservatoreSentinella?.disconnect(); } catch {}
+            try {
+              this.osservatoreSentinella?.disconnect();
+            } catch {}
             this.osservatoreSentinella = null;
           }
         });
       });
   }
 
-    gestisciScrollACategoria(idCategoria: string): void {
+  gestisciScrollACategoria(idCategoria: string): void {
     const id = String(idCategoria || '').trim();
     if (!id) return;
 
@@ -480,7 +572,10 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         const rect = el.getBoundingClientRect();
-        const y = (window.scrollY || 0) + rect.top - Math.floor(window.innerHeight * 0.65);
+        const y =
+          (window.scrollY || 0) +
+          rect.top -
+          Math.floor(window.innerHeight * 0.65);
         this.scorrimentoCatalogo.impostaSpinnerScroll(false);
         this.servizioAnimazioni.scrollaA(y, 0.35);
         setTimeout(() => this.forzaControlloSentinella(), 380);
@@ -515,7 +610,9 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
         if (finito) return;
         if (token !== this.tokenScroll) return;
 
-        const giaOra = this.righeDemo.some((r) => String(r?.idCategoria) === id);
+        const giaOra = this.righeDemo.some(
+          (r) => String(r?.idCategoria) === id,
+        );
         if (giaOra) return chiudi(true);
         if (!this.haAltreRighe) return chiudi(false);
 
@@ -534,27 +631,41 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
           .pipe(take(1))
           .subscribe({
             next: (ris: any) => {
-              const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
-                                     const nuoveRighe = items
+              const items = Array.isArray(ris?.data?.items)
+                ? ris.data.items
+                : [];
+              const nuoveRighe = items
                 .map((x: any) => {
                   const idCategoriaRiga = String(x?.idCategoria || '');
 
-                  let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
+                  let locandine = (
+                    Array.isArray(x?.locandine) ? x.locandine : []
+                  )
                     .map((p: any) => ({
-                      src: String(p?.src || ''),
-                      titolo: String(p?.titolo || ''),
-                      sottotitolo: String(p?.sottotitolo || ''),
-                    }))
+                src: String(p?.src || ''),
+                titolo: String(p?.titolo || ''),
+                sottotitolo: String(p?.sottotitolo || ''),
+                tipo: String(p?.tipo || ''), // 'film' | 'serie'
+                id_media: String(p?.id_media || ''), // id originale in tabella film/serie
+              }))
                     .filter((p: any) => !!p.src);
 
-                  if (this.tipoSelezionato === 'film_serie' && locandine.length) {
-                    locandine = this.mescolaDeterministicaLocandine(locandine as any, idCategoriaRiga) as any;
+                  if (
+                    this.tipoSelezionato === 'film_serie' &&
+                    locandine.length
+                  ) {
+                    locandine = this.mescolaDeterministicaLocandine(
+                      locandine as any,
+                      idCategoriaRiga,
+                    ) as any;
                   }
 
                   return {
                     idCategoria: idCategoriaRiga,
                     category: String(x?.category || ''),
-                    locandine: locandine.length ? (locandine as any) : this.locandineDemo,
+                    locandine: locandine.length
+                      ? (locandine as any)
+                      : this.locandineDemo,
                   };
                 })
                 .filter((x: any) => !!x.idCategoria);
@@ -564,8 +675,11 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // evita duplicati
               const giaMap: Record<string, boolean> = {};
-              for (const r of this.righeDemo) giaMap[String(r.idCategoria)] = true;
-              const soloNuove = nuoveRighe.filter((r: any) => !giaMap[String(r.idCategoria)]);
+              for (const r of this.righeDemo)
+                giaMap[String(r.idCategoria)] = true;
+              const soloNuove = nuoveRighe.filter(
+                (r: any) => !giaMap[String(r.idCategoria)],
+              );
 
               this.righeDemo.push(...soloNuove);
               this.offsetRighe += nuoveRighe.length;
@@ -575,9 +689,13 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
               this.caricamentoRighe = false;
 
-              try { (window as any).ScrollTrigger?.refresh?.(); } catch {}
+              try {
+                (window as any).ScrollTrigger?.refresh?.();
+              } catch {}
 
-              const trovataOra = this.righeDemo.some((r) => String(r?.idCategoria) === id);
+              const trovataOra = this.righeDemo.some(
+                (r) => String(r?.idCategoria) === id,
+              );
               if (trovataOra) return chiudi(true);
               if (!this.haAltreRighe) return chiudi(false);
               if (this.timerCaricaFino) clearTimeout(this.timerCaricaFino);
@@ -605,7 +723,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     const host = this.sentinella?.nativeElement as HTMLElement;
     if (!host) return;
 
-   const r = host.getBoundingClientRect();
+    const r = host.getBoundingClientRect();
     const inVista = r.top <= window.innerHeight && r.bottom >= 0;
     if (!inVista) return;
 

@@ -4,13 +4,14 @@ import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.serv
 import { Subscription } from 'rxjs';
 import { TipoContenutoService } from './categoria_services/tipo-contenuto.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-riga-categoria',
   templateUrl: './riga-categoria.component.html',
   styleUrls: ['./riga-categoria.component.scss'],
 })
 export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
- @Input() locandine: { src: string; titolo: string; sottotitolo: string }[] = [];
+ @Input() locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[] = [];
   @Input() categoria = '';
   @Input() tickResetPagine = 0;
   @Input() titolo = '';
@@ -46,6 +47,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     public cambioLingua: CambioLinguaService,
     private audioGlobaleService: AudioGlobaleService,
      public tipoContenuto: TipoContenutoService,
+     public router: Router,
  public riferitore: ChangeDetectorRef,
   ) {}
 
@@ -340,6 +342,36 @@ titoloPulitoPerTooltip(testoTradotto: string): string {
     .replace('{{titolo}}', '')
     .replace(/"/g, '')
     .trim();
+}
+
+baseCatalogoDaLingua(): string {
+  const codice = this.cambioLingua.leggiCodiceLingua();
+  const pref = codice === 'it' ? '/it' : '/en';
+  const base = codice === 'it' ? '/catalogo' : '/catalog';
+  return pref + base;
+}
+
+fogliaDaTipo(tipo: string): string {
+  const codice = this.cambioLingua.leggiCodiceLingua();
+  const en = codice === 'en';
+  const t = String(tipo || '').toLowerCase() === 'serie' ? 'serie' : 'film';
+  if (en) return t === 'film' ? '/movies' : '/series';
+  return t === 'film' ? '/film' : '/serie';
+}
+
+tipoDaClick(loc: { tipo: string }): string {
+  const selezionato = this.tipoContenuto.leggiTipo();
+  if (selezionato === 'film_serie') return String(loc?.tipo || '').toLowerCase() === 'serie' ? 'serie' : 'film';
+  return selezionato === 'serie' ? 'serie' : 'film';
+}
+
+onClickLocandina(loc: { tipo: string; id_media: string }): void {
+  const id = String(loc?.id_media || '').trim();
+  if (!id) return;
+
+  const tipo = this.tipoDaClick(loc);
+  const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
+  this.router.navigateByUrl(url);
 }
 
 }
