@@ -1,3 +1,36 @@
-p{
-  color: aliceblue;
+:host{
+  display: block;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.sfondo_scheda{
+  position: fixed;
+     transform: scale(1.02);
+
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+
+.sfumatura{
+  position: fixed;
+  inset: 0;
+  display: block;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, #070217 0%, #0000 75%, #0000 100%),
+    linear-gradient(to right, #08021b 0%, #08021b 9%, #190221db 26%, #0000 80%, #0000 100%);
+}
+
+
+.contenuto{
+  margin-top: 105vh;
+  background-color: red;
+  color: rgb(224, 220, 230);
+  display: block;
+  position: relative;
+  z-index: 2;
 }

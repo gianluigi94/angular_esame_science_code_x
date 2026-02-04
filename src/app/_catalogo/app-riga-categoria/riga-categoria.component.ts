@@ -4,6 +4,7 @@ import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.serv
 import { Subscription } from 'rxjs';
 import { TipoContenutoService } from './categoria_services/tipo-contenuto.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+import { StopVideoGlobaleService } from './categoria_services/stop-video-globale.service';
 import { Router } from '@angular/router';
 @Component({
   selector: 'app-riga-categoria',
@@ -48,6 +49,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     private audioGlobaleService: AudioGlobaleService,
      public tipoContenuto: TipoContenutoService,
      public router: Router,
+     private stopVideoGlobale: StopVideoGlobaleService,
  public riferitore: ChangeDetectorRef,
   ) {}
 
@@ -365,12 +367,19 @@ tipoDaClick(loc: { tipo: string }): string {
   return selezionato === 'serie' ? 'serie' : 'film';
 }
 
-onClickLocandina(loc: { tipo: string; id_media: string }): void {
+async onClickLocandina(loc: { tipo: string; id_media: string }): Promise<void> {
   const id = String(loc?.id_media || '').trim();
   if (!id) return;
 
   const tipo = this.tipoDaClick(loc);
   const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
+
+  // 1) stop dolce PRIMA del cambio pagina
+  try {
+    await this.stopVideoGlobale.richiediStopDolce(350);
+  } catch {}
+
+  // 2) ora posso navigare
   this.router.navigateByUrl(url);
 }
 

@@ -15,6 +15,7 @@ import { CaroselloNovitaService } from './carosello_services/carosello-novita.se
 import { NovitaInfo } from 'src/app/_interfacce/Inovita-info.interface';
 import { CaricamentoCaroselloService } from './carosello_services/caricamento-carosello.service';
 import { Subscription } from 'rxjs';
+import { StopVideoGlobaleService } from '../app-riga-categoria/categoria_services/stop-video-globale.service';
 import { CaroselloScrollUtility } from './carosello_utility/carosello-scroll.utility';
 import { CaroselloDatiUtility } from './carosello_utility/carosello-dati.utility';
 import { CaroselloOverlayUtility } from './carosello_utility/carosello-overlay.utility';
@@ -157,6 +158,7 @@ export class CaroselloNovitaComponent
     private caricamentoCaroselloService: CaricamentoCaroselloService,
     private servizioHoverLocandina: HoverLocandinaService,
     private audioGlobaleService: AudioGlobaleService,
+    private stopVideoGlobale: StopVideoGlobaleService,
   ) {}
 
   /**
@@ -498,6 +500,13 @@ export class CaroselloNovitaComponent
           });
         },
       ),
+    );
+
+    // STOP DOLCE richiesto da click locandina (prima di navigare)
+    this.subs.add(
+      this.stopVideoGlobale.osservaRichiesteStop$().subscribe(({ durataMs, done }) => {
+        this.stopDolceImmediato(durataMs).finally(() => done());
+      }),
     );
   }
 
@@ -1266,6 +1275,20 @@ export class CaroselloNovitaComponent
     try {
       this.audioGlobaleService.setSoloBrowserBlocca(false);
     } catch {}
+  }
+  stopDolceImmediato(durataMs: number): Promise<void> {
+    // blocco avvii pendenti
+    try { this.fermaAvvioPendete(); } catch {}
+
+    // se non ho player, chiudo subito
+    if (!this.player) return Promise.resolve();
+
+    // fade-out  pausa  reset (sempre, anche se non in play: non fa male)
+    return this.sfumaGuadagnoVerso(0, Math.max(0, durataMs || 0)).finally(() => {
+      try { this.player.pause(); } catch {}
+      try { this.player.currentTime(0); } catch {}
+      try { this.mostraVideo = false; } catch {}
+    });
   }
 
 }
