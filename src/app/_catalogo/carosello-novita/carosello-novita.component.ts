@@ -37,6 +37,7 @@ export class CaroselloNovitaComponent
   implements OnInit, OnDestroy, AfterViewInit
 {
   pausaPerHover = false;
+  hoverLocandinaAttivo = false;
   audioBloccatoDaUtente = false;
   mostraImmagineHover = false;
   immagineHoverFissa =
@@ -297,6 +298,7 @@ export class CaroselloNovitaComponent
             titolo,
             sottotitolo,
           }) => {
+            this.hoverLocandinaAttivo = !!attivo;
             const eraAttivo = this.mostraImmagineHover;
             this.mostraImmagineHover = attivo;
 

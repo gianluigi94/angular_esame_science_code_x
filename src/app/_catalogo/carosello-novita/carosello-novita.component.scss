@@ -81,6 +81,7 @@ video-js {
   flex-direction: column;
   align-items: center;
   transition: transform 0.5s ease-in-out, top 0.5s ease-in-out;
+
   &.rimpiciolito_salito_destra {
     top: 32%;
     transform: scale(0.85);
@@ -313,3 +314,23 @@ video-js {
      transform: scale(1.02);
    }
  }
+
+.play {
+  transition:
+    opacity 0.2s ease 150ms,
+    transform 0.2s ease 150ms;
+}
+
+.comandi-carosello {
+  transition:
+    opacity 0.2s ease 150ms,
+    transform 0.5s ease-in-out,
+    top 0.5s ease-in-out;
+}
+
+.nascosto-per-hover {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.98);
+ transition-delay: 0ms;
+}

@@ -77,7 +77,11 @@
  </div>
 
   <!-- comanidi del carosello che cambiano stile se non sono in cima -->
-  <div class="comandi-carosello" [class.rimpiciolito_salito_destra]="!alTop">
+  <div
+  class="comandi-carosello"
+  [class.rimpiciolito_salito_destra]="!alTop"
+  [class.nascosto-per-hover]="hoverLocandinaAttivo"
+>
     <div class="riga-alta">
       <!-- i bottoni hanno aria e title dinamici con la locandina e la lingua  -->
 <!-- bottoni indietro  -->
@@ -175,14 +179,18 @@
     <p class="sottotitolo" [class.nascosto]="!sottotitoloVisibile">
       {{ sottotitoloOverlay }}
       <!-- span play con title dinamico alla lingua -->
-      <span
-        class="play"
-        [attr.title]="
-          'ui.carosello.slide_tooltip.title'
-            | translate : { titolo: titoloOverlay || '' }
-        "
-        >&#9658;</span
-      >
+     <span
+  class="play"
+    [class.nascosto-per-hover]="hoverLocandinaAttivo || !alTop"
+
+  [attr.title]="
+    'ui.carosello.slide_tooltip.title'
+      | translate : { titolo: titoloOverlay || '' }
+  "
+>
+  &#9658;
+</span>
+
     </p>
   </div>
 </div>
