@@ -125,6 +125,9 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sottoscrizioni.unsubscribe();
     this.azzeraTimer();
+      if (this.timerEntrata) clearTimeout(this.timerEntrata);
+  if (this.timerUscita) clearTimeout(this.timerUscita);
+  try { this.servizioHoverLocandina.emettiUscita(); } catch {}
   }
 
   calcolaNumeroMassimoPagine(): void {
@@ -373,6 +376,11 @@ async onClickLocandina(loc: { tipo: string; id_media: string }): Promise<void> {
 
   const tipo = this.tipoDaClick(loc);
   const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
+
+    try { this.servizioHoverLocandina.emettiUscita(); } catch {}
+  if (this.timerEntrata) clearTimeout(this.timerEntrata);
+  if (this.timerUscita) clearTimeout(this.timerUscita);
+
 
   // 1) stop dolce PRIMA del cambio pagina
   try {

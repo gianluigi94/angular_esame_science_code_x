@@ -171,6 +171,11 @@ export class CaroselloNovitaComponent
    * @returns void
    */
   ngOnInit(): void {
+      try { this.servizioHoverLocandina.emettiUscita(); } catch {}
+  this.pausaPerHover = false;
+  this.hoverLocandinaAttivo = false;
+  this.mostraImmagineHover = false;
+  this.hoverTrailerInAttesa = false;
     this.caricaDati(); // Avvio il caricamento dati iniziali
     this.subs.add(
       this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
@@ -533,7 +538,15 @@ export class CaroselloNovitaComponent
   ngOnDestroy(): void {
     this.fermaAvvioPendete(); // Fermo eventuali avvii trailer pendenti (timer/sequence)
     this.fermaAutoscroll(); // Fermo l'autoscroll e resetto il relativo timer
-
+      this.tokenHoverTrailer += 1;
+  this.tokenHoverImg += 1;
+  if (this.timerMostraTrailerHover) clearTimeout(this.timerMostraTrailerHover);
+  this.timerMostraTrailerHover = null;
+  this.pausaPerHover = false;
+  this.hoverLocandinaAttivo = false;
+  this.mostraImmagineHover = false;
+  this.hoverTrailerInAttesa = false;
+  try { this.servizioHoverLocandina.emettiUscita(); } catch {}
     try {
       // Provo a rimuovere l'ascolto per lo sblocco audio senza rischiare errori
       this.rimuoviAscoltoSbloccoAudio(); // Tolgo l'event listener di click usato per sbloccare l'audio
