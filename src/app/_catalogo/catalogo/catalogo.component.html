@@ -16,14 +16,15 @@
 <div class="catalogo-contenuto">
   <section id="locandine_container">
    <ng-container *ngFor="let riga of righeDemo; trackBy: tracciaRigaCategoria">
-     <app-riga-categoria
-       #rigaCatalogo
-       [attr.id]="'cat_' + riga.idCategoria"
-       [categoria]="riga.category"
-       [locandine]="riga.locandine"
-       [tickResetPagine]="tickResetPagine"
-     >
-     </app-riga-categoria>
+    <app-riga-categoria
+  #rigaCatalogo
+  [attr.id]="'cat_' + riga.idCategoria"
+  [idCategoria]="riga.idCategoria"
+  [categoria]="riga.category"
+  [locandine]="riga.locandine"
+  [tickResetPagine]="tickResetPagine"
+>
+</app-riga-categoria>
    </ng-container>
    <div *ngIf="haAltreRighe && !hoFinitoTutto" #sentinella class="sentinella">
     <ng-container *ngFor="let indice of cinqueElementi">

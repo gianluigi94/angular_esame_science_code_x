@@ -14,7 +14,8 @@ import { Router } from '@angular/router';
 export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
  @Input() locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[] = [];
   @Input() categoria = '';
-  @Input() tickResetPagine = 0;
+@Input() idCategoria = '';
+@Input() tickResetPagine = 0;
   @Input() titolo = '';
    @ViewChildren('elementoLocandina', { read: ElementRef })
  elementiLocandina!: QueryList<ElementRef>;
@@ -373,7 +374,10 @@ tipoDaClick(loc: { tipo: string }): string {
 async onClickLocandina(loc: { tipo: string; id_media: string }): Promise<void> {
   const id = String(loc?.id_media || '').trim();
   if (!id) return;
-
+    // salvo la categoria cliccata per il ritorno alla stessa sezione
+  try {
+  sessionStorage.setItem('ultima_categoria_click', String(this.idCategoria || '').trim());
+} catch {}
   const tipo = this.tipoDaClick(loc);
   const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
 

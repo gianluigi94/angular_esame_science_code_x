@@ -55,7 +55,8 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   sentinellaPronta = false;
   utenteHaScrollato = false;
   scrollYPrimaCambio = 0;
-
+   timerAutoScrollSessione: any = 0;
+ autoScrollSessioneEseguito = false;
   cinqueElementi = Array(5).fill(0);
 
   locandinaDemo = 'assets/locandine_it/locandina_it_abbraccia_il_vento.webp';
@@ -103,9 +104,11 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
         window.scrollTo(0, this.cacheCatalogo.scrollY || 0);
         this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
         if (this.sentinellaPronta) this.inizializzaOsservatoreSentinella();
+        this.provaAutoScrollDaSessionStorage();
       });
     } else {
       this.caricaPrimeRigheDaApi(0, false);
+      this.provaAutoScrollDaSessionStorage();
     }
     this.sottoscrizioni.add(
       this.scorrimentoCatalogo.richieste$.subscribe((idCategoria: string) => {
@@ -157,6 +160,10 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
       clearTimeout(this.timerCaricaFino);
       this.timerCaricaFino = 0;
     }
+       if (this.timerAutoScrollSessione) {
+     clearTimeout(this.timerAutoScrollSessione);
+     this.timerAutoScrollSessione = 0;
+   }
     try {
       this.osservatoreSentinella?.disconnect();
     } catch {}
@@ -753,4 +760,38 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.caricaAltreQuattroRigheDaApi();
   }
+
+   leggiCategoriaDaSessionStorage(): string {
+   try {
+     return String(sessionStorage.getItem('ultima_categoria_click') || '').trim();
+   } catch {
+     return '';
+   }
+ }
+
+ pulisciCategoriaDaSessionStorage(): void {
+   try {
+     sessionStorage.removeItem('ultima_categoria_click');
+   } catch {}
+ }
+
+ provaAutoScrollDaSessionStorage(): void {
+   if (this.autoScrollSessioneEseguito) return;
+   const idCategoria = this.leggiCategoriaDaSessionStorage();
+   if (!idCategoria) return;
+
+   this.autoScrollSessioneEseguito = true;
+
+   if (this.timerAutoScrollSessione) {
+     clearTimeout(this.timerAutoScrollSessione);
+     this.timerAutoScrollSessione = 0;
+   }
+
+   // piccolo delay per lasciare montare DOM/sentinella e poi riusare la tua pipeline standard
+   this.timerAutoScrollSessione = setTimeout(() => {
+     this.timerAutoScrollSessione = 0;
+     this.gestisciScrollACategoria(idCategoria);
+     this.pulisciCategoriaDaSessionStorage();
+   }, 80);
+ }
 }
