@@ -272,8 +272,8 @@ const disabilitaLoader = sonoNelLogin || (sonoNelCatalogo && eroNelLogin);
           // Provo a capire se sono in un reload del catalogo usando l'API performance
           const nav = performance.getEntriesByType('navigation') as any[]; // Leggo le info di navigazione del browser
           const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : ''; // Ricavo il tipo di navigazione (es. reload) se disponibile
-           const path = pulisciUrl(window.location.pathname || '');
-this.loaderAvvioCatalogo = tipo === 'reload' && isCatalogoHome(path);
+                      const path = pulisciUrl(window.location.pathname || '');
+this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
 
         } catch {
           // Se l'API performance non è disponibile o fallisce
