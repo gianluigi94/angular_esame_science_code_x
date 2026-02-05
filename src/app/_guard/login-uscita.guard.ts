@@ -56,18 +56,17 @@ export class LoginUscitaGuard implements CanDeactivate<LoginComponent> { //(fors
       return true; // permetto l'uscita immediata senza fare altro
     }
 
-    const targetUrl = // ricavo l'URL verso cui sto navigando, usando più tentativi per coprire casi diversi
-      (nextState?.url as string) || // provo prima a leggere l'url dal nextState se esiste
-      this.router.getCurrentNavigation()?.finalUrl?.toString() || // se non c'è, provo a leggere l'URL finale dalla navigazione corrente
-      ''; // se non trovo nulla, mi assicuro di avere una stringa vuota
+        const targetUrl =
+      (nextState?.url as string) ||
+      this.router.getCurrentNavigation()?.finalUrl?.toString() ||
+      '';
 
-         const vaInBenvenuto =
-       targetUrl === '/' ||
-       targetUrl === '' ||
-       targetUrl === '/benvenuto' ||
-       targetUrl.startsWith('/benvenuto') ||
-       targetUrl === '/welcome' ||
-       targetUrl.startsWith('/welcome');
+    const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
+
+          const vaInBenvenuto =
+      pathPulito === '/' ||
+      pathPulito === '' ||
+      /^\/(it|en)?\/?(benvenuto|welcome)(\/|$)/.test(pathPulito);
 
     if (vaInBenvenuto) { // se sto tornando alle pagine di benvenuto
       const scene = this.saturnoService.getScene(); // recupero la scena 3D attuale per poterla animare

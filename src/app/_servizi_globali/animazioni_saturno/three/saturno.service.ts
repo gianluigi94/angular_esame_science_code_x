@@ -613,6 +613,26 @@ this.planetMesh = planetMesh;
 this.saturnoPosizioniService.applicaPoseAScena(scene, 'WELCOME_ALTO');
 
 const url = this.router.url;
+
+
+// ✅ SE sono in scheda catalogo e NON voglio animazioni di ingresso,
+//    allora voglio lo stato finale subito (come "catalogo gia finito").
+if (!usaAnimazioniWelcome && this.eSchedaCatalogo(url)) {
+    // ✅ UI come "catalogo gia finito": titolo alto-sinistra  X normale
+  this.animateService.setXNormale();
+  this.animateService.setTitoloAltoGlobal();
+  this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
+  this.animateService.fadeOutSaturnoESfondo(0);
+  this.animateService.enablePageScroll();
+  this.firstRenderDone = true;
+  this.saturnoStatoService.setPronto();
+  this.spegniSaturno();
+  this.animateService.pauseClearcoat();
+  this.catalogoGiaAnimato = true;
+  this.scenaInizializzata = true;
+  resolve();
+  return;
+}
 const isLoginRoute = this.eRottaLogin(url);
 
 const isWelcomeRoute =
@@ -1148,4 +1168,14 @@ private eRottaWelcome(url: string): boolean {
     /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(path)
   );
 }
+
+
+  private eSchedaCatalogo(url: string): boolean {
+    const path = String(url || '').split('?')[0].split('#')[0];
+    // /it/catalogo/film/21
+    // /en/catalog/movies/21
+    // /it/catalogo/serie/1
+    // /en/catalog/series/1
+    return /^\/(it|en)\/(catalogo|catalog)\/(film|movies|serie|series)\/\d+(\/|$)/.test(path);
+  }
 }

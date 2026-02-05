@@ -259,4 +259,14 @@ export class ApiService {
  };
  return this.richiestaGenerica(risorsa, 'GET', parametri);
  }
+
+   public getFilm(id: number | string): Observable<IRispostaServer> {
+    const risorsa: (string | number)[] = ['film', id];
+    return this.richiestaGenerica(risorsa, 'GET');
+  }
+
+  public getSerie(id: number | string): Observable<IRispostaServer> {
+    const risorsa: (string | number)[] = ['serie', id];
+    return this.richiestaGenerica(risorsa, 'GET');
+  }
 }
