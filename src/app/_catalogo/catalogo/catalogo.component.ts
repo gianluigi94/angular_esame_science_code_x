@@ -20,6 +20,7 @@ import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { AnimazioniScomparsaService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/animazioni-scomparsa.service';
 import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_services/scorrimento-catalogo.service';
+import { CatalogoCacheService } from '../app-riga-categoria/categoria_services/catalogo-cache.service';
 @Component({
   selector: 'app-catalogo',
   templateUrl: './catalogo.component.html',
@@ -32,6 +33,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     public router: Router,
     public location: Location,
     public cambioLingua: CambioLinguaService,
+    public cacheCatalogo: CatalogoCacheService,
     public servizioAnimazioni: AnimazioniScomparsaService,
     public scorrimentoCatalogo: ScorrimentoCatalogoService,
   ) {}
@@ -91,7 +93,20 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
     this.forzaRottaCatalogoDaLinguaETipo();
-    this.caricaPrimeRigheDaApi(0, false);
+        const lingua = this.cambioLingua.leggiCodiceLingua();
+    if (this.cacheCatalogo.valida(lingua, this.tipoSelezionato)) {
+      this.righeDemo = this.cacheCatalogo.righeDemo.slice();
+      this.offsetRighe = this.cacheCatalogo.offsetRighe;
+      this.haAltreRighe = this.cacheCatalogo.haAltreRighe;
+      this.hoFinitoTutto = this.cacheCatalogo.hoFinitoTutto;
+      requestAnimationFrame(() => {
+        window.scrollTo(0, this.cacheCatalogo.scrollY || 0);
+        this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
+        if (this.sentinellaPronta) this.inizializzaOsservatoreSentinella();
+      });
+    } else {
+      this.caricaPrimeRigheDaApi(0, false);
+    }
     this.sottoscrizioni.add(
       this.scorrimentoCatalogo.richieste$.subscribe((idCategoria: string) => {
         this.gestisciScrollACategoria(idCategoria);
@@ -99,6 +114,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+        this.cacheCatalogo.svuota();
         this.forzaRottaCatalogoDaLinguaETipo(false);
         this.caricaPrimeRigheDaApi(0, false);
       }),
@@ -108,6 +124,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
       this.tipoContenuto.tipoSelezionato$
         .pipe(distinctUntilChanged(), skip(1))
         .subscribe((tipo) => {
+          this.cacheCatalogo.svuota();
           this.tipoSelezionato = tipo;
           this.tickResetPagine += 1;
           this.avviaCambioTipoConAttese();
@@ -117,6 +134,13 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+        this.cacheCatalogo.righeDemo = this.righeDemo.slice();
+    this.cacheCatalogo.offsetRighe = this.offsetRighe;
+    this.cacheCatalogo.haAltreRighe = this.haAltreRighe;
+    this.cacheCatalogo.hoFinitoTutto = this.hoFinitoTutto;
+    this.cacheCatalogo.tipo = this.tipoSelezionato;
+    this.cacheCatalogo.lingua = this.cambioLingua.leggiCodiceLingua();
+    this.cacheCatalogo.scrollY = window.scrollY || 0;
     this.sottoscrizioni.unsubscribe();
     try {
       this.servizioAnimazioni.disconnettiOsservatori();
