@@ -142,20 +142,43 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   aggiornaTrasformazioneWrapper(): void {
     this.trasformazioneWrapper = `translateX(${-this.indicePagina * 100}%)`;
   }
+impostaPaginaIniziale(pagina: number): void {
+  const p = Number.isFinite(pagina) ? Math.floor(pagina) : 0;
+  const clamped = Math.max(0, Math.min(p, this.numeroMassimoPagine));
+  this.indicePagina = clamped;
+  this.aggiornaTrasformazioneWrapper();
+}
 
-  paginaSuccessiva(): void {
-    if (this.indicePagina < this.numeroMassimoPagine) {
-      this.indicePagina++;
-      this.aggiornaTrasformazioneWrapper();
-    }
-  }
+registraClickScrollCategoria(): void {
+  try {
+    const chiave = 'storico_scroll_categorie';
+    const raw = sessionStorage.getItem(chiave);
+    const storico = raw ? JSON.parse(raw) : [];
 
-  paginaPrecedente(): void {
-    if (this.indicePagina > 0) {
-      this.indicePagina--;
-      this.aggiornaTrasformazioneWrapper();
-    }
+    storico.push({
+      idCategoria: String(this.idCategoria || '').trim(),
+      pagina: this.indicePagina,
+    });
+
+    sessionStorage.setItem(chiave, JSON.stringify(storico));
+  } catch {}
+}
+
+paginaSuccessiva(): void {
+  if (this.indicePagina < this.numeroMassimoPagine) {
+    this.indicePagina++;
+    this.aggiornaTrasformazioneWrapper();
+    this.registraClickScrollCategoria();
   }
+}
+
+paginaPrecedente(): void {
+  if (this.indicePagina > 0) {
+    this.indicePagina--;
+    this.aggiornaTrasformazioneWrapper();
+    this.registraClickScrollCategoria();
+  }
+}
 
   onMouseEnterLocandina(loc: { src: string; titolo: string; sottotitolo: string }): void {
     if (this.timerUscita) clearTimeout(this.timerUscita);

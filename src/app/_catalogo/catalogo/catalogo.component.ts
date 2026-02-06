@@ -21,6 +21,7 @@ import { Location } from '@angular/common';
 import { AnimazioniScomparsaService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/animazioni-scomparsa.service';
 import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { CatalogoCacheService } from '../app-riga-categoria/categoria_services/catalogo-cache.service';
+import { RigaCategoriaComponent } from '../app-riga-categoria/riga-categoria.component';
 @Component({
   selector: 'app-catalogo',
   templateUrl: './catalogo.component.html',
@@ -74,14 +75,17 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('sentinella', { read: ElementRef })
   sentinella!: ElementRef;
 
-  @ViewChildren('rigaCatalogo', { read: ElementRef })
-  righeCatalogo!: QueryList<ElementRef>;
+ @ViewChildren('rigaCatalogo', { read: ElementRef })
+righeCatalogo!: QueryList<ElementRef>;
+
+@ViewChildren('rigaCatalogo')
+righeComponenti!: QueryList<RigaCategoriaComponent>;
 
   ngAfterViewInit(): void {
     this.servizioAnimazioni.inizializzaAnimazioni(this.righeCatalogo);
     this.righeCatalogo.changes.subscribe(() => {
-      this.servizioAnimazioni.inizializzaAnimazioni(this.righeCatalogo);
-    });
+   this.servizioAnimazioni.inizializzaAnimazioni(this.righeCatalogo);
+ });
     this.inizializzaOsservatoreSentinella();
   }
 
@@ -128,6 +132,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
         .pipe(distinctUntilChanged(), skip(1))
         .subscribe((tipo) => {
           this.cacheCatalogo.svuota();
+          this.pulisciStoricoScrollOrizzontaleDaSessionStorage();
           this.tipoSelezionato = tipo;
           this.tickResetPagine += 1;
           this.avviaCambioTipoConAttese();
@@ -775,6 +780,12 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
    } catch {}
  }
 
+ pulisciStoricoScrollOrizzontaleDaSessionStorage(): void {
+  try {
+    sessionStorage.removeItem('storico_scroll_categorie');
+  } catch {}
+}
+
  provaAutoScrollDaSessionStorage(): void {
    if (this.autoScrollSessioneEseguito) return;
    const idCategoria = this.leggiCategoriaDaSessionStorage();
@@ -788,10 +799,79 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
    }
 
    // piccolo delay per lasciare montare DOM/sentinella e poi riusare la tua pipeline standard
-   this.timerAutoScrollSessione = setTimeout(() => {
-     this.timerAutoScrollSessione = 0;
-     this.gestisciScrollACategoria(idCategoria);
-     this.pulisciCategoriaDaSessionStorage();
-   }, 80);
+this.timerAutoScrollSessione = setTimeout(() => {
+  this.timerAutoScrollSessione = 0;
+  this.gestisciScrollACategoria(idCategoria);
+  setTimeout(() => {
+    const esito = this.applicaScrollOrizzontaleInizialePerCategoria(idCategoria);
+     // pulizia SEMPRE, anche se non ha trovato match o non ha scrollato
+     this.pulisciStoricoScrollOrizzontaleDaSessionStorage();
+    if (esito?.eseguito) {
+      this.salvaScrollOrizzontaleInSessionStorage(esito.idCategoria, esito.pagina);
+    }
+   }, 120);
+   this.pulisciCategoriaDaSessionStorage();
+}, 80);
  }
+
+leggiScrollOrizzontalePerCategoriaDaSessionStorage(idCategoria: string): { idCategoria: string; pagina: number } | null {
+   try {
+    const id = String(idCategoria || '').trim();
+    if (!id) return null;
+
+     const raw = sessionStorage.getItem('storico_scroll_categorie');
+     if (!raw) return null;
+     const storico = JSON.parse(raw);
+     if (!Array.isArray(storico) || !storico.length) return null;
+
+
+    // prendo l'ULTIMA occorrenza della categoria cliccata in locandina
+    let trovato: any = null;
+    for (let i = storico.length - 1; i >= 0; i--) {
+      const voce = storico[i] || {};
+      const idVoce = String(voce?.idCategoria || '').trim();
+      if (idVoce === id) {
+        trovato = voce;
+        break;
+      }
+    }
+    if (!trovato) return null;
+
+    const pagina = Number(trovato?.pagina);
+     if (!Number.isFinite(pagina) || pagina < 0) return null;
+
+    return { idCategoria: id, pagina: Math.floor(pagina) };
+   } catch {
+     return null;
+   }
+ }
+
+
+applicaScrollOrizzontaleInizialePerCategoria(idCategoria: string): { eseguito: boolean; idCategoria: string; pagina: number } | null {
+  const match = this.leggiScrollOrizzontalePerCategoriaDaSessionStorage(idCategoria);
+ if (!match) return null;
+
+  const righe = this.righeComponenti ? this.righeComponenti.toArray() : [];
+ if (!righe.length) return null;
+
+  const target = righe.find(
+    (r) => String(r?.idCategoria || '').trim() === match.idCategoria,
+  );
+ if (!target) return null;
+
+  target.impostaPaginaIniziale(match.pagina);
+ return { eseguito: true, idCategoria: match.idCategoria, pagina: match.pagina };
+}
+
+salvaScrollOrizzontaleInSessionStorage(idCategoria: string, pagina: number): void {
+  try {
+    const id = String(idCategoria || '').trim();
+    const p = Number.isFinite(pagina) ? Math.max(0, Math.floor(pagina)) : 0;
+    if (!id) return;
+
+    const chiave = 'storico_scroll_categorie';
+    const storico = [{ idCategoria: id, pagina: p }];
+    sessionStorage.setItem(chiave, JSON.stringify(storico));
+  } catch {}
+}
 }

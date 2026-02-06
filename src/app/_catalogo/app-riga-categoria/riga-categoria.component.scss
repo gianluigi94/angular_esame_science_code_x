@@ -99,11 +99,13 @@
   position: absolute;
   top: 54%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
+        background: rgba(59, 59, 59, 0.341);
+
   border: none;
   padding: 6px 12px;
   border-radius: 50%;
-  color: #fff;
+         color: #dddcdc;
+
   font-size: 1.25rem;
   cursor: pointer;
   user-select: none;
@@ -111,7 +113,10 @@
   pointer-events: auto;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.8);
+           color: #e5ae09;
+
+
+
   }
 
   &.indietro {
