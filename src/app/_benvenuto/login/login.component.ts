@@ -44,8 +44,10 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     private translate: TranslateService,
     private loginUscitaService: LoginUscitaService
   ) {
-        this.saltaAnimazioniIngresso =
-      !!this.router.getCurrentNavigation()?.extras?.state?.['saltaAnimazioniLogin'];
+            const nav = this.router.getCurrentNavigation();
+    this.saltaAnimazioniIngresso =
+      nav?.trigger === 'imperative' &&
+      !!nav?.extras?.state?.['saltaAnimazioniLogin'];
 
     this.reactiveForm = this.fb.group({
       // costruisco il reactive form raggruppando i controlli e le loro regole di validazione
