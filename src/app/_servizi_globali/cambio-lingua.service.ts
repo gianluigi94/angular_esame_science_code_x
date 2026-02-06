@@ -238,7 +238,10 @@ export class CambioLinguaService {
   }
 
       private sincBenvenutoPathConLingua(codice: string): void {
-    const full = this.router.url || '';
+        const full =
+      this.location.path(true) ||
+      (window.location.pathname + window.location.search + window.location.hash) ||
+      '';
     const path = full.split('?')[0].split('#')[0];
 
         const m = path.match(/^\/(it|en)\/(benvenuto|welcome)(\/.*)?$/);
@@ -254,11 +257,12 @@ export class CambioLinguaService {
     const target = (base + tail).replace(/\/+$/,'');
     const current = String(path || '').replace(/\/+$/,'');
     if (target === current) return;
+    // ✅ cambia URL senza navigare: non ricrei componenti e NON resetti lo scroll della .main-scroll
+    // preservo query/hash se presenti
+    const soloPath = full.split('?')[0].split('#')[0];
+    const tailQh = full.substring(soloPath.length); // ?query/#hash
 
-    this.router.navigateByUrl(target, {
-      replaceUrl: true,
-      state: { saltaAnimazioniLogin: true },
-    });
+    this.location.replaceState(target + tailQh);
   }
 
     impostaLinguaDaCodice(codice: string, salva: boolean = false): void {
