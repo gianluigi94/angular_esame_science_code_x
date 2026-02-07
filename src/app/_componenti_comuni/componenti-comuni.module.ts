@@ -15,6 +15,7 @@ import { ToastContainerComponent } from './toast-container/toast-container.compo
 import { CaroselloNovitaComponent } from '../_catalogo/carosello-novita/carosello-novita.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { PaginaCaricamentoComponent } from './pagina-caricamento/pagina-caricamento.component';
+import { NotFoundComponent } from './not-found/not-found.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +30,7 @@ import { PaginaCaricamentoComponent } from './pagina-caricamento/pagina-caricame
     CaroselloNovitaComponent,
     SpinnerComponent,
     PaginaCaricamentoComponent,
+    NotFoundComponent,
   ],
   imports: [
     CommonModule,

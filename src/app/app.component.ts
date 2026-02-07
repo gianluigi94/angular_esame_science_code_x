@@ -104,9 +104,10 @@ export class AppComponent implements OnInit {
     });
 
     // Qui decido se mostrare il loader e se caricare il carosello in base all'URL, e mi aggancio ai cambi rotta per aggiornare tutto durante la navigazione
-            this.caricamentoDisabilitato =
+               this.caricamentoDisabilitato =
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(urlIniziale) ||
-  /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(urlIniziale);
+  /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(urlIniziale) ||
+  /^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale);
     this.caricamentoDisabilitato$.next(this.caricamentoDisabilitato); // Propago subito lo stato del loader disabilitato nello stream
 
     this.deveCaricareImmaginiCarosello = isCatalogoHome(urlIniziale);
@@ -143,6 +144,10 @@ export class AppComponent implements OnInit {
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(url) ||
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(url);
 
+  const sonoInNonTrovato =
+  /^\/(it|en)\/non-trovato(\/|$)/.test(url);
+
+
 const eroNelLogin =
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(precedente) ||
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(precedente);
@@ -150,7 +155,7 @@ const eroNelLogin =
 const sonoNelCatalogo =
   /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url);
 
-const disabilitaLoader = sonoNelLogin || (sonoNelCatalogo && eroNelLogin);
+const disabilitaLoader = sonoNelLogin || sonoInNonTrovato || (sonoNelCatalogo && eroNelLogin);
 
         this.caricamentoDisabilitato = disabilitaLoader; // Salvo nello stato interno se il loader è disabilitato
         this.caricamentoDisabilitato$.next(disabilitaLoader); // Notifico nello stream che il loader è (o non è) disabilitato
