@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
   saturnoPronto$ = this.saturnoStatoService.saturnoPronto$; // Verifico se l'animazione/stato di Saturno è pronto
   caroselloPronto$ = this.caricamentoCaroselloService.caroselloPronto$; // Controllo se il carosello ha finito di caricarsi
   forzaLoaderExtra = false; // Decido se forzare la visualizzazione extra del loader
-
+  chiaveToast404 = 'toast_404_persistente';
   private extraLoaderTimer: any = null; // Uso un timer per gestire il loader extra
   private readonly EXTRA_LOADER_MS = 2600; // Definisco la durata del loader extra in millisecondi
   devoCaricareTexturePrimaVolta = false; // Indico se devo caricare le texture solo al primo avvio
@@ -79,6 +79,9 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.isFirefox = isFirefox(); // Mi salvo se sto girando su Firefox
     const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
+        if (/^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale)) {
+      this.mostraToast404Persistente();
+    }
     this.devoCaricareTexturePrimaVolta = // Decido se devo caricare le texture al primo avvio
       localStorage.getItem('saturnoTextureLoaded') !== 'true'; // Controllo in localStorage se avevo già caricato le texture
 
@@ -147,7 +150,13 @@ export class AppComponent implements OnInit {
   const sonoInNonTrovato =
   /^\/(it|en)\/non-trovato(\/|$)/.test(url);
 
-
+  if (sonoInNonTrovato) {
+  this.erroreGlobaleService.resettaErroreFatale();
+  this.mostraToast404Persistente();
+}
+if (!sonoInNonTrovato) {
+  this.toastService.chiudi(this.chiaveToast404);
+}
 const eroNelLogin =
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(precedente) ||
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(precedente);
@@ -343,6 +352,17 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
           console.log('LOADER SPARITO alle ' + now + ' ms');
         }
       }
+    );
+  }
+
+    mostraToast404Persistente(): void {
+    this.toastService.chiudi(this.chiaveToast404);
+    this.toastService.mostra(
+      'non abbiamo trovato questa pagina',
+      'error',
+      true,
+      undefined,
+      this.chiaveToast404
     );
   }
 }

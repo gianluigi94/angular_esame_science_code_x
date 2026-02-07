@@ -5,10 +5,15 @@ import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ErroreGlobaleService } from 'src/app/_servizi_globali/errore-globale.service';
-
+import { Router } from '@angular/router';
+import { ToastService } from 'src/app/_servizi_globali/toast.service';
 @Injectable() // dichiaro che può essere gestita dalle iniezioni
 export class ErroreHttpInterceptor implements HttpInterceptor {
-  constructor(private erroreGlobaleService: ErroreGlobaleService) {}
+    constructor(
+    private erroreGlobaleService: ErroreGlobaleService,
+    private router: Router,
+    private toastService: ToastService
+  ) {}
 
     /**
    * Intercetta ogni richiesta HTTP in uscita per gestire in modo centralizzato
@@ -39,6 +44,22 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
         if (err.status === 401 || err.status === 403) {
           // lascio che gli errori di autorizzazione vengano gestiti altrove
           return throwError(() => err); // rilancio l'errore così com'è
+        }
+
+
+        // 404 su dettaglio film/serie -> pagina non trovato (NO errore fatale)
+        const e404 = err.status === 404;
+        const eDettaglioFilmSerie =
+          /\/api\/v1\/(film|serie)\/\d+(\?.*)?$/i.test(req.url);
+
+        if (e404 && eDettaglioFilmSerie) {
+          const m = (this.router.url || '').match(/^\/(it|en)(\/|$)/i);
+          const lingua = m ? m[1].toLowerCase() : 'it';
+
+          this.erroreGlobaleService.resettaErroreFatale();
+          this.router.navigateByUrl('/' + lingua + '/non-trovato');
+
+          return throwError(() => err);
         }
 
         const msgBackend = // preparo un messaggio di errore leggibile partendo dalla risposta del backend
