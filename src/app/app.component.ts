@@ -10,6 +10,7 @@ import { PerformanceService } from './_servizi_globali/performance.service';
 import { filter, take } from 'rxjs/operators';
 import { CaricamentoCaroselloService } from './_catalogo/carosello-novita/carosello_services/caricamento-carosello.service';
 import { BehaviorSubject, combineLatest } from 'rxjs';
+import { AnimateService } from './_servizi_globali/animazioni_saturno/animate.service';
 import { DOCUMENT } from '@angular/common';
 import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
@@ -57,6 +58,7 @@ export class AppComponent implements OnInit {
     private traduzioniService: TraduzioniService,
     private erroreGlobaleService: ErroreGlobaleService,
     private toastService: ToastService,
+    private animateService: AnimateService,
     private statoSessioneClient: StatoSessioneClientService,
     private translate: TranslateService,
     private saturnoStatoService: SaturnoStatoService,
@@ -84,6 +86,7 @@ export class AppComponent implements OnInit {
     const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
     this.sonoIn404 = /^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale);
     this.aggiornaVisibilitaSfondo404();
+    this.gestisciFadeInSfondo404();
     salvaPathInSessionStorage(urlIniziale);
         if (/^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale)) {
       this.mostraToast404Persistente();
@@ -142,6 +145,7 @@ export class AppComponent implements OnInit {
         this.ultimaUrl = url; // Aggiorno l'ultima URL con quella nuova
         salvaPathInSessionStorage(url);
         this.aggiornaVisibilitaSfondo404();
+        this.gestisciFadeInSfondo404();
            if (
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(url) ||
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(url)
@@ -380,5 +384,16 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
       path.startsWith('it/catalogo') || path.startsWith('en/catalog');
 
     this.nascondiSfondoIn404 = this.sonoIn404 && vieneDaCatalogo;
+  }
+
+    gestisciFadeInSfondo404(): void {
+    // Caso in cui prima lo sfondo NON veniva montato:
+    // ora lo montiamo sempre, ma lo facciamo comparire con fade-in.
+    if (this.nascondiSfondoIn404) {
+      this.animateService.fadeInSoloSfondo(1.85);
+      return;
+    }
+
+    // Negli altri casi non forziamo nulla: non tocchiamo i flussi gia' esistenti.
   }
 }

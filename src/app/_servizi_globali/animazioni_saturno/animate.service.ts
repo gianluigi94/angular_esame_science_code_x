@@ -730,6 +730,20 @@ private preparaHeaderPrimaDelLoader(
   } catch {}
 }
 
+public fadeInSoloSfondo(durata: number = 1, delay: number = 0): void {
+  const sfondo = document.querySelector('app-sfondo') as HTMLElement | null;
+  if (!sfondo) {
+    return;
+  }
 
+  gsap.killTweensOf(sfondo);
+  gsap.set(sfondo, { opacity: 0 });
+  gsap.to(sfondo, {
+    opacity: 1,
+    duration: durata,
+    delay,
+    ease: 'power2.out',
+  });
+}
 
 }
