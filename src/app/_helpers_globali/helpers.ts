@@ -78,3 +78,35 @@ export function impostaLangHtml(documento: Document, codice: string): void { // 
   const lang = codice === 'it' ? 'it' : 'en'; // traduco il codice in una lingua supportata: se non è 'it' forzo 'en'
   documento.documentElement.setAttribute('lang', lang); // imposto l'attributo lang sull'elemento radice del documento
 }
+
+
+const CHIAVE_SESSIONE_PATH = 'ultimo_path';
+
+/**
+ * Salva in sessionStorage il path corrente (senza query/hash).
+ */
+export function salvaPathInSessionStorage(url: string): void {
+  try {
+    const pathPulito = pulisciUrl(url || '');
+            if (
+      !pathPulito ||
+      pathPulito === '/' ||
+      /^\/(it|en)$/.test(pathPulito) ||
+      /^\/(it|en)\/non-trovato(\/|$)/.test(pathPulito)
+    ) {
+      return;
+    }
+    sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito);
+  } catch {}
+}
+
+/**
+ * Ritorna il path salvato in sessionStorage.
+ */
+export function leggiPathDaSessionStorage(): string {
+  try {
+    return sessionStorage.getItem(CHIAVE_SESSIONE_PATH) || '';
+  } catch {
+    return '';
+  }
+}

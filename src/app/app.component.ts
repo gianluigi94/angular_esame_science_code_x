@@ -18,6 +18,8 @@ import {
   pulisciUrl,
   isCatalogoHome,
   isAreaCatalogo,
+  leggiPathDaSessionStorage,
+  salvaPathInSessionStorage,
   impostaLangHtml,
 } from './_helpers_globali/helpers';
 
@@ -40,7 +42,8 @@ export class AppComponent implements OnInit {
   devoCaricareTexturePrimaVolta = false; // Indico se devo caricare le texture solo al primo avvio
   deveCaricareImmaginiCarosello = false; // Indico se devo caricare le immagini del carosello
   deveCaricareImmaginiCarosello$ = new BehaviorSubject<boolean>(false); // Espongo come stream se il carosello deve caricare immagini
-
+  sonoIn404 = false;
+  nascondiSfondoIn404 = false;
   caricamentoDisabilitato = false; // Indico se il loader globale è disabilitato
   caricamentoDisabilitato$ = new BehaviorSubject<boolean>(false); // Espongo lo stato del loader disabilitato come observable
   ultimaUrl = ''; // Memorizzo l'ultima URL visitata
@@ -79,6 +82,9 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.isFirefox = isFirefox(); // Mi salvo se sto girando su Firefox
     const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
+    this.sonoIn404 = /^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale);
+    this.aggiornaVisibilitaSfondo404();
+    salvaPathInSessionStorage(urlIniziale);
         if (/^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale)) {
       this.mostraToast404Persistente();
     }
@@ -131,10 +137,11 @@ export class AppComponent implements OnInit {
             : ev && ev.url // Altrimenti provo con ev.url e se non c'è nulla, metto stringa vuota
             ? ev.url
             : '';
-
+        this.sonoIn404 = /^\/(it|en)\/non-trovato(\/|$)/.test(url);
         const precedente = this.ultimaUrl; // Mi salvo l'URL precedente prima di aggiornarlo
         this.ultimaUrl = url; // Aggiorno l'ultima URL con quella nuova
-
+        salvaPathInSessionStorage(url);
+        this.aggiornaVisibilitaSfondo404();
            if (
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(url) ||
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(url)
@@ -364,5 +371,14 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
       undefined,
       this.chiaveToast404
     );
+  }
+
+    aggiornaVisibilitaSfondo404(): void {
+    const raw = leggiPathDaSessionStorage();
+    const path = raw.replace(/^\/+/, ''); // tolgo eventuali slash iniziali
+    const vieneDaCatalogo =
+      path.startsWith('it/catalogo') || path.startsWith('en/catalog');
+
+    this.nascondiSfondoIn404 = this.sonoIn404 && vieneDaCatalogo;
   }
 }

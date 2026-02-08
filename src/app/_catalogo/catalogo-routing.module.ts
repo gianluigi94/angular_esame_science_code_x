@@ -3,7 +3,37 @@
 import { NgModule } from '@angular/core';
 import { CatalogoComponent } from './catalogo/catalogo.component';
 import { SchedaComponent } from './scheda/scheda.component';
-import { RouterModule, Routes, CanActivateFn, Router, UrlTree } from '@angular/router';
+import { RouterModule, Routes, UrlSegment, UrlMatchResult } from '@angular/router';
+
+export function matcherFilmDettaglio(segmenti: UrlSegment[]): UrlMatchResult | null {
+  // /film/:id oppure /movies/:id con id solo cifre e niente extra
+  if (
+    segmenti.length === 2 &&
+    /^(film|movies)$/.test(segmenti[0].path) &&
+    /^\d+$/.test(segmenti[1].path)
+  ) {
+    return {
+      consumed: segmenti,
+      posParams: { id: segmenti[1] },
+    };
+  }
+  return null;
+}
+
+export function matcherSerieDettaglio(segmenti: UrlSegment[]): UrlMatchResult | null {
+  // /serie/:id oppure /series/:id con id solo cifre e niente extra
+  if (
+    segmenti.length === 2 &&
+    /^(serie|series)$/.test(segmenti[0].path) &&
+    /^\d+$/.test(segmenti[1].path)
+  ) {
+    return {
+      consumed: segmenti,
+      posParams: { id: segmenti[1] },
+    };
+  }
+  return null;
+}
 
 const routes: Routes = [
   {
@@ -36,12 +66,8 @@ const routes: Routes = [
     path: 'movies-series',
     component: CatalogoComponent,
   },
-    { path: 'film/:id', component: SchedaComponent },
-  { path: 'serie/:id', component: SchedaComponent },
-
-  // SCHEDA (EN)
-  { path: 'movies/:id', component: SchedaComponent },
-  { path: 'series/:id', component: SchedaComponent },
+     { matcher: matcherFilmDettaglio, component: SchedaComponent },
+  { matcher: matcherSerieDettaglio, component: SchedaComponent },
 
 
 ];
