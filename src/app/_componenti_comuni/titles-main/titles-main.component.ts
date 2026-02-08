@@ -39,9 +39,7 @@ export class TitlesMainComponent implements AfterViewInit {
    */
   ngAfterViewInit(): void {
     // entro nell’hook che scatta quando la view è stata renderizzata e gli elementi DOM esistono
-    const firstElement = this.elementRef.nativeElement.querySelector(
-      '.first'
-    ) as HTMLElement; // recupero l’elemento .first dal DOM del componente
+    const firstElement = this.elementRef.nativeElement.querySelector('[data-titolo-first]') as HTMLElement;
 
     this.performanceService.isLowEndPC$.subscribe((isLowEnd) => {
       // mi sottoscrivo allo stream che mi dice se il pc è di fascia bassa
@@ -52,6 +50,16 @@ export class TitlesMainComponent implements AfterViewInit {
         const xElement = this.elementRef.nativeElement.querySelector(
           '[data-titolo-x]'
         ) as HTMLElement; // recupero l’elemento con attributo data-titolo-x
+
+        const url = this.router.url.split('?')[0].split('#')[0];
+        const isWelcomeRoute =
+          /^\/(it|en)\/(benvenuto|welcome)(\/|$)/.test(url) &&
+          !/^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url);
+
+        // fuori dalla welcome non avviare intro titolo
+        if (!isWelcomeRoute) {
+          return;
+        }
 
         this.animateService.animateAll(
           // chiamo il servizio per avviare tutte le animazioni

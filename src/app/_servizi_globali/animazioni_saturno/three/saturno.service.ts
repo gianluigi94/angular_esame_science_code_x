@@ -428,6 +428,10 @@ if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato) {
       this.directionalLight || undefined
     );
 
+  } else if (this.eRottaNotFound(url)) {
+    this.animateService.setXNormale();
+    this.animateService.setTitoloAltoGlobal();
+
  } else if (this.eRottaWelcome(url)) {
     // 🔹 Rientro nella pagina di benvenuto con scena già costruita:
     //    - titolo di nuovo centrale
@@ -641,7 +645,7 @@ const isWelcomeRoute =
   !isLoginRoute;
 
 const isCatalogRoute = usaAnimazioniWelcome && this.eRottaCatalogo(url);
-
+const isNotFoundRoute = this.eRottaNotFound(url);
 const ricaricaCatalogo = usaAnimazioniWelcome && this.isReloadCatalogo();
 
 
@@ -659,7 +663,10 @@ if (this.eRottaLogin(url)) {
     this.directionalLight || undefined
   );
 }
-
+if (isNotFoundRoute) {
+  this.animateService.setXNormale();
+  this.animateService.setTitoloAltoGlobal();
+}
 // 👉 NIENTE animateAll qui: lo chiameremo DOPO aver creato i gruppi di particelle
 
 
@@ -1177,5 +1184,10 @@ private eRottaWelcome(url: string): boolean {
     // /it/catalogo/serie/1
     // /en/catalog/series/1
     return /^\/(it|en)\/(catalogo|catalog)\/(film|movies|serie|series)\/\d+(\/|$)/.test(path);
+  }
+
+    private eRottaNotFound(url: string): boolean {
+    const path = String(url || '').split('?')[0].split('#')[0];
+    return /^\/(it|en)\/non-trovato(\/|$)/.test(path);
   }
 }
