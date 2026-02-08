@@ -296,14 +296,21 @@ public setXNormale(): void {
 public setXGif(): void {
   const xLow = document.querySelector('#x_low');
   const xHigh = document.querySelector('#x_hegh');
-
+  const xAfterRule = CSSRulePlugin.getRule('.x::after');
   if (xLow) {
+    gsap.killTweensOf(xLow);
     xLow.classList.remove('x-orange');
     xLow.classList.add('x', 'x-low');
   }
   if (xHigh) {
+    gsap.killTweensOf(xHigh);
     xHigh.classList.remove('x-orange');
     xHigh.classList.add('x', 'x-high');
+    gsap.set(xHigh, { color: 'transparent', opacity: 1, clearProps: 'transform' });
+  }
+
+    if (xAfterRule) {
+    gsap.set(xAfterRule, { opacity: 1 });
   }
 }
 
@@ -464,7 +471,7 @@ private getTitoloAltoConfig(): {
   } else if (window.innerWidth <= 1000) {
     topValue = 8;
   } else {
-    topValue = 12;
+    topValue = 11;
   }
 
   const softOffset = ((1 - scaleValue) * 100) / 2;
