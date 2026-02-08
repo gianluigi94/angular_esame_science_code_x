@@ -530,7 +530,8 @@ public animateTitoloVersoAltoGlobal(
   const title = document.querySelector('.title-container') as HTMLElement | null;
   const subtitle = document.querySelector('.subtitle') as HTMLElement | null;
   const scrol = document.querySelector('.scrol') as HTMLElement | null;
-
+    const first = document.querySelector('[data-titolo-first]') as HTMLElement | null;
+  const x = document.querySelector('[data-titolo-x]') as HTMLElement | null;
   if (subtitle) {
     gsap.killTweensOf(subtitle);
     gsap.set(subtitle, { opacity: 0, display: 'none' });
@@ -541,7 +542,18 @@ public animateTitoloVersoAltoGlobal(
     gsap.set(scrol, { opacity: 0 });
   }
 
+  // ✅ login reload: garantisco visibilita' parti titolo
+  if (first) {
+    gsap.killTweensOf(first);
+    gsap.set(first, { opacity: 1, clearProps: 'transform' });
+  }
+  if (x) {
+    gsap.killTweensOf(x);
+    gsap.set(x, { opacity: 1, clearProps: 'transform' });
+  }
   if (title) {
+        gsap.killTweensOf(title);
+    gsap.set(title, { opacity: 1 });
     // 🔹 aspetto 100ms prima di rendere il titolo "cliccabile"
     setTimeout(() => {
       title.classList.add('titolo-alto');
