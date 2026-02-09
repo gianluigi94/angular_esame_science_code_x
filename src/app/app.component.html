@@ -19,6 +19,7 @@
 <app-pagina-caricamento
   *ngIf="!caricamentoDisabilitato && (
          forzaLoaderExtra
+         || forzaLoaderExtraCustom
          || (erroreFatale$ | async)
          || !(traduzioniPronte$ | async)
          || !(sessioneVerificata$ | async)
@@ -29,6 +30,7 @@
   [stileAvvioCatalogo]="loaderAvvioCatalogo"
   [isFirefox]="isFirefox">
 </app-pagina-caricamento>
+
 
 
 

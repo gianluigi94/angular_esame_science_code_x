@@ -37,9 +37,13 @@ export class AppComponent implements OnInit {
   saturnoPronto$ = this.saturnoStatoService.saturnoPronto$; // Verifico se l'animazione/stato di Saturno è pronto
   caroselloPronto$ = this.caricamentoCaroselloService.caroselloPronto$; // Controllo se il carosello ha finito di caricarsi
   forzaLoaderExtra = false; // Decido se forzare la visualizzazione extra del loader
+  forzaLoaderExtraCustom = false; // EXTRA MIO (NON tocca Firefox/texture)
   chiaveToast404 = 'toast_404_persistente';
   private extraLoaderTimer: any = null; // Uso un timer per gestire il loader extra
   private readonly EXTRA_LOADER_MS = 2600; // Definisco la durata del loader extra in millisecondi
+    private customLoaderTimer: any = null; // timer extra mio
+  private readonly CUSTOM_LOADER_MS = 50;
+  private customDelayGiaApplicato = false; // evita loop
   devoCaricareTexturePrimaVolta = false; // Indico se devo caricare le texture solo al primo avvio
   deveCaricareImmaginiCarosello = false; // Indico se devo caricare le immagini del carosello
   deveCaricareImmaginiCarosello$ = new BehaviorSubject<boolean>(false); // Espongo come stream se il carosello deve caricare immagini
@@ -49,7 +53,8 @@ export class AppComponent implements OnInit {
   caricamentoDisabilitato$ = new BehaviorSubject<boolean>(false); // Espongo lo stato del loader disabilitato come observable
   ultimaUrl = ''; // Memorizzo l'ultima URL visitata
 
-  private loaderVisibile = true; // Tengo traccia se il loader è attualmente visibile
+    loaderVisibile = true; // Deve essere usato dal template
+  private hideLoaderTimer: any = null;
   isFirefox = false; // Indico se il browser in uso è Firefox
   loaderAvvioCatalogo = false; // Indico se il loader è mostrato durante l'avvio del catalogo
 
@@ -67,7 +72,7 @@ export class AppComponent implements OnInit {
     private titoloPaginaService: TitoloPaginaService,
     private performanceService: PerformanceService,
     @Inject(DOCUMENT) private documento: Document // Inietto il DOM Document di Angular per poter leggere/modificare il tag <html> (impostare la lingua)
-  ) {}
+  ) {console.log('ciao')}
 
   /**
    *  Eseguito una sola volta quando il componente root viene inizializzato.
@@ -313,6 +318,13 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
             clearTimeout(this.extraLoaderTimer); // Lo annullo
             this.extraLoaderTimer = null; // E lo azzero
           }
+                    // reset extra mio
+          this.forzaLoaderExtraCustom = false;
+          this.customDelayGiaApplicato = false;
+          if (this.customLoaderTimer) {
+            clearTimeout(this.customLoaderTimer);
+            this.customLoaderTimer = null;
+          }
         } else if (deveMostrareLoader) {
           // Se devo mostrare il loader normale
           this.forzaLoaderExtra = false; // Non devo forzare il loader extra
@@ -321,8 +333,36 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
             clearTimeout(this.extraLoaderTimer); // Lo annullo
             this.extraLoaderTimer = null; // E lo azzero
           }
+
+                    // reset extra mio
+          this.forzaLoaderExtraCustom = false;
+          this.customDelayGiaApplicato = false;
+          if (this.customLoaderTimer) {
+            clearTimeout(this.customLoaderTimer);
+            this.customLoaderTimer = null;
+          }
         } else {
           // Se non devo mostrare il loader normale
+
+          // === EXTRA MIO (NON tocca Firefox/texture) ===
+          const sonoNelCasoSpecialeFirefox =
+            this.isFirefox && this.devoCaricareTexturePrimaVolta;
+
+          if (!sonoNelCasoSpecialeFirefox && !this.customDelayGiaApplicato) {
+            this.customDelayGiaApplicato = true;
+            this.forzaLoaderExtraCustom = true;
+
+            if (this.customLoaderTimer) {
+              clearTimeout(this.customLoaderTimer);
+              this.customLoaderTimer = null;
+            }
+
+            this.customLoaderTimer = setTimeout(() => {
+              this.forzaLoaderExtraCustom = false;
+              this.customLoaderTimer = null;
+            }, this.CUSTOM_LOADER_MS);
+          }
+
           if (
             // Controllo se devo forzare un po' di loader extra su Firefox al primo caricamento texture
             this.devoCaricareTexturePrimaVolta && // Lo faccio solo se è la prima volta che carico le texture
@@ -349,6 +389,7 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
 
         if (caricamentoDisabilitato) {
           // Se il caricamento è disabilitato
+
           this.loaderVisibile = false; // Nascondo direttamente il loader
         }
 
@@ -358,9 +399,11 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
           !deveMostrareLoader && // solo se non serve più il loader normale
           !this.forzaLoaderExtra // solo se non sto forzando il loader extra
         ) {
-          this.loaderVisibile = false; // Nascondo il loader
-          const now = performance.now(); // Prendo il tempo corrente per loggare quando è sparito
-          console.log('LOADER SPARITO alle ' + now + ' ms');
+                  setTimeout(() => {
+            this.loaderVisibile = false; // Nascondo il loader con piccolo ritardo anti-flicker
+            const now = performance.now(); // Prendo il tempo corrente per loggare quando è sparito
+            console.log('LOADER SPARITO alle ' + now + ' ms');
+          }, 100000);
         }
       }
     );
@@ -369,7 +412,7 @@ this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
     mostraToast404Persistente(): void {
     this.toastService.chiudi(this.chiaveToast404);
     this.toastService.mostra(
-      'non abbiamo trovato questa pagina',
+      'non abbiamo trovato questaz pagina',
       'error',
       true,
       undefined,
