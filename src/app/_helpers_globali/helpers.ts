@@ -110,3 +110,51 @@ export function leggiPathDaSessionStorage(): string {
     return '';
   }
 }
+
+/**
+ * Ritorna true se l'ultimo path salvato in sessionStorage indica che si arriva da benvenuto/welcome.
+ * Usa leggiPathDaSessionStorage() che già pulisce e salva i path "utili".
+ */
+export function vengoDaBenvenutoDaSessione(): boolean {
+  try {
+    const last = pulisciUrl(leggiPathDaSessionStorage() || '');
+
+    return (
+      last === '/it/benvenuto' ||
+      last === '/it/welcome' ||
+      last === '/en/benvenuto' ||
+      last === '/en/welcome'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Forza il salvataggio del path corrente anche se è /non-trovato.
+ * Da chiamare SOLO quando la pagina 404 è già caricata/stabile.
+ */
+export function salvaPathNonTrovatoDopoCaricamento(url: string): void {
+  try {
+    const pathPulito = pulisciUrl(url || '');
+    if (!pathPulito) return;
+
+    // accetta SOLO la rotta non-trovato (it/en)
+    if (!/^\/(it|en)\/non-trovato(\/|$)/.test(pathPulito)) {
+      return;
+    }
+
+    sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito);
+  } catch {}
+}
+const CHIAVE_WELCOME_TITOLO_STATO = 'welcome_titolo_stato';
+export type WelcomeTitoloStato = 'ALTO' | 'CENTRO' | '';
+
+export function leggiWelcomeTitoloStatoDaSessione(): WelcomeTitoloStato {
+  try {
+    const v = (sessionStorage.getItem(CHIAVE_WELCOME_TITOLO_STATO) || '') as any;
+    return v === 'ALTO' || v === 'CENTRO' ? v : '';
+  } catch {
+    return '';
+  }
+}

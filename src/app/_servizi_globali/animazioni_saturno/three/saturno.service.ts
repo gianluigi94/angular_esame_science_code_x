@@ -367,10 +367,19 @@ this.skipLoginIntroOnce = this.isPageReload() && this.eRottaLogin(window.locatio
   );
 }
 
- else if (this.eRottaNotFound(url)) {
-          this.animateService.setXNormale();
-          this.animateService.setTitoloAltoGlobal();
-        } else if (this.eRottaWelcome(url)) {
+else if (this.eRottaNotFound(url)) {
+  this.animateService.setTitoloCentraleGlobal();
+  this.animateService.setXGif();
+
+  // poi fallo salire senza scontro
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      this.animateService.setXNormale();
+      this.animateService.animateTitoloVersoAltoGlobal(0.9, 0.05);
+    });
+  });
+}
+ else if (this.eRottaWelcome(url)) {
           // 🔹 Rientro nella pagina di benvenuto con scena già costruita:
           //    - titolo di nuovo centrale
           //    - X in versione GIF

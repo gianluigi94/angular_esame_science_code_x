@@ -326,44 +326,49 @@ const saturnoTrigger = ScrollTrigger.create({
 
 
     // Trigger per la posizione e dimensione del titolo
-    const titleTrigger = ScrollTrigger.create({
-      trigger: '#saturno-scrolle',
-      scroller: '.main-scroll',
-      start: '10px top',
-      onEnter: () => {
-        gsap.to(title, {
-          top: topValue,
-          left: leftValue,
-          xPercent: isTablet ? -softOffset : -softOffset * 1.1,
-          yPercent: -softOffset,
-          paddingTop: 0,
-          marginTop: 0,
-                   scaleX: scaleX,
-         scaleY: scaleY,
-          minWidth: '60px',
-          minHeight: '200px',
-          duration: 0.85,
-          delay: 0.2,
-          ease: 'power2.inOut',
-        });
-      },
-      onLeaveBack: () => {
-        gsap.to(title, {
-          top: '50%',
-          left: '50%',
-          xPercent: -50,
-          yPercent: -50,
-          paddingTop: 210,
-          marginTop: this.checkSpecialTablet() ? -120 : 0,
-          scale: 1,
-          clearProps: 'minWidth,minHeight',
-          duration: 0.85,
-          delay: 0.2,
-          ease: 'power2.inOut',
-        });
-      },
+   const titleTrigger = ScrollTrigger.create({
+  trigger: '#saturno-scrolle',
+  scroller: '.main-scroll',
+  start: '10px top',
+  onEnter: () => {
+    this.setTitoloStatoSS('ALTO');// ✅ quando il trigger entra, titolo va in alto
+
+    gsap.to(title, {
+      top: topValue,
+      left: leftValue,
+      xPercent: isTablet ? -softOffset : -softOffset * 1.1,
+      yPercent: -softOffset,
+      paddingTop: 0,
+      marginTop: 0,
+      scaleX: scaleX,
+      scaleY: scaleY,
+      minWidth: '60px',
+      minHeight: '200px',
+      duration: 0.85,
+      delay: 0.2,
+      ease: 'power2.inOut',
     });
-    this.triggers.push(titleTrigger);
+  },
+  onLeaveBack: () => {
+    this.setTitoloStatoSS('CENTRO'); // ✅ quando risali sopra il trigger, torna centrale
+
+    gsap.to(title, {
+      top: '50%',
+      left: '50%',
+      xPercent: -50,
+      yPercent: -50,
+      paddingTop: 210,
+      marginTop: this.checkSpecialTablet() ? -120 : 0,
+      scale: 1,
+      clearProps: 'minWidth,minHeight',
+      duration: 0.85,
+      delay: 0.2,
+      ease: 'power2.inOut',
+    });
+  },
+});
+this.triggers.push(titleTrigger);
+
 
     // Sottotitolo
     gsap.to('.subtitle', {
@@ -623,7 +628,9 @@ if (footerP) {
 
   public stopAllScrollAnimations(): void {
     this.destroyScrollTriggers();
-
+    try {
+    sessionStorage.removeItem(this.SS_WELCOME_TITOLO_STATO);
+  } catch {}
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
       this.resizeHandler = null;
@@ -720,4 +727,28 @@ if (footerP) {
 
     this.triggers.push(loopingTrigger);
   }
+
+ private readonly SS_WELCOME_TITOLO_STATO = 'welcome_titolo_stato';
+// valori: 'ALTO' | 'CENTRO'
+
+private setTitoloStatoSS(stato: 'ALTO' | 'CENTRO'): void {
+  try {
+    sessionStorage.setItem(this.SS_WELCOME_TITOLO_STATO, stato);
+  } catch {}
+}
+
+public getTitoloStatoSS(): 'ALTO' | 'CENTRO' | '' {
+  try {
+    return (sessionStorage.getItem(this.SS_WELCOME_TITOLO_STATO) || '') as any;
+  } catch {
+    return '';
+  }
+}
+
+public clearWelcomeSessionState(): void {
+  try {
+    sessionStorage.removeItem(this.SS_WELCOME_TITOLO_STATO);
+  } catch {}
+}
+
 }
