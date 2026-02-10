@@ -8,6 +8,9 @@ import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.servic
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import gsap from 'gsap';
+gsap.registerPlugin(ScrollTrigger);
 @Injectable({ providedIn: 'root' }) // Rendo questo servizio disponibile in tutta l'app
 export class CambioLinguaService {
   linguaUtente = 'inglese'; // Salvo la lingua scelta dall'utente in formato testuale, inglese default
@@ -71,6 +74,12 @@ export class CambioLinguaService {
     this.iconaLingua$.next(this.iconaLingua); // Notifico subito la nuova icona
 
     const codice = this.leggiCodiceLingua(); // Calcolo il codice lingua 'it' o 'en'
+    // ✅ salva scroll della main-scroll (welcome) prima di cambiare lingua
+const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
+if (scroller) {
+  sessionStorage.setItem('welcome_scrollTop', String(scroller.scrollTop));
+  sessionStorage.setItem('welcome_restore', '1'); // 👈 flag: ripristina SOLO dopo cambio lingua
+}
     this.sincBenvenutoPathConLingua(codice);
 
     this.sincCatalogoPathConLingua(codice)
@@ -100,6 +109,17 @@ export class CambioLinguaService {
           this.traduzioniService.usaLingua(codice); // Applico davvero la lingua alle traduzioni
 
           this.cambioLinguaApplicata$.next({ codice, mappaNovita }); // Notifico che la lingua è stata applicata e passo anche i dati del carosello
+
+  // ✅ TEST: dopo cambio lingua, il DOM cambia (testi/altezze) => ricalcolo ScrollTrigger
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      try {
+        ScrollTrigger.refresh();
+        ScrollTrigger.update();
+        console.log('[LANG] ScrollTrigger refresh after language apply');
+      } catch {}
+    });
+  });
         })
       )
       .subscribe(); // Avvio la pipeline

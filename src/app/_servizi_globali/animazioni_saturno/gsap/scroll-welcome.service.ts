@@ -31,6 +31,26 @@ export class ScrollWelcomeService {
   camera: THREE.Camera,
   light: THREE.DirectionalLight
 ): void {
+
+    // ✅ scroller UNA SOLA VOLTA (nome diverso per non redeclare)
+  const scrollerEl = document.querySelector('.main-scroll') as HTMLElement | null;
+const shouldRestore = sessionStorage.getItem('welcome_restore') === '1';
+const saved = sessionStorage.getItem('welcome_scrollTop');
+
+// ✅ ripristina SOLO se sei DAVVERO in welcome (non quando rientri dal login/back)
+const isWelcome = /^\/(it|en)\/(benvenuto|welcome)(\/|$)/.test(
+  (window.location.pathname || '').split('?')[0].split('#')[0]
+);
+
+if (scrollerEl && isWelcome && shouldRestore && saved) {
+  const v = Number(saved);
+  if (!Number.isNaN(v) && v > 0) scrollerEl.scrollTop = v;
+}
+
+// ✅ consuma sempre
+sessionStorage.removeItem('welcome_restore');
+sessionStorage.removeItem('welcome_scrollTop');
+
   const title = document.querySelector('.title-container') as HTMLElement;
   gsap.set(title, {
     top: '50%',
@@ -42,13 +62,33 @@ export class ScrollWelcomeService {
 
   // Crea le ScrollTrigger iniziali
   this.createScrollTriggers(scene, title, light);
+     requestAnimationFrame(() => {
+    ScrollTrigger.refresh();
+    ScrollTrigger.update();
+  });
+  // ✅ TEST BACK: misura scrollTop e posizione trigger (NON cambia la grafica)
+  const triggerEl = document.querySelector('#saturno-scrolle') as HTMLElement | null;
 
+  const dump = (tag: string) => {
+    const st = scrollerEl ? scrollerEl.scrollTop : -1;
+    const top = triggerEl ? triggerEl.getBoundingClientRect().top : null;
+    console.log(`[WELCOME][${tag}] scrollTop=`, st, ' triggerTop=', top);
+  };
+
+  dump('after-create');
+
+  window.addEventListener('popstate', () => {
+    dump('popstate');
+    setTimeout(() => dump('popstate+0'), 0);
+    setTimeout(() => dump('popstate+200'), 200);
+  });
     // DOPO
 this.resizeHandler = () => {
   this.destroyScrollTriggers();
 
   this.createScrollTriggers(scene, title, light);  // ✅ passa anche light
-  ScrollTrigger.refresh();
+      ScrollTrigger.refresh();
+  ScrollTrigger.update();
 
   const triggerElement = document.querySelector('#saturno-scrolle');
   const scrollerElement = document.querySelector('.main-scroll');

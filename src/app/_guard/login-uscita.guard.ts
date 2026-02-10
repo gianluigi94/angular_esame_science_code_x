@@ -70,22 +70,31 @@ export class LoginUscitaGuard implements CanDeactivate<LoginComponent> { //(fors
       pathPulito === '' ||
       /^\/(it|en)?\/?(benvenuto|welcome)(\/|$)/.test(pathPulito);
 
-    if (vaInBenvenuto) { // se sto tornando alle pagine di benvenuto
-      const scene = this.saturnoService.getScene(); // recupero la scena 3D attuale per poterla animare
-      const light = this.saturnoService.getDirectionalLight(); // recupero la luce direzionale da usare durante l'animazione
+   if (vaInBenvenuto) { // se sto tornando alle pagine di benvenuto
 
-      this.animateService.setXGif(); // imposto l'animazione grafica 'X' come indicatore visivo
-      this.animateService.animateTitoloVersoCentroGlobal(1.25, 0); // porto il titolo verso il centro con durata e ritardo stabiliti
+  // ✅ DISINNESCA restore del cambio lingua (altrimenti ti rispara giù dopo)
+  sessionStorage.removeItem('welcome_restore');
+  sessionStorage.removeItem('welcome_scrollTop');
 
-      if (scene) { // proseguo solo se ho davvero una scena disponibile
-        this.saturnoRouteAnimazioniService.animaVerso( // avvio l'animazione di transizione della scena verso una posizione predefinita
-          scene, // passo la scena da animare
-          'WELCOME_ALTO', // scelgo la podsizione in cui deve ritornare il titolo
-          1.25, // imposto la durata dell'animazione
-          light || undefined // passo la luce se esiste, altrimenti lascio indefinito
-        );
-      }
-    }
+  const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
+  if (scroller) scroller.scrollTop = 0;
+
+  const scene = this.saturnoService.getScene();
+  const light = this.saturnoService.getDirectionalLight();
+
+  this.animateService.setXGif();
+  this.animateService.animateTitoloVersoCentroGlobal(1.25, 0);
+
+  if (scene) {
+    this.saturnoRouteAnimazioniService.animaVerso(
+      scene,
+      'WELCOME_ALTO',
+      1.25,
+      light || undefined
+    );
+  }
+}
+
 
     return component.animaUscita().then(() => true); // avvio l'animazione di uscita del login e poi autorizzo la navigazione
   }
