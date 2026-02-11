@@ -14,15 +14,15 @@ import { AnimateService } from './_servizi_globali/animazioni_saturno/animate.se
 import { DOCUMENT } from '@angular/common';
 import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
-import {
-  isFirefox,
-  pulisciUrl,
-  isCatalogoHome,
-  isAreaCatalogo,
-  leggiPathDaSessionStorage,
-  salvaPathInSessionStorage,
-  impostaLangHtml,
-} from './_helpers_globali/helpers';
+ import {
+   isFirefox,
+   pulisciUrl,
+   isCatalogoHome,
+   isAreaCatalogo,
+   leggiPathDaSessionStorage,
+   salvaPathInSessionStorage,
+   impostaLangHtml,
+ } from './_helpers_globali/helpers';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +30,7 @@ import {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
+  private pathPrecedenteSessioneAllAvvio: string = '';
   // Qui definisco tutte le variabili che uso per gestire loader, errori e caricamenti
   traduzioniPronte$ = this.traduzioniService.traduzioniInizialiCaricate$; // Tengo traccia se le traduzioni iniziali sono pronte
   erroreFatale$ = this.erroreGlobaleService.erroreFatale$; // Osservo se si è verificato un errore fatale globale
@@ -84,10 +85,11 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.isFirefox = isFirefox(); // Mi salvo se sto girando su Firefox
     const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
+    this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
     this.sonoIn404 = /^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale);
     this.aggiornaVisibilitaSfondo404();
     this.gestisciFadeInSfondo404();
-    salvaPathInSessionStorage(urlIniziale);
+    setTimeout(() => salvaPathInSessionStorage(urlIniziale), 0);
         if (/^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale)) {
       this.mostraToast404Persistente();
     }
@@ -298,7 +300,13 @@ const disabilitaLoader = sonoNelLogin || sonoInNonTrovato || (sonoNelCatalogo &&
           const nav = performance.getEntriesByType('navigation') as any[]; // Leggo le info di navigazione del browser
           const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : ''; // Ricavo il tipo di navigazione (es. reload) se disponibile
                       const path = pulisciUrl(window.location.pathname || '');
-this.loaderAvvioCatalogo = tipo === 'reload' && isAreaCatalogo(path);
+   const ingressoDirettoCatalogoConStoricoCatalogo =
+     tipo !== 'reload' &&
+     isAreaCatalogo(path) &&
+     isAreaCatalogo(this.pathPrecedenteSessioneAllAvvio);
+   this.loaderAvvioCatalogo =
+     (tipo === 'reload' && isAreaCatalogo(path)) ||
+     ingressoDirettoCatalogoConStoricoCatalogo;
 
         } catch {
           // Se l'API performance non è disponibile o fallisce

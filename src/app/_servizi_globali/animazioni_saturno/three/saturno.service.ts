@@ -14,6 +14,7 @@ import { SaturnoRouteAnimazioniService } from '../gsap/saturno-route-animazioni.
 import { CaricamentoCaroselloService } from 'src/app/_catalogo/carosello-novita/carosello_services/caricamento-carosello.service';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { SaturnoStatoService } from '../saturno-stato.service';
+import { leggiPathDaSessionStorage, isAreaCatalogo } from 'src/app/_helpers_globali/helpers';
 //Serve per calcolare la posizione nello spazio
 const vertexShader = /* glsl */ `
   varying vec3 vPosition;
@@ -46,6 +47,7 @@ void main() {
 
 @Injectable({ providedIn: 'root' })
 export class SaturnoService {
+  private pathPrecedenteSessioneAllAvvio: string = '';
   saturnoPronto$ = this.saturnoStatoService.saturnoPronto$;
 
   private scenaInizializzata: boolean = false;
@@ -155,7 +157,7 @@ private skipLoginIntroOnce: boolean = false;
       }
     });
 this.skipLoginIntroOnce = this.isPageReload() && this.eRottaLogin(window.location.pathname);
-
+this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
   }
 
   // SaturnoService
@@ -1055,7 +1057,12 @@ else if (this.eRottaNotFound(url)) {
         path === '/catalog/serie' ||
         path === '/catalog/film-serie';
 
-      return tipo === 'reload' && eCatalogoHome;
+           const ingressoDirettoConStoricoCatalogo =
+       tipo !== 'reload' &&
+       eCatalogoHome &&
+       isAreaCatalogo(this.pathPrecedenteSessioneAllAvvio);
+
+     return (tipo === 'reload' && eCatalogoHome) || ingressoDirettoConStoricoCatalogo;
     } catch {
       return false;
     }

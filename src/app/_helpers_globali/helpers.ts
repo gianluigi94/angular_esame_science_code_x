@@ -68,11 +68,13 @@ export function pulisciUrl(url: string): string { // funzione che mi pulisce un 
  }
 
 
-export function isAreaCatalogo(url: string): boolean { // funzione che mi dice se l'url sta dentro l'area catalogo (qualsiasi sotto-rotta)
-    const path = pulisciUrl(url || '');
-    const p = path.replace(/^\/(it|en)(?=\/|$)/, '');
-  return p.startsWith('/catalogo') || p.startsWith('/catalog');
-}
+// helpers.ts
+
+ export function isAreaCatalogo(url: string): boolean {
+   const path = pulisciUrl(url || '');
+   const p = path.replace(/^\/(it|en)(?=\/|$)/, '');
+   return p.startsWith('/catalogo') || p.startsWith('/catalog');
+ }
 
 export function impostaLangHtml(documento: Document, codice: string): void { // funzione che mi imposta l'attributo lang del tag <html>
   const lang = codice === 'it' ? 'it' : 'en'; // traduco il codice in una lingua supportata: se non è 'it' forzo 'en'
