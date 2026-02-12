@@ -322,7 +322,6 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
         this.camera &&
         this.renderer
       ) {
-        this.forzaPosaLateraleSePresente404();
         const url = this.leggiUrlAttuale();
 
         if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato) {
@@ -371,15 +370,25 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
 }
 
 else if (this.eRottaNotFound(url)) {
-  this.animateService.setTitoloCentraleGlobal();
-  this.animateService.setXGif();
+  // stesso flusso della 404 "pulita": comparsa coerente  transizione
+    const scenaCorrente = this.scene;
+  if (!scenaCorrente) {
+    resolve();
+    return;
+  }
 
-  // poi fallo salire senza scontro
+  this.saturnoPosizioniService.applicaPoseAScena(scenaCorrente, 'CATALOGO_NASCOSTO');
+  this.animateService.setXNormale();
+  this.animateService.setTitoloAltoGlobal();
+  this.animateService.enablePageScroll();
+
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      this.animateService.setXNormale();
-      this.animateService.animateTitoloVersoAltoGlobal(0.9, 0.05);
-    });
+    this.saturnoRouteAnimazioniService.animaVerso(
+      scenaCorrente,
+      'WELCOME_ALTO',
+      1.45,
+      this.directionalLight || undefined
+    );
   });
 }
  else if (this.eRottaWelcome(url)) {
@@ -481,7 +490,6 @@ else if (this.eRottaNotFound(url)) {
           this.scene = scene;
           this.camera = camera;
           this.renderer = renderer;
-          this.forzaPosaLateraleSePresente404();
           //   // ✅ Imposto la pose "WELCOME_ALTO" come stato iniziale standard
           //   this.saturnoPosizioniService.applicaPoseAScena(scene, 'WELCOME_ALTO');
 
@@ -1149,16 +1157,17 @@ else if (this.eRottaNotFound(url)) {
   }
 }
   private forzaPosaLateraleSePresente404(): void {
-    const path = String(window.location.pathname || '')
-      .split('?')[0]
-      .split('#')[0];
+    // const path = String(window.location.pathname || '')
+    //   .split('?')[0]
+    //   .split('#')[0];
 
-    // Pagina 404: forza sempre la posa laterale, senza altre logiche
-    if (/^\/(it|en)\/non-trovato(\/|$)/.test(path) && this.scene) {
-      this.saturnoPosizioniService.applicaPoseAScena(this.scene, 'LOGIN_LATERALE');
-      this.animateService.setXNormale();
-      this.animateService.setTitoloAltoGlobal();
-      this.animateService.enablePageScroll();
-    }
+    // // Pagina 404: forza sempre la posa laterale, senza altre logiche
+    // if (/^\/(it|en)\/non-trovato(\/|$)/.test(path) && this.scene) {
+    //   this.saturnoPosizioniService.applicaPoseAScena(this.scene, 'LOGIN_LATERALE');
+    //   this.animateService.setXNormale();
+    //   this.animateService.setTitoloAltoGlobal();
+    //   this.animateService.enablePageScroll();
+    // }
+    return;
   }
 }
