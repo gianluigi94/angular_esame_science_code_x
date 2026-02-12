@@ -322,6 +322,7 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
         this.camera &&
         this.renderer
       ) {
+        this.forzaPosaLateraleSePresente404();
         const url = this.leggiUrlAttuale();
 
         if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato) {
@@ -480,7 +481,7 @@ else if (this.eRottaNotFound(url)) {
           this.scene = scene;
           this.camera = camera;
           this.renderer = renderer;
-
+          this.forzaPosaLateraleSePresente404();
           //   // ✅ Imposto la pose "WELCOME_ALTO" come stato iniziale standard
           //   this.saturnoPosizioniService.applicaPoseAScena(scene, 'WELCOME_ALTO');
 
@@ -609,9 +610,11 @@ else if (this.eRottaNotFound(url)) {
 }
 
 
-          if (isNotFoundRoute) {
+                    if (isNotFoundRoute) {
+            this.saturnoPosizioniService.applicaPoseAScena(scene, 'LOGIN_LATERALE');
             this.animateService.setXNormale();
             this.animateService.setTitoloAltoGlobal();
+            this.animateService.enablePageScroll();
           }
           // 👉 NIENTE animateAll qui: lo chiameremo DOPO aver creato i gruppi di particelle
 
@@ -1134,5 +1137,17 @@ else if (this.eRottaNotFound(url)) {
     return false;
   }
 }
+  private forzaPosaLateraleSePresente404(): void {
+    const path = String(window.location.pathname || '')
+      .split('?')[0]
+      .split('#')[0];
 
+    // Pagina 404: forza sempre la posa laterale, senza altre logiche
+    if (/^\/(it|en)\/non-trovato(\/|$)/.test(path) && this.scene) {
+      this.saturnoPosizioniService.applicaPoseAScena(this.scene, 'LOGIN_LATERALE');
+      this.animateService.setXNormale();
+      this.animateService.setTitoloAltoGlobal();
+      this.animateService.enablePageScroll();
+    }
+  }
 }
