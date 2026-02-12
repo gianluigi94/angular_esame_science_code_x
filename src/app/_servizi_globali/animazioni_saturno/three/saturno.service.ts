@@ -610,11 +610,22 @@ else if (this.eRottaNotFound(url)) {
 }
 
 
-                    if (isNotFoundRoute) {
-            this.saturnoPosizioniService.applicaPoseAScena(scene, 'LOGIN_LATERALE');
+                          if (isNotFoundRoute) {
+            // 1) comparsa immediata in laterale
+            this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
             this.animateService.setXNormale();
             this.animateService.setTitoloAltoGlobal();
             this.animateService.enablePageScroll();
+
+            // 2) poi transizione verso WELCOME_ALTO
+                       setTimeout(() => {
+              this.saturnoRouteAnimazioniService.animaVerso(
+                scene,
+                'WELCOME_ALTO',
+                1.05,
+                this.directionalLight || undefined
+              );
+            }, 300);
           }
           // 👉 NIENTE animateAll qui: lo chiameremo DOPO aver creato i gruppi di particelle
 
