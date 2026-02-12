@@ -1,3 +1,70 @@
-p{
-  color: aliceblue;
+
+/* Contenitore full screen */
+.nf-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+
+  /* ✅ SFONDO IMMAGINE: metti la tua immagine in /src/assets/ */
+
+  /* Se vuoi solo colore invece dell’immagine, usa:
+  background: #050b1a;
+  */
+}
+
+/* overlay scuro per rendere il 404 leggibile sopra l'immagine */
+.nf-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.193);
+}
+
+/* centra il numero */
+.nf-center {
+  margin-top: -70px;
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* maschera wipe sinistra->destra */
+.nf-mask {
+  width: 0%;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 1400ms ease;
+transition-delay: 300ms;
+
+}
+
+.nf-mask.show { width: 100%; }
+.nf-mask { text-align: center; }
+
+
+/* numero 404 */
+.nf-num {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  user-select: none;
+  font-size: 280px;
+  color: #f7732b;
+  text-shadow: 0 0 10px #0b40d373;
+
+  /* ✅ distanza tra caratteri */
+  letter-spacing: 0.05em;
+}
+
+/* ✅ rende ogni cifra "separata" e controllabile */
+.nf-num .d {
+  display: inline-block;
+}
+
+/* ✅ lo 0 semi-trasparente */
+.nf-num .zero {
+  opacity: 0.85; /* cambia a gusto: 0.3 più trasparente, 0.6 meno */
 }

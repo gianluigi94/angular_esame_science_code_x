@@ -20,8 +20,8 @@ export class ApiService {
  */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    const server: string = 'http://localhost/science_codex/public/api'
-    // const server: string = 'http://192.168.1.37/science_codex/public/api';
+    // const server: string = 'http://localhost/science_codex/public/api'
+    const server: string = 'http://192.168.1.37/science_codex/public/api';
     // const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
 

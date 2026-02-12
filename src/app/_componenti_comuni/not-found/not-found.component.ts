@@ -6,7 +6,6 @@ import {
   leggiWelcomeTitoloStatoDaSessione,
 } from 'src/app/_helpers_globali/helpers';
 
-
 @Component({
   selector: 'app-not-found',
   templateUrl: './not-found.component.html',
@@ -16,41 +15,44 @@ export class NotFoundComponent implements AfterViewInit {
 
   public vengoDaBenvenuto: boolean = false;
 
+  // ✅ controlla la classe .show della maschera
+  public mostra404 = false;
+
   constructor(private animateService: AnimateService) {}
 
   ngAfterViewInit(): void {
-  // 1) decido subito usando l’ultimo path “buono”
-  this.vengoDaBenvenuto = vengoDaBenvenutoDaSessione();
+    // --- la tua logica attuale ---
+    this.vengoDaBenvenuto = vengoDaBenvenutoDaSessione();
 
-  // 2) leggo lo stato del titolo in welcome (può essere '' se non esiste)
-  const titoloStato = leggiWelcomeTitoloStatoDaSessione();
-  const titoloEraCentrale = !titoloStato || titoloStato === 'CENTRO'; // <-- manca o è CENTRO
+    const titoloStato = leggiWelcomeTitoloStatoDaSessione();
+    const titoloEraCentrale = !titoloStato || titoloStato === 'CENTRO';
 
-  const devoAnimareTitolo = this.vengoDaBenvenuto && titoloEraCentrale;
+    const devoAnimareTitolo = this.vengoDaBenvenuto && titoloEraCentrale;
 
-  requestAnimationFrame(() => {
-    if (!devoAnimareTitolo) {
-      // ✅ niente animazione: titolo già alto subito (comportamento vecchio)
-      this.animateService.setXNormale();
-      this.animateService.setTitoloAltoGlobal();
-    } else {
-      // ✅ animazione: titolo parte centrale e va su (senza scontro)
-      this.animateService.setTitoloCentraleGlobal();
-      this.animateService.setXGif();
+    requestAnimationFrame(() => {
+      if (!devoAnimareTitolo) {
+        this.animateService.setXNormale();
+        this.animateService.setTitoloAltoGlobal();
+      } else {
+        this.animateService.setTitoloCentraleGlobal();
+        this.animateService.setXGif();
+
+        requestAnimationFrame(() => {
+          this.animateService.setXNormale();
+          this.animateService.animateTitoloVersoAltoGlobal(0.9, 0.05);
+        });
+      }
 
       requestAnimationFrame(() => {
-        this.animateService.setXNormale();
-        this.animateService.animateTitoloVersoAltoGlobal(0.9, 0.05);
+        setTimeout(() => {
+          salvaPathNonTrovatoDopoCaricamento(window.location.pathname);
+        }, 0);
       });
-    }
-
-    // 3) DOPO che tutto è partito, aggiorno ultimo_path a "non-trovato"
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        salvaPathNonTrovatoDopoCaricamento(window.location.pathname);
-      }, 0);
     });
-  });
-}
 
+    // ✅ avvio effetto wipe del 404 dopo qualche ms
+    setTimeout(() => {
+      this.mostra404 = true;
+    }, 250);
+  }
 }

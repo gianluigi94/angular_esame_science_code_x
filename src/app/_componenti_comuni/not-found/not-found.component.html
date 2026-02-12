@@ -3,4 +3,16 @@
   [usaAnimazioniScroll]="false">
 </app-saturno>
 
-<p>not-found works!</p>
+<!-- Sfondo + overlay + 404 centrato -->
+<div class="nf-bg">
+  <div class="nf-overlay"></div>
+
+  <div class="nf-center">
+    <div class="nf-mask" [class.show]="mostra404">
+      <div class="nf-num">
+  <span class="d">4</span><span class="d zero">0</span><span class="d">4</span>
+</div>
+
+    </div>
+  </div>
+</div>

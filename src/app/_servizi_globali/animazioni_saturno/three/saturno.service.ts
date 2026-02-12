@@ -376,7 +376,7 @@ else if (this.eRottaNotFound(url)) {
     resolve();
     return;
   }
-
+this.ensureRingsAndParticlesIfMissing(scenaCorrente);
   this.saturnoPosizioniService.applicaPoseAScena(scenaCorrente, 'CATALOGO_NASCOSTO');
   this.animateService.setXNormale();
   this.animateService.setTitoloAltoGlobal();
@@ -568,6 +568,7 @@ else if (this.eRottaNotFound(url)) {
           //    allora voglio lo stato finale subito (come "catalogo gia finito").
           if (!usaAnimazioniWelcome && this.eSchedaCatalogo(url)) {
             // ✅ UI come "catalogo gia finito": titolo alto-sinistra  X normale
+            this.ensureRingsAndParticlesIfMissing(scene);
             this.animateService.setXNormale();
             this.animateService.setTitoloAltoGlobal();
             this.saturnoPosizioniService.applicaPoseAScena(
@@ -1170,4 +1171,32 @@ else if (this.eRottaNotFound(url)) {
     // }
     return;
   }
+
+
+  private ensureRingsAndParticlesIfMissing(scene: THREE.Scene): void {
+  // ✅ se i dischi esistono già, NON ricreare
+  if (this.diskService.getDisks().length === 0) {
+    // --- dischi (copiati dal tuo blocco originale) ---
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.17, 1.305, 0xffffff, 0.18, true, true, 0.01, 0);
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.245, 1.27, 0xffffff, 0.45, true, true, 0.03, 0);
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.27, 1.49, 0xfffee9, 0.55, true, true, -0.01, 0);
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.34, 1.39, 0xfffee9, 0.65, true, true, 0.01, 0);
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.54, 1.74, 0xffffff, 0.05, true, true, -0.01, 0);
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.57, 1.97, 0xfff4e9, 0.25, true, true, 0.01, 0);
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.715, 1.799, 0xfff4e9, 0.25, true, true, 0.03, 0);
+    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.9, 2.17, 0xffffff, 0.055, true, false, 0.03, 0);
+  }
+
+  // ✅ se i gruppi particelle esistono già, NON ricreare
+  if (this.particleGroups.length === 0) {
+    const particleGroups: THREE.Group[] = [];
+    this.groupsConfig.forEach((config) => {
+      const group = this.particleGroupService.createParticleGroup(config);
+      scene.add(group);
+      particleGroups.push(group);
+    });
+    this.particleGroups = particleGroups;
+  }
+}
+
 }
