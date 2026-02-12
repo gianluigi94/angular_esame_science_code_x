@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes, UrlSegment, UrlMatchResult } from '@angular/router';
 import { AvvioGuard } from './_guard/avvio.guard';
 import { RedirectVuotoComponent } from './redirect-vuoto.component';
-import { NotFoundComponent } from './_componenti_comuni/not-found/not-found.component';
+// import { NotFoundComponent } from './_componenti_comuni/not-found/not-found.component';
 
 export function linguaMatcher(segmenti: UrlSegment[]): UrlMatchResult | null {
   if (segmenti.length > 0 && (segmenti[0].path === 'it' || segmenti[0].path === 'en')) {
@@ -57,9 +57,11 @@ const routes: Routes = [
           import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
       },
       {
-        path: 'non-trovato',
-        component: NotFoundComponent,
-      },
+  path: 'non-trovato',
+  loadChildren: () =>
+    import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
+},
+
       {
         path: '**',
         redirectTo: 'non-trovato',
@@ -101,9 +103,11 @@ const routes: Routes = [
           import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
       },
       {
-        path: 'non-trovato',
-        component: NotFoundComponent,
-      },
+  path: 'non-trovato',
+  loadChildren: () =>
+    import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
+},
+
       {
         path: '**',
         redirectTo: 'non-trovato',

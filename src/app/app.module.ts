@@ -20,7 +20,7 @@ import { ErroreHttpInterceptor } from './_interceptor/errore-http.interceptor';
     ReactiveFormsModule,
     HttpClientModule, //per ngx-translate
     TranslateModule.forRoot(), //istanza principale di TranslateModule
-    ComponentiComuniModule,//importo il modulo con elementi riutilizzabili
+    ComponentiComuniModule,//importo il modulo con elementi riutilizzabilis
   ],
    // L'ho usato per registrare i miei HTTP Interceptors: così ogni chiamata fatta con HttpClient passa da qui, e posso aggiungere automaticamente il token di autenticazione e gestire gli errori in modo centralizzato.
 providers: [
