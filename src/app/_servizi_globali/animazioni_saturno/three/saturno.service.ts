@@ -49,7 +49,7 @@ void main() {
 export class SaturnoService {
   private pathPrecedenteSessioneAllAvvio: string = '';
   saturnoPronto$ = this.saturnoStatoService.saturnoPronto$;
-
+  transizioneDa404ACatalogo: boolean = false;
   private scenaInizializzata: boolean = false;
   private firstRenderDone = false;
 
@@ -156,6 +156,8 @@ private skipLoginIntroOnce: boolean = false;
         this.reduceParticles();
       }
     });
+    this.transizioneDa404ACatalogo = this.leggiFlagTransizione404Catalogo();
+
 this.skipLoginIntroOnce = this.isPageReload() && this.eRottaLogin(window.location.pathname);
 this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
   }
@@ -323,8 +325,8 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
         this.renderer
       ) {
         const url = this.leggiUrlAttuale();
-
-        if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato) {
+        const da404 = this.leggiFlagTransizione404Catalogo();
+        if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
           this.animateService.fadeOutSaturnoESfondo(0);
           this.animateService.enablePageScroll();
           this.spegniSaturno();
@@ -400,6 +402,40 @@ this.ensureRingsAndParticlesIfMissing(scenaCorrente);
           this.animateService.setTitoloCentraleGlobal();
           this.animateService.setXGif();
         } else if (this.eRottaCatalogo(url)) {
+            const da404 = this.leggiFlagTransizione404Catalogo();
+
+  // PRIORITA': transizione 404 -> catalogo (stesso Saturno, no rebuild)
+  if (da404) {
+    const durataCatalogo = 1.6;
+    const anticipoMs = 400;
+
+    this.attendiCaroselloPronto().finally(() => {
+      setTimeout(() => {
+        this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+          this.animateService.enablePageScroll();
+        });
+      }, durataCatalogo * 1000 - anticipoMs);
+
+      this.saturnoRouteAnimazioniService.animaVerso(
+        this.scene!,
+        'CATALOGO_NASCOSTO',
+        durataCatalogo,
+        this.directionalLight || undefined,
+        () => {
+          this.spegniSaturno();
+          this.animateService.pauseClearcoat();
+          this.catalogoGiaAnimato = true;
+          this.consumaFlagTransizione404Catalogo();
+        },
+      );
+    });
+
+    this.attivaHoverMouse();
+    this.startFixedFPSLoop();
+    resolve();
+    return;
+  }
+
           const anticipoMs = 400;
 
           if (this.animateService.isTitoloInPosizioneAlta()) {
@@ -475,6 +511,8 @@ this.ensureRingsAndParticlesIfMissing(scenaCorrente);
         resolve();
         return;
       }
+
+
 
       // 👇 Da qui in poi è uguale a prima
       // Carica *in parallelo* la texture di Saturno e quelle degli asteroidi
@@ -1199,4 +1237,18 @@ this.ensureRingsAndParticlesIfMissing(scenaCorrente);
   }
 }
 
+
+  leggiFlagTransizione404Catalogo(): boolean {
+    try {
+      return sessionStorage.getItem('transizione_404_catalogo') === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  consumaFlagTransizione404Catalogo(): void {
+    try {
+      sessionStorage.removeItem('transizione_404_catalogo');
+    } catch {}
+  }
 }

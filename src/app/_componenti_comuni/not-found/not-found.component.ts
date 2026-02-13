@@ -1,11 +1,12 @@
-import { Component, AfterViewInit } from '@angular/core';
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
 import {
   vengoDaBenvenutoDaSessione,
   salvaPathNonTrovatoDopoCaricamento,
   leggiWelcomeTitoloStatoDaSessione,
 } from 'src/app/_helpers_globali/helpers';
-
+import { Component, AfterViewInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 @Component({
   selector: 'app-not-found',
   templateUrl: './not-found.component.html',
@@ -18,7 +19,13 @@ export class NotFoundComponent implements AfterViewInit {
   // ✅ controlla la classe .show della maschera
   public mostra404 = false;
   public animazione404InCorso = false;
-  constructor(private animateService: AnimateService) {}
+  public navigazioneInCorso = false;
+  public timerFallbackNavigazione: any = 0;
+    constructor(
+    private animateService: AnimateService,
+    private router: Router,
+    private cambioLinguaService: CambioLinguaService
+  ) {}
 
   ngAfterViewInit(): void {
     // --- la tua logica attuale ---
@@ -58,13 +65,53 @@ export class NotFoundComponent implements AfterViewInit {
 
     chiudi404(): void {
     if (this.animazione404InCorso) return;
+    if (this.navigazioneInCorso) return;
     if (!this.mostra404) return; // e' gia' chiuso
 
     this.animazione404InCorso = true;
-    this.mostra404 = false; // ✅ wipe al contrario (scomparsa)
+    this.mostra404 = false;
 
-    setTimeout(() => {
-      this.animazione404InCorso = false;
-    }, 10);
+    // fallback: se transitionend non parte, navigo lo stesso
+    if (this.timerFallbackNavigazione) {
+      clearTimeout(this.timerFallbackNavigazione);
+      this.timerFallbackNavigazione = 0;
+    }
+    this.timerFallbackNavigazione = setTimeout(() => {
+      this.eseguiNavigazioneCatalogo();
+    }, 420); // metti poco sopra la durata reale css (es. 380ms)
+  }
+
+
+  onMaskTransitionEnd(event: TransitionEvent): void {
+       if (!this.animazione404InCorso) return;
+    // niente filtri stretti su propertyName/target: spesso bloccano tutto
+    this.eseguiNavigazioneCatalogo();
+   }
+
+  eseguiNavigazioneCatalogo(): void {
+    if (this.navigazioneInCorso) return;
+
+    this.navigazioneInCorso = true;
+    this.animazione404InCorso = false;
+
+    if (this.timerFallbackNavigazione) {
+      clearTimeout(this.timerFallbackNavigazione);
+      this.timerFallbackNavigazione = 0;
+    }
+
+    try {
+      sessionStorage.setItem('transizione_404_catalogo', '1');
+    } catch {}
+
+    const lingua = this.cambioLinguaService.leggiCodiceLingua();
+    const baseCatalogo =
+      lingua === 'it'
+        ? '/it/catalogo/film-serie'
+        : '/en/catalog/movies-series';
+
+        setTimeout(() => {
+      this.router.navigateByUrl(baseCatalogo);
+    }, 600);
+
   }
 }

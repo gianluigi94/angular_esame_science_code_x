@@ -96,6 +96,11 @@ righeComponenti!: QueryList<RigaCategoriaComponent>;
   }
 
   ngOnInit(): void {
+       try {
+     const da404 = sessionStorage.getItem('transizione_404_catalogo') === '1';
+     // lo lascio solo se mi serve immediatamente in questo ingresso
+     // se vuoi comportamento ultra rigoroso, puoi non toccarlo qui e farlo consumare solo da SaturnoService
+   } catch {}
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
     this.forzaRottaCatalogoDaLinguaETipo();
         const lingua = this.cambioLingua.leggiCodiceLingua();

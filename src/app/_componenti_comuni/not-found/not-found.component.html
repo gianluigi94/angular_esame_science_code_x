@@ -9,7 +9,8 @@
   <div class="nf-center">
      <div class="nf-mask"
       [class.show]="mostra404"
-      [class.closing]="animazione404InCorso">
+            [class.closing]="animazione404InCorso"
+      (transitionend)="onMaskTransitionEnd($event)">
       <div class="nf-num">
   <span class="d">4</span><span class="d zero">0</span><span class="d">4</span>
   <p><span class="bigbig">Clicca</span> per tornare al catalogo </p>

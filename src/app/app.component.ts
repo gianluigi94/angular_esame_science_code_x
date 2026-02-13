@@ -174,10 +174,15 @@ const eroNelLogin =
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(precedente) ||
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(precedente);
 
+  const eroInNonTrovato =
+  /^\/(it|en)\/non-trovato(\/|$)/.test(precedente);
 const sonoNelCatalogo =
   /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url);
 
-const disabilitaLoader = sonoNelLogin || sonoInNonTrovato || (sonoNelCatalogo && eroNelLogin);
+const disabilitaLoader =
+  sonoNelLogin ||
+  sonoInNonTrovato ||
+  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato));
 
         this.caricamentoDisabilitato = disabilitaLoader; // Salvo nello stato interno se il loader è disabilitato
         this.caricamentoDisabilitato$.next(disabilitaLoader); // Notifico nello stream che il loader è (o non è) disabilitato
