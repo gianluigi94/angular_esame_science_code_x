@@ -4,7 +4,7 @@
   position: fixed;
   inset: 0;
   z-index: 10;
-
+  cursor: pointer;
   /* ✅ SFONDO IMMAGINE: metti la tua immagine in /src/assets/ */
 
   /* Se vuoi solo colore invece dell’immagine, usa:
@@ -16,7 +16,7 @@
 .nf-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.193);
+  background: rgba(0, 0, 0, 0.192);
 }
 
 /* centra il numero */
@@ -36,10 +36,17 @@
   overflow: hidden;
   white-space: nowrap;
   transition: width 1400ms ease;
-transition-delay: 300ms;
+transition-delay: 0ms;
 
 }
+.nf-mask.show {
+  transition-delay: 300ms;
+}
 
+/* ✅ quando clicchi e chiudi: niente delay garantito */
+.nf-mask.closing {
+  transition-delay: 0ms !important;
+}
 .nf-mask.show { width: 100%; }
 .nf-mask { text-align: center; }
 
@@ -52,10 +59,7 @@ transition-delay: 300ms;
   line-height: 1;
   user-select: none;
   font-size: 280px;
-  color: #f7732b;
-  text-shadow: 0 0 10px #0b40d373;
-
-  /* ✅ distanza tra caratteri */
+  color: #fc7228;
   letter-spacing: 0.05em;
 }
 
@@ -70,10 +74,13 @@ transition-delay: 300ms;
 }
 
 p{
+  color: #f5a87e;
+
   margin-top: 20px;
   font-size: 35px;
   padding-bottom: 10px;
 }
 .bigbig{
-  font-size: 45px;
+  font-size: 50px;
+
 }

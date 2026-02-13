@@ -17,7 +17,7 @@ export class NotFoundComponent implements AfterViewInit {
 
   // ✅ controlla la classe .show della maschera
   public mostra404 = false;
-
+  public animazione404InCorso = false;
   constructor(private animateService: AnimateService) {}
 
   ngAfterViewInit(): void {
@@ -54,5 +54,17 @@ export class NotFoundComponent implements AfterViewInit {
     setTimeout(() => {
       this.mostra404 = true;
     }, 250);
+  }
+
+    chiudi404(): void {
+    if (this.animazione404InCorso) return;
+    if (!this.mostra404) return; // e' gia' chiuso
+
+    this.animazione404InCorso = true;
+    this.mostra404 = false; // ✅ wipe al contrario (scomparsa)
+
+    setTimeout(() => {
+      this.animazione404InCorso = false;
+    }, 10);
   }
 }
