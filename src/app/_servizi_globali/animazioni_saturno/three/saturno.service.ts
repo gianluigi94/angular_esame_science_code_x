@@ -16,6 +16,7 @@ import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { SaturnoStatoService } from '../saturno-stato.service';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { leggiPathDaSessionStorage, isAreaCatalogo } from 'src/app/_helpers_globali/helpers';
+import gsap from 'gsap';
 //Serve per calcolare la posizione nello spazio
 const vertexShader = /* glsl */ `
   varying vec3 vPosition;
@@ -374,26 +375,22 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
 }
 
 else if (this.eRottaNotFound(url)) {
-  // stesso flusso della 404 "pulita": comparsa coerente  transizione
-    const scenaCorrente = this.scene;
+  const scenaCorrente = this.scene;
   if (!scenaCorrente) {
     resolve();
     return;
   }
-this.ensureRingsAndParticlesIfMissing(scenaCorrente);
+  this.ensureRingsAndParticlesIfMissing(scenaCorrente);
   this.saturnoPosizioniService.applicaPoseAScena(scenaCorrente, 'CATALOGO_NASCOSTO');
   this.animateService.setXNormale();
   this.animateService.setTitoloAltoGlobal();
   this.animateService.enablePageScroll();
 
   requestAnimationFrame(() => {
-    this.saturnoRouteAnimazioniService.animaVerso(
-      scenaCorrente,
-      'WELCOME_ALTO',
-      1.45,
-      this.directionalLight || undefined
-    );
-  });
+  this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
+    scenaCorrente, 1.45, this.directionalLight || undefined
+  );
+});
 }
  else if (this.eRottaWelcome(url)) {
           // 🔹 Rientro nella pagina di benvenuto con scena già costruita:
@@ -662,23 +659,18 @@ this.ensureRingsAndParticlesIfMissing(scenaCorrente);
 }
 
 
-                          if (isNotFoundRoute) {
-            // 1) comparsa immediata in laterale
-            this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
-            this.animateService.setXNormale();
-            this.animateService.setTitoloAltoGlobal();
-            this.animateService.enablePageScroll();
+     if (isNotFoundRoute) {
+  this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
+  this.animateService.setXNormale();
+  this.animateService.setTitoloAltoGlobal();
+  this.animateService.enablePageScroll();
 
-            // 2) poi transizione verso WELCOME_ALTO
-                       setTimeout(() => {
-              this.saturnoRouteAnimazioniService.animaVerso(
-                scene,
-                'WELCOME_ALTO',
-                1.05,
-                this.directionalLight || undefined
-              );
-            }, 300);
-          }
+ setTimeout(() => {
+  this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
+    scene, 1.05, this.directionalLight || undefined
+  );
+}, 300);
+}
           // 👉 NIENTE animateAll qui: lo chiameremo DOPO aver creato i gruppi di particelle
 
           // Creazione dei dischi (anelli di Saturno)
@@ -1256,4 +1248,6 @@ this.ensureRingsAndParticlesIfMissing(scenaCorrente);
       sessionStorage.removeItem('transizione_404_catalogo');
     } catch {}
   }
+
+
 }

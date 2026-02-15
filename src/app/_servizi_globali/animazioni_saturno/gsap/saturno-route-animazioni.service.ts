@@ -179,4 +179,73 @@ public animaVerso(
       light.position.z = lightZ;
     }
   }
+
+  /**
+ * Timeline unificata: Saturno + scritte 404.
+ * Saturno sale verso WELCOME_ALTO mentre maschera, cifre e paragrafo entrano con GSAP.
+ */
+public animaIngresso404ConScritte(
+  scene: THREE.Scene,
+  durataSaturno: number,
+  light?: THREE.DirectionalLight
+): void {
+
+  // ── 1) Saturno verso WELCOME_ALTO ──
+  this.animaVerso(scene, 'WELCOME_ALTO', durataSaturno, light);
+
+  // ── 2) Scritte 404: maschera wipe + cifre + paragrafo ──
+  const mask = document.querySelector('.nf-mask') as HTMLElement | null;
+  if (!mask) return;
+
+  const digits = document.querySelectorAll('.nf-num .d');
+  const paragrafo = document.querySelector('.nf-num p') as HTMLElement | null;
+
+  mask.style.transition = 'none';
+
+  gsap.set(mask, { width: '0%' });
+  if (digits.length) gsap.set(digits, { opacity: 0, y: 40, scale: 0.7 });
+  if (paragrafo) gsap.set(paragrafo, { opacity: 0, y: 20 });
+
+  const tl404 = gsap.timeline();
+
+  tl404.to(mask, {
+    width: '100%',
+    duration: 1.4,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      mask.style.transition = '';
+      mask.classList.add('show');
+      gsap.set(mask, { clearProps: 'width' });
+    },
+  }, 0);
+
+  if (digits.length) {
+    tl404.to(digits, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.7,
+      ease: 'back.out(1.4)',
+      stagger: 0.15,
+      onComplete: () => {
+        gsap.set(digits, { clearProps: 'y,scale' });
+        digits.forEach((d) => {
+          (d as HTMLElement).style.removeProperty('opacity');
+        });
+      },
+    }, 0.3);
+  }
+
+  if (paragrafo) {
+    tl404.to(paragrafo, {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: 'power2.out',
+      onComplete: () => {
+        gsap.set(paragrafo, { clearProps: 'opacity,y' });
+      },
+    }, 0.75);
+  }
+}
 }

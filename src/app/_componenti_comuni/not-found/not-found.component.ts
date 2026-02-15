@@ -57,10 +57,7 @@ export class NotFoundComponent implements AfterViewInit {
       });
     });
 
-    // ✅ avvio effetto wipe del 404 dopo qualche ms
-    setTimeout(() => {
-      this.mostra404 = true;
-    }, 250);
+   setTimeout(() => { this.mostra404 = true; }, 600);
   }
 
     chiudi404(): void {

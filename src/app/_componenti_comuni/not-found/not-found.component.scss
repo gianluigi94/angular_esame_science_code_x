@@ -59,7 +59,7 @@ transition-delay: 0ms;
   line-height: 1;
   user-select: none;
   font-size: 280px;
-  color: #fc7228;
+  color: #fc7228d6;
   letter-spacing: 0.05em;
 }
 
@@ -69,9 +69,7 @@ transition-delay: 0ms;
 }
 
 /* ✅ lo 0 semi-trasparente */
-.nf-num .zero {
-  opacity: 0.85; /* cambia a gusto: 0.3 più trasparente, 0.6 meno */
-}
+
 
 p{
   color: #f5a87e;
