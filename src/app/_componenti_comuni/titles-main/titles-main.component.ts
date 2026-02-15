@@ -6,6 +6,7 @@ import { PerformanceService } from '../../_servizi_globali/performance.service';
 import { AnimateService } from '../../_servizi_globali/animazioni_saturno/animate.service';
 import * as THREE from 'three';
 import { isMobileOrTablet } from 'src/app/_helpers_globali/helpers';
+import { NotFoundCloseService } from './not-found-close.service';
 
 @Component({
   selector: 'app-titles-main',
@@ -21,7 +22,8 @@ export class TitlesMainComponent implements AfterViewInit {
     private elementRef: ElementRef,
     private performanceService: PerformanceService,
     private animateService: AnimateService,
-    private router: Router
+    private router: Router,
+    private notFoundClose: NotFoundCloseService
   ) {}
 
   public isLowPerf: boolean = false; // espongo un flag pubblico per sapere se devo usare modalità “low performance”
@@ -71,4 +73,18 @@ export class TitlesMainComponent implements AfterViewInit {
       }, 0);
     });
   }
+
+   get isNotFoundRoute(): boolean {
+  const url = this.router.url.split('?')[0].split('#')[0];
+  return /^\/(it|en)\/non-trovato(\/|$)/.test(url);
+}
+
+onLogoClick(ev: MouseEvent): void {
+  if (!this.isNotFoundRoute) return;
+
+  ev.preventDefault();
+  ev.stopPropagation();
+  this.notFoundClose.requestClose();
+}
+
 }

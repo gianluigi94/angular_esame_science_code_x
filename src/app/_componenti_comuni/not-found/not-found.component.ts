@@ -4,15 +4,20 @@ import {
   salvaPathNonTrovatoDopoCaricamento,
   leggiWelcomeTitoloStatoDaSessione,
 } from 'src/app/_helpers_globali/helpers';
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
+
 import { Router } from '@angular/router';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+import { Subscription } from 'rxjs';
+import { NotFoundCloseService } from '../titles-main/not-found-close.service';
 @Component({
   selector: 'app-not-found',
   templateUrl: './not-found.component.html',
   styleUrls: ['./not-found.component.scss']
 })
-export class NotFoundComponent implements AfterViewInit {
+export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
+  private subClose404?: Subscription;
+
 
   public vengoDaBenvenuto: boolean = false;
 
@@ -23,6 +28,7 @@ export class NotFoundComponent implements AfterViewInit {
   public timerFallbackNavigazione: any = 0;
     constructor(
     private animateService: AnimateService,
+    private notFoundClose: NotFoundCloseService,
     private router: Router,
     private cambioLinguaService: CambioLinguaService
   ) {}
@@ -111,4 +117,16 @@ export class NotFoundComponent implements AfterViewInit {
     }, 600);
 
   }
+
+
+ngOnInit(): void {
+  this.subClose404 = this.notFoundClose.close404$.subscribe(() => {
+    this.chiudi404();
+  });
+}
+
+ngOnDestroy(): void {
+  this.subClose404?.unsubscribe();
+}
+
 }
