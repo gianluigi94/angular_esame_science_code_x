@@ -14,6 +14,7 @@ import { SaturnoRouteAnimazioniService } from '../gsap/saturno-route-animazioni.
 import { CaricamentoCaroselloService } from 'src/app/_catalogo/carosello-novita/carosello_services/caricamento-carosello.service';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { SaturnoStatoService } from '../saturno-stato.service';
+import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { leggiPathDaSessionStorage, isAreaCatalogo } from 'src/app/_helpers_globali/helpers';
 //Serve per calcolare la posizione nello spazio
 const vertexShader = /* glsl */ `
@@ -150,6 +151,7 @@ private skipLoginIntroOnce: boolean = false;
 
     private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
     private caricamentoCaroselloService: CaricamentoCaroselloService,
+    private scorrimentoCatalogo: ScorrimentoCatalogoService,
   ) {
     this.performanceService.isLowEndPC$.subscribe((isLowEnd) => {
       if (isLowEnd || this.isMobileOrTablet()) {
@@ -404,10 +406,12 @@ this.ensureRingsAndParticlesIfMissing(scenaCorrente);
         } else if (this.eRottaCatalogo(url)) {
             const da404 = this.leggiFlagTransizione404Catalogo();
 
-  // PRIORITA': transizione 404 -> catalogo (stesso Saturno, no rebuild)
+// PRIORITA': transizione 404 -> catalogo (stesso Saturno, no rebuild)
   if (da404) {
     const durataCatalogo = 1.6;
     const anticipoMs = 400;
+
+    this.scorrimentoCatalogo.impostaSpinnerScroll(true);
 
     this.attendiCaroselloPronto().finally(() => {
       setTimeout(() => {
@@ -426,6 +430,7 @@ this.ensureRingsAndParticlesIfMissing(scenaCorrente);
           this.animateService.pauseClearcoat();
           this.catalogoGiaAnimato = true;
           this.consumaFlagTransizione404Catalogo();
+          this.scorrimentoCatalogo.impostaSpinnerScroll(false);
         },
       );
     });
