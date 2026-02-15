@@ -7,7 +7,7 @@ import { AnimateService } from '../../_servizi_globali/animazioni_saturno/animat
 import * as THREE from 'three';
 import { isMobileOrTablet } from 'src/app/_helpers_globali/helpers';
 import { NotFoundCloseService } from './not-found-close.service';
-
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 @Component({
   selector: 'app-titles-main',
   templateUrl: './titles-main.component.html',
@@ -22,6 +22,7 @@ export class TitlesMainComponent implements AfterViewInit {
     private elementRef: ElementRef,
     private performanceService: PerformanceService,
     private animateService: AnimateService,
+    private authService: Authservice,
     private router: Router,
     private notFoundClose: NotFoundCloseService
   ) {}
@@ -84,7 +85,11 @@ onLogoClick(ev: MouseEvent): void {
 
   ev.preventDefault();
   ev.stopPropagation();
-  this.notFoundClose.requestClose();
+
+  const auth = this.authService.leggiObsAuth().value;
+  const autenticato = auth && auth.tk !== null;
+
+  this.notFoundClose.requestClose(!autenticato);
 }
 
 }

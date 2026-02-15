@@ -5,7 +5,7 @@ import {
   leggiWelcomeTitoloStatoDaSessione,
 } from 'src/app/_helpers_globali/helpers';
 import { Component, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
-
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { Router } from '@angular/router';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { Subscription } from 'rxjs';
@@ -25,10 +25,12 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
   public mostra404 = false;
   public animazione404InCorso = false;
   public navigazioneInCorso = false;
+  private deveRicaricare = false;
   public timerFallbackNavigazione: any = 0;
     constructor(
     private animateService: AnimateService,
     private notFoundClose: NotFoundCloseService,
+    private authService: Authservice,
     private router: Router,
     private cambioLinguaService: CambioLinguaService
   ) {}
@@ -66,7 +68,14 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
    setTimeout(() => { this.mostra404 = true; }, 600);
   }
 
-    chiudi404(): void {
+    chiudi404DaClick(): void {
+    const auth = this.authService.leggiObsAuth().value;
+    const autenticato = auth && auth.tk !== null;
+    this.deveRicaricare = !autenticato;
+    this.chiudi404();
+  }
+
+  chiudi404(): void {
     if (this.animazione404InCorso) return;
     if (this.navigazioneInCorso) return;
     if (!this.mostra404) return; // e' gia' chiuso
@@ -102,9 +111,16 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
       this.timerFallbackNavigazione = 0;
     }
 
-    try {
+     try {
       sessionStorage.setItem('transizione_404_catalogo', '1');
     } catch {}
+
+    if (this.deveRicaricare) {
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 600);
+      return;
+    }
 
     const lingua = this.cambioLinguaService.leggiCodiceLingua();
     const baseCatalogo =
@@ -120,7 +136,8 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
 
 
 ngOnInit(): void {
-  this.subClose404 = this.notFoundClose.close404$.subscribe(() => {
+   this.subClose404 = this.notFoundClose.close404$.subscribe((reload) => {
+    this.deveRicaricare = reload;
     this.chiudi404();
   });
 }
