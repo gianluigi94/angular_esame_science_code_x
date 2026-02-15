@@ -40,8 +40,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private shieldLogout: HTMLDivElement | null = null; // mi tengo il riferimento allo 'schermo' che blocca l’interfaccia durante il logout
   distruggi$ = new Subject<void>(); // creo un subject che uso per chiudere le subscribe con takeUntil quando il componente si distrugge
 
-  paginaLogin = false; // mi segno se mi trovo nella pagina di login (per adattare l'header)
-  headerPronto = false; // mi segno quando l'header è pronto da mostrare senza glitch dopo navigazione/reload
+  paginaLogin = false;
+pagina404 = false;
+headerPronto = false;
+
   cambioLinguaService: CambioLinguaService; // mi tengo il riferimento al servizio che gestisce il cambio lingua
   iconaLingua$!: Observable<string>; // mi espongo uno stream con l'icona della lingua da mostrare in modo reattivo
 
@@ -70,7 +72,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
 
       this.paginaLogin =
-   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(this.router.url || '');
+  /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(this.router.url || '');
+this.pagina404 =
+  /^\/(it|en)\/non-trovato(\/|$)/.test(this.router.url || '');
 
     this.router.events // ascolto gli eventi del router per aggiornare lo stato quando cambio pagina
       .pipe(
@@ -80,8 +84,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .subscribe((ev: NavigationEnd) => {
         const url = ev.urlAfterRedirects || ev.url; // prendo l'url definitivo dopo eventuali reindirizzamenti
                           this.paginaLogin =
-   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url || '');
-        this.headerPronto = true; // segno che l'header puo' essere mostrato senza 'flash' dopo un reload
+  /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url || '');
+this.pagina404 =
+  /^\/(it|en)\/non-trovato(\/|$)/.test(url || '');
+this.headerPronto = true;
       });
 
     this.authCorrente = this.authService.leggiObsAuth().value; // leggo lo stato di autenticazione corrente al momento della costruzione

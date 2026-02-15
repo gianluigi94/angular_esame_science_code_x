@@ -3,15 +3,17 @@
 
   <!-- SINISTRA  -->
   <div class="sinistra">
-<div class="menu_sinistra">
+<div class="menu_sinistra"
+[style.visibility]="pagina404 ? 'hidden' : 'visible'">
 
     <!-- menu "Le nostre categorie" sole se si è loggati, si mostrano al passaggio del mause -->
-    <ul
-      class="menu-categorie"
-      *ngIf="authVisuale?.tk"
-      (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
-      (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
-    >
+ <ul
+  class="menu-categorie"
+  *ngIf="authVisuale?.tk"
+  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
+  (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
+>
       <!-- voce principale -->
       <li class="info-categorie">
         <img
@@ -55,12 +57,13 @@
 
 
     <!-- menu tipo contenuto: visibile solo da loggati -->
-    <ul
-      class="menu-tipo"
-      *ngIf="authVisuale?.tk"
-      (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
-      (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"
-    >
+  <ul
+  class="menu-tipo"
+  *ngIf="authVisuale?.tk"
+  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
+  (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"
+>
       <!-- voce principale (mostra selezionata) -->
       <li class="info-tipo">
         <span class="label-tipo">{{ etichettaTipoSelezionato }}</span>
@@ -98,11 +101,12 @@
      <!-- Questa formula abbreviata dice: prova a leggere il token da authVisuale (se authVisuale esiste) e se il token ha un valore mostrerà il container, altrimenti il template -->
     <ng-container *ngIf="authVisuale?.tk; else vistaNonLoggato">
       <!-- Ricerca, al passassagio del mause l'input si apre-->
-      <div
-        class="contenitore-ricerca"
-        (mouseenter)="!logoutInCorso && (mostraRicerca = true)"
-        (mouseleave)="!logoutInCorso && (mostraRicerca = false)"
-      >
+    <div
+  class="contenitore-ricerca"
+  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  (mouseenter)="!logoutInCorso && (mostraRicerca = true)"
+  (mouseleave)="!logoutInCorso && (mostraRicerca = false)"
+>
         <input
           type="text"
           class="ricerca-barra"
@@ -203,11 +207,12 @@
       </div>
 
       <!-- Menu utente -->
-      <ul
-        class="menu-utente"
-        (mouseenter)="!logoutInCorso && (menuUtenteAperto = true)"
-        (mouseleave)="!logoutInCorso && (menuUtenteAperto = false)"
-      >
+     <ul
+  class="menu-utente"
+  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  (mouseenter)="!logoutInCorso && (menuUtenteAperto = true)"
+  (mouseleave)="!logoutInCorso && (menuUtenteAperto = false)"
+>
         <li class="info-utente">
           <svg class="icona icona-utente" viewBox="0 0 24 24">
             <circle cx="12" cy="8" r="4" fill="currentColor" />
@@ -293,8 +298,8 @@
         "
         [routerLink]="pathLoginDaLingua()"
         [class.preparazione]="!headerPronto"
-        [class.nascosto]="paginaLogin"
-        [attr.aria-disabled]="paginaLogin || !headerPronto ? 'true' : null"
+        [class.nascosto]="paginaLogin || pagina404"
+[attr.aria-disabled]="paginaLogin || pagina404 || !headerPronto ? 'true' : null"
         [innerHTML]="'ui.menu_utente.collegati.label' | translate"
       ></button>
     </ng-template>
