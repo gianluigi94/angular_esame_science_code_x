@@ -56,8 +56,13 @@ const routes: Routes = [
         loadChildren: () =>
           import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
       },
-      {
+    {
   path: 'non-trovato',
+  loadChildren: () =>
+    import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
+},
+{
+  path: 'not-found',
   loadChildren: () =>
     import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
 },
@@ -102,15 +107,20 @@ const routes: Routes = [
         loadChildren: () =>
           import('./_catalogo/catalogo.module').then((m) => m.CatalogoModule),
       },
-      {
+   {
   path: 'non-trovato',
+  loadChildren: () =>
+    import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
+},
+{
+  path: 'not-found',
   loadChildren: () =>
     import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
 },
 
       {
         path: '**',
-        redirectTo: 'non-trovato',
+        redirectTo: 'not-found',
         pathMatch: 'full',
       },
     ],

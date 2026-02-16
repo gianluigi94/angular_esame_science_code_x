@@ -57,7 +57,8 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
           const lingua = m ? m[1].toLowerCase() : 'it';
 
           this.erroreGlobaleService.resettaErroreFatale();
-          this.router.navigateByUrl('/' + lingua + '/non-trovato');
+          const pagina404 = lingua === 'it' ? '/non-trovato' : '/not-found';
+          this.router.navigateByUrl('/' + lingua + pagina404);
 
           return throwError(() => err);
         }

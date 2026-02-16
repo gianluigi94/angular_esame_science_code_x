@@ -77,7 +77,7 @@ export class TitlesMainComponent implements AfterViewInit {
 
    get isNotFoundRoute(): boolean {
   const url = this.router.url.split('?')[0].split('#')[0];
-  return /^\/(it|en)\/non-trovato(\/|$)/.test(url);
+  return /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
 }
 
 onLogoClick(ev: MouseEvent): void {

@@ -94,7 +94,7 @@ export function salvaPathInSessionStorage(url: string): void {
       !pathPulito ||
       pathPulito === '/' ||
       /^\/(it|en)$/.test(pathPulito) ||
-      /^\/(it|en)\/non-trovato(\/|$)/.test(pathPulito)
+      /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(pathPulito)
     ) {
       return;
     }
@@ -142,7 +142,7 @@ export function salvaPathNonTrovatoDopoCaricamento(url: string): void {
     if (!pathPulito) return;
 
     // accetta SOLO la rotta non-trovato (it/en)
-    if (!/^\/(it|en)\/non-trovato(\/|$)/.test(pathPulito)) {
+    if (!/^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(pathPulito)) {
       return;
     }
 

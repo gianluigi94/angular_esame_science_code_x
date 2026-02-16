@@ -82,8 +82,9 @@ if (scroller) {
 }
     this.sincBenvenutoPathConLingua(codice);
 
-    this.sincCatalogoPathConLingua(codice)
-    this.toastService.chiudiTutti(); // Chiudo tutti i toast per non lasciarli in una lingua sbagliata
+    this.sincCatalogoPathConLingua(codice);
+    this.sincNotFoundPathConLingua(codice);
+    this.toastService.chiudiTutti();
     this.cambioLinguaAvviato$.next(codice); // Notifico che ho iniziato il cambio lingua con quel codice
 
     const srv = this.prendiCaroselloNovitaService(); // Recupero il servizio del carosello
@@ -330,6 +331,27 @@ if (scroller) {
     if (target === current) return;
 
     // IMPORTANTISSIMO: cambia URL senza navigare, quindi non ricrei componenti
+    this.location.replaceState(target + tail);
+  }
+
+  private sincNotFoundPathConLingua(codice: string): void {
+    const full =
+      this.location.path(true) ||
+      (window.location.pathname + window.location.search + window.location.hash) ||
+      '';
+    const soloPath = full.split('?')[0].split('#')[0];
+    const tail = full.substring(soloPath.length);
+
+    const m = soloPath.match(/^\/(it|en)\/(non-trovato|not-found)(\/.*)?$/);
+    if (!m) return;
+
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
+    const segmento404 = c === 'it' ? 'non-trovato' : 'not-found';
+    const resto = m[3] || '';
+    const target = ('/' + c + '/' + segmento404 + resto).replace(/\/+$/, '');
+    const current = soloPath.replace(/\/+$/, '');
+    if (target === current) return;
+
     this.location.replaceState(target + tail);
   }
 }

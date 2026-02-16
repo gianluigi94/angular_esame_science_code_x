@@ -1179,7 +1179,7 @@ else if (this.eRottaNotFound(url)) {
     const path = String(url || '')
       .split('?')[0]
       .split('#')[0];
-    return /^\/(it|en)\/non-trovato(\/|$)/.test(path);
+    return /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(path);
   }
 
 

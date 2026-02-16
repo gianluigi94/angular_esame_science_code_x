@@ -74,7 +74,7 @@ headerPronto = false;
       this.paginaLogin =
   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(this.router.url || '');
 this.pagina404 =
-  /^\/(it|en)\/non-trovato(\/|$)/.test(this.router.url || '');
+  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(this.router.url || '');
 
     this.router.events // ascolto gli eventi del router per aggiornare lo stato quando cambio pagina
       .pipe(
@@ -86,7 +86,7 @@ this.pagina404 =
                           this.paginaLogin =
   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url || '');
 this.pagina404 =
-  /^\/(it|en)\/non-trovato(\/|$)/.test(url || '');
+  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url || '');
 this.headerPronto = true;
       });
 

@@ -86,11 +86,11 @@ export class AppComponent implements OnInit {
     this.isFirefox = isFirefox(); // Mi salvo se sto girando su Firefox
     const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
     this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
-    this.sonoIn404 = /^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale);
+    this.sonoIn404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale);
     this.aggiornaVisibilitaSfondo404();
     this.gestisciFadeInSfondo404();
     setTimeout(() => salvaPathInSessionStorage(urlIniziale), 0);
-        if (/^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale)) {
+        if (/^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale)) {
       this.mostraToast404Persistente();
     }
     this.devoCaricareTexturePrimaVolta = // Decido se devo caricare le texture al primo avvio
@@ -124,7 +124,7 @@ export class AppComponent implements OnInit {
                this.caricamentoDisabilitato =
   /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(urlIniziale) ||
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(urlIniziale) ||
-  /^\/(it|en)\/non-trovato(\/|$)/.test(urlIniziale);
+  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale);
     this.caricamentoDisabilitato$.next(this.caricamentoDisabilitato); // Propago subito lo stato del loader disabilitato nello stream
 
     this.deveCaricareImmaginiCarosello = isCatalogoHome(urlIniziale);
@@ -145,7 +145,7 @@ export class AppComponent implements OnInit {
             : ev && ev.url // Altrimenti provo con ev.url e se non c'è nulla, metto stringa vuota
             ? ev.url
             : '';
-        this.sonoIn404 = /^\/(it|en)\/non-trovato(\/|$)/.test(url);
+        this.sonoIn404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
         const precedente = this.ultimaUrl; // Mi salvo l'URL precedente prima di aggiornarlo
         this.ultimaUrl = url; // Aggiorno l'ultima URL con quella nuova
         salvaPathInSessionStorage(url);
@@ -164,7 +164,7 @@ export class AppComponent implements OnInit {
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(url);
 
   const sonoInNonTrovato =
-  /^\/(it|en)\/non-trovato(\/|$)/.test(url);
+  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
 
   if (sonoInNonTrovato) {
   this.erroreGlobaleService.resettaErroreFatale();
@@ -178,7 +178,7 @@ const eroNelLogin =
   /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(precedente);
 
   const eroInNonTrovato =
-  /^\/(it|en)\/non-trovato(\/|$)/.test(precedente);
+  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(precedente);
 const sonoNelCatalogo =
   /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url);
 

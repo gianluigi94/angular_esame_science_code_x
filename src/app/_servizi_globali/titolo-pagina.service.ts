@@ -48,6 +48,10 @@ if (path === '/catalogo' || path === '/catalogo/' || path.startsWith('/catalogo/
 
     this.cambioLinguaService.cambioLinguaApplicata$.subscribe(() => {
   const path = this.pulisciUrlSenzaLingua(this.router.url || '');
+if (path === '/non-trovato' || path === '/not-found') {
+  this.aggiornaTitolo(this.router.url || '');
+  return;
+}
 if (path === '/catalogo' || path === '/catalogo/' || path.startsWith('/catalogo/') ||
     path === '/catalog'  || path === '/catalog/'  || path.startsWith('/catalog/')) {
   this.aggiornaTitolo(this.pathDaTipoCorrente());
@@ -122,6 +126,9 @@ if (
 
 } else if (path === '/catalogo/film-serie' || path === '/catalog/movies-series') {
   titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;
+
+} else if (path === '/non-trovato' || path === '/not-found') {
+  titolo = codice === 'it' ? `Pagina non trovata - ${base}` : `Page Not Found - ${base}`;
 }
 
 
