@@ -149,14 +149,4 @@ export function salvaPathNonTrovatoDopoCaricamento(url: string): void {
     sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito);
   } catch {}
 }
-const CHIAVE_WELCOME_TITOLO_STATO = 'welcome_titolo_stato';
-export type WelcomeTitoloStato = 'ALTO' | 'CENTRO' | '';
 
-export function leggiWelcomeTitoloStatoDaSessione(): WelcomeTitoloStato {
-  try {
-    const v = (sessionStorage.getItem(CHIAVE_WELCOME_TITOLO_STATO) || '') as any;
-    return v === 'ALTO' || v === 'CENTRO' ? v : '';
-  } catch {
-    return '';
-  }
-}

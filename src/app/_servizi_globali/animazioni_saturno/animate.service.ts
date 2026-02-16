@@ -777,4 +777,16 @@ public fadeInSoloSfondo(durata: number = 1, delay: number = 0): void {
   });
 }
 
+public refreshXGif(): void {
+  const xAfterLow = CSSRulePlugin.getRule('.x-low::after');
+  const xAfterHigh = CSSRulePlugin.getRule('.x-high::after');
+  const ts = `?t=${Date.now()}`;
+
+  if (xAfterLow) {
+    gsap.set(xAfterLow, { backgroundImage: `url("/assets/img/x_piccola.gif${ts}")` });
+  }
+  if (xAfterHigh) {
+    gsap.set(xAfterHigh, { backgroundImage: `url("/assets/img/x_grende.gif${ts}")` });
+  }
+}
 }

@@ -2,7 +2,6 @@ import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/anim
 import {
   vengoDaBenvenutoDaSessione,
   salvaPathNonTrovatoDopoCaricamento,
-  leggiWelcomeTitoloStatoDaSessione,
 } from 'src/app/_helpers_globali/helpers';
 import { Component, AfterViewInit, OnInit, OnDestroy } from '@angular/core';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
@@ -10,6 +9,7 @@ import { Router } from '@angular/router';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { Subscription } from 'rxjs';
 import { NotFoundCloseService } from '../titles-main/not-found-close.service';
+import { TraduzioniService } from 'src/app/_servizi_globali/traduzioni.service';
 @Component({
   selector: 'app-not-found',
   templateUrl: './not-found.component.html',
@@ -24,6 +24,7 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
   // ✅ controlla la classe .show della maschera
   public mostra404 = false;
   public animazione404InCorso = false;
+  traduzioniPronte = false;
   public navigazioneInCorso = false;
   private deveRicaricare = false;
   public timerFallbackNavigazione: any = 0;
@@ -32,31 +33,16 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
     private notFoundClose: NotFoundCloseService,
     private authService: Authservice,
     private router: Router,
-    private cambioLinguaService: CambioLinguaService
+    private traduzioniService: TraduzioniService,
+    public cambioLinguaService: CambioLinguaService
   ) {}
 
-  ngAfterViewInit(): void {
-    // --- la tua logica attuale ---
+ngAfterViewInit(): void {
     this.vengoDaBenvenuto = vengoDaBenvenutoDaSessione();
 
-    const titoloStato = leggiWelcomeTitoloStatoDaSessione();
-    const titoloEraCentrale = !titoloStato || titoloStato === 'CENTRO';
-
-    const devoAnimareTitolo = this.vengoDaBenvenuto && titoloEraCentrale;
-
     requestAnimationFrame(() => {
-      if (!devoAnimareTitolo) {
-        this.animateService.setXNormale();
-        this.animateService.setTitoloAltoGlobal();
-      } else {
-        this.animateService.setTitoloCentraleGlobal();
-        this.animateService.setXGif();
-
-        requestAnimationFrame(() => {
-          this.animateService.setXNormale();
-          this.animateService.animateTitoloVersoAltoGlobal(0.9, 0.05);
-        });
-      }
+      this.animateService.setXNormale();
+      this.animateService.setTitoloAltoGlobal();
 
       requestAnimationFrame(() => {
         setTimeout(() => {
@@ -65,8 +51,8 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
       });
     });
 
-   setTimeout(() => { this.mostra404 = true; }, 600);
-  }
+    setTimeout(() => { this.mostra404 = true; }, 600);
+}
 
     chiudi404DaClick(): void {
     const auth = this.authService.leggiObsAuth().value;
@@ -136,6 +122,10 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
 
 
 ngOnInit(): void {
+  this.traduzioniService.traduzioniInizialiCaricate$.subscribe(v => {
+    this.traduzioniPronte = v;
+  });
+
    this.subClose404 = this.notFoundClose.close404$.subscribe((reload) => {
     this.deveRicaricare = reload;
     this.chiudi404();

@@ -113,13 +113,15 @@ this.resizeHandler = () => {
     window.addEventListener('orientationchange', this.orientationHandler);
 
     this.visibilityHandler = () => {
-      if (document.visibilityState === 'visible') {
-        setTimeout(() => {
-          ScrollTrigger.refresh();
-        }, 300);
-      }
-    };
-    document.addEventListener('visibilitychange', this.visibilityHandler);
+  if (document.visibilityState === 'visible') {
+    setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 300);
+    // ✅ forza il browser a ricaricare la GIF della X
+    this.animateService.refreshXGif();
+  }
+};
+document.addEventListener('visibilitychange', this.visibilityHandler);
 
 
 
@@ -331,7 +333,6 @@ const saturnoTrigger = ScrollTrigger.create({
   scroller: '.main-scroll',
   start: '10px top',
   onEnter: () => {
-    this.setTitoloStatoSS('ALTO');// ✅ quando il trigger entra, titolo va in alto
 
     gsap.to(title, {
       top: topValue,
@@ -350,7 +351,6 @@ const saturnoTrigger = ScrollTrigger.create({
     });
   },
   onLeaveBack: () => {
-    this.setTitoloStatoSS('CENTRO'); // ✅ quando risali sopra il trigger, torna centrale
 
     gsap.to(title, {
       top: '50%',
@@ -628,9 +628,7 @@ if (footerP) {
 
   public stopAllScrollAnimations(): void {
     this.destroyScrollTriggers();
-    try {
-    sessionStorage.removeItem(this.SS_WELCOME_TITOLO_STATO);
-  } catch {}
+
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
       this.resizeHandler = null;
@@ -729,26 +727,7 @@ if (footerP) {
   }
 
  private readonly SS_WELCOME_TITOLO_STATO = 'welcome_titolo_stato';
-// valori: 'ALTO' | 'CENTRO'
 
-private setTitoloStatoSS(stato: 'ALTO' | 'CENTRO'): void {
-  try {
-    sessionStorage.setItem(this.SS_WELCOME_TITOLO_STATO, stato);
-  } catch {}
-}
 
-public getTitoloStatoSS(): 'ALTO' | 'CENTRO' | '' {
-  try {
-    return (sessionStorage.getItem(this.SS_WELCOME_TITOLO_STATO) || '') as any;
-  } catch {
-    return '';
-  }
-}
-
-public clearWelcomeSessionState(): void {
-  try {
-    sessionStorage.removeItem(this.SS_WELCOME_TITOLO_STATO);
-  } catch {}
-}
 
 }

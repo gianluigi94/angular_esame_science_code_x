@@ -113,8 +113,11 @@ export class AppComponent implements OnInit {
       this.cambioLinguaService.leggiCodiceLingua()
     ); // Imposto subito la lingua sul tag <html> leggendo la lingua salvata
     this.ultimaUrl = urlIniziale; // Salvo l'URL iniziale come ultima URL conosciuta
-    this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
+        this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
       impostaLangHtml(this.documento, codice);
+      if (this.sonoIn404) {
+        this.mostraToast404Persistente();
+      }
     });
 
     // Qui decido se mostrare il loader e se caricare il carosello in base all'URL, e mi aggancio ai cambi rotta per aggiornare tutto durante la navigazione
@@ -379,15 +382,21 @@ const disabilitaLoader =
     );
   }
 
-    mostraToast404Persistente(): void {
+   mostraToast404Persistente(): void {
     this.toastService.chiudi(this.chiaveToast404);
-    this.toastService.mostra(
-      'non abbiamo trovato questa pagina',
-      'error',
-      true,
-      undefined,
-      this.chiaveToast404
-    );
+
+    const codiceLingua = this.cambioLinguaService.leggiCodiceLingua();
+    this.traduzioniService.assicuraTraduzioni$(codiceLingua).pipe(take(1)).subscribe(() => {
+      this.translate.get('ui.toast.non-trovato').pipe(take(1)).subscribe((testo) => {
+        this.toastService.mostra(
+          testo,
+          'error',
+          true,
+          undefined,
+          this.chiaveToast404
+        );
+      });
+    });
   }
 
     aggiornaVisibilitaSfondo404(): void {
