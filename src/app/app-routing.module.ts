@@ -66,6 +66,16 @@ const routes: Routes = [
   loadChildren: () =>
     import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
 },
+{
+  path: 'contatti',
+  loadChildren: () =>
+    import('./_componenti_comuni/contatti/contatti.module').then(m => m.ContattiModule),
+},
+{
+  path: 'contact',
+  loadChildren: () =>
+    import('./_componenti_comuni/contatti/contatti.module').then(m => m.ContattiModule),
+},
 
       {
         path: '**',
@@ -116,6 +126,16 @@ const routes: Routes = [
   path: 'not-found',
   loadChildren: () =>
     import('./_componenti_comuni/not-found/not-found.module').then(m => m.NotFoundModule),
+},
+{
+  path: 'contatti',
+  loadChildren: () =>
+    import('./_componenti_comuni/contatti/contatti.module').then(m => m.ContattiModule),
+},
+{
+  path: 'contact',
+  loadChildren: () =>
+    import('./_componenti_comuni/contatti/contatti.module').then(m => m.ContattiModule),
 },
 
       {
