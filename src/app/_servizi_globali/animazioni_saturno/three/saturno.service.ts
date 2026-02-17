@@ -329,7 +329,13 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
       ) {
         const url = this.leggiUrlAttuale();
         const da404 = this.leggiFlagTransizione404Catalogo();
-        if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
+       if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
+          // Riattacco il canvas al nuovo container (es. scheda ha un suo app-saturno)
+          const container = document.getElementById('three-container');
+          if (container && this.renderer.domElement.parentElement !== container) {
+            container.appendChild(this.renderer.domElement);
+          }
+
           this.animateService.fadeOutSaturnoESfondo(0);
           this.animateService.enablePageScroll();
           this.spegniSaturno();
@@ -1251,6 +1257,28 @@ else if (this.eRottaNotFound(url)) {
 
 public riaccendiSaturno(): void {
     if (!this.scene || !this.renderer) return;
+
+    // FIX 1: se la luce è spenta (es. F5 su catalogo → intensity rimasta a 0)
+    if (this.directionalLight && this.directionalLight.intensity < 0.1) {
+      this.directionalLight.intensity = 2.8;
+    }
+
+    // FIX 2: se il canvas è staccato dal DOM (es. scheda catalogo → app-saturno distrutto)
+    const canvas = this.renderer.domElement;
+    if (!canvas.parentElement) {
+      let overlay = document.getElementById('saturno-overlay-temp');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'saturno-overlay-temp';
+        overlay.style.cssText =
+          'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
+          'z-index:0;pointer-events:none;overflow:hidden;';
+        document.body.appendChild(overlay);
+      }
+      overlay.appendChild(canvas);
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
     this.startFixedFPSLoop();
     this.attivaHoverMouse();
     this.animateService.resumeClearcoat();

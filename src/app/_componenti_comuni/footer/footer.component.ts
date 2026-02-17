@@ -86,7 +86,7 @@ export class FooterComponent {
       // Contemporaneamente: sposto Saturno 3D da CATALOGO_NASCOSTO a LOGIN_LATERALE
       if (scena) {
         this.saturnoRouteAnimazioniService.animaVerso(
-          scena, 'LOGIN_LATERALE', 1.85, luce || undefined
+          scena, 'LOGIN_LATERALE', 1.15, luce || undefined
         );
       }
     } else {
