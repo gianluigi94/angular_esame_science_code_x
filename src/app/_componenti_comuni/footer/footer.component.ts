@@ -89,9 +89,31 @@ export class FooterComponent {
           scena, 'LOGIN_LATERALE', 1.15, luce || undefined
         );
       }
-    } else {
-      console.log('[Contatti] Già visibili, navigo subito.');
-      navigaAContatti();
+   } else {
+      // Saturno e sfondo sono già visibili: capisco da che pagina vengo
+      const poseStimata = scene ? this.indovinaPose(scene.position, scene.scale) : 'SCONOSCIUTA';
+
+      if (poseStimata === 'WELCOME_BASSO') {
+        // Welcome → Contatti: stessa tecnica di Welcome → Login
+        // Animazione e navigazione partono insieme
+        console.log('[Contatti] Da Welcome basso: piroetta + navigo simultaneamente');
+
+        const luce = this.saturnoService.getDirectionalLight();
+
+        this.animateService.setXNormale();
+        this.animateService.animateTitoloVersoAltoGlobal();
+
+        this.saturnoRouteAnimazioniService.animaVerso(
+          scene!, 'LOGIN_LATERALE', 0.85, luce || undefined
+        );
+
+        navigaAContatti();
+
+      } else {
+        // Login o altro: Saturno è già in LOGIN_LATERALE, navigo direttamente
+        console.log('[Contatti] Già visibili e in posizione, navigo subito.');
+        navigaAContatti();
+      }
     }
   }
 

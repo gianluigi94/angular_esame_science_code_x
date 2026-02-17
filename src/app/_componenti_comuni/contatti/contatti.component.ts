@@ -1,11 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
+import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_utility.service';
 
 @Component({
   selector: 'app-contatti',
-  template: `<div style="color: white; padding: 40px; text-align: center;">
-    <h1>📬 Contatti</h1>
-    <p>Pagina contatti — placeholder</p>
-  </div>`,
+  templateUrl: './contatti.component.html',
   styles: [`:host { display: block; }`],
 })
-export class ContattiComponent {}
+export class ContattiComponent implements AfterViewInit {
+
+  ngAfterViewInit(): void {
+    UtilityService.nascondiSottotitoloEScrol();
+  }
+}
