@@ -1249,5 +1249,10 @@ else if (this.eRottaNotFound(url)) {
     } catch {}
   }
 
-
+public riaccendiSaturno(): void {
+    if (!this.scene || !this.renderer) return;
+    this.startFixedFPSLoop();
+    this.attivaHoverMouse();
+    this.animateService.resumeClearcoat();
+  }
 }

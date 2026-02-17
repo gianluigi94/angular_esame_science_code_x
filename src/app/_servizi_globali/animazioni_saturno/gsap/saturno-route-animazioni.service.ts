@@ -20,9 +20,11 @@ public animaVerso(
 ): void {
   const pose = this.saturnoPosizioniService.getPose(stato);
   const isFromBasso = scene.scale.x > 2.5;
+  const isFromCatalogo = scene.scale.x < 0.05;
+  const conPiroetta = isFromBasso || isFromCatalogo;
 
   const durataAnim =
-    stato === 'LOGIN_LATERALE' && isFromBasso ? durata + 0.4 : durata;
+    stato === 'LOGIN_LATERALE' && conPiroetta ? durata + 0.4 : durata;
 
   const tl = gsap.timeline({
     onComplete: () => {
@@ -109,7 +111,7 @@ public animaVerso(
   );
 
   // ROTAZIONE (come prima)
-  if (stato === 'LOGIN_LATERALE' && isFromBasso) {
+ if (stato === 'LOGIN_LATERALE' && conPiroetta) {
     tl.to(
       scene.rotation,
       {
