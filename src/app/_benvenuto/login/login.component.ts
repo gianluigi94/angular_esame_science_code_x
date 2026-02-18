@@ -88,6 +88,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
  * @returns void
  */
   ngAfterViewInit(): void {
+    sessionStorage.setItem('vengo_da_login', 'true');
         if (this.saltaAnimazioniIngresso) {
       UtilityService.nascondiSottotitoloEScrol();
       return;

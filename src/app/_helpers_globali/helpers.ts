@@ -109,6 +109,15 @@ export function salvaPathInSessionStorage(url: string): void {
       }, 500);
     }
 
+    // se il path cambia e non siamo più sul login, rimuovo il flag vengo_da_login
+    const eraLogin = /^\/(it\/benvenuto\/accedi|en\/welcome\/sign-in)(\/|$)/.test(last);
+    const oraLogin = /^\/(it\/benvenuto\/accedi|en\/welcome\/sign-in)(\/|$)/.test(pathPulito);
+    if (eraLogin && !oraLogin) {
+      setTimeout(() => {
+        sessionStorage.removeItem('vengo_da_login');
+      }, 500);
+    }
+
     sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito);
   } catch {}
 }
