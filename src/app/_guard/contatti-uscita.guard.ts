@@ -27,6 +27,13 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     const targetUrl = (nextState?.url as string) || '';
     const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
 
+    // ── Login (es. torno indietro da contatti a login) ──
+    // Saturno e titolo sono già nella posizione corretta: sposto solo il pannello
+    const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito);
+    if (vaInLogin) {
+      return component.animaUscita().then(() => true);
+    }
+
     // ── Welcome ──
     const vaInBenvenuto =
       pathPulito === '/' ||
