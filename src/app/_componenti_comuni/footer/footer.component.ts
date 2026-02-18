@@ -73,20 +73,20 @@ export class FooterComponent {
       }
 
       // app-sfondo: fade-in progressivo + Saturno 3D: partono insieme
-      const tl = gsap.timeline({
-        onComplete: () => navigaAContatti(),
-      });
+      const tl = gsap.timeline();
+
+setTimeout(() => navigaAContatti(), 1050);
 
       if (sfondoEl) {
         gsap.killTweensOf(sfondoEl);
         sfondoEl.style.opacity = '0';
-        tl.fromTo(sfondoEl, { opacity: 0 }, { opacity: 1, duration: 1.85, ease: 'power2.out' }, 0);
+        tl.fromTo(sfondoEl, { opacity: 0 }, { opacity: 1, duration: 1.05, ease: 'power2.out' }, 0);
       }
 
       // Contemporaneamente: sposto Saturno 3D da CATALOGO_NASCOSTO a LOGIN_LATERALE
       if (scena) {
         this.saturnoRouteAnimazioniService.animaVerso(
-          scena, 'LOGIN_LATERALE', 1.15, luce || undefined
+          scena, 'LOGIN_LATERALE', 0.75, luce || undefined
         );
       }
    } else {
