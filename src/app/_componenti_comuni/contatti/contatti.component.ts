@@ -13,9 +13,11 @@ export class ContattiComponent implements AfterViewInit {
 
   constructor(private loginAnimazioniService: LoginAnimazioniService) {}
 
-  ngAfterViewInit(): void {
-    UtilityService.nascondiSottotitoloEScrol();
-  }
+ ngAfterViewInit(): void {
+  sessionStorage.setItem('vengo_da_contatti', 'true');
+  UtilityService.nascondiSottotitoloEScrol();
+}
+
 
   animaUscita(): Promise<void> {
     if (!this.contattiContenuto?.nativeElement) {

@@ -329,21 +329,50 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
       ) {
         const url = this.leggiUrlAttuale();
         const da404 = this.leggiFlagTransizione404Catalogo();
-       if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
-          // Riattacco il canvas al nuovo container (es. scheda ha un suo app-saturno)
-          const container = document.getElementById('three-container');
-          if (container && this.renderer.domElement.parentElement !== container) {
-            container.appendChild(this.renderer.domElement);
-          }
+      if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
+  // Riattacco il canvas al nuovo container (es. scheda ha un suo app-saturno)
+  const container = document.getElementById('three-container');
+  if (container && this.renderer.domElement.parentElement !== container) {
+    container.appendChild(this.renderer.domElement);
+  }
 
-          this.animateService.fadeOutSaturnoESfondo(0);
-          this.animateService.enablePageScroll();
-          this.spegniSaturno();
-          this.animateService.pauseClearcoat();
+  const vengoDaContatti =
+    (sessionStorage.getItem('vengo_da_contatti') || '') === 'true';
 
-          resolve();
-          return;
-        }
+  if (vengoDaContatti) {
+    try {
+      sessionStorage.removeItem('vengo_da_contatti');
+    } catch {}
+
+    const saturno = document.querySelector('app-saturno') as HTMLElement | null;
+    const sfondo = document.querySelector('app-sfondo') as HTMLElement | null;
+
+    if (saturno) {
+      gsap.killTweensOf(saturno);
+      gsap.set(saturno, { opacity: 1 });
+    }
+    if (sfondo) {
+      gsap.killTweensOf(sfondo);
+      gsap.set(sfondo, { opacity: 1 });
+    }
+
+    requestAnimationFrame(() => {
+      this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+        this.animateService.enablePageScroll();
+      });
+    });
+  } else {
+    this.animateService.fadeOutSaturnoESfondo(0);
+    this.animateService.enablePageScroll();
+  }
+
+  this.spegniSaturno();
+  this.animateService.pauseClearcoat();
+
+  resolve();
+  return;
+}
+
 
         const container = document.getElementById('three-container');
         if (!container) {

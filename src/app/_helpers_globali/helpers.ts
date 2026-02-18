@@ -90,7 +90,7 @@ const CHIAVE_SESSIONE_PATH = 'ultimo_path';
 export function salvaPathInSessionStorage(url: string): void {
   try {
     const pathPulito = pulisciUrl(url || '');
-            if (
+    if (
       !pathPulito ||
       pathPulito === '/' ||
       /^\/(it|en)$/.test(pathPulito) ||
@@ -98,9 +98,21 @@ export function salvaPathInSessionStorage(url: string): void {
     ) {
       return;
     }
+
+    const last = sessionStorage.getItem(CHIAVE_SESSIONE_PATH) || '';
+    const eraContatti = /^\/(it\/contatti|en\/contact)(\/|$)/.test(last);
+    const oraContatti = /^\/(it\/contatti|en\/contact)(\/|$)/.test(pathPulito);
+
+    if (eraContatti && !oraContatti) {
+      setTimeout(() => {
+        sessionStorage.removeItem('vengo_da_contatti');
+      }, 500);
+    }
+
     sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito);
   } catch {}
 }
+
 
 /**
  * Ritorna il path salvato in sessionStorage.

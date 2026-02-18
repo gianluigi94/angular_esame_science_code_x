@@ -49,7 +49,10 @@ export class AppComponent implements OnInit {
   caricamentoDisabilitato = false; // Indico se il loader globale è disabilitato
   caricamentoDisabilitato$ = new BehaviorSubject<boolean>(false); // Espongo lo stato del loader disabilitato come observable
   ultimaUrl = ''; // Memorizzo l'ultima URL visitata
+  private loaderDelayTimer: any = null;
+private readonly LOADER_DELAY_MS = 140; // 120–180 va bene
 
+loaderDaMostrare = false;
   private loaderVisibile = true; // Tengo traccia se il loader è attualmente visibile
   isFirefox = false; // Indico se il browser in uso è Firefox
   loaderAvvioCatalogo = false; // Indico se il loader è mostrato durante l'avvio del catalogo
@@ -182,13 +185,19 @@ const eroNelLogin =
 const sonoNelCatalogo =
   /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url);
 
+const vengoDaContatti = (() => {
+  try { return sessionStorage.getItem('vengo_da_contatti') === 'true'; }
+  catch { return false; }
+})();
+
 const disabilitaLoader =
   sonoNelLogin ||
   sonoInNonTrovato ||
-  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato));
+  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato || vengoDaContatti));
 
-        this.caricamentoDisabilitato = disabilitaLoader; // Salvo nello stato interno se il loader è disabilitato
-        this.caricamentoDisabilitato$.next(disabilitaLoader); // Notifico nello stream che il loader è (o non è) disabilitato
+this.caricamentoDisabilitato = disabilitaLoader;
+this.caricamentoDisabilitato$.next(disabilitaLoader);
+
 
         const deve = isCatalogoHome(url); // Capisco se sono esattamente nella home del catalogo
 
