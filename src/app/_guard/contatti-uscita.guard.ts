@@ -1,3 +1,4 @@
+// src/app/_guard/contatti-uscita.guard.ts
 
 import { Injectable } from '@angular/core';
 import { CanDeactivate, Router } from '@angular/router';
@@ -26,13 +27,13 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     const targetUrl = (nextState?.url as string) || '';
     const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
 
+    // ── Welcome ──
     const vaInBenvenuto =
       pathPulito === '/' ||
       pathPulito === '' ||
       /^\/(it|en)?\/?(benvenuto|welcome)(\/|$)/.test(pathPulito);
 
     if (vaInBenvenuto) {
-      // Stessa logica di LoginUscitaGuard
       sessionStorage.removeItem('welcome_restore');
       sessionStorage.removeItem('welcome_scrollTop');
 
@@ -47,15 +48,36 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
 
       if (scene) {
         this.saturnoRouteAnimazioniService.animaVerso(
-          scene,
-          'WELCOME_ALTO',
-          1.25,
-          light || undefined
+          scene, 'WELCOME_ALTO', 1.25, light || undefined
         );
       }
+
+      return component.animaUscita().then(() => true);
     }
 
-    // Avvio l'uscita animata del contenuto contatti, poi autorizzo
+    // ── Catalogo ──
+    const vaInCatalogo = /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(pathPulito);
+
+    if (vaInCatalogo) {
+      const scene = this.saturnoService.getScene();
+      const light = this.saturnoService.getDirectionalLight();
+
+      // Saturno: LOGIN_LATERALE → CATALOGO_NASCOSTO (in parallelo al pannello)
+      if (scene) {
+        this.saturnoRouteAnimazioniService.animaVerso(
+          scene, 'CATALOGO_NASCOSTO', 1.2, light || undefined,
+          () => {
+            this.saturnoService.spegniSaturno();
+            this.animateService.pauseClearcoat();
+          }
+        );
+      }
+
+      // Il pannello contatti scivola via (1.25s) — guida la navigazione
+      return component.animaUscita().then(() => true);
+    }
+
+    // ── Default (login o altro): solo uscita pannello ──
     return component.animaUscita().then(() => true);
   }
 }
