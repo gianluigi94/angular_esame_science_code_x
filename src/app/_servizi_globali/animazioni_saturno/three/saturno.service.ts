@@ -540,6 +540,35 @@ else if (this.eRottaNotFound(url)) {
               );
             });
           }
+      } else if (this.eRottaContatti(url)) {
+          const saturno = document.querySelector('app-saturno') as HTMLElement | null;
+          const sfondo = document.querySelector('app-sfondo') as HTMLElement | null;
+          if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
+          if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
+          if (this.directionalLight && this.directionalLight.intensity < 0.1) {
+            this.directionalLight.intensity = 2.8;
+          }
+          this.animateService.setTitoloAltoGlobal();
+          this.animateService.setXNormale();
+
+          // Se Saturn è già in LOGIN_LATERALE (il footer ha già animato), snap silenzioso
+          const scl = this.scene!.scale;
+          const pos = this.scene!.position;
+          const giaInLoginLaterale = Math.abs(scl.x - 1.4) < 0.2 && pos.x < -1;
+
+          if (giaInLoginLaterale) {
+            this.saturnoPosizioniService.applicaPoseAScena(this.scene!, 'LOGIN_LATERALE');
+            if (this.directionalLight) {
+              this.directionalLight.position.z = 0.1001;
+            }
+          } else {
+            this.saturnoRouteAnimazioniService.animaVerso(
+              this.scene!,
+              'LOGIN_LATERALE',
+              durata,
+              this.directionalLight || undefined,
+            );
+          }
         }
 
         this.attivaHoverMouse();
@@ -1211,10 +1240,13 @@ else if (this.eRottaNotFound(url)) {
   }
 
   private eRottaNotFound(url: string): boolean {
-    const path = String(url || '')
-      .split('?')[0]
-      .split('#')[0];
+    const path = String(url || '').split('?')[0].split('#')[0];
     return /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(path);
+  }
+
+  private eRottaContatti(url: string): boolean {
+    const path = String(url || '').split('?')[0].split('#')[0];
+    return /^\/(it|en)\/(contatti|contact)(\/|$)/.test(path);
   }
 
 
