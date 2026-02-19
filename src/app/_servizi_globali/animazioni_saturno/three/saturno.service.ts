@@ -548,7 +548,6 @@ else if (this.eRottaNotFound(url)) {
           if (this.directionalLight && this.directionalLight.intensity < 0.1) {
             this.directionalLight.intensity = 2.8;
           }
-          this.animateService.setTitoloAltoGlobal();
           this.animateService.setXNormale();
 
           // Se Saturn è già in LOGIN_LATERALE (il footer ha già animato), snap silenzioso
@@ -557,11 +556,15 @@ else if (this.eRottaNotFound(url)) {
           const giaInLoginLaterale = Math.abs(scl.x - 1.4) < 0.2 && pos.x < -1;
 
           if (giaInLoginLaterale) {
+            // footer ha già animato tutto: snap silenzioso anche per il titolo
+            this.animateService.setTitoloAltoGlobal();
             this.saturnoPosizioniService.applicaPoseAScena(this.scene!, 'LOGIN_LATERALE');
             if (this.directionalLight) {
               this.directionalLight.position.z = 0.1001;
             }
           } else {
+            // tasto avanti da welcome (ALTO o BASSO): anima sia Saturn che il titolo
+            this.animateService.animateTitoloVersoAltoGlobal(durata, 0);
             this.saturnoRouteAnimazioniService.animaVerso(
               this.scene!,
               'LOGIN_LATERALE',
