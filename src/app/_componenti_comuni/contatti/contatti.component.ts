@@ -5,7 +5,7 @@ import { LoginAnimazioniService } from 'src/app/_servizi_globali/animazioni_satu
 @Component({
   selector: 'app-contatti',
   templateUrl: './contatti.component.html',
-  styles: [`:host { display: block; }`],
+  styleUrls: ['./contatti.component.scss'],
 })
 export class ContattiComponent implements AfterViewInit {
   @ViewChild('contattiContenuto', { static: true })
