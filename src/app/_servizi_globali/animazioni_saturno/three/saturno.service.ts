@@ -875,7 +875,7 @@ else if (this.eRottaNotFound(url)) {
             }
 
             // Contatti non deve bloccare lo scroll come welcome
-            this.animateService.enablePageScroll();
+            // this.animateService.enablePageScroll();
           }
           // Avvia le animazioni di ingresso SOLO sulla welcome
 
