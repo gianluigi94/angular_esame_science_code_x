@@ -858,7 +858,25 @@ else if (this.eRottaNotFound(url)) {
             particleGroups.push(group);
           });
           this.particleGroups = particleGroups;
+          if (this.eRottaContatti(url)) {
+            this.ensureRingsAndParticlesIfMissing(scene);
 
+            // UI coerente con area login/laterale
+            this.animateService.setXNormale();
+            this.animateService.setTitoloAltoGlobal();
+
+            // Posa scena coerente con contatti (laterale)
+            this.saturnoPosizioniService.applicaPoseAScena(scene, 'LOGIN_LATERALE');
+
+            // Luce coerente: su contatti non deve rimanere quella "welcome" (spenta/dietro)
+            if (this.directionalLight) {
+              this.directionalLight.intensity = 2.8;
+              this.directionalLight.position.z = 0.1001;
+            }
+
+            // Contatti non deve bloccare lo scroll come welcome
+            this.animateService.enablePageScroll();
+          }
           // Avvia le animazioni di ingresso SOLO sulla welcome
 
           // ✅ Ora che i gruppi di particelle ESISTONO, posso lanciare la timeline unica
