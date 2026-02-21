@@ -304,6 +304,18 @@ this.caricamentoDisabilitato$.next(disabilitaLoader);
         deveCaricare, // Mi arriva se devo caricare immagini carosello
         caricamentoDisabilitato, // Mi arriva se il loader è disabilitato
       ]) => {
+        console.log(
+  '[LOADER STATE]',
+  'url=', this.ultimaUrl,
+  '| disabilitato=', caricamentoDisabilitato,
+  '| forzaExtra=', this.forzaLoaderExtra,
+  '| erroreFatale=', erroreFatale,
+  '| traduzioniPronte=', traduzioniPronte,
+  '| sessioneVerificata=', sessioneVerificata,
+  '| saturnoPronto=', saturnoPronto,
+  '| deveCaricareCarosello=', deveCaricare,
+  '| caroselloPronto=', caroselloPronto,
+);
         const deveMostrareLoader = // Calcolo se il loader deve rimanere visibile
           !caricamentoDisabilitato && // Mostro il loader solo se non è disabilitato
           (erroreFatale || // Mostro il loader se c'è un errore fatale
