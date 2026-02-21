@@ -3,22 +3,20 @@
 <section class="login-contenuto" #contattiContenuto>
   <div class="contatti-contenuto">
     <h2>Contatti</h2>
-  <dl class="contact-list">
-    <div class="row">
-      <dt>Sviluppato da</dt>
-      <dd>Gianluigi Abbracciavento</dd>
-    </div>
-    <div class="row">
-      <dt>Email</dt>
-      <dd><a href="mailto:info@azienda.it">info@azienda.it</a></dd>
-    </div>
-
-    <div class="row">
-      <dt>Indirizzo</dt>
-      <dd>Via Castello 2, 12032 Barge (CN)</dd>
-    </div>
-  </dl>
+    <dl class="contact-list">
+      <div class="row">
+        <dt>Sviluppato da</dt>
+        <dd>Gianluigi Abbracciavento</dd>
+      </div>
+      <div class="row">
+        <dt>Email</dt>
+        <dd><a href="mailto:{{ mail }}">{{ mail }}</a></dd>
+      </div>
+      <div class="row">
+        <dt>Indirizzo</dt>
+        <dd>{{ indirizzo }}</dd>
+      </div>
+    </dl>
   </div>
   <app-footer></app-footer>
 </section>
-

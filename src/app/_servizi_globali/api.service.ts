@@ -269,4 +269,16 @@ export class ApiService {
     const risorsa: (string | number)[] = ['serie', id];
     return this.richiestaGenerica(risorsa, 'GET');
   }
+
+  /**
+ * Recupera l'elenco dei dati personali.
+ *
+ * @returns Observable con la risposta del server contenente i dati personali.
+ */
+  public getDatiPersonali(): Observable<IRispostaServer> {
+    const risorsa: string[] = ['dati-personali']; // Imposto l'endpoint /dati-personali
+    return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
+  }
+
+
 }
