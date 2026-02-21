@@ -1,6 +1,6 @@
 import { Component, AfterViewInit, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_utility.service';
-import { LoginAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/login_animazioni.service';
+import { ContattiAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/contatti_animazioni.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
 import { take } from 'rxjs';
@@ -17,9 +17,12 @@ export class ContattiComponent implements AfterViewInit, OnInit {
   mail: string = '';           // Campo mail ricevuto dal server
   indirizzo: string = '';      // Campo indirizzo ricevuto dal server
 
+    private viewReady = false;
+  private datiReady = false;
+
   constructor(
-    private loginAnimazioniService: LoginAnimazioniService,
-    private apiService: ApiService                          // Inietto il servizio API
+    private contattiAnimazioni: ContattiAnimazioniService,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -29,12 +32,22 @@ export class ContattiComponent implements AfterViewInit, OnInit {
       const dato = rit.data[0];             // Prendo il primo record dell'array
       this.mail = dato.mail;               // Salvo la mail
       this.indirizzo = dato.indirizzo;     // Salvo l'indirizzo
+            this.datiReady = true;
+      this.avviaAnimazioniSePronto();
     });
   }
 
   ngAfterViewInit(): void {
     sessionStorage.setItem('vengo_da_contatti', 'true');
     UtilityService.nascondiSottotitoloEScrol();
+        if (this.contattiContenuto?.nativeElement) {
+      this.contattiAnimazioni.preparaStatoIniziale(this.contattiContenuto.nativeElement);
+    }
+
+    this.viewReady = true;
+    this.avviaAnimazioniSePronto();
+
+    // footer IN (come già funziona)
         const footer = document.querySelector('footer') as HTMLElement | null;
     if (footer) {
       gsap.killTweensOf(footer);
@@ -66,12 +79,17 @@ export class ContattiComponent implements AfterViewInit, OnInit {
     }
   }
 
-  animaUscita(): Promise<void> {
-    if (!this.contattiContenuto?.nativeElement) {
-      return Promise.resolve();
-    }
-    return this.loginAnimazioniService.animaUscita(
-      this.contattiContenuto.nativeElement
-    );
+  private avviaAnimazioniSePronto(): void {
+    if (!this.viewReady || !this.datiReady) return;
+    if (!this.contattiContenuto?.nativeElement) return;
+
+    // ✅ parte solo quando dati  view sono pronti
+    requestAnimationFrame(() => {
+      this.contattiAnimazioni.animaIngresso(this.contattiContenuto.nativeElement);
+    });
+  }
+    animaUscita(): Promise<void> {
+    if (!this.contattiContenuto?.nativeElement) return Promise.resolve();
+    return this.contattiAnimazioni.animaUscita(this.contattiContenuto.nativeElement);
   }
 }

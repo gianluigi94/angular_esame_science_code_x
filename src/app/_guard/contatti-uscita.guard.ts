@@ -19,8 +19,8 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
 
 
 
-  canDeactivate(
-    _component: ContattiComponent,
+    canDeactivate(
+    component: ContattiComponent,
     _currentRoute: any,
     _currentState: any,
     nextState?: any
@@ -60,7 +60,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     // ✅ NON animare pannello HTML (niente footer che vola)
     const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito);
     if (vaInLogin) {
-      return animaFooterOut().then(() => true);
+      return Promise.all([component.animaUscita(), animaFooterOut()]).then(() => true);
     }
 
     // ── Welcome ──
@@ -90,7 +90,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       }
 
       // ✅ Niente animaUscita pannello: aspetto solo il tempo della transizione globale
-      return Promise.all([animaFooterOut(), wait(1250)]).then(() => true);
+      return Promise.all([component.animaUscita(), animaFooterOut(), wait(1250)]).then(() => true);
     }
 
     // ── Catalogo ──
@@ -112,11 +112,11 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       }
 
       // ✅ Niente animaUscita pannello: aspetto solo la durata scena
-      return Promise.all([animaFooterOut(), wait(1200)]).then(() => true);
+      return Promise.all([component.animaUscita(), animaFooterOut(), wait(1200)]).then(() => true);
     }
 
     // ── Default ──
     // ✅ Nessuna animazione HTML
-    return animaFooterOut().then(() => true);
+    return Promise.all([component.animaUscita(), animaFooterOut()]).then(() => true);
   }
 }
