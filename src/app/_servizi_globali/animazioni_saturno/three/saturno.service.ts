@@ -321,6 +321,26 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
 
   public initializeSaturn(usaAnimazioniWelcome: boolean = true): Promise<void> {
     return new Promise((resolve, reject) => {
+
+      // ✅ se vengo da contatti verso catalogo/scheda, faccio sparire sfondo subito
+      // senza aspettare il caricamento delle texture
+      const urlSubito = this.leggiUrlAttuale();
+      const vengoDaContattiFlag = sessionStorage.getItem('vengo_da_contatti') === 'true';
+      if (
+        vengoDaContattiFlag &&
+        (this.eRottaCatalogo(urlSubito) || this.eSchedaCatalogo(urlSubito)) &&
+        !this.catalogoGiaAnimato
+      ) {
+        try { sessionStorage.removeItem('vengo_da_contatti'); } catch {}
+        const saturno = document.querySelector('app-saturno') as HTMLElement | null;
+        const sfondo = document.querySelector('app-sfondo') as HTMLElement | null;
+        if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
+        if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
+        this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+          this.animateService.enablePageScroll();
+        });
+      }
+
       if (
         this.scenaInizializzata &&
         this.scene &&
@@ -922,6 +942,7 @@ else if (this.eRottaNotFound(url)) {
 
               // segno che catalogo e' gia' "finito"
               this.catalogoGiaAnimato = true;
+
             } else {
               /* ✅ CASO 2: / -> (diorottamento) -> /catalogo (navigate) -> resta identico a prima */
               this.animateService.setTitoloCentraleGlobal();
