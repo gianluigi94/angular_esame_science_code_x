@@ -6,7 +6,7 @@ import { ContattiComponent } from '../_componenti_comuni/contatti/contatti.compo
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
-
+import gsap from 'gsap';
 @Injectable({ providedIn: 'root' })
 export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
 
@@ -17,9 +17,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     private animateService: AnimateService
   ) {}
 
-  private wait(ms: number): Promise<boolean> {
-    return new Promise((resolve) => setTimeout(() => resolve(true), ms));
-  }
+
 
   canDeactivate(
     _component: ContattiComponent,
@@ -27,7 +25,34 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     _currentState: any,
     nextState?: any
   ): boolean | Promise<boolean> {
+        const animaFooterOut = (): Promise<void> => {
+      return new Promise((resolve) => {
+        const footer = document.querySelector('footer') as HTMLElement | null;
+        const footerP = document.querySelector('#footer-p') as HTMLElement | null;
 
+        if (footerP) {
+          gsap.killTweensOf(footerP);
+          gsap.to(footerP, { opacity: 0, duration: 0.18, ease: 'power1.out' });
+        }
+
+        if (!footer) {
+          resolve();
+          return;
+        }
+
+        gsap.killTweensOf(footer);
+        gsap.to(footer, {
+          scaleY: 0,
+          opacity: 0,
+          duration: 0.25,
+          ease: 'power2.in',
+          transformOrigin: 'bottom center',
+          onComplete: () => resolve(),
+        });
+      });
+    };
+
+    const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
     const targetUrl = (nextState?.url as string) || '';
     const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
 
@@ -35,7 +60,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     // ✅ NON animare pannello HTML (niente footer che vola)
     const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito);
     if (vaInLogin) {
-      return true; // oppure: return this.wait(0);
+      return animaFooterOut().then(() => true);
     }
 
     // ── Welcome ──
@@ -65,7 +90,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       }
 
       // ✅ Niente animaUscita pannello: aspetto solo il tempo della transizione globale
-      return this.wait(1250);
+      return Promise.all([animaFooterOut(), wait(1250)]).then(() => true);
     }
 
     // ── Catalogo ──
@@ -87,11 +112,11 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       }
 
       // ✅ Niente animaUscita pannello: aspetto solo la durata scena
-      return this.wait(1200);
+      return Promise.all([animaFooterOut(), wait(1200)]).then(() => true);
     }
 
     // ── Default ──
     // ✅ Nessuna animazione HTML
-    return true;
+    return animaFooterOut().then(() => true);
   }
 }

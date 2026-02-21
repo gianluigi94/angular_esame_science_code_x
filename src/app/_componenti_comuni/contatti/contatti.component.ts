@@ -4,7 +4,7 @@ import { LoginAnimazioniService } from 'src/app/_servizi_globali/animazioni_satu
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
 import { take } from 'rxjs';
-
+import gsap from 'gsap';
 @Component({
   selector: 'app-contatti',
   templateUrl: './contatti.component.html',
@@ -35,6 +35,35 @@ export class ContattiComponent implements AfterViewInit, OnInit {
   ngAfterViewInit(): void {
     sessionStorage.setItem('vengo_da_contatti', 'true');
     UtilityService.nascondiSottotitoloEScrol();
+        const footer = document.querySelector('footer') as HTMLElement | null;
+    if (footer) {
+      gsap.killTweensOf(footer);
+      gsap.set(footer, {
+        scaleY: 0,
+        transformOrigin: 'bottom center',
+        opacity: 0,
+      });
+
+      gsap.to(footer, {
+        scaleY: 1,
+        opacity: 1,
+        duration: 0.3,
+        delay: 0.25,
+        ease: 'power2.out',
+      });
+    }
+
+    const footerP = document.querySelector('#footer-p') as HTMLElement | null;
+    if (footerP) {
+      gsap.killTweensOf(footerP);
+      gsap.set(footerP, { opacity: 0 });
+      gsap.to(footerP, {
+        opacity: 1,
+        duration: 0.6,
+        delay: 0.55,
+        ease: 'power2.out',
+      });
+    }
   }
 
   animaUscita(): Promise<void> {
