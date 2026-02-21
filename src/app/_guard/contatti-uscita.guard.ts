@@ -17,8 +17,12 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     private animateService: AnimateService
   ) {}
 
+  private wait(ms: number): Promise<boolean> {
+    return new Promise((resolve) => setTimeout(() => resolve(true), ms));
+  }
+
   canDeactivate(
-    component: ContattiComponent,
+    _component: ContattiComponent,
     _currentRoute: any,
     _currentState: any,
     nextState?: any
@@ -27,11 +31,11 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     const targetUrl = (nextState?.url as string) || '';
     const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
 
-    // ── Login (es. torno indietro da contatti a login) ──
-    // Saturno e titolo sono già nella posizione corretta: sposto solo il pannello
+    // ── Login (torno indietro da contatti a login) ──
+    // ✅ NON animare pannello HTML (niente footer che vola)
     const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito);
     if (vaInLogin) {
-      return component.animaUscita().then(() => true);
+      return true; // oppure: return this.wait(0);
     }
 
     // ── Welcome ──
@@ -50,6 +54,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       const scene = this.saturnoService.getScene();
       const light = this.saturnoService.getDirectionalLight();
 
+      // ✅ Lascia intatto: Saturno + titolo (come ora)
       this.animateService.setXGif();
       this.animateService.animateTitoloVersoCentroGlobal(1.25, 0);
 
@@ -59,7 +64,8 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
         );
       }
 
-      return component.animaUscita().then(() => true);
+      // ✅ Niente animaUscita pannello: aspetto solo il tempo della transizione globale
+      return this.wait(1250);
     }
 
     // ── Catalogo ──
@@ -69,7 +75,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       const scene = this.saturnoService.getScene();
       const light = this.saturnoService.getDirectionalLight();
 
-      // Saturno: LOGIN_LATERALE → CATALOGO_NASCOSTO (in parallelo al pannello)
+      // ✅ Lascia intatto: Saturno perfetto (come ora)
       if (scene) {
         this.saturnoRouteAnimazioniService.animaVerso(
           scene, 'CATALOGO_NASCOSTO', 1.2, light || undefined,
@@ -80,11 +86,12 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
         );
       }
 
-      // Il pannello contatti scivola via (1.25s) — guida la navigazione
-      return component.animaUscita().then(() => true);
+      // ✅ Niente animaUscita pannello: aspetto solo la durata scena
+      return this.wait(1200);
     }
 
-    // ── Default (login o altro): solo uscita pannello ──
-    return component.animaUscita().then(() => true);
+    // ── Default ──
+    // ✅ Nessuna animazione HTML
+    return true;
   }
 }
