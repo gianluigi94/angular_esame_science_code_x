@@ -1,0 +1,29 @@
+<section class="overlay" *ngIf="visibile">
+
+
+  <div class="pagina">
+    <div class="contenuto">
+      <h2>Dati personali</h2>
+
+      <dl class="contact-list">
+        <div class="row">
+          <dt>Sviluppato da</dt>
+          <dd>Gianluigi Abbracciavento</dd>
+        </div>
+
+        <div class="row">
+          <dt>Email</dt>
+          <dd>
+            <a [href]="'mailto:' + mail">{{ mail }}</a>
+          </dd>
+        </div>
+
+        <div class="row">
+          <dt>Indirizzo</dt>
+          <dd>{{ indirizzo }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    </div>
+</section>

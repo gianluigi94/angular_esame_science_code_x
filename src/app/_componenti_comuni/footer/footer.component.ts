@@ -5,7 +5,7 @@ import { AnimateService } from '../../_servizi_globali/animazioni_saturno/animat
 import { SaturnoRouteAnimazioniService } from '../../_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import { CambioLinguaService } from '../../_servizi_globali/cambio-lingua.service';
 import gsap from 'gsap';
-
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
@@ -18,12 +18,16 @@ export class FooterComponent {
     private animateService: AnimateService,
     private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
     private cambioLinguaService: CambioLinguaService,
-    private router: Router
+    private router: Router,
+        private authService: Authservice,
   ) {}
 
   onContattiClick(event: Event): void {
     event.preventDefault();
-
+const sonoLoggato = !!this.authService.leggiObsAuth().value?.tk;
+if (sonoLoggato) {
+  window.dispatchEvent(new CustomEvent('apri-dati-personali'));
+}
     const scene = this.saturnoService.getScene();
     const saturnoEl = document.querySelector('app-saturno') as HTMLElement | null;
     const sfondoEl = document.querySelector('app-sfondo') as HTMLElement | null;

@@ -6,12 +6,21 @@ export class ContattiAnimazioniService {
   private xIniziale = 26;     // spostati a destra
   private gap = 0.12;         // attesa tra i blocchi (sec)
 
-  preparaStatoIniziale(container: HTMLElement): void {
+  preparaStatoIniziale(container: HTMLElement, forzaNascosto: boolean = false): void {
     const title = container.querySelector('h2') as HTMLElement | null;
     const rows = Array.from(container.querySelectorAll('.contact-list .row')) as HTMLElement[];
 
     // container invisibile all'inizio
-    gsap.set(container, { opacity: 1 }); // il container resta "esistente", ma i figli sono invisibili
+        // ✅ se loggato: il container resta completamente nascosto
+    if (forzaNascosto) {
+      gsap.set(container, { opacity: 0 });
+      if (title) gsap.set(title, { opacity: 0, x: this.xIniziale });
+      rows.forEach((r) => gsap.set(r, { opacity: 0, x: this.xIniziale }));
+      return;
+    }
+
+    // normale: container "presente" ma figli invisibili
+    gsap.set(container, { opacity: 1 });
 
     if (title) gsap.set(title, { opacity: 0, x: this.xIniziale });
     rows.forEach((r) => gsap.set(r, { opacity: 0, x: this.xIniziale }));

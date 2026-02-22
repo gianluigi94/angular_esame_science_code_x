@@ -5,6 +5,7 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
 import { take } from 'rxjs';
 import gsap from 'gsap';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 @Component({
   selector: 'app-contatti',
   templateUrl: './contatti.component.html',
@@ -19,13 +20,15 @@ export class ContattiComponent implements AfterViewInit, OnInit {
 
     private viewReady = false;
   private datiReady = false;
-
+private sonoLoggato = false;
   constructor(
+    private authService: Authservice,
     private contattiAnimazioni: ContattiAnimazioniService,
     private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
+    this.sonoLoggato = !!this.authService.leggiObsAuth().value?.tk;
     this.apiService.getDatiPersonali().pipe( // Chiamo l'endpoint /dati-personali
       take(1)                                // Prendo solo la prima risposta e chiudo
     ).subscribe((rit: IRispostaServer) => {  // Mi sottoscrivo alla risposta del server
@@ -41,7 +44,10 @@ export class ContattiComponent implements AfterViewInit, OnInit {
     sessionStorage.setItem('vengo_da_contatti', 'true');
     UtilityService.nascondiSottotitoloEScrol();
         if (this.contattiContenuto?.nativeElement) {
-      this.contattiAnimazioni.preparaStatoIniziale(this.contattiContenuto.nativeElement);
+           this.contattiAnimazioni.preparaStatoIniziale(
+        this.contattiContenuto.nativeElement,
+        this.sonoLoggato
+      );
     }
 
     this.viewReady = true;
@@ -82,7 +88,7 @@ export class ContattiComponent implements AfterViewInit, OnInit {
   private avviaAnimazioniSePronto(): void {
     if (!this.viewReady || !this.datiReady) return;
     if (!this.contattiContenuto?.nativeElement) return;
-
+if (this.sonoLoggato) return;
     // ✅ parte solo quando dati  view sono pronti
     requestAnimationFrame(() => {
       this.contattiAnimazioni.animaIngresso(this.contattiContenuto.nativeElement);

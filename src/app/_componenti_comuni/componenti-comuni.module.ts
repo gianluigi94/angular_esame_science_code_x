@@ -15,8 +15,7 @@ import { ToastContainerComponent } from './toast-container/toast-container.compo
 import { CaroselloNovitaComponent } from '../_catalogo/carosello-novita/carosello-novita.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { PaginaCaricamentoComponent } from './pagina-caricamento/pagina-caricamento.component';
-import { NotFoundComponent } from './not-found/not-found.component';
-import { SaturnoModule } from './saturno/saturno.module';
+import { DatiPersonaliComponent } from './dati-personali/dati-personali.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +30,7 @@ import { SaturnoModule } from './saturno/saturno.module';
     CaroselloNovitaComponent,
     SpinnerComponent,
     PaginaCaricamentoComponent,
-    // NotFoundComponent,
+   DatiPersonaliComponent,
   ],
   imports: [
     CommonModule,
@@ -51,6 +50,7 @@ import { SaturnoModule } from './saturno/saturno.module';
     ToastContainerComponent,
     CaroselloNovitaComponent,
     SpinnerComponent,
+    DatiPersonaliComponent,
     PaginaCaricamentoComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA] // per poter usare il tag <video-js>
