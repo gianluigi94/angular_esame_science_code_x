@@ -4,16 +4,17 @@
   width: 100vw;
   height: 100vh;
   display: block;
-  z-index: 40; // sopra contenuti e footer
+  z-index: 20; // sopra contenuti e footer
   pointer-events: none; // si attiva solo quando overlay è visibile (vedi .overlay)
 }
 
 .overlay {
+  pointer-events: none;
+
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  pointer-events: auto;
 }
 
 
@@ -51,6 +52,7 @@ dt {
 }
 
 dd {
+  pointer-events: auto;
   font-size: 18px;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: rgb(199, 174, 128);

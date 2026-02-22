@@ -12,6 +12,7 @@ import { CaricamentoCaroselloService } from './_catalogo/carosello-novita/carose
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { AnimateService } from './_servizi_globali/animazioni_saturno/animate.service';
 import { DOCUMENT } from '@angular/common';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
  import {
@@ -70,6 +71,7 @@ loaderDaMostrare = false;
     private caricamentoCaroselloService: CaricamentoCaroselloService,
     private titoloPaginaService: TitoloPaginaService,
     private performanceService: PerformanceService,
+    private authService: Authservice,
     @Inject(DOCUMENT) private documento: Document // Inietto il DOM Document di Angular per poter leggere/modificare il tag <html> (impostare la lingua)
   ) {}
 
@@ -87,7 +89,12 @@ loaderDaMostrare = false;
    */
   ngOnInit(): void {
     this.isFirefox = isFirefox(); // Mi salvo se sto girando su Firefox
-    const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
+        const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
+
+    // ✅ se sono loggato e apro direttamente /contatti (F5 / deep link), apro overlay dati personali
+    if (this.isContattiUrl(urlIniziale) && this.isLoggato()) {
+      window.dispatchEvent(new CustomEvent('apri-dati-personali'));
+    }
     this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
     this.sonoIn404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale);
     this.aggiornaVisibilitaSfondo404();
@@ -148,6 +155,9 @@ loaderDaMostrare = false;
             : ev && ev.url // Altrimenti provo con ev.url e se non c'è nulla, metto stringa vuota
             ? ev.url
             : '';
+                    if (this.isContattiUrl(url) && this.isLoggato()) {
+          window.dispatchEvent(new CustomEvent('apri-dati-personali'));
+        }
         this.sonoIn404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
         const precedente = this.ultimaUrl; // Mi salvo l'URL precedente prima di aggiornarlo
         this.ultimaUrl = url; // Aggiorno l'ultima URL con quella nuova
@@ -438,5 +448,15 @@ this.caricamentoDisabilitato$.next(disabilitaLoader);
     }
 
     // Negli altri casi non forziamo nulla: non tocchiamo i flussi gia' esistenti.
+  }
+
+
+  private isLoggato(): boolean {
+    return !!this.authService.leggiObsAuth().value?.tk;
+  }
+
+  private isContattiUrl(url: string): boolean {
+    const path = String(url || '').split('?')[0].split('#')[0];
+    return /^\/(it|en)\/(contatti|contact)(\/|$)/.test(path);
   }
 }
