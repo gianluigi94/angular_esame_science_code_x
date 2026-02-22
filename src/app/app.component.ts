@@ -95,6 +95,9 @@ loaderDaMostrare = false;
     if (this.isContattiUrl(urlIniziale) && this.isLoggato()) {
       window.dispatchEvent(new CustomEvent('apri-dati-personali'));
     }
+        if (!this.isContattiUrl(urlIniziale)) {
+      window.dispatchEvent(new CustomEvent('chiudi-dati-personali'));
+    }
     this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
     this.sonoIn404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale);
     this.aggiornaVisibilitaSfondo404();
@@ -155,6 +158,9 @@ loaderDaMostrare = false;
             : ev && ev.url // Altrimenti provo con ev.url e se non c'è nulla, metto stringa vuota
             ? ev.url
             : '';
+                    if (!this.isContattiUrl(url)) {
+          window.dispatchEvent(new CustomEvent('chiudi-dati-personali'));
+        }
                     if (this.isContattiUrl(url) && this.isLoggato()) {
           window.dispatchEvent(new CustomEvent('apri-dati-personali'));
         }

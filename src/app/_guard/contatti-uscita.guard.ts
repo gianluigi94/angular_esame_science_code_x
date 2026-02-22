@@ -7,6 +7,7 @@ import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/thre
 import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
 import gsap from 'gsap';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 @Injectable({ providedIn: 'root' })
 export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
 
@@ -14,7 +15,8 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     private router: Router,
     private saturnoService: SaturnoService,
     private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
-    private animateService: AnimateService
+        private animateService: AnimateService,
+    private authService: Authservice
   ) {}
 
 
@@ -56,11 +58,19 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     const targetUrl = (nextState?.url as string) || '';
     const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
 
+        const sonoLoggato = !!this.authService.leggiObsAuth().value?.tk;
+    if (sonoLoggato) {
+      window.dispatchEvent(new CustomEvent('chiudi-dati-personali'));
+    }
+
+    const animaPannello = (): Promise<void> => {
+      return sonoLoggato ? Promise.resolve() : component.animaUscita();
+    };
     // ── Login (torno indietro da contatti a login) ──
     // ✅ NON animare pannello HTML (niente footer che vola)
     const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito);
     if (vaInLogin) {
-      return Promise.all([component.animaUscita(), animaFooterOut()]).then(() => true);
+      return Promise.all([animaPannello(), animaFooterOut()]).then(() => true);
     }
 
     // ── Welcome ──
@@ -90,7 +100,7 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       }
 
       // ✅ Niente animaUscita pannello: aspetto solo il tempo della transizione globale
-      return Promise.all([component.animaUscita(), animaFooterOut(), wait(1250)]).then(() => true);
+      return Promise.all([animaPannello(), animaFooterOut(), wait(1250)]).then(() => true);
     }
 
     // ── Catalogo ──
@@ -112,11 +122,11 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
       }
 
       // ✅ Niente animaUscita pannello: aspetto solo la durata scena
-      return Promise.all([component.animaUscita(), animaFooterOut(), wait(1200)]).then(() => true);
+      return Promise.all([animaPannello(), animaFooterOut(), wait(1200)]).then(() => true);
     }
 
     // ── Default ──
     // ✅ Nessuna animazione HTML
-    return Promise.all([component.animaUscita(), animaFooterOut()]).then(() => true);
+    return Promise.all([animaPannello(), animaFooterOut()]).then(() => true);
   }
 }

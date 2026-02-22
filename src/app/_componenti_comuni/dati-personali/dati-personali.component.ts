@@ -43,7 +43,7 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnInit(): void {
     window.addEventListener('apri-dati-personali', this.onApri);
-
+    window.addEventListener('chiudi-dati-personali', this.onChiudi);
     // ✅ se durante la visualizzazione fai logout, chiudo
     this.sub.add(
       this.authService.leggiObsAuth().subscribe(() => {
@@ -54,6 +54,7 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnDestroy(): void {
     window.removeEventListener('apri-dati-personali', this.onApri);
+    window.removeEventListener('chiudi-dati-personali', this.onChiudi);
     this.sub.unsubscribe();
   }
 
@@ -93,4 +94,20 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
       this.contattiAnimazioni.ingresso(this.datiPersonaliContenuto!.nativeElement);
     });
   }
+
+    private onChiudi = () => {
+    if (!this.visibile) return;
+    const el = this.datiPersonaliContenuto?.nativeElement;
+    if (!el) {
+      this.visibile = false;
+      return;
+    }
+
+    // ✅ anima uscita, poi nascondo
+    this.contattiAnimazioni.uscita(el).then(() => {
+      this.visibile = false;
+      this.viewReady = false;
+      this.datiReady = false;
+    });
+  };
 }
