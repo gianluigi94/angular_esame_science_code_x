@@ -201,16 +201,20 @@ const eroNelLogin =
 const sonoNelCatalogo =
   /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url);
 
+// DOPO
 const vengoDaContatti = (() => {
   try { return sessionStorage.getItem('vengo_da_contatti') === 'true'; }
   catch { return false; }
 })();
-const sonoInContatti = this.isContattiUrl(url);
+// Il flag vengo_da_contatti è valido solo se il precedente URL Angular
+// era effettivamente contatti (navigazione interna), non su fresh load da root
+const eroInContatti = /^\/(it|en)\/(contatti|contact)(\/|$)/.test(precedente);
+
 const disabilitaLoader =
   sonoNelLogin ||
   sonoInNonTrovato ||
-  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato || vengoDaContatti)) ||
-  (sonoInContatti && eroInNonTrovato); // ← da 404 verso contatti: niente loader
+  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato || (vengoDaContatti && eroInContatti))) ||
+  (eroInContatti && eroInNonTrovato);
 
 this.caricamentoDisabilitato = disabilitaLoader;
 this.caricamentoDisabilitato$.next(disabilitaLoader);

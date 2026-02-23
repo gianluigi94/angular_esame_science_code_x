@@ -94,7 +94,20 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
       this.contattiAnimazioni.ingresso(this.datiPersonaliContenuto!.nativeElement);
     });
   }
-
+chiudi(): void {
+  const el = this.datiPersonaliContenuto?.nativeElement;
+  if (!el) {
+    this.visibile = false;
+    window.history.back();
+    return;
+  }
+  this.contattiAnimazioni.uscita(el).then(() => {
+    this.visibile = false;
+    this.viewReady = false;
+    this.datiReady = false;
+    window.history.back();
+  });
+}
     private onChiudi = () => {
     if (!this.visibile) return;
     const el = this.datiPersonaliContenuto?.nativeElement;

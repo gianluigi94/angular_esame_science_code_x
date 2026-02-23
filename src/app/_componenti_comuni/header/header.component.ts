@@ -15,6 +15,7 @@ import { TipoContenuto, TipoContenutoService } from 'src/app/_catalogo/app-riga-
 import { Location } from '@angular/common';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
@@ -40,8 +41,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private shieldLogout: HTMLDivElement | null = null; // mi tengo il riferimento allo 'schermo' che blocca l’interfaccia durante il logout
   distruggi$ = new Subject<void>(); // creo un subject che uso per chiudere le subscribe con takeUntil quando il componente si distrugge
 
-  paginaLogin = false;
+paginaLogin = false;
 pagina404 = false;
+paginaContatti = false;
 headerPronto = false;
 
   cambioLinguaService: CambioLinguaService; // mi tengo il riferimento al servizio che gestisce il cambio lingua
@@ -71,10 +73,12 @@ headerPronto = false;
     this.spinnerScroll$ = this.scorrimentoCatalogo.spinnerScroll$;
 
 
-      this.paginaLogin =
+    this.paginaLogin =
   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(this.router.url || '');
 this.pagina404 =
   /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(this.router.url || '');
+this.paginaContatti =
+  /^\/(it\/contatti|en\/contact)(\/|$)/.test(this.router.url || '');
 
     this.router.events // ascolto gli eventi del router per aggiornare lo stato quando cambio pagina
       .pipe(
@@ -83,10 +87,12 @@ this.pagina404 =
       )
       .subscribe((ev: NavigationEnd) => {
         const url = ev.urlAfterRedirects || ev.url; // prendo l'url definitivo dopo eventuali reindirizzamenti
-                          this.paginaLogin =
+                        this.paginaLogin =
   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url || '');
 this.pagina404 =
   /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url || '');
+this.paginaContatti =
+  /^\/(it\/contatti|en\/contact)(\/|$)/.test(url || '');
 this.headerPronto = true;
       });
 

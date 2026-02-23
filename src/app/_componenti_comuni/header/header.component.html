@@ -4,13 +4,13 @@
   <!-- SINISTRA  -->
   <div class="sinistra">
 <div class="menu_sinistra"
-[style.visibility]="pagina404 ? 'hidden' : 'visible'">
+[style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'">
 
     <!-- menu "Le nostre categorie" sole se si è loggati, si mostrano al passaggio del mause -->
  <ul
   class="menu-categorie"
   *ngIf="authVisuale?.tk"
-  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
   (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
   (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
 >
@@ -57,10 +57,10 @@
 
 
     <!-- menu tipo contenuto: visibile solo da loggati -->
-  <ul
+<ul
   class="menu-tipo"
   *ngIf="authVisuale?.tk"
-  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
   (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
   (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"
 >
@@ -103,7 +103,7 @@
       <!-- Ricerca, al passassagio del mause l'input si apre-->
     <div
   class="contenitore-ricerca"
-  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
   (mouseenter)="!logoutInCorso && (mostraRicerca = true)"
   (mouseleave)="!logoutInCorso && (mostraRicerca = false)"
 >
@@ -207,9 +207,9 @@
       </div>
 
       <!-- Menu utente -->
-     <ul
+   <ul
   class="menu-utente"
-  [style.visibility]="pagina404 ? 'hidden' : 'visible'"
+  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
   (mouseenter)="!logoutInCorso && (menuUtenteAperto = true)"
   (mouseleave)="!logoutInCorso && (menuUtenteAperto = false)"
 >

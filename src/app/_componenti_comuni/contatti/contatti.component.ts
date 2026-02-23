@@ -20,7 +20,7 @@ export class ContattiComponent implements AfterViewInit, OnInit {
 
     private viewReady = false;
   private datiReady = false;
-private sonoLoggato = false;
+public sonoLoggato = false;
   constructor(
     private authService: Authservice,
     private contattiAnimazioni: ContattiAnimazioniService,
@@ -94,8 +94,12 @@ if (this.sonoLoggato) return;
       this.contattiAnimazioni.animaIngresso(this.contattiContenuto.nativeElement);
     });
   }
-    animaUscita(): Promise<void> {
-    if (!this.contattiContenuto?.nativeElement) return Promise.resolve();
-    return this.contattiAnimazioni.animaUscita(this.contattiContenuto.nativeElement);
-  }
+    tornaIndietro(): void {
+  window.history.back();
+}
+
+animaUscita(): Promise<void> {
+  if (!this.contattiContenuto?.nativeElement) return Promise.resolve();
+  return this.contattiAnimazioni.animaUscita(this.contattiContenuto.nativeElement);
+}
 }

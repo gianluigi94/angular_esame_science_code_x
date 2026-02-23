@@ -25,8 +25,9 @@ export class NotFoundComponent implements AfterViewInit, OnInit, OnDestroy {
   public mostra404 = false;
   public animazione404InCorso = false;
   traduzioniPronte = false;
-  public navigazioneInCorso = false;
-  private deveRicaricare = false;
+public navigazioneInCorso = false;
+private deveRicaricare = false;
+public autenticato = false;
   public timerFallbackNavigazione: any = 0;
     constructor(
     private animateService: AnimateService,
@@ -125,6 +126,8 @@ ngOnInit(): void {
   this.traduzioniService.traduzioniInizialiCaricate$.subscribe(v => {
     this.traduzioniPronte = v;
   });
+  const auth = this.authService.leggiObsAuth().value;
+  this.autenticato = auth && auth.tk !== null;
 
    this.subClose404 = this.notFoundClose.close404$.subscribe((reload) => {
     this.deveRicaricare = reload;

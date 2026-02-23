@@ -2,10 +2,10 @@
 
 <section class="login-contenuto">
   <div class="contatti-contenuto" #contattiContenuto>
-    <h2>Contatti</h2>
+    <h2>{{ 'ui.h2.contatti' | translate }}</h2>
     <dl class="contact-list">
       <div class="row">
-        <dt>Sviluppato da</dt>
+        <dt [innerHTML]="'ui.sviluppato.contatti' | translate"></dt>
         <dd>Gianluigi Abbracciavento</dd>
       </div>
       <div class="row">
@@ -13,9 +13,16 @@
         <dd><a href="mailto:{{ mail }}">{{ mail }}</a></dd>
       </div>
       <div class="row">
-        <dt>Indirizzo</dt>
+        <dt [innerHTML]="'ui.indirizzo.contatti' | translate"></dt>
         <dd>{{ indirizzo }}</dd>
       </div>
+
+      <div class="row">
+  <dt> </dt>
+  <dd class="special_dd" (click)="tornaIndietro()">
+    {{ (sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti') | translate }}
+  </dd>
+</div>
     </dl>
   </div>
   <app-footer></app-footer>

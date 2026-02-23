@@ -1,19 +1,26 @@
-<!-- semplice footer con link che hanno un title e un contenuto dinamico con le traduzioni -->
 <footer id="main_footer">
   <p id="footer-p">
-    <a
-      routerLink="/privacy"
-      [innerHTML]="'ui.footer.privacy.label' | translate"
-      [title]="'ui.footer.privacy.title' | translate">
-    </a>
+
+    <a routerLink="/privacy"
+       [innerHTML]="'ui.footer.privacy.label' | translate"
+       [title]="'ui.footer.privacy.title' | translate"></a>
 
     © 2025 Science&nbsp;Code<span>X</span>
 
-    <a
-     class="link_cont"
-      (click)="onContattiClick($event)"
-      [innerHTML]="'ui.footer.contatti.label' | translate"
-      [title]="'ui.footer.contatti.title' | translate">
-    </a>
+    <ng-container *ngIf="!isContactRoute; else tornaTemplate">
+      <a class="link_cont"
+         (click)="onContattiClick($event)"
+         [innerHTML]="'ui.footer.contatti.label' | translate"
+         [title]="'ui.footer.contatti.title' | translate"></a>
+    </ng-container>
+
+    <ng-template #tornaTemplate>
+      <a class="link_cont"
+         (click)="tornaIndietro($event)"
+         [title]="(sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti') | translate">
+        {{ (sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti') | translate }}
+      </a>
+    </ng-template>
+
   </p>
 </footer>

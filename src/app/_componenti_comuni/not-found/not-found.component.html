@@ -14,8 +14,8 @@
       (transitionend)="onMaskTransitionEnd($event)">
       <div class="nf-num">
   <span class="d">4</span><span class="d zero">0</span><span class="d">4</span>
-  <p *ngIf="cambioLinguaService.leggiCodiceLingua() === 'it'"><span class="bigbig">Clicca</span> per tornare al catalogo</p>
-<p *ngIf="cambioLinguaService.leggiCodiceLingua() !== 'it'"><span class="bigbig">Click</span> to go back to the catalog</p>
+ <p *ngIf="cambioLinguaService.leggiCodiceLingua() === 'it'"><span class="bigbig">Clicca</span> per tornare {{ autenticato ? 'al catalogo' : 'alla pagina iniziale' }}</p>
+<p *ngIf="cambioLinguaService.leggiCodiceLingua() !== 'it'"><span class="bigbig">Click</span> to go back to the {{ autenticato ? 'catalog' : 'home page' }}</p>
 </div>
 
     </div>

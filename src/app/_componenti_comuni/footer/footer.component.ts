@@ -19,8 +19,22 @@ export class FooterComponent {
     private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
     private cambioLinguaService: CambioLinguaService,
     private router: Router,
-        private authService: Authservice,
+    private authService: Authservice,
   ) {}
+
+  get isContactRoute(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0];
+    return /^\/(it\/contatti|en\/contact)(\/|$)/.test(url);
+  }
+
+  get sonoLoggato(): boolean {
+    return !!this.authService.leggiObsAuth().value?.tk;
+  }
+
+  tornaIndietro(event: Event): void {
+    event.preventDefault();
+    window.history.back();
+  }
 
   onContattiClick(event: Event): void {
     event.preventDefault();
