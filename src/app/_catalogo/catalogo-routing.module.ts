@@ -4,7 +4,7 @@ import { NgModule } from '@angular/core';
 import { CatalogoComponent } from './catalogo/catalogo.component';
 import { SchedaComponent } from './scheda/scheda.component';
 import { RouterModule, Routes, UrlSegment, UrlMatchResult } from '@angular/router';
-
+import { CatalogoUscitaGuard } from 'src/app/_guard/catalogo-uscita.guard';
 export function matcherFilmDettaglio(segmenti: UrlSegment[]): UrlMatchResult | null {
   // /film/:id oppure /movies/:id con id solo cifre e niente extra
   if (
@@ -39,36 +39,50 @@ const routes: Routes = [
   {
     path: '',
     component: CatalogoComponent,
+    canDeactivate: [CatalogoUscitaGuard],
   },
 
   {
     path: 'film',
     component: CatalogoComponent,
+    canDeactivate: [CatalogoUscitaGuard],
   },
   {
 
     path: 'serie',
     component: CatalogoComponent,
+    canDeactivate: [CatalogoUscitaGuard],
   },
     {
     path: 'film-serie',
     component: CatalogoComponent,
+    canDeactivate: [CatalogoUscitaGuard],
    },
      {
     path: 'movies',
     component: CatalogoComponent,
+    canDeactivate: [CatalogoUscitaGuard],
   },
   {
     path: 'series',
     component: CatalogoComponent,
+    canDeactivate: [CatalogoUscitaGuard],
   },
   {
     path: 'movies-series',
     component: CatalogoComponent,
+    canDeactivate: [CatalogoUscitaGuard],
   },
-     { matcher: matcherFilmDettaglio, component: SchedaComponent },
-  { matcher: matcherSerieDettaglio, component: SchedaComponent },
-
+{
+  matcher: matcherFilmDettaglio,
+  component: SchedaComponent,
+  canDeactivate: [CatalogoUscitaGuard],  // <-- aggiungi
+},
+{
+  matcher: matcherSerieDettaglio,
+  component: SchedaComponent,
+  canDeactivate: [CatalogoUscitaGuard],  // <-- aggiungi
+},
 
 ];
 

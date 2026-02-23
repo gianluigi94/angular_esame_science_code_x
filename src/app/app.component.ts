@@ -205,11 +205,12 @@ const vengoDaContatti = (() => {
   try { return sessionStorage.getItem('vengo_da_contatti') === 'true'; }
   catch { return false; }
 })();
-
+const sonoInContatti = this.isContattiUrl(url);
 const disabilitaLoader =
   sonoNelLogin ||
   sonoInNonTrovato ||
-  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato || vengoDaContatti));
+  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato || vengoDaContatti)) ||
+  (sonoInContatti && eroInNonTrovato); // ← da 404 verso contatti: niente loader
 
 this.caricamentoDisabilitato = disabilitaLoader;
 this.caricamentoDisabilitato$.next(disabilitaLoader);

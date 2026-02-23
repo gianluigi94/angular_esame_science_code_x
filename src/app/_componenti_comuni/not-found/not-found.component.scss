@@ -4,7 +4,6 @@
   position: fixed;
   inset: 0;
   z-index: 10;
-  cursor: pointer;
   /* ✅ SFONDO IMMAGINE: metti la tua immagine in /src/assets/ */
 
   /* Se vuoi solo colore invece dell’immagine, usa:
@@ -89,4 +88,12 @@ app-footer{
   position: absolute;
   left: 0;
   bottom: 0;
+}
+.flex{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+height: 100%;
+width: 100%;
+cursor: pointer;
 }

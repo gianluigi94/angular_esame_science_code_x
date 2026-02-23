@@ -2,7 +2,7 @@
 <div class="title-container">
   <div class="home-container">
    <!-- titolo principale: NON viene più distrutto/ricreato, cambia solo comportamento -->
-<a class="title-link" [routerLink]="isNotFoundRoute ? null : ['/']" (click)="onLogoClick($event)">
+<a class="title-link" [routerLink]="(isNotFoundRoute || isContactRoute) ? null : ['/']" (click)="onLogoClick($event)">
   <h1 id="titles" class="main-title" [attr.translate]="'no'">
     <span class="first" data-titolo-first>Science <br> code</span>
     <span id="x_low" *ngIf="isLowPerf" #xRef class="x x-low" data-titolo-x>X</span>

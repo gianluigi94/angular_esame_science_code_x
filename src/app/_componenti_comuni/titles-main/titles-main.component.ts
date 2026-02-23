@@ -81,6 +81,13 @@ export class TitlesMainComponent implements AfterViewInit {
 }
 
 onLogoClick(ev: MouseEvent): void {
+  if (this.isContactRoute) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    window.history.back();
+    return;
+  }
+
   if (!this.isNotFoundRoute) return;
 
   ev.preventDefault();
@@ -91,5 +98,8 @@ onLogoClick(ev: MouseEvent): void {
 
   this.notFoundClose.requestClose(!autenticato);
 }
-
+get isContactRoute(): boolean {
+  const url = this.router.url.split('?')[0].split('#')[0];
+  return /^\/(it\/contatti|en\/contact)(\/|$)/.test(url);
+}
 }
