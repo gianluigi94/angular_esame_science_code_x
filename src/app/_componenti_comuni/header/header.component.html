@@ -231,16 +231,10 @@
         </li>
         <li class="tendina" [class.aperta]="menuUtenteAperto">
           <ul class="menu-tendina">
-            <li class="voce-tendina">Profilo</li>
-            <li class="voce-tendina" (click)="onClickScollegati()">
-              Scollegati
-            </li>
-            <li
-              class="separatore-tendina"
-              role="separator"
-              aria-hidden="true"
-            ></li>
-            <li class="voce-tendina">Contattaci</li>
+            <li class="voce-tendina" [innerHTML]="'ui.menu_utente.profilo.label' | translate"></li>
+<li class="voce-tendina" (click)="onClickScollegati()" [innerHTML]="'ui.menu_utente.scollegati.label' | translate"></li>
+<li class="separatore-tendina" role="separator" aria-hidden="true"></li>
+<li class="voce-tendina" (click)="onContattiClick($event)" [innerHTML]="'ui.h2.contatti' | translate"></li>
           </ul>
         </li>
       </ul>

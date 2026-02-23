@@ -15,6 +15,7 @@ import { TipoContenuto, TipoContenutoService } from 'src/app/_catalogo/app-riga-
 import { Location } from '@angular/common';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+import { ContattiNavigazioneService } from 'src/app/_helpers_globali/contatti-navigazione.service';
 
 @Component({
   selector: 'app-header',
@@ -65,7 +66,8 @@ headerPronto = false;
     private statoSessione: StatoSessioneClientService,
     private erroreGlobale: ErroreGlobaleService,
     public scorrimentoCatalogo: ScorrimentoCatalogoService,
-    private audioGlobaleService: AudioGlobaleService
+    private audioGlobaleService: AudioGlobaleService,
+    private contattiNav: ContattiNavigazioneService,
   ) {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
     this.cambioLinguaService = cambioLinguaService; // mi salvo il servizio di cambio lingua nella proprieta' del componente
@@ -390,5 +392,8 @@ this.headerPronto = true;
    if (codice === 'it') return pref + '/benvenuto/accedi';
    return pref + '/welcome/login';
  }
-
+onContattiClick(event: Event): void {
+    event.preventDefault();
+    this.contattiNav.vai();
+  }
 }
