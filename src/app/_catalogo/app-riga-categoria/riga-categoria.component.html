@@ -36,7 +36,7 @@
       </div>
 
 
-    <div class="doppio_audio">
+    <div class="doppio_audio" (click)="$event.stopPropagation()">
       <app-bottone-audio></app-bottone-audio>
       <button
           class="bottone-audio-provisorio"
@@ -65,7 +65,7 @@
         </button>
     </div>
 
-    <app-bottone-preferiti [titolo]="loc.titolo || loc.src"></app-bottone-preferiti>
+    <app-bottone-preferiti [titolo]="loc.titolo || loc.src" (click)="$event.stopPropagation()"></app-bottone-preferiti>
 
 
     </div>

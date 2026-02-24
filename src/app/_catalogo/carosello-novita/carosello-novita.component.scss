@@ -334,3 +334,51 @@ video-js {
   transform: scale(0.98);
  transition-delay: 0ms;
 }
+
+.barra-avanzamento {
+  position: absolute;
+  top: 12%;
+  right: 2.7%;
+  width: 18%;
+  height: 2px;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  z-index: 50;
+  cursor: pointer;
+  overflow: hidden;
+
+  .riempimento-buffer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    transition: width 0.1s ease-in-out;
+  }
+
+  .riempimento-progresso {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    transition: width 0.1s ease-in-out;
+    border-bottom: 1px solid rgba(87, 87, 87, 0.492);
+    border-top: 1px solid #e5ae09;
+  }
+
+  .tempo-corrente,
+  .tempo-totale {
+    position: absolute;
+    top: -22px;
+    font-size: 12px;
+    font-family: "Quantico", sans-serif;
+    color: #fff;
+    text-shadow: 0 2px 4px #000;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .tempo-corrente { left: 0; }
+  .tempo-totale { right: 0; }
+}

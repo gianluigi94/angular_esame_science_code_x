@@ -148,7 +148,21 @@
   </div>
   <!-- sfumatura css -->
   <span class="sfumatura"></span>
-
+ <div
+    class="barra-avanzamento"
+    *ngIf="mostraVideo || pausaPerHover"
+    role="slider"
+    [attr.aria-valuemin]="0"
+    [attr.aria-valuemax]="durataTotaleMs"
+    [attr.aria-valuenow]="posizioneCorrenteMs"
+    [attr.aria-label]="'ui.carosello.barraAvanzamentoAria' | translate"
+    (click)="saltaAConClick($event)"
+  >
+    <div class="riempimento-buffer" [style.width.%]="percentualeBuffer"></div>
+    <div class="riempimento-progresso" [style.width.%]="percentualeAvanzamento"></div>
+    <span class="tempo-corrente" aria-hidden="true">{{ tempoCorrenteTesto }}</span>
+    <span class="tempo-totale" aria-hidden="true">{{ durataTotaleTesto }}</span>
+  </div>
   <!-- tag esclusivo per il player video con video-js -->
   <video-js
     #riproduttore

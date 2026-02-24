@@ -69,6 +69,17 @@ export class CaroselloNovitaComponent
   sottotitoli: string[] = []; // Memorizzo i sottotitoli per ogni slide
   indiciSfondiCritici: number[] = []; // Tengo la lista degli indici sfondo 'critici' che devono essere pronti subito
 
+    // ===== BARRA AVANZAMENTO (presa dal vecchio progetto) =====
+  percentualeAvanzamento = 0;
+  percentualeBuffer = 0;
+  durataTotaleMs = 0;
+  posizioneCorrenteMs = 0;
+  tempoCorrenteTesto = '00:00';
+  durataTotaleTesto = '00:00';
+
+  private gestoreAggiornaTempo: any = null;
+  private gestoreAggiornaBuffer: any = null;
+
   titoloOverlay = ''; // Tengo il titolo attualmente mostrato nell'overlay
   imgTitoloOverlay = ''; // Tengo l'immagine titolo attualmente mostrata nell'overlay
   sottotitoloOverlay = ''; // Tengo il sottotitolo attualmente mostrato nell'overlay
@@ -566,10 +577,14 @@ export class CaroselloNovitaComponent
         this.contestoAudio.close(); // Chiudo l'AudioContext per rilasciare risorse
     } catch {}
 
-    try {
-      // Provo a distruggere il player video senza far fallire la teardown
-      if (this.player) this.player.dispose(); // Smonto il player
-    } catch {}
+   try {
+  // ✅ MANCAVA QUESTO
+  this.scollegaAggiornamentoBarra();
+} catch {}
+
+try {
+  if (this.player) this.player.dispose();
+} catch {}
 
     this.subs.unsubscribe(); // Disiscrivo tutte le subscription RxJS registrate
   }
@@ -942,10 +957,13 @@ export class CaroselloNovitaComponent
    *
    * @returns void
    */
-  inizializzaPlayerSePronto(): void {
-    // Inizializzo video.js quando il ViewChild del riproduttore e' disponibile
-    CaroselloPlayerUtility.inizializzaPlayerSePronto(this); // delego l'inizializzazione del player alla utility
+inizializzaPlayerSePronto(): void {
+  CaroselloPlayerUtility.inizializzaPlayerSePronto(this);
+
+  if (this.player && this.playerInizializzato) {
+    this.collegaAggiornamentoBarra();
   }
+}
 
   /**
    * Verifica se sono ancora presenti coperture/overlay visibili sopra la pagina.
@@ -1219,11 +1237,14 @@ export class CaroselloNovitaComponent
         this.verificaRicollegamentoVideo();
         this.applicaAttributiVideoReale(); // mette crossorigin="anonymous" sul <video> reale
 
-        this.player.src({
-          src: this.trailerHoverProvvisorio,
-          type: 'video/mp4',
-        });
-        this.player.load?.();
+       this.player.src({
+  src: this.trailerHoverProvvisorio,
+  type: 'video/mp4',
+});
+this.player.load?.();
+
+// ✅ MANCAVA QUESTO
+this.resetBarraAvanzamento();
 
         // importantissimo: dopo src/load Video.js puo' rimpiazzare il <video>, quindi riallineo
         this.verificaRicollegamentoVideo();
@@ -1303,5 +1324,140 @@ export class CaroselloNovitaComponent
       try { this.mostraVideo = false; } catch {}
     });
   }
+  collegaAggiornamentoBarra(): void {
+    try {
+      if (!this.player) return;
 
+      this.gestoreAggiornaTempo = () => {
+        const corrente = this.secondiCorrentiSicuri();
+        const durata = this.durataInSecondiSicura();
+        this.aggiornaBarraDaValori(corrente, durata);
+      };
+
+      this.gestoreAggiornaBuffer = () => {
+        const durata = this.durataInSecondiSicura();
+        this.aggiornaBufferDaElementi(durata);
+      };
+
+      this.player.on('timeupdate', this.gestoreAggiornaTempo);
+      this.player.on('seeking', this.gestoreAggiornaTempo);
+
+      this.player.on('loadedmetadata', this.gestoreAggiornaBuffer);
+      this.player.on('durationchange', this.gestoreAggiornaBuffer);
+      this.player.on('progress', this.gestoreAggiornaBuffer);
+    } catch {}
+  }
+
+  scollegaAggiornamentoBarra(): void {
+    try {
+      if (!this.player) return;
+
+      if (this.gestoreAggiornaTempo) {
+        this.player.off('timeupdate', this.gestoreAggiornaTempo);
+        this.player.off('seeking', this.gestoreAggiornaTempo);
+      }
+
+      if (this.gestoreAggiornaBuffer) {
+        this.player.off('loadedmetadata', this.gestoreAggiornaBuffer);
+        this.player.off('durationchange', this.gestoreAggiornaBuffer);
+        this.player.off('progress', this.gestoreAggiornaBuffer);
+      }
+    } catch {}
+
+    this.gestoreAggiornaTempo = null;
+    this.gestoreAggiornaBuffer = null;
+  }
+
+  resetBarraAvanzamento(): void {
+    this.percentualeAvanzamento = 0;
+    this.percentualeBuffer = 0;
+    this.durataTotaleMs = 0;
+    this.posizioneCorrenteMs = 0;
+    this.tempoCorrenteTesto = '00:00';
+    this.durataTotaleTesto = '00:00';
+  }
+
+  aggiornaBarraDaValori(correnteSec: number, durataSec: number): void {
+    if (!isFinite(durataSec) || durataSec <= 0) {
+      this.percentualeAvanzamento = 0;
+      this.posizioneCorrenteMs = 0;
+      this.durataTotaleMs = 0;
+      this.tempoCorrenteTesto = '00:00';
+      this.durataTotaleTesto = '00:00';
+      return;
+    }
+    const clampCorr = Math.max(0, Math.min(correnteSec, durataSec));
+    this.percentualeAvanzamento = (clampCorr / durataSec) * 100;
+    this.posizioneCorrenteMs = Math.round(clampCorr * 1000);
+    this.durataTotaleMs = Math.round(durataSec * 1000);
+    this.tempoCorrenteTesto = this.formattaMinutiSecondi(clampCorr);
+    this.durataTotaleTesto = this.formattaMinutiSecondi(durataSec);
+  }
+
+  aggiornaBufferDaElementi(durataSec: number): void {
+    try {
+      const el = this.ottieniElementoVideoReale();
+      if (!el || !isFinite(durataSec) || durataSec <= 0) {
+        this.percentualeBuffer = 0;
+        return;
+      }
+      let fineBuffer = 0;
+      if (el.buffered && el.buffered.length > 0) {
+        fineBuffer = el.buffered.end(el.buffered.length - 1);
+      }
+      const perc = Math.max(0, Math.min(100, (fineBuffer / durataSec) * 100));
+      this.percentualeBuffer = perc;
+    } catch {
+      this.percentualeBuffer = 0;
+    }
+  }
+
+  secondiCorrentiSicuri(): number {
+    try {
+      return typeof this.player?.currentTime === 'function'
+        ? Number(this.player.currentTime())
+        : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  durataInSecondiSicura(): number {
+    try {
+      return typeof this.player?.duration === 'function'
+        ? Number(this.player.duration())
+        : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  formattaMinutiSecondi(sec: number): string {
+    const s = Math.max(0, Math.floor(sec));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    const mm = m.toString().padStart(2, '0');
+    const ss = r.toString().padStart(2, '0');
+    return `${mm}:${ss}`;
+  }
+
+  saltaAConClick(evento: MouseEvent): void {
+    try {
+      if (!this.player) return;
+      const target = evento.currentTarget as HTMLElement;
+      if (!target) return;
+
+      const rett = target.getBoundingClientRect();
+      const x = Math.min(Math.max(evento.clientX - rett.left, 0), rett.width);
+      const frazione = rett.width > 0 ? x / rett.width : 0;
+
+      const durata = this.durataInSecondiSicura();
+      if (!isFinite(durata) || durata <= 0) return;
+
+      const nuoviSec = frazione * durata;
+
+      try { this.player.currentTime(nuoviSec); } catch {}
+      this.aggiornaBarraDaValori(nuoviSec, durata);
+    } catch {}
+  }
 }

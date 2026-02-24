@@ -270,7 +270,7 @@ export class ApiService {
     return this.richiestaGenerica(risorsa, 'GET');
   }
 
-  /**
+/**
  * Recupera l'elenco dei dati personali.
  *
  * @returns Observable con la risposta del server contenente i dati personali.

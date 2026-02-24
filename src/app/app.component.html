@@ -17,16 +17,15 @@
  <!-- esiste una versione per firefox 'senza sfondo' perche quest'ultimo appariva qualche ms di ritardo  -->
   <!-- esiste una versione più semplice senza sfondo, senza spinner e con z-index sotto all'header, per quando ricarico /catalogo e voglio una visuale più snella -->
 <app-pagina-caricamento
-  *ngIf="!caricamentoDisabilitato && (
+  *ngIf="(erroreFatale$ | async) || (!caricamentoDisabilitato && (
          forzaLoaderExtra
-         || (erroreFatale$ | async)
          || !(traduzioniPronte$ | async)
          || !(sessioneVerificata$ | async)
          || !(saturnoPronto$ | async)
          || (deveCaricareImmaginiCarosello && !(caroselloPronto$ | async))
-       )"
+       ))"
   [mostraSpinner]="!(erroreFatale$ | async) && !loaderAvvioCatalogo"
-  [stileAvvioCatalogo]="loaderAvvioCatalogo"
+  [stileAvvioCatalogo]="loaderAvvioCatalogo && !(erroreFatale$ | async)"
   [isFirefox]="isFirefox">
 </app-pagina-caricamento>
 

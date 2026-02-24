@@ -388,7 +388,13 @@ righeComponenti!: QueryList<RigaCategoriaComponent>;
     if (!idForzato) this.idCicloRighe = id;
 
     this.scrollYPrimaCambio = window.scrollY || 0;
-    const eroFinitoPrimaDelCambio = this.hoFinitoTutto;
+// se siamo a y=0 (caricamento fresco, non ritorno da scheda) lo azzeramento
+// deve avvenire via GSAP così ScrollTrigger non interferisce e il
+// requestAnimationFrame interno troverà scrollYPrimaCambio già a 0
+if (this.scrollYPrimaCambio === 0) {
+  this.servizioAnimazioni.scrollaA(0, 0);
+}
+const eroFinitoPrimaDelCambio = this.hoFinitoTutto;
     if (this.timerSentinella) {
       clearTimeout(this.timerSentinella);
       this.timerSentinella = 0;
@@ -791,10 +797,13 @@ righeComponenti!: QueryList<RigaCategoriaComponent>;
   } catch {}
 }
 
- provaAutoScrollDaSessionStorage(): void {
-   if (this.autoScrollSessioneEseguito) return;
-   const idCategoria = this.leggiCategoriaDaSessionStorage();
-   if (!idCategoria) return;
+provaAutoScrollDaSessionStorage(): void {
+  if (this.autoScrollSessioneEseguito) return;
+  const idCategoria = this.leggiCategoriaDaSessionStorage();
+  if (!idCategoria) {
+    this.servizioAnimazioni.scrollaA(0, 0); // GSAP, istantaneo, non combatte con ScrollTrigger
+    return;
+  }
 
    this.autoScrollSessioneEseguito = true;
 
