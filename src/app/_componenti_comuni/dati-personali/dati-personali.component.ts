@@ -1,5 +1,7 @@
 import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { Subscription, take } from 'rxjs';
+import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+import gsap from 'gsap';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
@@ -37,17 +39,27 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
   };
   constructor(
     private authService: Authservice,
-        private apiService: ApiService,
-    private contattiAnimazioni: ContattiAnimazioniService
+    private apiService: ApiService,
+    private contattiAnimazioni: ContattiAnimazioniService,
+    private cambioLingua: CambioLinguaService,
   ) {}
 
   ngOnInit(): void {
     window.addEventListener('apri-dati-personali', this.onApri);
     window.addEventListener('chiudi-dati-personali', this.onChiudi);
-    // ✅ se durante la visualizzazione fai logout, chiudo
     this.sub.add(
       this.authService.leggiObsAuth().subscribe(() => {
        if (this.visibile && !this.isLoggato()) this.visibile = false;
+      })
+    );
+    this.sub.add(
+      this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+        if (!this.visibile) return;
+        const el = this.datiPersonaliContenuto?.nativeElement;
+        if (!el) return;
+        gsap.killTweensOf(el.querySelectorAll('h2, .contact-list .row'));
+        gsap.set(el.querySelectorAll('h2, .contact-list .row'), { opacity: 0, x: 26 });
+        requestAnimationFrame(() => this.contattiAnimazioni.ingresso(el));
       })
     );
   }

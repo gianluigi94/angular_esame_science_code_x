@@ -417,8 +417,9 @@ this.caricamentoDisabilitato$.next(disabilitaLoader);
           !this.forzaLoaderExtra // solo se non sto forzando il loader extra
         ) {
           this.loaderVisibile = false; // Nascondo il loader
-          const now = performance.now(); // Prendo il tempo corrente per loggare quando è sparito
-          console.log('LOADER SPARITO alle ' + now + ' ms');
+window.dispatchEvent(new CustomEvent('loader-hidden'));
+const now = performance.now(); // Prendo il tempo corrente per loggare quando è sparito
+console.log('LOADER SPARITO alle ' + now + ' ms');
         }
       }
     );

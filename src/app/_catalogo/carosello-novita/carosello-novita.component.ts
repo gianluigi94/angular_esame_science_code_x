@@ -524,6 +524,14 @@ export class CaroselloNovitaComponent
         this.stopDolceImmediato(durataMs).finally(() => done());
       }),
     );
+
+    this.subs.add(
+      this.stopVideoGlobale.osservaRichiesteFadeAudio$().subscribe(({ durataMs, done }) => {
+        // solo fade audio, video resta visibile fino alla navigazione
+        this.fermaAvvioPendete();
+        this.sfumaGuadagnoVerso(0, durataMs).finally(() => done());
+      }),
+    );
   }
 
   /**

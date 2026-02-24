@@ -1,12 +1,23 @@
- <!-- saturno esiste anche in scheda, ma senza animazioni (stand-by) -->
- <app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false"></app-saturno>
+<!-- saturno esiste anche in scheda, ma senza animazioni (stand-by) -->
+<app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false"></app-saturno>
 
- <img
-   src="assets/carosello_locandine/carosello_cavalli_contro_circuiti.webp"
-   alt=""
-   class="sfondo_scheda"
- />
- <span class="sfumatura"></span>
+<img
+  *ngIf="urlSfondoScheda"
+  [src]="urlSfondoScheda"
+  alt=""
+  class="sfondo_scheda"
+  [class.anim]="startAnim"
+/>
+<span class="sfumatura"></span>
 
- <p class="contenuto">{{ descrizione || '...' }}</p>
+<div class="titolo-scheda" *ngIf="imgTitoloScheda">
+  <img
+    [src]="imgTitoloScheda"
+    alt=""
+    class="titolo-scheda__img"
+    [class.anim]="startAnimTitolo"
+  />
+</div>
+
+<p class="contenuto">{{ descrizione || '...' }}</p>
 <app-footer></app-footer>

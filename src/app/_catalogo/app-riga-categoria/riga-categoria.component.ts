@@ -394,28 +394,63 @@ tipoDaClick(loc: { tipo: string }): string {
   return selezionato === 'serie' ? 'serie' : 'film';
 }
 
-async onClickLocandina(loc: { tipo: string; id_media: string }): Promise<void> {
+private precaricaRisorseScheda(loc: { src: string; tipo: string; id_media: string }): Promise<void> {
+  const slug = this.slugDaLocandina(loc.src);
+  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
+
+  const caricaImmagine = (src: string): Promise<void> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve(); // fallback: navigo comunque
+      img.src = src;
+    });
+
+  const timeout = new Promise<void>((resolve) => setTimeout(resolve, 3000));
+
+  // Promise.all con timeout: se entro 3s non è pronta, navigo comunque
+  return Promise.race([
+    Promise.all([
+      caricaImmagine(urlSfondo),
+      // in futuro aggiungi qui altre promesse (es. chiamate API)
+    ]).then(() => {}),
+    timeout,
+  ]);
+}
+
+async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Promise<void> {
   const id = String(loc?.id_media || '').trim();
   if (!id) return;
-    // salvo la categoria cliccata per il ritorno alla stessa sezione
+
   try {
-  sessionStorage.setItem('ultima_categoria_click', String(this.idCategoria || '').trim());
-} catch {}
+    sessionStorage.setItem('ultima_categoria_click', String(this.idCategoria || '').trim());
+  } catch {}
+
   const tipo = this.tipoDaClick(loc);
   const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
 
-    try { this.servizioHoverLocandina.emettiUscita(); } catch {}
   if (this.timerEntrata) clearTimeout(this.timerEntrata);
   if (this.timerUscita) clearTimeout(this.timerUscita);
 
+  const slug = this.slugDaLocandina(loc.src);
+  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
 
-  // 1) stop dolce PRIMA del cambio pagina
-  try {
-    await this.stopVideoGlobale.richiediStopDolce(350);
-  } catch {}
+  const caricaImmagine = (src: string): Promise<void> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = src;
+    });
 
-  // 2) ora posso navigare
-  this.router.navigateByUrl(url);
+ // 1. preload risorse — il video continua a girare
+  await caricaImmagine(urlSfondo);
+
+  // 2. fade audio con video ancora visibile, poi naviga
+  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+
+  const lingua = this.cambioLingua.leggiCodiceLingua();
+  const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
+  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo } });
 }
-
 }
