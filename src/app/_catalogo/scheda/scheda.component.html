@@ -1,6 +1,8 @@
 <!-- saturno esiste anche in scheda, ma senza animazioni (stand-by) -->
-<app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false"></app-saturno>
-
+<app-saturno
+  [usaAnimazioniIngresso]="false"
+  [usaAnimazioniScroll]="false"
+></app-saturno>
 <img
   *ngIf="urlSfondoScheda"
   [src]="urlSfondoScheda"
@@ -10,14 +12,35 @@
 />
 <span class="sfumatura"></span>
 
-<div class="titolo-scheda" *ngIf="imgTitoloScheda">
-  <img
-    [src]="imgTitoloScheda"
-    alt=""
-    class="titolo-scheda__img"
-    [class.anim]="startAnimTitolo"
-  />
-</div>
+<div class="scheda">
+  <div class="titolo-scheda" *ngIf="imgTitoloScheda">
+    <img
+      [src]="imgTitoloScheda"
+      alt=""
+      class="titolo-scheda__img"
+      [class.anim]="startAnimTitolo"
+    />
+  </div>
+  <div class="bottoni_film">
+   <button
+        type="button"
+        class="riprendi"
+      >
+      Riprendi Visione
+        <span class="icon play" aria-hidden="true">&#9658;</span>
+      </button>
+  <button type="button" class="riproduci">
+    Riproduci
+    <span class="icon play" aria-hidden="true">&#9658;</span>
+  </button>
 
-<p class="contenuto">{{ descrizione || '...' }}</p>
-<app-footer></app-footer>
+  <button type="button" class="riproduci">
+    Trailer
+    <span class="icon play" aria-hidden="true">&#9658;</span>
+  </button>
+
+  <app-bottone-preferiti> </app-bottone-preferiti>
+</div>
+  <p class="contenuto">{{ descrizione || "..." }}</p>
+  <app-footer></app-footer>
+</div>
