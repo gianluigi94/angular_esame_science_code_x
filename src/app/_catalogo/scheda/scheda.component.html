@@ -41,6 +41,33 @@
 
   <app-bottone-preferiti> </app-bottone-preferiti>
 </div>
+
+<p class="descrizione" [class.anim]="startAnimDescrizione">
+  {{ descrizioneTestuale || '...' }}
+</p>
+
+<div class="tabella">
+      <p >
+        <span class="cubo"> Anno:</span>
+        1994
+      </p>
+
+      <p>
+        <span class="cubo"> Durata:</span>
+        2 ore
+      </p>
+
+      <p>
+        <span class="cubo"> Regista:</span>
+        Gianluigi
+      </p>
+
+      <p>
+        <span class="cubo"> Episodi Totali:</span>
+        12
+      </p>
+    </div>
+
   <p class="contenuto">{{ descrizione || "..." }}</p>
   <app-footer></app-footer>
 </div>

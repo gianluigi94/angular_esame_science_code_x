@@ -1,4 +1,4 @@
-<header>
+<header [class.solido]="headerSolido">
   <!-- html dell header che è diversa se sono loggato oppure no -->
 
   <!-- SINISTRA  -->
@@ -6,10 +6,25 @@
 <div class="menu_sinistra"
 [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'">
 
+ <!-- torna al catalogo: visibile solo nella scheda -->
+    <a
+     *ngIf="authVisuale?.tk && paginaScheda()"
+      class="torna-catalogo"
+      [routerLink]="baseCatalogoDaUrl()"
+    >
+      <img
+        src="assets/pellicola.webp"
+        class="icona-pellicola"
+        alt=""
+        aria-hidden="true"
+      />
+      {{ isIt ? 'Ritorna al catalogo ⮨' : 'Back to catalog ⮨' }}
+    </a>
+
     <!-- menu "Le nostre categorie" sole se si è loggati, si mostrano al passaggio del mause -->
  <ul
   class="menu-categorie"
-  *ngIf="authVisuale?.tk"
+  *ngIf="authVisuale?.tk && !paginaScheda()"
   [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
   (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
   (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
@@ -59,7 +74,7 @@
     <!-- menu tipo contenuto: visibile solo da loggati -->
 <ul
   class="menu-tipo"
-  *ngIf="authVisuale?.tk"
+  *ngIf="authVisuale?.tk && !paginaScheda()"
   [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
   (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
   (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"

@@ -260,15 +260,25 @@ export class ApiService {
  return this.richiestaGenerica(risorsa, 'GET', parametri);
  }
 
-   public getFilm(id: number | string): Observable<IRispostaServer> {
-    const risorsa: (string | number)[] = ['film', id];
-    return this.richiestaGenerica(risorsa, 'GET');
-  }
+public getFilm(id: number | string): Observable<IRispostaServer> {
+  const risorsa: (string | number)[] = ['film', id];
+  return this.richiestaGenerica(risorsa, 'GET');
+}
 
-  public getSerie(id: number | string): Observable<IRispostaServer> {
-    const risorsa: (string | number)[] = ['serie', id];
-    return this.richiestaGenerica(risorsa, 'GET');
-  }
+public getSerie(id: number | string): Observable<IRispostaServer> {
+  const risorsa: (string | number)[] = ['serie', id];
+  return this.richiestaGenerica(risorsa, 'GET');
+}
+
+public getFilmTraduzioni(idFilm: number | string, lingua: string): Observable<IRispostaServer> {
+  const risorsa: string[] = ['film-traduzioni'];
+  return this.richiestaGenerica(risorsa, 'GET', { id_film: String(idFilm), lingua });
+}
+
+public getSerieTraduzioni(idSerie: number | string, lingua: string): Observable<IRispostaServer> {
+  const risorsa: string[] = ['serie-traduzioni'];
+  return this.richiestaGenerica(risorsa, 'GET', { id_serie: String(idSerie), lingua });
+}
 
 /**
  * Recupera l'elenco dei dati personali.

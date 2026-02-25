@@ -11,12 +11,14 @@ import { Subscription } from 'rxjs';
 })
 export class SchedaComponent implements OnInit, OnDestroy {
   descrizione = '';
+descrizioneTestuale = '';
   tipoContenuto: 'film' | 'serie' | null = null;
   idContenuto: number | null = null;
   urlSfondoScheda = '';
   imgTitoloScheda = '';
   startAnim = false;
   startAnimTitolo = false;
+  startAnimDescrizione = false;
 
   private slugCorrente = '';
   private subs = new Subscription();
@@ -60,17 +62,32 @@ export class SchedaComponent implements OnInit, OnDestroy {
 
     // reagisce al cambio lingua ricostruendo l'immagine titolo dallo slug
    this.subs.add(
-      this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
-        if (this.slugCorrente) {
-          this.startAnimTitolo = false;
-          this.imgTitoloScheda = '';
-          requestAnimationFrame(() => {
-            this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
-            requestAnimationFrame(() => (this.startAnimTitolo = true));
-          });
-        }
-      })
-    );
+  this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+    const lingua = this.cambioLingua.leggiCodiceLingua();
+
+    if (this.slugCorrente) {
+      this.startAnimTitolo = false;
+      this.imgTitoloScheda = '';
+      requestAnimationFrame(() => {
+        this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
+        requestAnimationFrame(() => (this.startAnimTitolo = true));
+      });
+    }
+
+   if (this.idContenuto && this.tipoContenuto) {
+  this.startAnimDescrizione = false;
+  this.descrizioneTestuale = '';
+  const fetch$ = this.tipoContenuto === 'film'
+    ? this.api.getFilmTraduzioni(this.idContenuto, lingua)
+    : this.api.getSerieTraduzioni(this.idContenuto, lingua);
+
+  fetch$.subscribe((res) => {
+  this.descrizioneTestuale = String(res?.data?.descrizione || '');
+  requestAnimationFrame(() => (this.startAnimDescrizione = true));
+});
+}
+  })
+);
 
     this.route.paramMap.subscribe((pm) => {
       const idRaw = pm.get('id');
@@ -80,31 +97,39 @@ export class SchedaComponent implements OnInit, OnDestroy {
       this.idContenuto = id;
       this.tipoContenuto = this.leggiTipoDaUrl();
 
-      if (this.tipoContenuto === 'film') {
-        this.api.getFilm(id).subscribe((res) => {
-          this.descrizione = String(res?.data?.descrizione || '');
-          this.slugCorrente = this.slugDaDescrizione(this.descrizione);
-          if (!this.urlSfondoScheda) {
-            this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
-          }
-          if (!this.imgTitoloScheda) {
-            this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
-          }
-        });
-      }
+     if (this.tipoContenuto === 'film') {
+  this.api.getFilm(id).subscribe((res) => {
+    this.descrizione = String(res?.data?.descrizione || '');
+    this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+    if (!this.urlSfondoScheda) {
+      this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
+    }
+    if (!this.imgTitoloScheda) {
+      this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
+    }
+  });
+  this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
+  this.descrizioneTestuale = String(res?.data?.descrizione || '');
+  this.startAnimDescrizione = this.startAnim;
+});
+}
 
-      if (this.tipoContenuto === 'serie') {
-        this.api.getSerie(id).subscribe((res) => {
-          this.descrizione = String(res?.data?.descrizione || '');
-          this.slugCorrente = this.slugDaDescrizione(this.descrizione);
-          if (!this.urlSfondoScheda) {
-            this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
-          }
-          if (!this.imgTitoloScheda) {
-            this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
-          }
-        });
-      }
+if (this.tipoContenuto === 'serie') {
+  this.api.getSerie(id).subscribe((res) => {
+    this.descrizione = String(res?.data?.descrizione || '');
+    this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+    if (!this.urlSfondoScheda) {
+      this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
+    }
+    if (!this.imgTitoloScheda) {
+      this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
+    }
+  });
+  this.api.getSerieTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
+  this.descrizioneTestuale = String(res?.data?.descrizione || '');
+  this.startAnimDescrizione = this.startAnim;
+});
+}
     });
   }
 

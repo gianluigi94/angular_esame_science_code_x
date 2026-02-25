@@ -1,6 +1,6 @@
 // Componente che gestisce l'header dell'app, mantenendo sincronizzati navigazione, autenticazione e cambio lingua, e facendo da punto di coordinamento tra UI e servizi globali.
 
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Subject, takeUntil, filter, Observable, take, forkJoin } from 'rxjs';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
@@ -53,7 +53,7 @@ headerPronto = false;
   private spinnerStart = 0; // mi salvo il timestamp di inizio spinner per calcolarne la durata
   private readonly MIN_SPINNER = 300; // imposto una durata minima dello spinner per evitare flicker
   tipoSelezionato: 'film_serie' | 'film' | 'serie' = 'film_serie';
-
+  headerSolido = false;
   constructor(
     private api: ApiService,
     private authService: Authservice,
@@ -96,6 +96,7 @@ this.pagina404 =
 this.paginaContatti =
   /^\/(it\/contatti|en\/contact)(\/|$)/.test(url || '');
 this.headerPronto = true;
+        if (!this.paginaScheda()) this.headerSolido = false;
       });
 
     this.authCorrente = this.authService.leggiObsAuth().value; // leggo lo stato di autenticazione corrente al momento della costruzione
@@ -131,6 +132,20 @@ this.headerPronto = true;
         if (this.authVisuale?.tk) this.caricaCategorieMenu();
       });
 
+  }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.paginaScheda()) {
+      this.headerSolido = window.scrollY > 10;
+    } else {
+      this.headerSolido = false;
+    }
+  }
+
+   paginaScheda(): boolean {
+    const url = this.router.url || '';
+    return /^\/(it|en)\/(catalogo|catalog)\/(film|movies|serie|series)\/\d+(\/|$)/.test(url);
   }
 
   ngOnInit(): void {

@@ -1,11 +1,30 @@
 // stile header
 header {
-  margin-top: 2px;
+  padding-top: 2px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
   width: 100%;
+  position: relative;
+  z-index: 10;
+
+  &::before {
+    content: '';
+    position: absolute;
+           box-shadow: 0 4px 12px rgba(183, 198, 100, 0.151);
+
+    inset: 0;
+    background: linear-gradient(to bottom, #001f3ffb, #030515f7);
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  &.solido::before {
+    opacity: 1;
+  }
 
   .sinistra {
     margin-left: 125px;
@@ -503,4 +522,36 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  .torna-catalogo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    font-family: "Quantico";
+    font-size: 14px;
+    font-weight: bold;
+    color: #ececec;
+    text-decoration: none;
+    padding: 6px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+    span{
+      margin-left: 2px;
+    }
+.icona-pellicola {
+          width: 24px;
+          height: 24px;
+          object-fit: cover;
+          margin-right: 6px;
+        }
+
+    &:hover {
+      color: #ec820a;
+    }
+  }
 }
+
+
+
