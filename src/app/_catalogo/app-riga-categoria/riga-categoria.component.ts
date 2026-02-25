@@ -6,6 +6,9 @@ import { TipoContenutoService } from './categoria_services/tipo-contenuto.servic
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 import { StopVideoGlobaleService } from './categoria_services/stop-video-globale.service';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { ApiService } from 'src/app/_servizi_globali/api.service';
 @Component({
   selector: 'app-riga-categoria',
   templateUrl: './riga-categoria.component.html',
@@ -50,6 +53,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
     private audioGlobaleService: AudioGlobaleService,
      public tipoContenuto: TipoContenutoService,
      public router: Router,
+     private api: ApiService,
      private stopVideoGlobale: StopVideoGlobaleService,
  public riferitore: ChangeDetectorRef,
   ) {}
@@ -434,6 +438,8 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
 
   const slug = this.slugDaLocandina(loc.src);
   const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
+  const lingua = this.cambioLingua.leggiCodiceLingua();
+  const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
 
   const caricaImmagine = (src: string): Promise<void> =>
     new Promise((resolve) => {
@@ -443,14 +449,21 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
       img.src = src;
     });
 
- // 1. preload risorse — il video continua a girare
-  await caricaImmagine(urlSfondo);
+  // Carica sfondo E traduzioni in parallelo — rimani in catalogo finché non sono pronti entrambi
+  const traduzioni$ = tipo === 'film'
+    ? this.api.getFilmTraduzioni(id, lingua)
+    : this.api.getSerieTraduzioni(id, lingua);
 
-  // 2. fade audio con video ancora visibile, poi naviga
+  const [_, tradRes] = await Promise.all([
+    caricaImmagine(urlSfondo),
+    firstValueFrom(traduzioni$.pipe(take(1))).catch(() => null),
+  ]);
+
+  const descrizioneTestuale = String((tradRes as any)?.data?.descrizione || '');
+
   await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
 
-  const lingua = this.cambioLingua.leggiCodiceLingua();
-  const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
-  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo } });
+  // Naviga passando tutto nello state: sfondo, titolo E descrizione già pronti
+  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo, descrizioneTestuale } });
 }
 }
