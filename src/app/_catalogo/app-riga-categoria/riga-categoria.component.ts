@@ -454,16 +454,21 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
     ? this.api.getFilmTraduzioni(id, lingua)
     : this.api.getSerieTraduzioni(id, lingua);
 
-  const [_, tradRes] = await Promise.all([
+  const tabella$ = tipo === 'film'
+    ? this.api.getFilm(id)
+    : this.api.getSerie(id);
+
+  const [_, tradRes, tabellaRes] = await Promise.all([
     caricaImmagine(urlSfondo),
     firstValueFrom(traduzioni$.pipe(take(1))).catch(() => null),
+    firstValueFrom(tabella$.pipe(take(1))).catch(() => null),
   ]);
 
   const descrizioneTestuale = String((tradRes as any)?.data?.descrizione || '');
+  const tabellaDati = (tabellaRes as any)?.data ?? null;
 
   await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
 
-  // Naviga passando tutto nello state: sfondo, titolo E descrizione già pronti
-  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo, descrizioneTestuale } });
+  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo, descrizioneTestuale, tabellaDati } });
 }
 }
