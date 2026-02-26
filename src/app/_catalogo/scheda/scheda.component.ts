@@ -4,6 +4,14 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { Subscription } from 'rxjs';
 import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
+
+export interface Episodio {
+  titolo: string;
+  descrizione: string;
+  anteprima: string;
+  durata: string;
+}
+
 @Component({
   selector: 'app-scheda',
   templateUrl: './scheda.component.html',
@@ -17,10 +25,39 @@ idContenuto: number | null = null;
 urlSfondoScheda = '';
 imgTitoloScheda = '';
 
+
+
+
 anno: number | null = null;
 durata: number | null = null;       // minuti — solo film
 episodiTotali: number | null = null; // solo serie
 regista = '';
+
+stagioneSelezionata: string | null = null;
+caricamentoStagioneInCorso = false;
+private idCaricamento = 0;
+private timerMinimoPlaceholderMs = 500;
+
+serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }>> = {
+  '1': {
+    ep1: { titolo: 'Episodio 1', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '48 min' },
+    ep2: { titolo: 'Episodio 2', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '51 min' },
+    ep3: { titolo: 'Episodio 3', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '45 min' },
+    ep4: { titolo: 'Episodio 4', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '50 min' },
+  },
+  '2': {
+    ep1: { titolo: 'Episodio 1', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '47 min' },
+    ep2: { titolo: 'Episodio 2', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '52 min' },
+    ep3: { titolo: 'Episodio 3', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '49 min' },
+    ep4: { titolo: 'Episodio 4', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '46 min' },
+  },
+  '3': {
+    ep1: { titolo: 'Episodio 1', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '53 min' },
+    ep2: { titolo: 'Episodio 2', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '44 min' },
+    ep3: { titolo: 'Episodio 3', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '48 min' },
+    ep4: { titolo: 'Episodio 4', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '55 min' },
+  }
+};
   startAnim = false;
   startAnimTitolo = false;
   startAnimDescrizione = false;
@@ -256,4 +293,53 @@ requestAnimationFrame(() => {
     this._loaderNascosto = true;
     this.verificaEAvviaAnimazioni();
   };
+
+  getChiavi(obj: Record<string, any>): string[] {
+  return Object.keys(obj);
+}
+
+attendi(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+urlAnteprimePerStagione(stagione: string): string[] {
+  if (!this.serieData || !this.serieData[stagione]) return [];
+  const episodi = this.serieData[stagione];
+  return this.getChiavi(episodi)
+    .map(k => episodi[k]?.anteprima)
+    .filter((u: any) => !!u);
+}
+
+precaricaImmagini(urls: string[]): Promise<void> {
+  if (!urls || urls.length === 0) return Promise.resolve();
+  const jobs = urls.map(u => new Promise<void>(resolve => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = u;
+  }));
+  return Promise.all(jobs).then(() => undefined);
+}
+
+async selezionaStagione(stagione: string): Promise<void> {
+  const stagioneCorrente = this.stagioneSelezionata || this.getChiavi(this.serieData)[0];
+  if (stagioneCorrente === stagione && !this.caricamentoStagioneInCorso) return;
+
+  const mioId = ++this.idCaricamento;
+  this.caricamentoStagioneInCorso = true;
+  this.stagioneSelezionata = stagione;
+
+  const urls = this.urlAnteprimePerStagione(stagione);
+  await Promise.all([
+    this.attendi(this.timerMinimoPlaceholderMs),
+    this.precaricaImmagini(urls)
+  ]);
+
+  if (mioId !== this.idCaricamento) return;
+  this.caricamentoStagioneInCorso = false;
+}
+
+onClicEpisodio(numeroEpisodio: number): void {
+  console.log('Clic episodio', numeroEpisodio, 'stagione', this.stagioneSelezionata || '1');
+}
 }

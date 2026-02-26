@@ -36,15 +36,7 @@
     linear-gradient(to right, #08021b 0%, #08021b 9%, #190221db 26%, #0000 80%, #0000 100%);
 }
 
-.contenuto{
-  margin-top: 50px;
-  background-color: red;
-  color: rgb(224, 220, 230);
-  display: block;
-  position: relative;
-  z-index: 2;
-  margin-bottom: 50px;
-}
+
 
 app-footer{
   position: absolute;
@@ -192,10 +184,218 @@ app-bottone-preferiti {
   margin-left: 65px;
   margin-top: 20px;
   font-size: 18px;
+
+  margin-bottom: 100px;
 }
 
 .cubo{
       font-family: "Quantico", serif;
 font-size: 19px;
+}
+
+
+
+.episodi {
+  color: #fff;
+  z-index: 4;
+  position: relative;
+  margin-left: 65px;
+  margin-top: 5px;
+  margin-bottom: 100px;
+  h3 {
+    font-family: "Cinzel", serif;
+    font-size: 33px;
+    color: #e6d1a1;
+    padding-top: 30px;
+  }
+
+  .menu-stagioni {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 10px 0 14px 0;
+    margin-right: 40px;
+    margin-top: 70px;
+    width: fit-content;
+
+    .voce_stagione {
+      cursor: pointer;
+      border: 1px solid rgba(230, 209, 161, 0.35);
+      background: #1f0d5b2d;
+      color: #e6d1a1;
+      font-family: "Quantico", serif;
+      font-weight: 700;
+      font-size: 15px;
+      border-radius: 6px;
+      padding: 8px 14px;
+      transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+      will-change: transform;
+
+      &:hover {
+        transform: scale(1.035);
+        background: #1f0d5b66;
+      }
+
+      &.attiva {
+        background: #e6d1a11a;
+        border-color: #e6d1a1;
+        box-shadow: 0 0 10px rgba(230, 209, 161, 0.25);
+        transform: scale(1.045);
+        color: white;
+      }
+    }
+  }
+
+  .titolo-stagione-corrente {
+    padding-top: 18px;
+    width: fit-content;
+  }
+
+ li {
+  margin-left: 20px;
+  gap: 50px;
+  list-style: none;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  padding-bottom: 20px;
+  padding-top: 20px;
+  transition: background-color 0.5s ease, transform 0.5s ease;
+  width: 70vw;
+  cursor: pointer;
+  will-change: transform;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    transform: scale(1.015);
+
+    .img_anteprima {
+      opacity: 0.75;
+    }
+  }
+
+    .titolo_durata {
+      display: flex;
+      flex-direction: column;
+
+      .titolo_ep {
+        font-family: "Quantico", serif;
+        font-size: 28px;
+        text-shadow: 0 0 10px rgb(11, 88, 211);
+      }
+
+      .descrizione_ep {
+        font-family: "Quantico", serif;
+        font-size: 18px;
+      }
+    }
+
+    .img_contenitore_scritta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: start;
+      font-size: 17px;
+
+      .img_anteprima {
+        position: relative;
+        background-color: rgb(30, 30, 37);
+        height: 150px;
+        width: 260px;
+        transition: opacity 0.55s ease;
+        background-size: cover;
+        background-position: center;
+        border-radius: 6px;
+        box-shadow: 0 6px 18px rgba(87, 80, 93, 0.264);
+
+        .sfumatura_piccola {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background:
+            linear-gradient(to top, #070217b8 0%, #0000 55%, #0000 100%),
+            linear-gradient(to right, #070217b8 0%, #070217b8 3%, #0000 40%, #0000 100%);
+        }
+      }
+    }
+  }
+}
+
+.ritaglio {
+  overflow: hidden;
+  border-radius: 6px;
+  position: relative;
+}
+
+.on_play {
+  opacity: 0;
+  transform: translate(-100%, -50%) scale(1.4);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 35px;
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 1px 3px 0 9px;
+  text-shadow: none;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+  z-index: 150;
+  background: rgba(34, 32, 43, 0.556);
+  border: 1px solid #ec820a;
+  color: #ec820a !important;
+}
+
+li:hover .on_play {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.4);
+}
+
+.menu-stagioni--basso {
+  margin-top: 40px !important;
+}
+
+.placeholder {
+  display: block;
+  opacity: 0.45;
+  z-index: 140;
+
+  li {
+    margin-bottom: 12px;
+    margin-top: 25px;
+  }
+
+  span {
+    display: inline-block;
+    background: linear-gradient(90deg, #2b2b3a 25%, #3a3a4b 37%, #2b2b3a 63%);
+    background-size: 400% 100%;
+  }
+
+  .placeholder_img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    width: 260px;
+    border-radius: 6px;
+
+    app-spinner {
+      transform: scale(1.85);
+    }
+  }
+
+  .placeholder_text {
+    height: 110px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: min(50vw, 640px);
+    border-radius: 4px;
+
+
+  }
 }
 

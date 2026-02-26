@@ -26,10 +26,10 @@
       Riprendi Visione
       <span class="icon play" aria-hidden="true">&#9658;</span>
     </button>
-    <button type="button" class="riproduci">
-      Riproduci
-      <span class="icon play" aria-hidden="true">&#9658;</span>
-    </button>
+    <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci">
+  Riproduci
+  <span class="icon play" aria-hidden="true">&#9658;</span>
+</button>
 
     <button type="button" class="riproduci">
       Trailer
@@ -69,6 +69,84 @@
   </p>
 
 </div>
-  <p class="contenuto">{{ descrizione || "..." }}</p>
+
+<div
+  class="episodi"
+  *ngIf="tipoContenuto === 'serie'"
+>
+  <nav class="menu-stagioni" aria-label="Seleziona stagione">
+    <button
+      type="button"
+      class="voce_stagione"
+      *ngFor="let stagione of getChiavi(serieData)"
+      [class.attiva]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
+      [attr.aria-pressed]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
+      (click)="selezionaStagione(stagione)"
+    >
+      Stagione {{ stagione }}
+    </button>
+  </nav>
+
+  <div
+    class="lista-episodi"
+    *ngIf="serieData[(stagioneSelezionata || getChiavi(serieData)[0])] as stagioneCorrenteObj"
+    [attr.aria-busy]="caricamentoStagioneInCorso"
+  >
+    <h3 class="titolo-stagione-corrente">
+      Stagione {{ (stagioneSelezionata || getChiavi(serieData)[0]) }}
+    </h3>
+
+    <ul class="placeholder" *ngIf="caricamentoStagioneInCorso" aria-live="polite">
+      <li *ngFor="let _ of [0,1,2,3]">
+        <span class="placeholder_img">
+          <app-spinner class="spinner--categoria"></app-spinner>
+        </span>
+        <span class="placeholder_text">
+          <app-spinner class="spinner--categoria"></app-spinner>
+        </span>
+      </li>
+    </ul>
+
+    <ul *ngIf="!caricamentoStagioneInCorso">
+      <li
+        *ngFor="let episodio of getChiavi(stagioneCorrenteObj); let i = index"
+        (click)="onClicEpisodio(i + 1)"
+      >
+        <div class="img_contenitore_scritta">
+          <div class="ritaglio">
+            <span class="on_play" aria-hidden="true">&#9658;</span>
+            <div
+              class="img_anteprima"
+              [style.background-image]="'url(' + stagioneCorrenteObj[episodio].anteprima + ')'"
+            >
+              <span class="sfumatura_piccola"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="titolo_durata">
+          Episodio {{ i + 1 }}
+          <span class="titolo_ep">{{ stagioneCorrenteObj[episodio].titolo }}</span>
+          <span class="descrizione_ep">{{ stagioneCorrenteObj[episodio].descrizione }}</span>
+          <span class="durata_ep">{{ stagioneCorrenteObj[episodio].durata }}</span>
+        </div>
+      </li>
+    </ul>
+
+    <nav class="menu-stagioni menu-stagioni--basso" aria-label="Seleziona stagione">
+      <button
+        type="button"
+        class="voce_stagione"
+        *ngFor="let stagione of getChiavi(serieData)"
+        [class.attiva]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
+        [attr.aria-pressed]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
+        (click)="selezionaStagione(stagione)"
+      >
+        Stagione {{ stagione }}
+      </button>
+    </nav>
+  </div>
+</div>
+
   <app-footer></app-footer>
 </div>
