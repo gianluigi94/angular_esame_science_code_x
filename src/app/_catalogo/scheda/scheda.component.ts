@@ -38,26 +38,9 @@ caricamentoStagioneInCorso = false;
 private idCaricamento = 0;
 private timerMinimoPlaceholderMs = 500;
 
-serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }>> = {
-  '1': {
-    ep1: { titolo: 'Episodio 1', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '48 min' },
-    ep2: { titolo: 'Episodio 2', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '51 min' },
-    ep3: { titolo: 'Episodio 3', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '45 min' },
-    ep4: { titolo: 'Episodio 4', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '50 min' },
-  },
-  '2': {
-    ep1: { titolo: 'Episodio 1', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '47 min' },
-    ep2: { titolo: 'Episodio 2', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '52 min' },
-    ep3: { titolo: 'Episodio 3', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '49 min' },
-    ep4: { titolo: 'Episodio 4', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '46 min' },
-  },
-  '3': {
-    ep1: { titolo: 'Episodio 1', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '53 min' },
-    ep2: { titolo: 'Episodio 2', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '44 min' },
-    ep3: { titolo: 'Episodio 3', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '48 min' },
-    ep4: { titolo: 'Episodio 4', descrizione: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.', anteprima: 'assets/screen/abbraccia_il_vento/01.webp', durata: '55 min' },
-  }
-};
+stagioni: Array<{ id_stagione: number; numero_stagione: number; numero_episodi: number }> = [];
+serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }>> = {};
+private stagioneCachata = new Set<string>();
   startAnim = false;
   startAnimTitolo = false;
   startAnimDescrizione = false;
@@ -176,7 +159,7 @@ if (tabellaDaState) {
         ? this.api.getFilmTraduzioni(this.idContenuto, lingua)
         : this.api.getSerieTraduzioni(this.idContenuto, lingua);
 
-      fetch$.subscribe((res) => {
+    fetch$.subscribe((res) => {
   const nuovaDesc = String(res?.data?.descrizione || '');
   this.startAnimTitolo = false;
   this.startAnimDescrizione = false;
@@ -189,6 +172,12 @@ if (tabellaDaState) {
       this.startAnimDescrizione = true;
     });
   });
+
+  if (this.tipoContenuto === 'serie' && this.stagioneSelezionata) {
+    this.stagioneCachata.clear();
+    this.serieData = {};
+    this.selezionaStagione(this.stagioneSelezionata);
+  }
 });
     } else {
       // Nessuna descrizione da caricare: aggiorna solo il titolo
@@ -262,6 +251,20 @@ requestAnimationFrame(() => {
   this._tabellaPronta = true;
 
   this.verificaEAvviaAnimazioni();
+
+  //
+  this.api.getStagioni(id).subscribe((res) => {
+  const lista: any[] = Array.isArray(res?.data) ? res.data : [];
+  this.stagioni = lista.map(s => ({
+  id_stagione: s.id_stagione,
+  numero_stagione: s.numero_stagione,
+  numero_episodi: s.numero_episodi
+}));
+  if (this.stagioni.length > 0) {
+    const prima = String(this.stagioni[0].numero_stagione);
+    this.selezionaStagione(prima);
+  }
+});
 });
 
         this.api.getSerieTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
@@ -302,13 +305,6 @@ attendi(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-urlAnteprimePerStagione(stagione: string): string[] {
-  if (!this.serieData || !this.serieData[stagione]) return [];
-  const episodi = this.serieData[stagione];
-  return this.getChiavi(episodi)
-    .map(k => episodi[k]?.anteprima)
-    .filter((u: any) => !!u);
-}
 
 precaricaImmagini(urls: string[]): Promise<void> {
   if (!urls || urls.length === 0) return Promise.resolve();
@@ -321,25 +317,99 @@ precaricaImmagini(urls: string[]): Promise<void> {
   return Promise.all(jobs).then(() => undefined);
 }
 
-async selezionaStagione(stagione: string): Promise<void> {
-  const stagioneCorrente = this.stagioneSelezionata || this.getChiavi(this.serieData)[0];
-  if (stagioneCorrente === stagione && !this.caricamentoStagioneInCorso) return;
+async selezionaStagione(numeroStagione: string): Promise<void> {
+  const stagioneCorrente = this.stagioneSelezionata || (this.stagioni.length > 0 ? String(this.stagioni[0].numero_stagione) : null);
+  if (stagioneCorrente === numeroStagione && !this.caricamentoStagioneInCorso && this.stagioneCachata.has(numeroStagione)) return;
 
   const mioId = ++this.idCaricamento;
   this.caricamentoStagioneInCorso = true;
-  this.stagioneSelezionata = stagione;
+  this.stagioneSelezionata = numeroStagione;
 
-  const urls = this.urlAnteprimePerStagione(stagione);
-  await Promise.all([
-    this.attendi(this.timerMinimoPlaceholderMs),
-    this.precaricaImmagini(urls)
-  ]);
+  if (!this.stagioneCachata.has(numeroStagione)) {
+    const stagione = this.stagioni.find(s => String(s.numero_stagione) === numeroStagione);
+    if (stagione) {
+      await Promise.all([
+        this.attendi(this.timerMinimoPlaceholderMs),
+        this.caricaEpisodiStagione(stagione.id_stagione, numeroStagione)
+      ]);
+    } else {
+      await this.attendi(this.timerMinimoPlaceholderMs);
+    }
+ } else {
+  await this.precaricaImmagini(this.urlAnteprimePerStagione(numeroStagione));
+}
 
   if (mioId !== this.idCaricamento) return;
   this.caricamentoStagioneInCorso = false;
 }
 
+private caricaEpisodiStagione(idStagione: number, numeroStagione: string): Promise<void> {
+  const lingua = this.cambioLingua.leggiCodiceLingua();
+  const slug = this.slugCorrente;
+
+  return new Promise<void>(resolve => {
+    Promise.all([
+      this.api.getEpisodi(idStagione).toPromise(),
+      this.api.getEpisodiTraduzioni(idStagione, lingua).toPromise()
+    ]).then(([resEpisodi, resTrad]) => {
+      const episodi: any[] = Array.isArray(resEpisodi?.data) ? (resEpisodi as any).data : [];
+      const traduzioni: any[] = Array.isArray(resTrad?.data) ? (resTrad as any).data : [];
+
+      const mapTrad: Record<number, { titolo: string; descrizione: string }> = {};
+      traduzioni.forEach(t => {
+        mapTrad[t.id_episodio] = { titolo: t.titolo || '', descrizione: t.descrizione || '' };
+      });
+
+      const stagObj: Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }> = {};
+      const offsetEpisodi = this.stagioni
+  .filter(s => s.numero_stagione < Number(numeroStagione))
+  .reduce((acc, s) => acc + s.numero_episodi, 0);
+
+episodi.forEach(ep => {
+  const numProgressivo = offsetEpisodi + ep.numero_episodio;
+  const numPadded = String(numProgressivo).padStart(2, '0');
+  const anteprima = slug ? `assets/screen/${slug}/${numPadded}.webp` : '';
+        const trad = mapTrad[ep.id_episodio] || { titolo: '', descrizione: '' };
+        stagObj[`ep${ep.id_episodio}`] = {
+          titolo: trad.titolo,
+          descrizione: trad.descrizione,
+          anteprima,
+          durata: this.secondiInLeggibile(ep.durata)
+        };
+      });
+
+      this.serieData = { ...this.serieData, [numeroStagione]: stagObj };
+      this.stagioneCachata.add(numeroStagione);
+
+      this.precaricaImmagini(this.urlAnteprimePerStagione(numeroStagione)).then(resolve);
+    }).catch(() => resolve());
+  });
+}
+
+urlAnteprimePerStagione(numeroStagione: string): string[] {
+  if (!this.serieData || !this.serieData[numeroStagione]) return [];
+  const episodi = this.serieData[numeroStagione];
+  return this.getChiavi(episodi)
+    .map(k => episodi[k]?.anteprima)
+    .filter((u: any) => !!u);
+}
+
 onClicEpisodio(numeroEpisodio: number): void {
-  console.log('Clic episodio', numeroEpisodio, 'stagione', this.stagioneSelezionata || '1');
+  console.log('Clic episodio', numeroEpisodio, 'stagione', this.stagioneSelezionata);
+}
+
+toString(val: any): string {
+  return String(val);
+}
+
+secondiInLeggibile(secondi: number | null | undefined): string {
+  if (!secondi || secondi <= 0) return '';
+  const ore = Math.floor(secondi / 3600);
+  const min = Math.floor((secondi % 3600) / 60);
+  const sec = secondi % 60;
+  if (ore > 0) {
+    return sec > 0 ? `${ore}h ${min}m ${sec}s` : `${ore}h ${min}m`;
+  }
+  return sec > 0 ? `${min}m ${sec}s` : `${min}m`;
 }
 }

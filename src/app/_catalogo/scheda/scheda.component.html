@@ -53,8 +53,8 @@
 
   <!-- Solo film -->
   <p *ngIf="tipoContenuto === 'film' && durata">
-    <span class="cubo">Durata:</span>
-    {{ durata }} min
+   <span class="cubo">Durata:</span>
+{{ secondiInLeggibile(durata) }}
   </p>
 
   <p *ngIf="regista">
@@ -75,26 +75,26 @@
   *ngIf="tipoContenuto === 'serie'"
 >
   <nav class="menu-stagioni" aria-label="Seleziona stagione">
-    <button
-      type="button"
-      class="voce_stagione"
-      *ngFor="let stagione of getChiavi(serieData)"
-      [class.attiva]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
-      [attr.aria-pressed]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
-      (click)="selezionaStagione(stagione)"
-    >
-      Stagione {{ stagione }}
-    </button>
-  </nav>
+  <button
+    type="button"
+    class="voce_stagione"
+    *ngFor="let stag of stagioni"
+    [class.attiva]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
+    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
+    (click)="selezionaStagione(toString(stag.numero_stagione))"
+  >
+    Stagione {{ stag.numero_stagione }}
+  </button>
+</nav>
 
   <div
-    class="lista-episodi"
-    *ngIf="serieData[(stagioneSelezionata || getChiavi(serieData)[0])] as stagioneCorrenteObj"
-    [attr.aria-busy]="caricamentoStagioneInCorso"
-  >
-    <h3 class="titolo-stagione-corrente">
-      Stagione {{ (stagioneSelezionata || getChiavi(serieData)[0]) }}
-    </h3>
+  class="lista-episodi"
+  *ngIf="caricamentoStagioneInCorso || serieData[(stagioneSelezionata || getChiavi(serieData)[0])]"
+  [attr.aria-busy]="caricamentoStagioneInCorso"
+>
+  <h3 class="titolo-stagione-corrente">
+    Stagione {{ stagioneSelezionata }}
+  </h3>
 
     <ul class="placeholder" *ngIf="caricamentoStagioneInCorso" aria-live="polite">
       <li *ngFor="let _ of [0,1,2,3]">
@@ -107,18 +107,18 @@
       </li>
     </ul>
 
-    <ul *ngIf="!caricamentoStagioneInCorso">
-      <li
-        *ngFor="let episodio of getChiavi(stagioneCorrenteObj); let i = index"
-        (click)="onClicEpisodio(i + 1)"
-      >
-        <div class="img_contenitore_scritta">
-          <div class="ritaglio">
-            <span class="on_play" aria-hidden="true">&#9658;</span>
-            <div
-              class="img_anteprima"
-              [style.background-image]="'url(' + stagioneCorrenteObj[episodio].anteprima + ')'"
-            >
+    <ul *ngIf="!caricamentoStagioneInCorso && serieData[(stagioneSelezionata || getChiavi(serieData)[0])]">
+  <li
+    *ngFor="let episodio of getChiavi(serieData[(stagioneSelezionata || getChiavi(serieData)[0])]); let i = index"
+    (click)="onClicEpisodio(i + 1)"
+  >
+    <div class="img_contenitore_scritta">
+      <div class="ritaglio">
+        <span class="on_play" aria-hidden="true">&#9658;</span>
+        <div
+          class="img_anteprima"
+          [style.background-image]="'url(' + serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].anteprima + ')'"
+        >
               <span class="sfumatura_piccola"></span>
             </div>
           </div>
@@ -126,25 +126,25 @@
 
         <div class="titolo_durata">
           Episodio {{ i + 1 }}
-          <span class="titolo_ep">{{ stagioneCorrenteObj[episodio].titolo }}</span>
-          <span class="descrizione_ep">{{ stagioneCorrenteObj[episodio].descrizione }}</span>
-          <span class="durata_ep">{{ stagioneCorrenteObj[episodio].durata }}</span>
+          <span class="titolo_ep">{{ serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].titolo }}</span>
+<span class="descrizione_ep">{{ serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].descrizione }}</span>
+<span class="durata_ep">{{ serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].durata }}</span>
         </div>
       </li>
     </ul>
 
-    <nav class="menu-stagioni menu-stagioni--basso" aria-label="Seleziona stagione">
-      <button
-        type="button"
-        class="voce_stagione"
-        *ngFor="let stagione of getChiavi(serieData)"
-        [class.attiva]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
-        [attr.aria-pressed]="(stagioneSelezionata || getChiavi(serieData)[0]) === stagione"
-        (click)="selezionaStagione(stagione)"
-      >
-        Stagione {{ stagione }}
-      </button>
-    </nav>
+    <nav class="menu-stagioni" aria-label="Seleziona stagione">
+  <button
+    type="button"
+    class="voce_stagione"
+    *ngFor="let stag of stagioni"
+    [class.attiva]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
+    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
+    (click)="selezionaStagione(toString(stag.numero_stagione))"
+  >
+    Stagione {{ stag.numero_stagione }}
+  </button>
+</nav>
   </div>
 </div>
 

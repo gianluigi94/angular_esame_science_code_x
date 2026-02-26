@@ -291,4 +291,18 @@ public getSerieTraduzioni(idSerie: number | string, lingua: string): Observable<
   }
 
 
+  public getStagioni(idSerie: number | string): Observable<IRispostaServer> {
+  return this.richiestaGenerica(['stagioni'], 'GET', { id_serie: String(idSerie) });
+}
+
+public getEpisodi(idStagione: number | string): Observable<IRispostaServer> {
+  return this.richiestaGenerica(['episodi'], 'GET', { id_stagione: String(idStagione) });
+}
+
+public getEpisodiTraduzioni(idStagione: number | string, lingua: string): Observable<IRispostaServer> {
+  return this.richiestaGenerica(['episodi-traduzioni'], 'GET', {
+    id_stagione: String(idStagione),
+    lingua
+  });
+}
 }
