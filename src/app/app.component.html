@@ -23,6 +23,7 @@
          || !(sessioneVerificata$ | async)
          || !(saturnoPronto$ | async)
          || (deveCaricareImmaginiCarosello && !(caroselloPronto$ | async))
+|| !(schedaPronta$ | async)
        ))"
   [mostraSpinner]="!(erroreFatale$ | async) && !loaderAvvioCatalogo"
   [stileAvvioCatalogo]="loaderAvvioCatalogo && !(erroreFatale$ | async)"

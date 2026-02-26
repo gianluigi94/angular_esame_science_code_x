@@ -24,7 +24,7 @@ import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/satur
    salvaPathInSessionStorage,
    impostaLangHtml,
  } from './_helpers_globali/helpers';
-
+import { SchedaProntaService } from './_catalogo/scheda/scheda_service/scheda-pronta.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -57,7 +57,7 @@ loaderDaMostrare = false;
   private loaderVisibile = true; // Tengo traccia se il loader è attualmente visibile
   isFirefox = false; // Indico se il browser in uso è Firefox
   loaderAvvioCatalogo = false; // Indico se il loader è mostrato durante l'avvio del catalogo
-
+schedaPronta$ = this.schedaProntaService.schedaPronta$;
   constructor(
     private cambioLinguaService: CambioLinguaService,
     private traduzioniService: TraduzioniService,
@@ -68,6 +68,7 @@ loaderDaMostrare = false;
     private translate: TranslateService,
     private saturnoStatoService: SaturnoStatoService,
     private router: Router,
+    private schedaProntaService: SchedaProntaService,
     private caricamentoCaroselloService: CaricamentoCaroselloService,
     private titoloPaginaService: TitoloPaginaService,
     private performanceService: PerformanceService,

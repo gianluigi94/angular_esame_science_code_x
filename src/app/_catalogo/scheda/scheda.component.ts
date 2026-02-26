@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { Subscription } from 'rxjs';
-
+import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
 @Component({
   selector: 'app-scheda',
   templateUrl: './scheda.component.html',
@@ -11,11 +11,16 @@ import { Subscription } from 'rxjs';
 })
 export class SchedaComponent implements OnInit, OnDestroy {
   descrizione = '';
-  descrizioneTestuale = '';
-  tipoContenuto: 'film' | 'serie' | null = null;
-  idContenuto: number | null = null;
-  urlSfondoScheda = '';
-  imgTitoloScheda = '';
+descrizioneTestuale = '';
+tipoContenuto: 'film' | 'serie' | null = null;
+idContenuto: number | null = null;
+urlSfondoScheda = '';
+imgTitoloScheda = '';
+
+anno: number | null = null;
+durata: number | null = null;       // minuti — solo film
+episodiTotali: number | null = null; // solo serie
+regista = '';
   startAnim = false;
   startAnimTitolo = false;
   startAnimDescrizione = false;
@@ -29,28 +34,37 @@ export class SchedaComponent implements OnInit, OnDestroy {
   private _titoloPronto = false;
   private _descPronta = false;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private api: ApiService,
-    private cambioLingua: CambioLinguaService,
-  ) {}
+constructor(
+  private route: ActivatedRoute,
+  private router: Router,
+  private api: ApiService,
+  private cambioLingua: CambioLinguaService,
+  private schedaPronta: SchedaProntaService,
+) {}
 
-  // Controlla se tutti i pezzi sono pronti e solo allora scatta tutte le animazioni insieme
-  private verificaEAvviaAnimazioni(): void {
-    if (
-      this._loaderNascosto &&
-      this._sfondoPronto &&
-      this._titoloPronto &&
-      this._descPronta
-    ) {
-      requestAnimationFrame(() => {
-        this.startAnim = true;
-        this.startAnimTitolo = true;
-        this.startAnimDescrizione = true;
-      });
-    }
+private verificaEAvviaAnimazioni(): void {
+  // Sblocca il loader solo quando il testo è fisicamente nel DOM
+  if (this._sfondoPronto && this._titoloPronto && this._descPronta) {
+    const aspetta = () => {
+      const el = document.querySelector('.descrizione');
+      if (el && el.textContent && el.textContent.trim().length > 3) {
+        this.schedaPronta.segnaPronte();
+      } else {
+        requestAnimationFrame(aspetta);
+      }
+    };
+    requestAnimationFrame(aspetta);
   }
+
+  // Le animazioni partono solo dopo che il loader è già sparito
+  if (this._loaderNascosto && this._sfondoPronto && this._titoloPronto && this._descPronta) {
+    requestAnimationFrame(() => {
+      this.startAnim = true;
+      this.startAnimTitolo = true;
+      this.startAnimDescrizione = true;
+    });
+  }
+}
 
   private imgTitoloDaSlug(slug: string): string {
     if (!slug) return '';
@@ -69,11 +83,20 @@ export class SchedaComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
+  this.schedaPronta.reset();
+  window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
     setTimeout(() => {
       if (!this._loaderNascosto) this.onLoaderHidden();
     }, 0);
-
+ const aspettaDescrizione = () => {
+    const el = document.querySelector('.descrizione');
+    if (el && el.textContent && el.textContent.trim().length > 3) {
+      console.log('[SCHEDA] .descrizione nel DOM alle ' + performance.now() + ' ms | ' + el.textContent.trim().substring(0, 40));
+    } else {
+      requestAnimationFrame(aspettaDescrizione);
+    }
+  };
+  requestAnimationFrame(aspettaDescrizione);
     // Legge stato passato dal catalogo (già precaricato)
     const navState = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
     const urlDaState = String(navState?.['urlSfondo'] || '').trim();
@@ -144,8 +167,13 @@ requestAnimationFrame(() => {
 
       if (this.tipoContenuto === 'film') {
         this.api.getFilm(id).subscribe((res) => {
-          this.descrizione = String(res?.data?.descrizione || '');
-          this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+  this.descrizione = String(res?.data?.descrizione || '');
+  this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+
+  this.anno         = res?.data?.anno         ?? null;
+  this.durata       = res?.data?.durata       ?? null;
+  this.regista      = String(res?.data?.regista || '');
+  this.episodiTotali = null; // non pertinente per i film
 
           if (!this.urlSfondoScheda) {
             this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
@@ -169,8 +197,13 @@ requestAnimationFrame(() => {
 
       if (this.tipoContenuto === 'serie') {
         this.api.getSerie(id).subscribe((res) => {
-          this.descrizione = String(res?.data?.descrizione || '');
-          this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+  this.descrizione = String(res?.data?.descrizione || '');
+  this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+
+  this.anno          = res?.data?.anno            ?? null;
+  this.episodiTotali = res?.data?.numero_episodi  ?? null;
+  this.regista       = String(res?.data?.regista  || '');
+  this.durata        = null; // non pertinente per le serie
 
           if (!this.urlSfondoScheda) {
             this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
@@ -195,9 +228,10 @@ requestAnimationFrame(() => {
   }
 
   ngOnDestroy(): void {
-    this.subs.unsubscribe();
-    window.removeEventListener('loader-hidden', this.onLoaderHidden);
-  }
+  this.schedaPronta.segnaPronte(); // sblocca sempre all'uscita
+  this.subs.unsubscribe();
+  window.removeEventListener('loader-hidden', this.onLoaderHidden);
+}
 
   leggiTipoDaUrl(): 'film' | 'serie' | null {
     const segments = this.route.snapshot.url.map((s) => s.path);

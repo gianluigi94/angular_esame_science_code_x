@@ -22,52 +22,53 @@
     />
   </div>
   <div class="bottoni_film">
-   <button
-        type="button"
-        class="riprendi"
-      >
+    <button type="button" class="riprendi">
       Riprendi Visione
-        <span class="icon play" aria-hidden="true">&#9658;</span>
-      </button>
-  <button type="button" class="riproduci">
-    Riproduci
-    <span class="icon play" aria-hidden="true">&#9658;</span>
-  </button>
+      <span class="icon play" aria-hidden="true">&#9658;</span>
+    </button>
+    <button type="button" class="riproduci">
+      Riproduci
+      <span class="icon play" aria-hidden="true">&#9658;</span>
+    </button>
 
-  <button type="button" class="riproduci">
-    Trailer
-    <span class="icon play" aria-hidden="true">&#9658;</span>
-  </button>
+    <button type="button" class="riproduci">
+      Trailer
+      <span class="icon play" aria-hidden="true">&#9658;</span>
+    </button>
 
-  <app-bottone-preferiti> </app-bottone-preferiti>
+    <app-bottone-preferiti> </app-bottone-preferiti>
+  </div>
+  <div class="contenuto_info">
+    <p class="descrizione" [class.anim]="startAnimDescrizione">
+      {{ descrizioneTestuale || "..." }}
+    </p>
+  </div>
+
+  <div class="tabella">
+
+  <p *ngIf="anno">
+    <span class="cubo">Anno:</span>
+    {{ anno }}
+  </p>
+
+  <!-- Solo film -->
+  <p *ngIf="tipoContenuto === 'film' && durata">
+    <span class="cubo">Durata:</span>
+    {{ durata }} min
+  </p>
+
+  <p *ngIf="regista">
+    <span class="cubo">Regista:</span>
+    {{ regista }}
+  </p>
+
+  <!-- Solo serie -->
+  <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
+    <span class="cubo">Episodi Totali:</span>
+    {{ episodiTotali }}
+  </p>
+
 </div>
-
-<p class="descrizione" [class.anim]="startAnimDescrizione">
-  {{ descrizioneTestuale || '...' }}
-</p>
-
-<div class="tabella">
-      <p >
-        <span class="cubo"> Anno:</span>
-        1994
-      </p>
-
-      <p>
-        <span class="cubo"> Durata:</span>
-        2 ore
-      </p>
-
-      <p>
-        <span class="cubo"> Regista:</span>
-        Gianluigi
-      </p>
-
-      <p>
-        <span class="cubo"> Episodi Totali:</span>
-        12
-      </p>
-    </div>
-
   <p class="contenuto">{{ descrizione || "..." }}</p>
   <app-footer></app-footer>
 </div>
