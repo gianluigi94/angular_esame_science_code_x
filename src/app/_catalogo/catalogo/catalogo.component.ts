@@ -22,6 +22,7 @@ import { AnimazioniScomparsaService } from 'src/app/_catalogo/app-riga-categoria
 import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { CatalogoCacheService } from '../app-riga-categoria/categoria_services/catalogo-cache.service';
 import { RigaCategoriaComponent } from '../app-riga-categoria/riga-categoria.component';
+import { SchedaCacheService } from '../scheda/scheda_service/scheda-cache.service';
 @Component({
   selector: 'app-catalogo',
   templateUrl: './catalogo.component.html',
@@ -34,6 +35,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     public router: Router,
     public location: Location,
     public cambioLingua: CambioLinguaService,
+    public schedaCache: SchedaCacheService,
     public cacheCatalogo: CatalogoCacheService,
     public servizioAnimazioni: AnimazioniScomparsaService,
     public scorrimentoCatalogo: ScorrimentoCatalogoService,
@@ -124,9 +126,10 @@ righeComponenti!: QueryList<RigaCategoriaComponent>;
         this.gestisciScrollACategoria(idCategoria);
       }),
     );
-    this.sottoscrizioni.add(
+   this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
         this.cacheCatalogo.svuota();
+        this.schedaCache.svuota();
         this.forzaRottaCatalogoDaLinguaETipo(false);
         this.caricaPrimeRigheDaApi(0, false);
       }),

@@ -5,7 +5,7 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { Subscription, forkJoin } from 'rxjs';
 import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
-
+import { SchedaCacheService } from './scheda_service/scheda-cache.service';
 export interface Episodio {
   titolo: string;
   descrizione: string;
@@ -61,6 +61,7 @@ constructor(
   private router: Router,
   private location: Location,
   private api: ApiService,
+  private schedaCache: SchedaCacheService,
   private cambioLingua: CambioLinguaService,
   private schedaPronta: SchedaProntaService,
 ) {}
@@ -105,10 +106,11 @@ private verificaEAvviaAnimazioni(): void {
   ngOnInit(): void {
   this.schedaPronta.reset();
   window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
-    setTimeout(() => {
-      if (!this._loaderNascosto) this.onLoaderHidden();
-    }, 0);
- const aspettaDescrizione = () => {
+  setTimeout(() => {
+    if (!this._loaderNascosto) this.onLoaderHidden();
+  }, 0);
+
+  const aspettaDescrizione = () => {
     const el = document.querySelector('.descrizione');
     if (el && el.textContent && el.textContent.trim().length > 3) {
       console.log('[SCHEDA] .descrizione nel DOM alle ' + performance.now() + ' ms | ' + el.textContent.trim().substring(0, 40));
@@ -117,186 +119,240 @@ private verificaEAvviaAnimazioni(): void {
     }
   };
   requestAnimationFrame(aspettaDescrizione);
-    // Legge stato passato dal catalogo (già precaricato)
-    const navState = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
-    const urlDaState = String(navState?.['urlSfondo'] || '').trim();
-    const imgTitoloDaState = String(navState?.['urlImgTitolo'] || '').trim();
 
-    const descDaState = String(navState?.['descrizioneTestuale'] || '').trim();
+  const navState = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
+  const urlDaState = String(navState?.['urlSfondo'] || '').trim();
+  const imgTitoloDaState = String(navState?.['urlImgTitolo'] || '').trim();
+  const descDaState = String(navState?.['descrizioneTestuale'] || '').trim();
 
-if (urlDaState) {
-  this.urlSfondoScheda = urlDaState;
-  this._sfondoPronto = true;
-}
-if (imgTitoloDaState) {
-  this.imgTitoloScheda = imgTitoloDaState;
-  this._titoloPronto = true;
-}
-if (descDaState) {
-  this.descrizioneTestuale = descDaState;
-  this._descPronta = true;
-}
-
-const tabellaDaState = navState?.['tabellaDati'] ?? null;
-if (tabellaDaState) {
-  this.anno          = tabellaDaState.anno           ?? null;
-  this.durata        = tabellaDaState.durata         ?? null;
-  this.episodiTotali = tabellaDaState.numero_episodi ?? null;
-  this.regista       = String(tabellaDaState.regista || '');
-  this._tabellaPronta = true;
-}
-
-    // Cambio lingua: sincronizza titolo (sincrono) + descrizione (asincrona)
-   this.subs.add(
-  this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
-    const lingua = this.cambioLingua.leggiCodiceLingua();
-
-    // Calcola il nuovo titolo in memoria, senza toccare ancora la UI
-    const nuovoTitolo = this.slugCorrente
-      ? this.imgTitoloDaSlug(this.slugCorrente)
-      : this.imgTitoloScheda;
-
-    if (this.idContenuto && this.tipoContenuto) {
-      const fetch$ = this.tipoContenuto === 'film'
-        ? this.api.getFilmTraduzioni(this.idContenuto, lingua)
-        : this.api.getSerieTraduzioni(this.idContenuto, lingua);
-
-    fetch$.subscribe((res) => {
-  const nuovaDesc = String(res?.data?.descrizione || '');
-  this.startAnimTitolo = false;
-  this.startAnimDescrizione = false;
-  this.imgTitoloScheda = nuovoTitolo;
-  this.descrizioneTestuale = nuovaDesc;
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      this.startAnimTitolo = true;
-      this.startAnimDescrizione = true;
-    });
-  });
-
-  if (this.tipoContenuto === 'serie' && this.stagioneSelezionata) {
-    this.stagioneCachata.clear();
-    this.serieData = {};
-    this.selezionaStagione(this.stagioneSelezionata);
+  if (urlDaState) {
+    this.urlSfondoScheda = urlDaState;
+    this._sfondoPronto = true;
   }
-});
-    } else {
-      // Nessuna descrizione da caricare: aggiorna solo il titolo
-      this.startAnimTitolo = false;
-this.imgTitoloScheda = nuovoTitolo;
-requestAnimationFrame(() => {
-  requestAnimationFrame(() => (this.startAnimTitolo = true));
-});
-    }
-  })
-);
-
-    this.route.paramMap.subscribe((pm) => {
-      const idRaw = pm.get('id');
-      const id = idRaw ? Number(idRaw) : NaN;
-      if (!idRaw || Number.isNaN(id)) return;
-
-      this.idContenuto = id;
-      this.tipoContenuto = this.leggiTipoDaUrl();
-
-      if (this.tipoContenuto === 'film') {
-     this.api.getFilm(id).subscribe((res) => {
-  this.descrizione = String(res?.data?.descrizione || '');
-  this.slugCorrente = this.slugDaDescrizione(this.descrizione);
-
-  this.anno         = res?.data?.anno         ?? null;
-  this.durata       = res?.data?.durata       ?? null;
-  this.regista      = String(res?.data?.regista || '');
-  this.episodiTotali = null;
-
-  if (!this.urlSfondoScheda) {
-    this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
+  if (imgTitoloDaState) {
+    this.imgTitoloScheda = imgTitoloDaState;
+    this._titoloPronto = true;
   }
-  this._sfondoPronto = true;
-
-  if (!this.imgTitoloScheda) {
-    this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
+  if (descDaState) {
+    this.descrizioneTestuale = descDaState;
+    this._descPronta = true;
   }
-  this._titoloPronto = true;
-  this._tabellaPronta = true;
 
-  this.verificaEAvviaAnimazioni();
-});
+  const tabellaDaState = navState?.['tabellaDati'] ?? null;
+  if (tabellaDaState) {
+    this.anno          = tabellaDaState.anno           ?? null;
+    this.durata        = tabellaDaState.durata         ?? null;
+    this.episodiTotali = tabellaDaState.numero_episodi ?? null;
+    this.regista       = String(tabellaDaState.regista || '');
+    this._tabellaPronta = true;
+  }
 
-        this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
-          this.descrizioneTestuale = String(res?.data?.descrizione || '');
-          this._descPronta = true;
-          this.verificaEAvviaAnimazioni();
+  this.subs.add(
+    this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+      const lingua = this.cambioLingua.leggiCodiceLingua();
+
+      const nuovoTitolo = this.slugCorrente
+        ? this.imgTitoloDaSlug(this.slugCorrente)
+        : this.imgTitoloScheda;
+
+      if (this.idContenuto && this.tipoContenuto) {
+        const fetch$ = this.tipoContenuto === 'film'
+          ? this.api.getFilmTraduzioni(this.idContenuto, lingua)
+          : this.api.getSerieTraduzioni(this.idContenuto, lingua);
+
+        fetch$.subscribe((res) => {
+          const nuovaDesc = String(res?.data?.descrizione || '');
+          this.startAnimTitolo = false;
+          this.startAnimDescrizione = false;
+          this.imgTitoloScheda = nuovoTitolo;
+          this.descrizioneTestuale = nuovaDesc;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              this.startAnimTitolo = true;
+              this.startAnimDescrizione = true;
+            });
+          });
+
+          if (this.tipoContenuto === 'serie' && this.stagioneSelezionata) {
+            this.stagioneCachata.clear();
+            this.serieData = {};
+            this.selezionaStagione(this.stagioneSelezionata);
+          }
+        });
+      } else {
+        this.startAnimTitolo = false;
+        this.imgTitoloScheda = nuovoTitolo;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => (this.startAnimTitolo = true));
         });
       }
+    })
+  );
+
+  this.route.paramMap.subscribe((pm) => {
+    const idRaw = pm.get('id');
+    const id = idRaw ? Number(idRaw) : NaN;
+    if (!idRaw || Number.isNaN(id)) return;
+
+    this.idContenuto = id;
+    this.tipoContenuto = this.leggiTipoDaUrl();
+
+    // ── Ripristino da cache (es. back button da /contatti) ──
+    const lingua = this.cambioLingua.leggiCodiceLingua();
+    const cached = this.tipoContenuto
+      ? this.schedaCache.get(this.tipoContenuto, id, lingua)
+      : null;
+
+    if (cached) {
+      this.descrizione         = cached.descrizione;
+      this.descrizioneTestuale = cached.descrizioneTestuale;
+      this.urlSfondoScheda     = cached.urlSfondoScheda;
+      this.imgTitoloScheda     = cached.imgTitoloScheda;
+      this.anno                = cached.anno;
+      this.durata              = cached.durata;
+      this.episodiTotali       = cached.episodiTotali;
+      this.regista             = cached.regista;
+      this.slugCorrente        = cached.slugCorrente;
+      this.stagioni            = cached.stagioni;
+      this.stagioneSelezionata = cached.stagioneSelezionata;
+      this.serieData           = cached.serieData;
+
+      for (const k of Object.keys(cached.serieData)) {
+        this.stagioneCachata.add(k);
+      }
+
+      this._sfondoPronto  = true;
+      this._titoloPronto  = true;
+      this._descPronta    = true;
+      this._tabellaPronta = true;
+
+      this.schedaPronta.segnaPronte();
+      requestAnimationFrame(() => {
+        this.startAnim            = true;
+        this.startAnimTitolo      = true;
+        this.startAnimDescrizione = true;
+      });
+
+      return;
+    }
+    // ── fine ripristino da cache ──
+
+    if (this.tipoContenuto === 'film') {
+      this.api.getFilm(id).subscribe((res) => {
+        this.descrizione = String(res?.data?.descrizione || '');
+        this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+
+        this.anno          = res?.data?.anno    ?? null;
+        this.durata        = res?.data?.durata  ?? null;
+        this.regista       = String(res?.data?.regista || '');
+        this.episodiTotali = null;
+
+        if (!this.urlSfondoScheda) {
+          this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
+        }
+        this._sfondoPronto = true;
+
+        if (!this.imgTitoloScheda) {
+          this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
+        }
+        this._titoloPronto  = true;
+        this._tabellaPronta = true;
+
+        this.verificaEAvviaAnimazioni();
+      });
+
+      this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
+        this.descrizioneTestuale = String(res?.data?.descrizione || '');
+        this._descPronta = true;
+        this.verificaEAvviaAnimazioni();
+      });
+    }
 
     if (this.tipoContenuto === 'serie') {
-        const lingua = this.cambioLingua.leggiCodiceLingua();
+      const lingua = this.cambioLingua.leggiCodiceLingua();
 
-        // traduzioni in parallelo con tutto il resto
-        this.api.getSerieTraduzioni(id, lingua).subscribe((res) => {
-          this.descrizioneTestuale = String(res?.data?.descrizione || '');
-          this._descPronta = true;
-          this.verificaEAvviaAnimazioni();
-        });
+      this.api.getSerieTraduzioni(id, lingua).subscribe((res) => {
+        this.descrizioneTestuale = String(res?.data?.descrizione || '');
+        this._descPronta = true;
+        this.verificaEAvviaAnimazioni();
+      });
 
-        // serie e stagioni in parallelo tra loro
-        const stagioneDaUrl = pm.get('stagione') ? Number(pm.get('stagione')) : 1;
+      const stagioneDaUrl = pm.get('stagione') ? Number(pm.get('stagione')) : 1;
 
-        forkJoin([
-          this.api.getSerie(id),
-          this.api.getStagioni(id)
-        ]).subscribe(([resSerie, resStagioni]: [any, any]) => {
-          this.descrizione    = String(resSerie?.data?.descrizione || '');
-          this.slugCorrente   = this.slugDaDescrizione(this.descrizione);
-          this.anno           = resSerie?.data?.anno            ?? null;
-          this.episodiTotali  = resSerie?.data?.numero_episodi  ?? null;
-          this.regista        = String(resSerie?.data?.regista  || '');
-          this.durata         = null;
+      forkJoin([
+        this.api.getSerie(id),
+        this.api.getStagioni(id)
+      ]).subscribe(([resSerie, resStagioni]: [any, any]) => {
+        this.descrizione   = String(resSerie?.data?.descrizione || '');
+        this.slugCorrente  = this.slugDaDescrizione(this.descrizione);
+        this.anno          = resSerie?.data?.anno           ?? null;
+        this.episodiTotali = resSerie?.data?.numero_episodi ?? null;
+        this.regista       = String(resSerie?.data?.regista || '');
+        this.durata        = null;
 
-          if (!this.urlSfondoScheda) {
-            this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
+        if (!this.urlSfondoScheda) {
+          this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
+        }
+        this._sfondoPronto = true;
+
+        if (!this.imgTitoloScheda) {
+          this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
+        }
+        this._titoloPronto  = true;
+        this._tabellaPronta = true;
+        this.verificaEAvviaAnimazioni();
+
+        const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
+        this.stagioni = lista.map(s => ({
+          id_stagione:     s.id_stagione,
+          numero_stagione: s.numero_stagione,
+          numero_episodi:  s.numero_episodi
+        }));
+
+        if (this.stagioni.length > 0) {
+          const stagioneDaUrlEsplicita = !!pm.get('stagione');
+          const target = this.stagioni.find(s => s.numero_stagione === stagioneDaUrl);
+
+          if (!target && stagioneDaUrlEsplicita) {
+            const codice = this.cambioLingua.leggiCodiceLingua();
+            this.router.navigateByUrl(`/${codice}/${codice === 'it' ? 'non-trovato' : 'not-found'}`);
+            return;
           }
-          this._sfondoPronto  = true;
-          if (!this.imgTitoloScheda) {
-            this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
-          }
-          this._titoloPronto  = true;
-          this._tabellaPronta = true;
-          this.verificaEAvviaAnimazioni();
 
-          const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
-          this.stagioni = lista.map(s => ({
-            id_stagione:     s.id_stagione,
-            numero_stagione: s.numero_stagione,
-            numero_episodi:  s.numero_episodi
-          }));
+          const stagione = target ?? this.stagioni[0];
+          const targetStr = String(stagione.numero_stagione);
+          this.aggiornaUrlStagione(targetStr);
+          this.caricaEpisodiStagione(stagione.id_stagione, targetStr).then(() => {
+            this.stagioneSelezionata = targetStr;
+          });
+        }
+      });
+    }
+  });
+}
 
-          if (this.stagioni.length > 0) {
-            const stagioneDaUrlEsplicita = !!pm.get('stagione');
-            const target = this.stagioni.find(s => s.numero_stagione === stagioneDaUrl);
+ ngOnDestroy(): void {
+  this.schedaPronta.segnaPronte();
 
-            if (!target && stagioneDaUrlEsplicita) {
-              const codice = this.cambioLingua.leggiCodiceLingua();
-              this.router.navigateByUrl(`/${codice}/${codice === 'it' ? 'non-trovato' : 'not-found'}`);
-              return;
-            }
-
-            const stagione = target ?? this.stagioni[0];
-            const targetStr = String(stagione.numero_stagione);
-            this.aggiornaUrlStagione(targetStr);
-            this.caricaEpisodiStagione(stagione.id_stagione, targetStr).then(() => {
-              this.stagioneSelezionata = targetStr;
-            });
-          }
-        });
-      }
+  if (this.tipoContenuto && this.idContenuto) {
+    const lingua = this.cambioLingua.leggiCodiceLingua();
+    this.schedaCache.set(this.tipoContenuto, this.idContenuto, lingua, {
+      descrizione: this.descrizione,
+      descrizioneTestuale: this.descrizioneTestuale,
+      urlSfondoScheda: this.urlSfondoScheda,
+      imgTitoloScheda: this.imgTitoloScheda,
+      anno: this.anno,
+      durata: this.durata,
+      episodiTotali: this.episodiTotali,
+      regista: this.regista,
+      slugCorrente: this.slugCorrente,
+      stagioni: this.stagioni,
+      stagioneSelezionata: this.stagioneSelezionata,
+      serieData: this.serieData,
     });
   }
 
-  ngOnDestroy(): void {
-  this.schedaPronta.segnaPronte(); // sblocca sempre all'uscita
   this.subs.unsubscribe();
   window.removeEventListener('loader-hidden', this.onLoaderHidden);
 }
