@@ -87,9 +87,13 @@
   </button>
 </nav>
 
-  <div
+  <div *ngIf="!stagioneSelezionata" class="episodi-spinner">
+  <app-spinner></app-spinner>
+</div>
+
+<div
   class="lista-episodi"
-  *ngIf="caricamentoStagioneInCorso || serieData[(stagioneSelezionata || getChiavi(serieData)[0])]"
+  *ngIf="stagioneSelezionata"
   [attr.aria-busy]="caricamentoStagioneInCorso"
 >
   <h3 class="titolo-stagione-corrente">

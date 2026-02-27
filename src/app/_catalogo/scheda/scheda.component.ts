@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
 
 export interface Episodio {
@@ -58,6 +59,7 @@ private _tabellaPronta = false;
 constructor(
   private route: ActivatedRoute,
   private router: Router,
+  private location: Location,
   private api: ApiService,
   private cambioLingua: CambioLinguaService,
   private schedaPronta: SchedaProntaService,
@@ -229,48 +231,65 @@ requestAnimationFrame(() => {
         });
       }
 
-      if (this.tipoContenuto === 'serie') {
-     this.api.getSerie(id).subscribe((res) => {
-  this.descrizione = String(res?.data?.descrizione || '');
-  this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+    if (this.tipoContenuto === 'serie') {
+        const lingua = this.cambioLingua.leggiCodiceLingua();
 
-  this.anno          = res?.data?.anno            ?? null;
-  this.episodiTotali = res?.data?.numero_episodi  ?? null;
-  this.regista       = String(res?.data?.regista  || '');
-  this.durata        = null;
-
-  if (!this.urlSfondoScheda) {
-    this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
-  }
-  this._sfondoPronto = true;
-
-  if (!this.imgTitoloScheda) {
-    this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
-  }
-  this._titoloPronto = true;
-  this._tabellaPronta = true;
-
-  this.verificaEAvviaAnimazioni();
-
-  //
-  this.api.getStagioni(id).subscribe((res) => {
-  const lista: any[] = Array.isArray(res?.data) ? res.data : [];
-  this.stagioni = lista.map(s => ({
-  id_stagione: s.id_stagione,
-  numero_stagione: s.numero_stagione,
-  numero_episodi: s.numero_episodi
-}));
-  if (this.stagioni.length > 0) {
-    const prima = String(this.stagioni[0].numero_stagione);
-    this.selezionaStagione(prima);
-  }
-});
-});
-
-        this.api.getSerieTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
+        // traduzioni in parallelo con tutto il resto
+        this.api.getSerieTraduzioni(id, lingua).subscribe((res) => {
           this.descrizioneTestuale = String(res?.data?.descrizione || '');
           this._descPronta = true;
           this.verificaEAvviaAnimazioni();
+        });
+
+        // serie e stagioni in parallelo tra loro
+        const stagioneDaUrl = pm.get('stagione') ? Number(pm.get('stagione')) : 1;
+
+        forkJoin([
+          this.api.getSerie(id),
+          this.api.getStagioni(id)
+        ]).subscribe(([resSerie, resStagioni]: [any, any]) => {
+          this.descrizione    = String(resSerie?.data?.descrizione || '');
+          this.slugCorrente   = this.slugDaDescrizione(this.descrizione);
+          this.anno           = resSerie?.data?.anno            ?? null;
+          this.episodiTotali  = resSerie?.data?.numero_episodi  ?? null;
+          this.regista        = String(resSerie?.data?.regista  || '');
+          this.durata         = null;
+
+          if (!this.urlSfondoScheda) {
+            this.urlSfondoScheda = this.sfondoDaDescrizione(this.descrizione);
+          }
+          this._sfondoPronto  = true;
+          if (!this.imgTitoloScheda) {
+            this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
+          }
+          this._titoloPronto  = true;
+          this._tabellaPronta = true;
+          this.verificaEAvviaAnimazioni();
+
+          const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
+          this.stagioni = lista.map(s => ({
+            id_stagione:     s.id_stagione,
+            numero_stagione: s.numero_stagione,
+            numero_episodi:  s.numero_episodi
+          }));
+
+          if (this.stagioni.length > 0) {
+            const stagioneDaUrlEsplicita = !!pm.get('stagione');
+            const target = this.stagioni.find(s => s.numero_stagione === stagioneDaUrl);
+
+            if (!target && stagioneDaUrlEsplicita) {
+              const codice = this.cambioLingua.leggiCodiceLingua();
+              this.router.navigateByUrl(`/${codice}/${codice === 'it' ? 'non-trovato' : 'not-found'}`);
+              return;
+            }
+
+            const stagione = target ?? this.stagioni[0];
+            const targetStr = String(stagione.numero_stagione);
+            this.aggiornaUrlStagione(targetStr);
+            this.caricaEpisodiStagione(stagione.id_stagione, targetStr).then(() => {
+              this.stagioneSelezionata = targetStr;
+            });
+          }
         });
       }
     });
@@ -320,6 +339,8 @@ precaricaImmagini(urls: string[]): Promise<void> {
 async selezionaStagione(numeroStagione: string): Promise<void> {
   const stagioneCorrente = this.stagioneSelezionata || (this.stagioni.length > 0 ? String(this.stagioni[0].numero_stagione) : null);
   if (stagioneCorrente === numeroStagione && !this.caricamentoStagioneInCorso && this.stagioneCachata.has(numeroStagione)) return;
+
+  this.aggiornaUrlStagione(numeroStagione);
 
   const mioId = ++this.idCaricamento;
   this.caricamentoStagioneInCorso = true;
@@ -402,6 +423,12 @@ toString(val: any): string {
   return String(val);
 }
 
+private aggiornaUrlStagione(numeroStagione: string): void {
+  const path = this.location.path(false);
+  const baseUrl = path.replace(/\/(stagione|season)\/\d+$/, '');
+  const segmento = path.includes('/en/') ? 'season' : 'stagione';
+  this.location.replaceState(`${baseUrl}/${segmento}/${numeroStagione}`);
+}
 secondiInLeggibile(secondi: number | null | undefined): string {
   if (!secondi || secondi <= 0) return '';
   const ore = Math.floor(secondi / 3600);

@@ -21,16 +21,25 @@ export function matcherFilmDettaglio(segmenti: UrlSegment[]): UrlMatchResult | n
 }
 
 export function matcherSerieDettaglio(segmenti: UrlSegment[]): UrlMatchResult | null {
-  // /serie/:id oppure /series/:id con id solo cifre e niente extra
   if (
-    segmenti.length === 2 &&
-    /^(serie|series)$/.test(segmenti[0].path) &&
-    /^\d+$/.test(segmenti[1].path)
+    /^(serie|series)$/.test(segmenti[0]?.path) &&
+    /^\d+$/.test(segmenti[1]?.path)
   ) {
-    return {
-      consumed: segmenti,
-      posParams: { id: segmenti[1] },
-    };
+    // /serie/13
+    if (segmenti.length === 2) {
+      return { consumed: segmenti, posParams: { id: segmenti[1] } };
+    }
+    // /serie/13/stagione/2 oppure /series/13/season/2
+    if (
+      segmenti.length === 4 &&
+      /^(stagione|season)$/.test(segmenti[2]?.path) &&
+      /^\d+$/.test(segmenti[3]?.path)
+    ) {
+      return {
+        consumed: segmenti,
+        posParams: { id: segmenti[1], stagione: segmenti[3] },
+      };
+    }
   }
   return null;
 }
@@ -76,12 +85,12 @@ const routes: Routes = [
 {
   matcher: matcherFilmDettaglio,
   component: SchedaComponent,
-  canDeactivate: [CatalogoUscitaGuard],  // <-- aggiungi
+  canDeactivate: [CatalogoUscitaGuard],
 },
 {
   matcher: matcherSerieDettaglio,
   component: SchedaComponent,
-  canDeactivate: [CatalogoUscitaGuard],  // <-- aggiungi
+  canDeactivate: [CatalogoUscitaGuard],
 },
 
 ];

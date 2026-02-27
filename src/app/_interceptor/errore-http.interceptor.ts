@@ -48,9 +48,9 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
 
 
         // 404 su dettaglio film/serie -> pagina non trovato (NO errore fatale)
-        const e404 = err.status === 404;
+       const e404 = err.status === 404;
         const eDettaglioFilmSerie =
-          /\/api\/v1\/(film|serie)\/\d+(\?.*)?$/i.test(req.url);
+          /\/api\/v1\/(film|serie)(\/|$|-)/i.test(req.url);
 
         if (e404 && eDettaglioFilmSerie) {
           const m = (this.router.url || '').match(/^\/(it|en)(\/|$)/i);
