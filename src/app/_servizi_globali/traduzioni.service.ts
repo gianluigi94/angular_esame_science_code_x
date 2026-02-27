@@ -1,13 +1,14 @@
 // services che gestisce con ngx-translate le trasuzioni inglese/italiano
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, Observable, of, map, take, tap } from 'rxjs';
+import { BehaviorSubject, Observable, of, map, take, tap, shareReplay } from 'rxjs';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 
 @Injectable({ providedIn: 'root' }) // Registro il servizio nel root injector
 export class TraduzioniService {
-  traduzioniCaricate: { [codiceLingua: string]: boolean } = {}; // Tengo una cache che dice quali lingue ho già caricato
-  traduzioniInizialiCaricate$ = new BehaviorSubject<boolean>(false); // Espongo se almeno una lingua è stata caricata e parto da false
+traduzioniCaricate: { [codiceLingua: string]: boolean } = {};
+traduzioniInizialiCaricate$ = new BehaviorSubject<boolean>(false);
+private richiesteInCorso: { [codiceLingua: string]: Observable<void> } = {};
 
   constructor(
     private api: ApiService,
@@ -23,24 +24,33 @@ export class TraduzioniService {
  * @param codiceLingua Codice della lingua ( 'it', 'en') da caricare/assicurare.
  * @returns Observable che completa quando le traduzioni sono state caricate e registrate (o già presenti in cache).
  */
-  assicuraTraduzioni$(codiceLingua: string): Observable<void> {
-    if (this.traduzioniCaricate[codiceLingua]) { // Controllo se ho già caricato quella lingua
-      if (!this.traduzioniInizialiCaricate$.value)
-        this.traduzioniInizialiCaricate$.next(true); // Segno che le traduzioni iniziali sono pronte
-      return of(void 0); // Ritorno un observable che completa subito perché non devo fare chiamate
-    }
-
-    return this.api.getTraduzioniLingua(codiceLingua).pipe( // Chiamo l'API per scaricare le traduzioni di quella lingua
-      take(1), // Prendo una sola risposta e poi chiudo
-      tap((traduzioni) => { // Quando arrivano le traduzioni le applico e aggiorno la cache
-        this.translateService.setTranslation(codiceLingua, traduzioni, true); // Registro le traduzioni in ngx-translate
-        this.traduzioniCaricate[codiceLingua] = true; // Segno in cache che questa lingua ora è caricata
-        if (!this.traduzioniInizialiCaricate$.value)
-          this.traduzioniInizialiCaricate$.next(true); // Segno che le traduzioni iniziali sono pronte
-      }),
-      map(() => void 0) // Converto l'output in void perché mi interessa solo 'finito'
-    );
+ assicuraTraduzioni$(codiceLingua: string): Observable<void> {
+  if (this.traduzioniCaricate[codiceLingua]) {
+    if (!this.traduzioniInizialiCaricate$.value)
+      this.traduzioniInizialiCaricate$.next(true);
+    return of(void 0);
   }
+
+  if (this.richiesteInCorso[codiceLingua]) {
+    return this.richiesteInCorso[codiceLingua];
+  }
+
+  const richiesta$ = this.api.getTraduzioniLingua(codiceLingua).pipe(
+    take(1),
+    tap((traduzioni) => {
+      this.translateService.setTranslation(codiceLingua, traduzioni, true);
+      this.traduzioniCaricate[codiceLingua] = true;
+      delete this.richiesteInCorso[codiceLingua];
+      if (!this.traduzioniInizialiCaricate$.value)
+        this.traduzioniInizialiCaricate$.next(true);
+    }),
+    map(() => void 0),
+    shareReplay(1)
+  );
+
+  this.richiesteInCorso[codiceLingua] = richiesta$;
+  return richiesta$;
+}
 
 /**
  * Imposta la lingua corrente in ngx-translate.
