@@ -144,17 +144,7 @@ app-bottone-preferiti {
   align-items: center;
   justify-content: center;
 }
-:host ::ng-deep app-bottone-preferiti button {
-  background-color: #1f0d5b2d !important;
-  border: 1px solid rgb(64, 64, 118);
-  transition: transform 0.4s ease, background-color 0.4s ease;
-  will-change: transform;
 
-  &:hover {
-    background-color: #1f0d5b9b !important;
-    transform: scale(1.055);
-  }
-}
 
 
 
@@ -400,13 +390,22 @@ li:hover .on_play {
 }
 
 .righe-correlate{
+  opacity: 0.72;
   position: relative;
   z-index: 10;
   margin-bottom: 65px;
-}
-
-app-riga-categoria {
+  app-riga-categoria {
   display: block;
   will-change: opacity, transform;
   transform-origin: center center;
+}
+app-spinner{
+  margin-left: 60px;
+}
+  ::ng-deep .fascia-carosello .locandina {
+    flex: 0 0 calc(100% / 6) !important;
+  }
+  ::ng-deep .titolo-categoria {
+    font-size: 20px !important;
+  }
 }

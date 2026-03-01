@@ -23,6 +23,7 @@ import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_serv
 import { CatalogoCacheService } from '../app-riga-categoria/categoria_services/catalogo-cache.service';
 import { RigaCategoriaComponent } from '../app-riga-categoria/riga-categoria.component';
 import { SchedaCacheService } from '../scheda/scheda_service/scheda-cache.service';
+import { calcolaHash32, slugDaLocandina, mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
 @Component({
   selector: 'app-catalogo',
   templateUrl: './catalogo.component.html',
@@ -231,46 +232,11 @@ righeComponenti!: QueryList<RigaCategoriaComponent>;
 
     if (targetPath !== currentPath) this.location.go(targetPath + tail);
   }
-  calcolaHash32(testo: string): number {
-    let h = 2166136261;
-    for (let i = 0; i < testo.length; i++) {
-      h ^= testo.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-  }
 
-  slugDaPoster(url: string): string {
-    const u = String(url || '');
-    const file = (u.split('/').pop() || '').trim(); // locandina_it_slug.webp
-    if (!file) return u;
 
-    const senzaExt = file.replace(/\.webp$/i, '');
-    const parti = senzaExt.split('_');
 
-    // atteso: locandina + lingua + slug...
-    if (parti.length >= 3 && parti[0] === 'locandina') {
-      return parti.slice(2).join('_'); // slug (stabile tra lingue)
-    }
 
-    return senzaExt;
-  }
 
-  mescolaDeterministicaLocandine(
-    lista: { src: string }[],
-    seed: string,
-  ): { src: string }[] {
-    const s = String(seed || '');
-    const out = (lista || []).slice();
-    out.sort((a, b) => {
-      const sa = this.slugDaPoster(String(a?.src || ''));
-      const sb = this.slugDaPoster(String(b?.src || ''));
-      const ka = this.calcolaHash32(s + '|' + sa);
-      const kb = this.calcolaHash32(s + '|' + sb);
-      return ka - kb;
-    });
-    return out;
-  }
   precaricaImmaginiRighe(
     righe: { locandine: { src: string }[] }[],
   ): Promise<void> {
@@ -447,7 +413,7 @@ const eroFinitoPrimaDelCambio = this.hoFinitoTutto;
             }))
             .filter((p: any) => !!p.src);
           if (this.tipoSelezionato === 'film_serie' && locandine.length) {
-            locandine = this.mescolaDeterministicaLocandine(
+            locandine = mescolaDeterministicaLocandine(
               locandine as any,
               idCategoria,
             ) as any;
@@ -548,7 +514,7 @@ const eroFinitoPrimaDelCambio = this.hoFinitoTutto;
               .filter((p: any) => !!p.src);
 
             if (this.tipoSelezionato === 'film_serie' && locandine.length) {
-              locandine = this.mescolaDeterministicaLocandine(
+              locandine = mescolaDeterministicaLocandine(
                 locandine as any,
                 idCategoria,
               ) as any;
@@ -704,7 +670,7 @@ const eroFinitoPrimaDelCambio = this.hoFinitoTutto;
                     this.tipoSelezionato === 'film_serie' &&
                     locandine.length
                   ) {
-                    locandine = this.mescolaDeterministicaLocandine(
+                    locandine = mescolaDeterministicaLocandine(
                       locandine as any,
                       idCategoriaRiga,
                     ) as any;

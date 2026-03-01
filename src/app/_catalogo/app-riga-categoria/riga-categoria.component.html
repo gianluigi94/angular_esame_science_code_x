@@ -4,7 +4,9 @@
     <h3 class="titolo-categoria">{{ categoria }}</h3>
  </div>
 
-  <div class="fascia-carosello" [style.transform]="trasformazioneWrapper">
+  <div class="fascia-carosello"
+  [class.sei-colonne]="locandineVisibili === 6"
+  [style.transform]="trasformazioneWrapper">
 
      <div
    class="locandina"

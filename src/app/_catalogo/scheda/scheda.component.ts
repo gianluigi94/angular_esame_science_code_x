@@ -7,6 +7,7 @@ import { Subscription, forkJoin } from 'rxjs';
 import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
 import { SchedaCacheService } from './scheda_service/scheda-cache.service';
 import { take } from 'rxjs/operators';
+import { calcolaHash32, slugDaLocandina, mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
 export interface Episodio {
   titolo: string;
   descrizione: string;
@@ -341,7 +342,13 @@ private verificaEAvviaAnimazioni(): void {
   });
 }
 
- private caricaRigheCorrelate(): void {
+
+
+
+
+
+
+private caricaRigheCorrelate(): void {
   if (!this.idContenuto || !this.tipoContenuto) return;
   const lingua = this.cambioLingua.leggiCodiceLingua();
   this.righeCorrelateInCaricamento = true;
@@ -356,15 +363,21 @@ private verificaEAvviaAnimazioni(): void {
           .map((x: any) => ({
             idCategoria: String(x?.idCategoria || ''),
             category: String(x?.category || ''),
-            locandine: (Array.isArray(x?.locandine) ? x.locandine : [])
-              .map((p: any) => ({
-                src: String(p?.src || ''),
-                titolo: String(p?.titolo || ''),
-                sottotitolo: String(p?.sottotitolo || ''),
-                tipo: String(p?.tipo || ''),
-                id_media: String(p?.id_media || ''),
-              }))
-              .filter((p: any) => !!p.src),
+            locandine: (() => {
+  const idCategoria = String(x?.idCategoria || '');
+  const loc = (Array.isArray(x?.locandine) ? x.locandine : [])
+    .map((p: any) => ({
+      src: String(p?.src || ''),
+      titolo: String(p?.titolo || ''),
+      sottotitolo: String(p?.sottotitolo || ''),
+      tipo: String(p?.tipo || ''),
+      id_media: String(p?.id_media || ''),
+    }))
+    .filter((p: any) => !!p.src);
+  return loc.length
+    ? (mescolaDeterministicaLocandine(loc, idCategoria) as typeof loc)
+    : loc;
+})(),
           }))
           .filter((r) => !!r.idCategoria);
         this.righeCorrelateInCaricamento = false;

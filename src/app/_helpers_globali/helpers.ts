@@ -171,3 +171,31 @@ export function salvaPathNonTrovatoDopoCaricamento(url: string): void {
   } catch {}
 }
 
+export function calcolaHash32(testo: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < testo.length; i++) {
+    h ^= testo.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+export function slugDaLocandina(url: string): string {
+  const u = String(url || '');
+  const file = (u.split('/').pop() || '').trim();
+  const m = file.match(/^locandina_(it|en)_(.+)\.webp$/i);
+  if (m && m[2]) return m[2];
+  return file.replace(/\.webp$/i, '');
+}
+
+export function mescolaDeterministicaLocandine<T extends { src: string }>(
+  lista: T[],
+  seed: string,
+): T[] {
+  const s = String(seed || '');
+  return (lista || []).slice().sort((a, b) => {
+    const ka = calcolaHash32(s + '|' + slugDaLocandina(String(a?.src || '')));
+    const kb = calcolaHash32(s + '|' + slugDaLocandina(String(b?.src || '')));
+    return ka - kb;
+  });
+}

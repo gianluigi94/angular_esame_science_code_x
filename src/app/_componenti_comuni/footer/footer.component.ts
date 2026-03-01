@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
-import { ContattiNavigazioneService } from 'src/app/_helpers_globali/contatti-navigazione.service';
+import { ContattiNavigazioneService } from 'src/app/_servizi_globali/contatti-navigazione.service';
 
 @Component({
   selector: 'app-footer',

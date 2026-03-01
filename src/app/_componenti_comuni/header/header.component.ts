@@ -15,7 +15,7 @@ import { TipoContenuto, TipoContenutoService } from 'src/app/_catalogo/app-riga-
 import { Location } from '@angular/common';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
-import { ContattiNavigazioneService } from 'src/app/_helpers_globali/contatti-navigazione.service';
+import { ContattiNavigazioneService } from 'src/app/_servizi_globali/contatti-navigazione.service';
 
 @Component({
   selector: 'app-header',

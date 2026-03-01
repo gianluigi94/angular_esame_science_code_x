@@ -48,6 +48,11 @@
   min-height: 150px;
 
  }
+  &.sei-colonne {
+    .locandina {
+      flex: 0 0 calc(100% / 6);
+    }
+  }
       &:hover {
 
                 .doppio_audio,
@@ -300,3 +305,4 @@ app-bottone-preferiti {
       }
     }
   }
+

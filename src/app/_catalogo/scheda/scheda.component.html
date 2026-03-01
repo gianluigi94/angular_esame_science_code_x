@@ -159,11 +159,12 @@
 
     <ng-container *ngFor="let riga of righeCorrelate">
       <app-riga-categoria
-        [idCategoria]="riga.idCategoria"
-        [categoria]="riga.category"
-        [locandine]="riga.locandine"
-        [tickResetPagine]="0"
-      ></app-riga-categoria>
+  [idCategoria]="riga.idCategoria"
+  [categoria]="riga.category"
+  [locandine]="riga.locandine"
+  [tickResetPagine]="0"
+  [locandineVisibili]="6"
+></app-riga-categoria>
     </ng-container>
   </div>
 

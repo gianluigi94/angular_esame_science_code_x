@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { slugDaLocandina } from 'src/app/_helpers_globali/helpers';
 @Component({
   selector: 'app-riga-categoria',
   templateUrl: './riga-categoria.component.html',
@@ -22,7 +23,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   @Input() titolo = '';
    @ViewChildren('elementoLocandina', { read: ElementRef })
  elementiLocandina!: QueryList<ElementRef>;
-  locandineVisibili = 5;
+  @Input() locandineVisibili = 5;
   indicePagina = 0;
   numeroMassimoPagine = 0;
   trasformazioneWrapper = '';
@@ -189,7 +190,7 @@ paginaPrecedente(): void {
     if (this.timerEntrata) clearTimeout(this.timerEntrata);
 
     this.timerEntrata = setTimeout(() => {
-  const slug = this.slugDaLocandina(loc.src);
+  const slug = slugDaLocandina(loc.src);
 const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
 
 const lang = this.cambioLingua.leggiCodiceLingua(); // 'it' | 'en'
@@ -355,13 +356,7 @@ fineCoperturaDopoMinimo(id: number): void {
   }, manca);
 }
 
- slugDaLocandina(url: string): string {
- const u = String(url || '');
- const file = (u.split('/').pop() || '').trim(); // locandina_it_slug.webp
- const m = file.match(/^locandina_(it|en)_(.+)\.webp$/i);
- if (m && m[2]) return m[2];
- return file.replace(/\.webp$/i, '');
- }
+
 
  urlTrailerHover(lang: string, slug: string): string {
   const l = String(lang || '').toLowerCase() === 'en' ? 'en' : 'it';
@@ -399,7 +394,7 @@ tipoDaClick(loc: { tipo: string }): string {
 }
 
 private precaricaRisorseScheda(loc: { src: string; tipo: string; id_media: string }): Promise<void> {
-  const slug = this.slugDaLocandina(loc.src);
+  const slug = slugDaLocandina(loc.src);
   const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
 
   const caricaImmagine = (src: string): Promise<void> =>
@@ -436,7 +431,7 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
   if (this.timerEntrata) clearTimeout(this.timerEntrata);
   if (this.timerUscita) clearTimeout(this.timerUscita);
 
-  const slug = this.slugDaLocandina(loc.src);
+  const slug = slugDaLocandina(loc.src);
   const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
   const lingua = this.cambioLingua.leggiCodiceLingua();
   const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
