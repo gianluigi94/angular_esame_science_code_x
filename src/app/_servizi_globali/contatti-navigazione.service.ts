@@ -1,6 +1,6 @@
 import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
-import { CambioLinguaService } from '../_servizi_globali/cambio-lingua.service';
+import { CambioLinguaService } from './cambio-lingua.service';
 import { Authservice } from '../_benvenuto/login/_login_service/auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -29,9 +29,9 @@ export class ContattiNavigazioneService {
       { SaturnoRouteAnimazioniService },
       { default: gsap },
     ] = await Promise.all([
-      import('../_servizi_globali/animazioni_saturno/three/saturno.service'),
-      import('../_servizi_globali/animazioni_saturno/animate.service'),
-      import('../_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service'),
+      import('./animazioni_saturno/three/saturno.service'),
+      import('./animazioni_saturno/animate.service'),
+      import('./animazioni_saturno/gsap/saturno-route-animazioni.service'),
       import('gsap'),
     ]);
 

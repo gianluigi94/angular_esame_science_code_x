@@ -13,6 +13,7 @@ export interface SchedaSnapshot {
   stagioni: Array<{ id_stagione: number; numero_stagione: number; numero_episodi: number }>;
   stagioneSelezionata: string | null;
   serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }>>;
+  righeCorrelate: { idCategoria: string; category: string; locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[] }[];
 }
 
 @Injectable({ providedIn: 'root' })

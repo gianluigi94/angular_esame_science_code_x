@@ -169,7 +169,7 @@ private verificaEAvviaAnimazioni(): void {
           ? this.api.getFilmTraduzioni(this.idContenuto, lingua)
           : this.api.getSerieTraduzioni(this.idContenuto, lingua);
 
-        fetch$.subscribe((res) => {
+       fetch$.subscribe((res) => {
           const nuovaDesc = String(res?.data?.descrizione || '');
           this.startAnimTitolo = false;
           this.startAnimDescrizione = false;
@@ -182,6 +182,8 @@ private verificaEAvviaAnimazioni(): void {
               this.startAnimDescrizione = true;
             });
           });
+
+          this.caricaRigheCorrelate(false);
 
           if (this.tipoContenuto === 'serie' && this.stagioneSelezionata) {
             this.stagioneCachata.clear();
@@ -235,6 +237,9 @@ private verificaEAvviaAnimazioni(): void {
       this._titoloPronto  = true;
       this._descPronta    = true;
       this._tabellaPronta = true;
+
+      this.righeCorrelate = cached.righeCorrelate ?? [];
+      this.righeCorrelateInCaricamento = false;
 
       this.schedaPronta.segnaPronte();
       requestAnimationFrame(() => {
@@ -348,10 +353,14 @@ private verificaEAvviaAnimazioni(): void {
 
 
 
-private caricaRigheCorrelate(): void {
+tracciaRigaCorrelata(_i: number, riga: { idCategoria: string }): string {
+  return riga.idCategoria;
+}
+
+private caricaRigheCorrelate(mostraCaricamento = true): void {
   if (!this.idContenuto || !this.tipoContenuto) return;
   const lingua = this.cambioLingua.leggiCodiceLingua();
-  this.righeCorrelateInCaricamento = true;
+  if (mostraCaricamento) this.righeCorrelateInCaricamento = true;
 
   this.api
     .getCategoriePerContenuto(lingua, this.tipoContenuto, this.idContenuto)
@@ -393,7 +402,7 @@ ngOnDestroy(): void {
 
   if (this.tipoContenuto && this.idContenuto) {
     const lingua = this.cambioLingua.leggiCodiceLingua();
-    this.schedaCache.set(this.tipoContenuto, this.idContenuto, lingua, {
+   this.schedaCache.set(this.tipoContenuto, this.idContenuto, lingua, {
       descrizione: this.descrizione,
       descrizioneTestuale: this.descrizioneTestuale,
       urlSfondoScheda: this.urlSfondoScheda,
@@ -406,6 +415,7 @@ ngOnDestroy(): void {
       stagioni: this.stagioni,
       stagioneSelezionata: this.stagioneSelezionata,
       serieData: this.serieData,
+      righeCorrelate: this.righeCorrelate,
     });
   }
 
