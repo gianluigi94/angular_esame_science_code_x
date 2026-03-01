@@ -6,6 +6,7 @@ import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.serv
 import { Subscription, forkJoin } from 'rxjs';
 import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
 import { SchedaCacheService } from './scheda_service/scheda-cache.service';
+import { take } from 'rxjs/operators';
 export interface Episodio {
   titolo: string;
   descrizione: string;
@@ -50,11 +51,18 @@ private stagioneCachata = new Set<string>();
   private subs = new Subscription();
 
   // --- FLAG DI SINCRONIZZAZIONE ---
-  private _loaderNascosto = false;
+private _loaderNascosto = false;
 private _sfondoPronto = false;
 private _titoloPronto = false;
 private _descPronta = false;
 private _tabellaPronta = false;
+
+righeCorrelate: {
+  idCategoria: string;
+  category: string;
+  locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[];
+}[] = [];
+righeCorrelateInCaricamento = true;
 
 constructor(
   private route: ActivatedRoute,
@@ -239,7 +247,7 @@ private verificaEAvviaAnimazioni(): void {
     // ── fine ripristino da cache ──
 
     if (this.tipoContenuto === 'film') {
-      this.api.getFilm(id).subscribe((res) => {
+        this.api.getFilm(id).subscribe((res) => {
         this.descrizione = String(res?.data?.descrizione || '');
         this.slugCorrente = this.slugDaDescrizione(this.descrizione);
 
@@ -260,6 +268,7 @@ private verificaEAvviaAnimazioni(): void {
         this._tabellaPronta = true;
 
         this.verificaEAvviaAnimazioni();
+        this.caricaRigheCorrelate();
       });
 
       this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
@@ -280,7 +289,7 @@ private verificaEAvviaAnimazioni(): void {
 
       const stagioneDaUrl = pm.get('stagione') ? Number(pm.get('stagione')) : 1;
 
-      forkJoin([
+       forkJoin([
         this.api.getSerie(id),
         this.api.getStagioni(id)
       ]).subscribe(([resSerie, resStagioni]: [any, any]) => {
@@ -302,7 +311,7 @@ private verificaEAvviaAnimazioni(): void {
         this._titoloPronto  = true;
         this._tabellaPronta = true;
         this.verificaEAvviaAnimazioni();
-
+        this.caricaRigheCorrelate();
         const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
         this.stagioni = lista.map(s => ({
           id_stagione:     s.id_stagione,
@@ -332,7 +341,41 @@ private verificaEAvviaAnimazioni(): void {
   });
 }
 
- ngOnDestroy(): void {
+ private caricaRigheCorrelate(): void {
+  if (!this.idContenuto || !this.tipoContenuto) return;
+  const lingua = this.cambioLingua.leggiCodiceLingua();
+  this.righeCorrelateInCaricamento = true;
+
+  this.api
+    .getCategoriePerContenuto(lingua, this.tipoContenuto, this.idContenuto)
+    .pipe(take(1))
+    .subscribe({
+      next: (ris: any) => {
+        const items: any[] = Array.isArray(ris?.data?.items) ? ris.data.items : [];
+        this.righeCorrelate = items
+          .map((x: any) => ({
+            idCategoria: String(x?.idCategoria || ''),
+            category: String(x?.category || ''),
+            locandine: (Array.isArray(x?.locandine) ? x.locandine : [])
+              .map((p: any) => ({
+                src: String(p?.src || ''),
+                titolo: String(p?.titolo || ''),
+                sottotitolo: String(p?.sottotitolo || ''),
+                tipo: String(p?.tipo || ''),
+                id_media: String(p?.id_media || ''),
+              }))
+              .filter((p: any) => !!p.src),
+          }))
+          .filter((r) => !!r.idCategoria);
+        this.righeCorrelateInCaricamento = false;
+      },
+      error: () => {
+        this.righeCorrelateInCaricamento = false;
+      },
+    });
+}
+
+ngOnDestroy(): void {
   this.schedaPronta.segnaPronte();
 
   if (this.tipoContenuto && this.idContenuto) {

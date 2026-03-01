@@ -152,5 +152,20 @@
   </div>
 </div>
 
+  <div class="righe-correlate" *ngIf="righeCorrelate.length > 0 || righeCorrelateInCaricamento">
+    <ng-container *ngIf="righeCorrelateInCaricamento">
+      <app-spinner></app-spinner>
+    </ng-container>
+
+    <ng-container *ngFor="let riga of righeCorrelate">
+      <app-riga-categoria
+        [idCategoria]="riga.idCategoria"
+        [categoria]="riga.category"
+        [locandine]="riga.locandine"
+        [tickResetPagine]="0"
+      ></app-riga-categoria>
+    </ng-container>
+  </div>
+
   <app-footer></app-footer>
 </div>

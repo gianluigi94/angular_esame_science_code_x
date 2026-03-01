@@ -399,3 +399,14 @@ li:hover .on_play {
   }
 }
 
+.righe-correlate{
+  position: relative;
+  z-index: 10;
+  margin-bottom: 65px;
+}
+
+app-riga-categoria {
+  display: block;
+  will-change: opacity, transform;
+  transform-origin: center center;
+}

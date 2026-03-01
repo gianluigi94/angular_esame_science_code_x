@@ -305,4 +305,19 @@ public getEpisodiTraduzioni(idStagione: number | string, lingua: string): Observ
     lingua
   });
 }
+
+
+public getCategoriePerContenuto(
+  lingua: string,
+  tipo: string,
+  id: number | string
+): Observable<IRispostaServer> {
+  const risorsa: string[] = ['categorie-per-contenuto'];  // ← endpoint dedicato
+  const parametri = {
+    lingua: String(lingua),
+    tipo: String(tipo),
+    id_contenuto: String(id),
+  };
+  return this.richiestaGenerica(risorsa, 'GET', parametri);
+}
 }
