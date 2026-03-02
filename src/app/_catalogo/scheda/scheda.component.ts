@@ -60,6 +60,11 @@ private _titoloPronto = false;
 private _descPronta = false;
 private _tabellaPronta = false;
 
+private contestoAudio: any = null;
+private nodoSorgente: any = null;
+private nodoGuadagno: any = null;
+private elementoVideoReale: HTMLVideoElement | null = null;
+
 righeCorrelate: {
   idCategoria: string;
   category: string;
@@ -84,6 +89,8 @@ ngAfterViewInit(): void {
     const el = this.playerSchedaRef?.nativeElement;
     if (!el) return;
 
+    el.setAttribute('crossorigin', 'anonymous');
+
     this.playerScheda = videojs(el, {
       controls: false,
       autoplay: false,
@@ -98,7 +105,8 @@ ngAfterViewInit(): void {
     });
 
    this.playerScheda.ready(() => {
- if (this.timerMostraVideoScheda) {
+    try { this.inizializzaWebAudio(); } catch {}
+  if (this.timerMostraVideoScheda) {
    clearTimeout(this.timerMostraVideoScheda);
    this.timerMostraVideoScheda = null;
  }
@@ -183,26 +191,39 @@ constructor(
   }
 
   ngOnInit(): void {
-  window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
-  setTimeout(() => {
-    if (!this._loaderNascosto) this.onLoaderHidden();
-  }, 0);
+  if (this.schedaPronta.loaderGlobalmenteNascosto) {
+    this._loaderNascosto = true; // ← già nascosto: lo sappiamo subito, sincrono
+  } else {
+    window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
+    setTimeout(() => {
+      if (!this._loaderNascosto) this.onLoaderHidden();
+    }, 0);
+  }
 
  this.subs.add(
    this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
      this.audioBloccatoDaUtente = !consentito;
 
      // se l’utente sceglie "senza audio": forzo mute e NON preparo sblocco
-     if (this.audioBloccatoDaUtente) {
+    if (this.audioBloccatoDaUtente) {
        this.soloBrowserBlocca = false;
        try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
        this.rimuoviSbloccoAudioScheda();
-       try { this.playerScheda?.muted?.(true); } catch {}
-       try { this.playerScheda?.volume?.(1); } catch {}
+       try { this.inizializzaWebAudio(); } catch {}
+       this.sfumaGuadagnoVerso(0, this.durataFadeSchedaMs).finally(() => {
+         try { this.playerScheda?.muted?.(true); } catch {}
+       });
        return;
      }
 
      // utente vuole audio: se il player è pronto, prova a partire con audio
+     try { this.inizializzaWebAudio(); } catch {}
+     try {
+       if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+         this.contestoAudio.resume().catch(() => {});
+       }
+     } catch {}
+     try { this.sfumaGuadagnoVerso(1, 0); } catch {}
      try { this.playerScheda?.muted?.(false); } catch {}
      this.sincronizzaAvvioTrailerScheda();
    }),
@@ -316,6 +337,14 @@ constructor(
       this.episodiTotali = tabellaDaState.numero_episodi ?? null;
       this.regista       = String(tabellaDaState.regista || '');
       this._tabellaPronta = true;
+    }
+
+  // ← AGGIUNTO
+    if (this._loaderNascosto && this._sfondoPronto && this._titoloPronto && this._descPronta && this._tabellaPronta) {
+      this.startAnim = true;
+      this.startAnimTitolo = true;
+      this.startAnimDescrizione = true;
+      this.schedaPronta.segnaPronte();
     }
 
     this.idContenuto = id;
@@ -747,6 +776,15 @@ secondiInLeggibile(secondi: number | null | undefined): string {
      if (this.audioBloccatoDaUtente) return;
 
      // restart pulito con audio
+    // resume AudioContext + ripristina gain
+     try {
+       if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+         this.contestoAudio.resume().catch(() => {});
+       }
+     } catch {}
+     try { this.sfumaGuadagnoVerso(1, 0); } catch {}
+
+     // restart pulito con audio
      try { this.playerScheda.pause(); } catch {}
      try { this.playerScheda.currentTime(0); } catch {}
      try { this.playerScheda.muted(false); } catch {}
@@ -792,4 +830,49 @@ secondiInLeggibile(secondi: number | null | undefined): string {
    try { this.playerScheda?.pause(); } catch {}
    try { this.playerScheda?.currentTime?.(0); } catch {}
  }
+
+ private ottieniVideoReale(): HTMLVideoElement | null {
+  try {
+    if (!this.playerScheda?.el) return null;
+    return (this.playerScheda.el() as HTMLElement).querySelector('video');
+  } catch { return null; }
+}
+
+private inizializzaWebAudio(): void {
+  const el = this.ottieniVideoReale();
+  if (!el) return;
+  if (this.elementoVideoReale === el && this.nodoSorgente && this.nodoGuadagno) return;
+  try {
+    try { this.nodoSorgente?.disconnect(); } catch {}
+    try { this.nodoGuadagno?.disconnect(); } catch {}
+    if (!this.contestoAudio) {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      this.contestoAudio = new Ctx();
+    }
+    el.setAttribute('crossorigin', 'anonymous');
+    el.setAttribute('playsinline', '');
+    this.elementoVideoReale = el;
+    this.nodoSorgente = this.contestoAudio.createMediaElementSource(el);
+    this.nodoGuadagno = this.contestoAudio.createGain();
+    try { this.nodoGuadagno.gain.setValueAtTime(1, this.contestoAudio.currentTime); } catch {}
+    this.nodoSorgente.connect(this.nodoGuadagno).connect(this.contestoAudio.destination);
+  } catch {}
+}
+
+private sfumaGuadagnoVerso(target: number, durataMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    try {
+      if (!this.contestoAudio || !this.nodoGuadagno) return resolve();
+      const durataSec = Math.max(0, (durataMs || 0) / 1000);
+      const t0 = this.contestoAudio.currentTime;
+      try { this.nodoGuadagno.gain.cancelScheduledValues(t0); } catch {}
+      try { this.nodoGuadagno.gain.setValueAtTime(this.nodoGuadagno.gain.value ?? 0, t0); } catch {}
+      try { this.nodoGuadagno.gain.linearRampToValueAtTime(target, t0 + durataSec); } catch {}
+      if (durataSec === 0) return resolve();
+      const nativeTimeout = (window as any).__zone_symbol__setTimeout ?? setTimeout;
+      nativeTimeout(resolve, Math.max(0, durataMs));
+    } catch { resolve(); }
+  });
+}
 }

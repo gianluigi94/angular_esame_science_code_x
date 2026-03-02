@@ -422,9 +422,10 @@ this.caricamentoDisabilitato$.next(disabilitaLoader);
           !deveMostrareLoader && // solo se non serve più il loader normale
           !this.forzaLoaderExtra // solo se non sto forzando il loader extra
         ) {
-          this.loaderVisibile = false; // Nascondo il loader
+         this.loaderVisibile = false;
 window.dispatchEvent(new CustomEvent('loader-hidden'));
-const now = performance.now(); // Prendo il tempo corrente per loggare quando è sparito
+this.schedaProntaService.loaderGlobalmenteNascosto = true; // ← AGGIUNTO
+const now = performance.now();
 console.log('LOADER SPARITO alle ' + now + ' ms');
         }
       }
