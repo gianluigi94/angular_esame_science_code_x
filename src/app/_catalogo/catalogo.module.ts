@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { CatalogoRoutingModule } from './catalogo-routing.module';
@@ -21,5 +21,6 @@ import { SchedaComponent } from './scheda/scheda.component';
     ComponentiComuniModule, // utilizzo dei componenti comunti
     SaturnoModule, // utilizzo di saturno
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class CatalogoModule {}

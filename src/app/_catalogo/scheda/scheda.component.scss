@@ -29,7 +29,7 @@
   position: fixed;
   inset: 0;
   display: block;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   background:
     linear-gradient(to top, #070217 0%, #0000 75%, #0000 100%),
@@ -408,4 +408,37 @@ app-spinner{
   ::ng-deep .titolo-categoria {
     font-size: 22px !important;
   }
+}
+
+
+:host ::ng-deep #player-scheda-trailer {
+  position: fixed;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1;
+  pointer-events: none;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition:
+    opacity var(--durata-fade-visivo, 0.4s) ease,
+    visibility 0s linear var(--durata-fade-visivo, 0.4s);
+
+  &.visibile {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--durata-fade-visivo, 0.4s) ease,
+      visibility 0s linear 0s;
+  }
+}
+
+:host ::ng-deep #player-scheda-trailer .vjs-tech {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }

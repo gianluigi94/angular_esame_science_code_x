@@ -13,6 +13,15 @@
 <span class="sfumatura"></span>
 
 <div class="scheda">
+  <video-js
+  #playerSchedaRef
+  id="player-scheda-trailer"
+  class="video-js senza-controlli"
+  [class.visibile]="mostraVideoScheda"
+  [style.--durata-fade-visivo]="durataFadeSchedaMs + 'ms'"
+  playsinline
+  preload="auto"
+></video-js>
   <div class="titolo-scheda" *ngIf="imgTitoloScheda">
     <img
       [src]="imgTitoloScheda"
@@ -27,9 +36,9 @@
       <span class="icon play" aria-hidden="true">&#9658;</span>
     </button>
     <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci">
-  Riproduci
-  <span class="icon play" aria-hidden="true">&#9658;</span>
-</button>
+      Riproduci
+      <span class="icon play" aria-hidden="true">&#9658;</span>
+    </button>
 
     <button type="button" class="riproduci">
       Trailer
@@ -45,126 +54,169 @@
   </div>
 
   <div class="tabella">
+    <p *ngIf="anno">
+      <span class="cubo">Anno:</span>
+      {{ anno }}
+    </p>
 
-  <p *ngIf="anno">
-    <span class="cubo">Anno:</span>
-    {{ anno }}
-  </p>
+    <!-- Solo film -->
+    <p *ngIf="tipoContenuto === 'film' && durata">
+      <span class="cubo">Durata:</span>
+      {{ secondiInLeggibile(durata) }}
+    </p>
 
-  <!-- Solo film -->
-  <p *ngIf="tipoContenuto === 'film' && durata">
-   <span class="cubo">Durata:</span>
-{{ secondiInLeggibile(durata) }}
-  </p>
+    <p *ngIf="regista">
+      <span class="cubo">Regista:</span>
+      {{ regista }}
+    </p>
 
-  <p *ngIf="regista">
-    <span class="cubo">Regista:</span>
-    {{ regista }}
-  </p>
+    <!-- Solo serie -->
+    <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
+      <span class="cubo">Episodi Totali:</span>
+      {{ episodiTotali }}
+    </p>
+  </div>
 
-  <!-- Solo serie -->
-  <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
-    <span class="cubo">Episodi Totali:</span>
-    {{ episodiTotali }}
-  </p>
+  <div class="episodi" *ngIf="tipoContenuto === 'serie'">
+    <nav class="menu-stagioni" aria-label="Seleziona stagione">
+      <button
+        type="button"
+        class="voce_stagione"
+        *ngFor="let stag of stagioni"
+        [class.attiva]="
+          (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
+          toString(stag.numero_stagione)
+        "
+        [attr.aria-pressed]="
+          (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
+          toString(stag.numero_stagione)
+        "
+        (click)="selezionaStagione(toString(stag.numero_stagione))"
+      >
+        Stagione {{ stag.numero_stagione }}
+      </button>
+    </nav>
 
-</div>
+    <div *ngIf="!stagioneSelezionata" class="episodi-spinner">
+      <app-spinner></app-spinner>
+    </div>
 
-<div
-  class="episodi"
-  *ngIf="tipoContenuto === 'serie'"
->
-  <nav class="menu-stagioni" aria-label="Seleziona stagione">
-  <button
-    type="button"
-    class="voce_stagione"
-    *ngFor="let stag of stagioni"
-    [class.attiva]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
-    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
-    (click)="selezionaStagione(toString(stag.numero_stagione))"
-  >
-    Stagione {{ stag.numero_stagione }}
-  </button>
-</nav>
+    <div
+      class="lista-episodi"
+      *ngIf="stagioneSelezionata"
+      [attr.aria-busy]="caricamentoStagioneInCorso"
+    >
+      <h3 class="titolo-stagione-corrente">
+        Stagione {{ stagioneSelezionata }}
+      </h3>
 
-  <div *ngIf="!stagioneSelezionata" class="episodi-spinner">
-  <app-spinner></app-spinner>
-</div>
+      <ul
+        class="placeholder"
+        *ngIf="caricamentoStagioneInCorso"
+        aria-live="polite"
+      >
+        <li *ngFor="let _ of [0, 1, 2, 3]">
+          <span class="placeholder_img">
+            <app-spinner class="spinner--categoria"></app-spinner>
+          </span>
+          <span class="placeholder_text">
+            <app-spinner class="spinner--categoria"></app-spinner>
+          </span>
+        </li>
+      </ul>
 
-<div
-  class="lista-episodi"
-  *ngIf="stagioneSelezionata"
-  [attr.aria-busy]="caricamentoStagioneInCorso"
->
-  <h3 class="titolo-stagione-corrente">
-    Stagione {{ stagioneSelezionata }}
-  </h3>
-
-    <ul class="placeholder" *ngIf="caricamentoStagioneInCorso" aria-live="polite">
-      <li *ngFor="let _ of [0,1,2,3]">
-        <span class="placeholder_img">
-          <app-spinner class="spinner--categoria"></app-spinner>
-        </span>
-        <span class="placeholder_text">
-          <app-spinner class="spinner--categoria"></app-spinner>
-        </span>
-      </li>
-    </ul>
-
-    <ul *ngIf="!caricamentoStagioneInCorso && serieData[(stagioneSelezionata || getChiavi(serieData)[0])]">
-  <li
-    *ngFor="let episodio of getChiavi(serieData[(stagioneSelezionata || getChiavi(serieData)[0])]); let i = index"
-
-  >
-    <div class="img_contenitore_scritta">
-      <div class="ritaglio">
-        <span class="on_play" aria-hidden="true">&#9658;</span>
-        <div
-          class="img_anteprima"
-          [style.background-image]="'url(' + serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].anteprima + ')'"
+      <ul
+        *ngIf="
+          !caricamentoStagioneInCorso &&
+          serieData[stagioneSelezionata || getChiavi(serieData)[0]]
+        "
+      >
+        <li
+          *ngFor="
+            let episodio of getChiavi(
+              serieData[stagioneSelezionata || getChiavi(serieData)[0]]
+            );
+            let i = index
+          "
         >
-              <span class="sfumatura_piccola"></span>
+          <div class="img_contenitore_scritta">
+            <div class="ritaglio">
+              <span class="on_play" aria-hidden="true">&#9658;</span>
+              <div
+                class="img_anteprima"
+                [style.background-image]="
+                  'url(' +
+                  serieData[stagioneSelezionata || getChiavi(serieData)[0]][
+                    episodio
+                  ].anteprima +
+                  ')'
+                "
+              >
+                <span class="sfumatura_piccola"></span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="titolo_durata">
-          Episodio {{ i + 1 }}
-          <span class="titolo_ep">{{ serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].titolo }}</span>
-<span class="descrizione_ep">{{ serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].descrizione }}</span>
-<span class="durata_ep">{{ serieData[(stagioneSelezionata || getChiavi(serieData)[0])][episodio].durata }}</span>
-        </div>
-      </li>
-    </ul>
+          <div class="titolo_durata">
+            Episodio {{ i + 1 }}
+            <span class="titolo_ep">{{
+              serieData[stagioneSelezionata || getChiavi(serieData)[0]][
+                episodio
+              ].titolo
+            }}</span>
+            <span class="descrizione_ep">{{
+              serieData[stagioneSelezionata || getChiavi(serieData)[0]][
+                episodio
+              ].descrizione
+            }}</span>
+            <span class="durata_ep">{{
+              serieData[stagioneSelezionata || getChiavi(serieData)[0]][
+                episodio
+              ].durata
+            }}</span>
+          </div>
+        </li>
+      </ul>
 
-    <nav class="menu-stagioni" aria-label="Seleziona stagione">
-  <button
-    type="button"
-    class="voce_stagione"
-    *ngFor="let stag of stagioni"
-    [class.attiva]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
-    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
-    (click)="selezionaStagione(toString(stag.numero_stagione))"
-  >
-    Stagione {{ stag.numero_stagione }}
-  </button>
-</nav>
+      <nav class="menu-stagioni" aria-label="Seleziona stagione">
+        <button
+          type="button"
+          class="voce_stagione"
+          *ngFor="let stag of stagioni"
+          [class.attiva]="
+            (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
+            toString(stag.numero_stagione)
+          "
+          [attr.aria-pressed]="
+            (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
+            toString(stag.numero_stagione)
+          "
+          (click)="selezionaStagione(toString(stag.numero_stagione))"
+        >
+          Stagione {{ stag.numero_stagione }}
+        </button>
+      </nav>
+    </div>
   </div>
-</div>
 
-  <div class="righe-correlate" *ngIf="righeCorrelate.length > 0 || righeCorrelateInCaricamento">
+  <div
+    class="righe-correlate"
+    *ngIf="righeCorrelate.length > 0 || righeCorrelateInCaricamento"
+  >
     <ng-container *ngIf="righeCorrelateInCaricamento">
       <app-spinner></app-spinner>
     </ng-container>
 
-    <ng-container *ngFor="let riga of righeCorrelate; trackBy: tracciaRigaCorrelata">
+    <ng-container
+      *ngFor="let riga of righeCorrelate; trackBy: tracciaRigaCorrelata"
+    >
       <app-riga-categoria
-  [idCategoria]="riga.idCategoria"
-  [categoria]="riga.category"
-  [locandine]="riga.locandine"
-  [tickResetPagine]="0"
-  [locandineVisibili]="6"
-></app-riga-categoria>
+        [idCategoria]="riga.idCategoria"
+        [categoria]="riga.category"
+        [locandine]="riga.locandine"
+        [tickResetPagine]="0"
+        [locandineVisibili]="6"
+      ></app-riga-categoria>
     </ng-container>
   </div>
 

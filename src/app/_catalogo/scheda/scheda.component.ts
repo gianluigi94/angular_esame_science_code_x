@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import videojs from 'video.js';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
@@ -20,7 +21,7 @@ export interface Episodio {
   templateUrl: './scheda.component.html',
   styleUrls: ['./scheda.component.scss']
 })
-export class SchedaComponent implements OnInit, OnDestroy {
+export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
   descrizione = '';
 descrizioneTestuale = '';
 tipoContenuto: 'film' | 'serie' | null = null;
@@ -64,6 +65,40 @@ righeCorrelate: {
   locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[];
 }[] = [];
 righeCorrelateInCaricamento = true;
+
+playerScheda: any = null;
+mostraVideoScheda = false;
+durataFadeSchedaMs = 400;
+
+  @ViewChild('playerSchedaRef') playerSchedaRef!: ElementRef;
+
+ngAfterViewInit(): void {
+  setTimeout(() => {
+    const el = this.playerSchedaRef?.nativeElement;
+    if (!el) return;
+    this.playerScheda = videojs(el, {
+      controls: false,
+      autoplay: true,
+      muted: true,
+      preload: 'auto',
+      loop: false,
+      sources: [{
+        src: 'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_noi_non_siamo_soli.mp4',
+        type: 'video/mp4'
+      }]
+    });
+
+    this.playerScheda.ready(() => {
+  setTimeout(() => {
+    this.mostraVideoScheda = true;
+  }, 1900);
+
+  this.playerScheda.on('ended', () => {
+    this.mostraVideoScheda = false;
+  });
+});
+  }, 50);
+}
 
 constructor(
   private route: ActivatedRoute,
@@ -445,6 +480,7 @@ ngOnDestroy(): void {
 
   this.subs.unsubscribe();
   window.removeEventListener('loader-hidden', this.onLoaderHidden);
+  try { if (this.playerScheda) this.playerScheda.dispose(); } catch {}
 }
 
   leggiTipoDaUrl(): 'film' | 'serie' | null {
