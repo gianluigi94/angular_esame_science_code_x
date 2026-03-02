@@ -1,19 +1,17 @@
 //questo servizio serve per capire la potenza della gpu dell'utente, ma purtroppo ottengo un risultato diverso da browser a browser
 
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-@Injectable({ providedIn: 'root' }) // Dico ad Angular che questa classe è un servizio iniettabile
+@Injectable({ providedIn: 'root' })
 export class PerformanceService {
-  private performanceLevel = new BehaviorSubject<string>('Calcolando...'); //mantiene l'ultimo valore emesso, all'inizio è calcolando, ma cambierà quando sarà pronto, uso ascoltatori perche avere eventuali messaggi dinamici in più eventuali parti nel progetto
-  performanceLevel$ = this.performanceLevel.asObservable(); //ottengo il valore in una proprietà
+  private performanceLevel = new BehaviorSubject<string>('Calcolando...');
+  performanceLevel$ = this.performanceLevel.asObservable();
+  private isLowEndPC = new BehaviorSubject<boolean>(false);
+  isLowEndPC$ = this.isLowEndPC.asObservable();
 
-  private isLowEndPC = new BehaviorSubject<boolean>(false); //inizia con false ma può cambiare se è un pc scarso
-  isLowEndPC$ = this.isLowEndPC.asObservable(); // Espongo lo stato 'pc poco potente' come observable in sola lettura
-
-
-  constructor() {
-    this.detectGPU();
+  constructor(private ngZone: NgZone) {
+    this.ngZone.runOutsideAngular(() => this.detectGPU());
   }
 
  /**
@@ -61,8 +59,10 @@ private async detectGPU(): Promise<void> {
       level = 'Estremamente bassa'; // uno dei pochi attendibili da tutti i brawser
     }
 
-    this.performanceLevel.next(level); //agiorna osservable
-    this.isLowEndPC.next(fps < 15 && this.isPC()); //imposta true se il dispositivo è un pc e gli fps sono bassi
+    this.ngZone.run(() => {
+      this.performanceLevel.next(level);
+      this.isLowEndPC.next(fps < 15 && this.isPC());
+    });
   }
 
   /**

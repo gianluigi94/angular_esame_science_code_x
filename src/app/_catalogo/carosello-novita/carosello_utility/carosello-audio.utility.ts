@@ -36,7 +36,8 @@ export class CaroselloAudioUtility {
         } catch {} // Rampo linearmente verso il target
 
         if (durataSec === 0) return resolve(); // Se e' istantaneo, posso risolvere subito
-        setTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' trascorsa
+const nativeTimeout = (window as any).__zone_symbol__setTimeout ?? setTimeout;
+nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' trascorsa (fuori zone Angular)
       } catch {
         // Se WebAudio fallisce, non blocco l'app
         resolve(); // Risolvo comunque

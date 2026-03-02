@@ -1,6 +1,6 @@
 // in questo servizio gestisco il codice principale della scena di saturno in three.js
 
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import * as THREE from 'three';
 import { SceneService } from './scene.service';
 import { DiskService } from './disk.service';
@@ -149,10 +149,10 @@ private skipLoginIntroOnce: boolean = false;
     private saturnoStatoService: SaturnoStatoService,
     private saturnoPosizioniService: SaturnoPosizioniService,
     private router: Router,
-
     private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
     private caricamentoCaroselloService: CaricamentoCaroselloService,
     private scorrimentoCatalogo: ScorrimentoCatalogoService,
+    private ngZone: NgZone,
   ) {
     this.performanceService.isLowEndPC$.subscribe((isLowEnd) => {
       if (isLowEnd || this.isMobileOrTablet()) {
@@ -251,13 +251,15 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
     }
 
     // 60 fps -> 1000 / 60 = 16.666... ms
-    this.animInterval = setInterval(() => {
-      const now = performance.now(); //tempo trascorso da quando il loop è stato eseguito
-      const deltaTime = (now - this.lastTime) / 1000; //calcola il tempo trascorso dal frame precedente, cambia da dispositivo
-      this.lastTime = now; //agiornamento
+    this.ngZone.runOutsideAngular(() => {
+      this.animInterval = setInterval(() => {
+        const now = performance.now();
+        const deltaTime = (now - this.lastTime) / 1000;
+        this.lastTime = now;
 
-      this.renderAndUpdate(deltaTime);
-    }, 1000 / 60);
+        this.renderAndUpdate(deltaTime);
+      }, 1000 / 60);
+    });
   }
 
   /**

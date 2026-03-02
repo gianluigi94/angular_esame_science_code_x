@@ -113,21 +113,13 @@ private verificaEAvviaAnimazioni(): void {
   }
 
   ngOnInit(): void {
-  this.schedaPronta.reset();
+  setTimeout(() => this.schedaPronta.reset());
   window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
   setTimeout(() => {
     if (!this._loaderNascosto) this.onLoaderHidden();
   }, 0);
 
-  const aspettaDescrizione = () => {
-    const el = document.querySelector('.descrizione');
-    if (el && el.textContent && el.textContent.trim().length > 3) {
-      console.log('[SCHEDA] .descrizione nel DOM alle ' + performance.now() + ' ms | ' + el.textContent.trim().substring(0, 40));
-    } else {
-      requestAnimationFrame(aspettaDescrizione);
-    }
-  };
-  requestAnimationFrame(aspettaDescrizione);
+
 
   const navState = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
   const urlDaState = String(navState?.['urlSfondo'] || '').trim();
@@ -569,9 +561,7 @@ urlAnteprimePerStagione(numeroStagione: string): string[] {
     .filter((u: any) => !!u);
 }
 
-onClicEpisodio(numeroEpisodio: number): void {
-  console.log('Clic episodio', numeroEpisodio, 'stagione', this.stagioneSelezionata);
-}
+
 
 toString(val: any): string {
   return String(val);

@@ -79,8 +79,8 @@
     type="button"
     class="voce_stagione"
     *ngFor="let stag of stagioni"
-    [class.attiva]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
-    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
+    [class.attiva]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
+    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
     (click)="selezionaStagione(toString(stag.numero_stagione))"
   >
     Stagione {{ stag.numero_stagione }}
@@ -114,7 +114,7 @@
     <ul *ngIf="!caricamentoStagioneInCorso && serieData[(stagioneSelezionata || getChiavi(serieData)[0])]">
   <li
     *ngFor="let episodio of getChiavi(serieData[(stagioneSelezionata || getChiavi(serieData)[0])]); let i = index"
-    (click)="onClicEpisodio(i + 1)"
+
   >
     <div class="img_contenitore_scritta">
       <div class="ritaglio">
@@ -142,8 +142,8 @@
     type="button"
     class="voce_stagione"
     *ngFor="let stag of stagioni"
-    [class.attiva]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
-    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0]?.numero_stagione)) === toString(stag.numero_stagione)"
+    [class.attiva]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
+    [attr.aria-pressed]="(stagioneSelezionata || toString(stagioni[0].numero_stagione)) === toString(stag.numero_stagione)"
     (click)="selezionaStagione(toString(stag.numero_stagione))"
   >
     Stagione {{ stag.numero_stagione }}

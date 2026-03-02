@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, NgZone } from '@angular/core';
 import { CambioLinguaService } from './_servizi_globali/cambio-lingua.service';
 import { TraduzioniService } from './_servizi_globali/traduzioni.service';
 import { ErroreGlobaleService } from './_servizi_globali/errore-globale.service';
@@ -12,6 +12,7 @@ import { CaricamentoCaroselloService } from './_catalogo/carosello-novita/carose
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { AnimateService } from './_servizi_globali/animazioni_saturno/animate.service';
 import { DOCUMENT } from '@angular/common';
+import gsap from 'gsap';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
@@ -59,6 +60,7 @@ loaderDaMostrare = false;
   loaderAvvioCatalogo = false; // Indico se il loader è mostrato durante l'avvio del catalogo
 schedaPronta$ = this.schedaProntaService.schedaPronta$;
   constructor(
+    private ngZone: NgZone,
     private cambioLinguaService: CambioLinguaService,
     private traduzioniService: TraduzioniService,
     private erroreGlobaleService: ErroreGlobaleService,
@@ -88,8 +90,11 @@ schedaPronta$ = this.schedaProntaService.schedaPronta$;
    *
    * @returns void
    */
-  ngOnInit(): void {
-    this.isFirefox = isFirefox(); // Mi salvo se sto girando su Firefox
+    ngOnInit(): void {
+    this.ngZone.runOutsideAngular(() => {
+      gsap.ticker.lagSmoothing(0);
+    });
+    this.isFirefox = isFirefox();
         const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
 
     // ✅ se sono loggato e apro direttamente /contatti (F5 / deep link), apro overlay dati personali

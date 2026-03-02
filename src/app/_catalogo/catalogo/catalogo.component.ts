@@ -329,7 +329,6 @@
           for (const e of entries) {
             if (!e.isIntersecting) continue;
 
-            console.log('Sentinella raggiunta');
 
             if (!this.sentinellaPronta) continue;
             if (!this.utenteHaScrollato) continue;

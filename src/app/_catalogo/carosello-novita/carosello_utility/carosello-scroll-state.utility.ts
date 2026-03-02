@@ -31,8 +31,12 @@ export class CaroselloScrollStateUtility {
     azioneScorrimento(); // Eseguo lo scorrimento (aggiorna indice/trasformazione/overlay)
 
     fade.finally(() => { // Dopo il fade-out, fermo e resetto il player
-      try { ctx.player.pause(); } catch {} // Metto in pausa in modo safe
-      try { ctx.player.currentTime(0); } catch {} // Riporto a inizio in modo safe
+     try { ctx.player.pause(); } catch {}
+try {
+  if (ctx.player && !ctx.player.isDisposed() && typeof ctx.player.readyState === 'function' && ctx.player.readyState() >= 1) {
+    ctx.player.currentTime(0);
+  }
+} catch {}
     });
   }
 

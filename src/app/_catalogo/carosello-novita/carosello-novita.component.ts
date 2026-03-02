@@ -409,8 +409,10 @@ export class CaroselloNovitaComponent
                   this.player.pause();
                 } catch {}
                 try {
-                  this.player.currentTime(0);
-                } catch {}
+  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+    this.player.currentTime(0);
+  }
+} catch {}
                 if (this.mostraImmagineHover && this.immagineHoverPronta) {
                   this.preparaTrailerHoverDopoImmaginePronta();
                 }
@@ -434,8 +436,10 @@ export class CaroselloNovitaComponent
                   this.player.pause();
                 } catch {}
                 try {
-                  this.player.currentTime(0);
-                } catch {}
+  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+    this.player.currentTime(0);
+  }
+} catch {}
 
                 // tolgo overlay e riparto con la logica normale (solo se posso)
                 if (
@@ -478,9 +482,11 @@ export class CaroselloNovitaComponent
           try {
             this.player.pause();
           } catch {} // Provo a mettere in pausa senza rompere se il player non e' pronto
-          try {
-            this.player.currentTime(0);
-          } catch {} // Provo a resettare il tempo del video senza rompere in caso di errore
+         try {
+  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+    this.player.currentTime(0);
+  }
+} catch {}
         });
       }),
     );
@@ -1130,8 +1136,10 @@ inizializzaPlayerSePronto(): void {
         else this.impostaMuteReale(false);
 
         try {
-          this.player.currentTime(0);
-        } catch {}
+  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+    this.player.currentTime(0);
+  }
+} catch {}
 
         const preparaSbloccoHover = () => {
           if (this.audioBloccatoDaUtente) return;
@@ -1168,9 +1176,11 @@ inizializzaPlayerSePronto(): void {
             try {
               this.player.pause();
             } catch {}
-            try {
-              this.player.currentTime(0);
-            } catch {}
+           try {
+  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+    this.player.currentTime(0);
+  }
+} catch {}
             try {
               this.impostaMuteReale(false);
             } catch {}
@@ -1283,9 +1293,11 @@ this.resetBarraAvanzamento();
       try {
         this.player.pause();
       } catch {}
-      try {
-        this.player.currentTime(0);
-      } catch {}
+     try {
+  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+    this.player.currentTime(0);
+  }
+} catch {}
       avviaNuovoSrc();
     });
   }
@@ -1333,10 +1345,14 @@ this.resetBarraAvanzamento();
 
     // fade-out  pausa  reset (sempre, anche se non in play: non fa male)
     return this.sfumaGuadagnoVerso(0, Math.max(0, durataMs || 0)).finally(() => {
-      try { this.player.pause(); } catch {}
-      try { this.player.currentTime(0); } catch {}
-      try { this.mostraVideo = false; } catch {}
-    });
+  try { this.player.pause(); } catch {}
+  try {
+    if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+      this.player.currentTime(0);
+    }
+  } catch {}
+  try { this.mostraVideo = false; } catch {}
+});
   }
   collegaAggiornamentoBarra(): void {
     try {
