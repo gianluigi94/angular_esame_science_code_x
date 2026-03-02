@@ -29,6 +29,10 @@ import { CaroselloScrollStateUtility } from './carosello_utility/carosello-scrol
 import { CaroselloCopertureUtility } from './carosello_utility/carosello-coperture.utility';
 import { HoverLocandinaService } from '../app-riga-categoria/categoria_services/hover-locandina.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+import { Router } from '@angular/router';
+import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { firstValueFrom } from 'rxjs';
+import { take } from 'rxjs/operators';
 @Component({
   selector: 'app-carosello-novita',
   templateUrl: './carosello-novita.component.html',
@@ -162,15 +166,17 @@ export class CaroselloNovitaComponent
   private idCambioLinguaVideo = 0; // Uso un token incrementale per distinguere i cambi lingua video
   private promessaStopCambioLingua: Promise<void> | null = null; // Mi salvo la promise dello stop/fade legata al cambio lingua
 
-  constructor(
-    private caroselloNovitaService: CaroselloNovitaService,
-    private cambioLinguaService: CambioLinguaService,
-    private translate: TranslateService,
-    private caricamentoCaroselloService: CaricamentoCaroselloService,
-    private servizioHoverLocandina: HoverLocandinaService,
-    private audioGlobaleService: AudioGlobaleService,
-    private stopVideoGlobale: StopVideoGlobaleService,
-  ) {}
+ constructor(
+  private caroselloNovitaService: CaroselloNovitaService,
+  private cambioLinguaService: CambioLinguaService,
+  private translate: TranslateService,
+  private caricamentoCaroselloService: CaricamentoCaroselloService,
+  private servizioHoverLocandina: HoverLocandinaService,
+  private audioGlobaleService: AudioGlobaleService,
+  private stopVideoGlobale: StopVideoGlobaleService,
+  private router: Router,
+  private api: ApiService,
+) {}
 
   /**
    * Metodo eseguito all'inizializzazione del componente.
@@ -1468,4 +1474,58 @@ this.resetBarraAvanzamento();
       this.aggiornaBarraDaValori(nuoviSec, durata);
     } catch {}
   }
+
+  // Aggiungi questo metodo nella classe:
+async vaiAllaSchedaCorrente(): Promise<void> {
+  // indice reale 0-based della slide corrente
+  const indiceReale = CaroselloGettersUtility.getIndiceRealeZeroBased(this);
+  const descrizione = this.descrizioni[indiceReale];
+  if (!descrizione) return;
+
+  const info = this.mappaNovitaCorrente[descrizione];
+  if (!info?.tipo || !info?.id_media) return;
+
+  const tipo = info.tipo;
+  const id = info.id_media;
+  const lingua = this.cambioLinguaService.leggiCodiceLingua();
+
+  const baseCatalogo = lingua === 'it' ? '/it/catalogo' : '/en/catalog';
+  const fogliaFilm = lingua === 'it' ? '/film' : '/movies';
+  const fogliaSerie = lingua === 'it' ? '/serie' : '/series';
+  const fogliaUrl = tipo === 'serie' ? fogliaSerie : fogliaFilm;
+  const url = baseCatalogo + fogliaUrl + '/' + id;
+
+  const slug = String(descrizione).replace(/^(film|serie)\./, '').trim();
+  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
+  const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
+
+  const caricaImmagine = (src: string): Promise<void> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = src;
+    });
+
+  const traduzioni$ = tipo === 'film'
+    ? this.api.getFilmTraduzioni(id, lingua)
+    : this.api.getSerieTraduzioni(id, lingua);
+
+  const tabella$ = tipo === 'film'
+    ? this.api.getFilm(id)
+    : this.api.getSerie(id);
+
+  const [_sfondo, tradRes, tabellaRes] = await Promise.all([
+    caricaImmagine(urlSfondo),
+    firstValueFrom(traduzioni$.pipe(take(1))).catch(() => null),
+    firstValueFrom(tabella$.pipe(take(1))).catch(() => null),
+  ]);
+
+  const descrizioneTestuale = String((tradRes as any)?.data?.descrizione || '');
+  const tabellaDati = (tabellaRes as any)?.data ?? null;
+
+  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+
+  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo, descrizioneTestuale, tabellaDati } });
+}
 }
