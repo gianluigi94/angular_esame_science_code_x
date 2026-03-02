@@ -8,7 +8,8 @@ import { Subscription, forkJoin } from 'rxjs';
 import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
 import { SchedaCacheService } from './scheda_service/scheda-cache.service';
 import { take } from 'rxjs/operators';
-import { calcolaHash32, slugDaLocandina, mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
+import {  mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
+import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 export interface Episodio {
   titolo: string;
   descrizione: string;
@@ -69,6 +70,12 @@ righeCorrelateInCaricamento = true;
 playerScheda: any = null;
 mostraVideoScheda = false;
 durataFadeSchedaMs = 400;
+private timerMostraVideoScheda: any = null;
+
+// === AUDIO (collegato ad AudioGlobaleService) ===
+audioBloccatoDaUtente = false;
+soloBrowserBlocca = false;
+private handlerSbloccoAudioScheda: any = null;
 
   @ViewChild('playerSchedaRef') playerSchedaRef!: ElementRef;
 
@@ -76,22 +83,34 @@ ngAfterViewInit(): void {
   setTimeout(() => {
     const el = this.playerSchedaRef?.nativeElement;
     if (!el) return;
+
     this.playerScheda = videojs(el, {
       controls: false,
-      autoplay: true,
-      muted: true,
+      autoplay: false,
+      muted: false,
       preload: 'auto',
       loop: false,
+      playsinline: true,
       sources: [{
         src: 'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_noi_non_siamo_soli.mp4',
         type: 'video/mp4'
       }]
     });
 
-    this.playerScheda.ready(() => {
-  setTimeout(() => {
+   this.playerScheda.ready(() => {
+ if (this.timerMostraVideoScheda) {
+   clearTimeout(this.timerMostraVideoScheda);
+   this.timerMostraVideoScheda = null;
+ }
+
+ this.timerMostraVideoScheda = setTimeout(() => {
+   this.timerMostraVideoScheda = null;
     this.mostraVideoScheda = true;
-  }, 1900);
+
+    // QUESTO MANCAVA: appena lo mostri, devi dirgli di partire
+    this.sincronizzaAvvioTrailerScheda();
+
+ }, 1900);
 
   this.playerScheda.on('ended', () => {
     this.mostraVideoScheda = false;
@@ -108,10 +127,33 @@ constructor(
   private schedaCache: SchedaCacheService,
   private cambioLingua: CambioLinguaService,
   private schedaPronta: SchedaProntaService,
+  private audioGlobaleService: AudioGlobaleService,
 ) {}
 
-private verificaEAvviaAnimazioni(): void {
-  if (this._sfondoPronto && this._titoloPronto && this._descPronta && this._tabellaPronta) {
+ private verificaEAvviaAnimazioni(): void {
+  const tuttoPronto =
+    this._loaderNascosto &&
+    this._sfondoPronto &&
+    this._titoloPronto &&
+    this._descPronta &&
+    this._tabellaPronta;
+
+  if (!tuttoPronto) return;
+
+  requestAnimationFrame(() => {
+    this.startAnim = true;
+    this.startAnimTitolo = true;
+    this.startAnimDescrizione = true;
+
+    // ← AGGIUNTO: avvia il trailer anche su navigazione stesso-tipo
+    if (this.playerScheda && !this.timerMostraVideoScheda) {
+      this.timerMostraVideoScheda = setTimeout(() => {
+        this.timerMostraVideoScheda = null;
+        this.mostraVideoScheda = true;
+        this.sincronizzaAvvioTrailerScheda();
+      }, 1900);
+    }
+
     const aspetta = () => {
       const el = document.querySelector('.descrizione');
       if (el && el.textContent && el.textContent.trim().length > 3) {
@@ -120,16 +162,9 @@ private verificaEAvviaAnimazioni(): void {
         requestAnimationFrame(aspetta);
       }
     };
-    requestAnimationFrame(aspetta);
-  }
 
-  if (this._loaderNascosto && this._sfondoPronto && this._titoloPronto && this._descPronta && this._tabellaPronta) {
-    requestAnimationFrame(() => {
-      this.startAnim = true;
-      this.startAnimTitolo = true;
-      this.startAnimDescrizione = true;
-    });
-  }
+    requestAnimationFrame(aspetta);
+  });
 }
   private imgTitoloDaSlug(slug: string): string {
     if (!slug) return '';
@@ -148,13 +183,30 @@ private verificaEAvviaAnimazioni(): void {
   }
 
   ngOnInit(): void {
-  setTimeout(() => this.schedaPronta.reset());
   window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
   setTimeout(() => {
     if (!this._loaderNascosto) this.onLoaderHidden();
   }, 0);
 
+ this.subs.add(
+   this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
+     this.audioBloccatoDaUtente = !consentito;
 
+     // se l’utente sceglie "senza audio": forzo mute e NON preparo sblocco
+     if (this.audioBloccatoDaUtente) {
+       this.soloBrowserBlocca = false;
+       try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+       this.rimuoviSbloccoAudioScheda();
+       try { this.playerScheda?.muted?.(true); } catch {}
+       try { this.playerScheda?.volume?.(1); } catch {}
+       return;
+     }
+
+     // utente vuole audio: se il player è pronto, prova a partire con audio
+     try { this.playerScheda?.muted?.(false); } catch {}
+     this.sincronizzaAvvioTrailerScheda();
+   }),
+ );
 
   const navState = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
   const urlDaState = String(navState?.['urlSfondo'] || '').trim();
@@ -232,7 +284,8 @@ private verificaEAvviaAnimazioni(): void {
     const idRaw = pm.get('id');
     const id = idRaw ? Number(idRaw) : NaN;
     if (!idRaw || Number.isNaN(id)) return;
-
+    this.schedaPronta.reset();
+    this.arrestaTrailerSchedaSubito();
     // Reset animazioni e flag per ogni cambio di contenuto
     this.startAnim = false;
     this.startAnimTitolo = false;
@@ -306,7 +359,16 @@ private verificaEAvviaAnimazioni(): void {
         this.startAnimTitolo      = true;
         this.startAnimDescrizione = true;
       });
+ if (this.timerMostraVideoScheda) {
+   clearTimeout(this.timerMostraVideoScheda);
+   this.timerMostraVideoScheda = null;
+ }
 
+ this.timerMostraVideoScheda = setTimeout(() => {
+   this.timerMostraVideoScheda = null;
+   this.mostraVideoScheda = true;
+   this.sincronizzaAvvioTrailerScheda();
+ }, 1900);
       return;
     }
     // ── fine ripristino da cache ──
@@ -457,11 +519,9 @@ private caricaRigheCorrelate(mostraCaricamento = true): void {
 }
 
 ngOnDestroy(): void {
-  this.schedaPronta.segnaPronte();
-
   if (this.tipoContenuto && this.idContenuto) {
     const lingua = this.cambioLingua.leggiCodiceLingua();
-   this.schedaCache.set(this.tipoContenuto, this.idContenuto, lingua, {
+    this.schedaCache.set(this.tipoContenuto, this.idContenuto, lingua, {
       descrizione: this.descrizione,
       descrizioneTestuale: this.descrizioneTestuale,
       urlSfondoScheda: this.urlSfondoScheda,
@@ -480,6 +540,12 @@ ngOnDestroy(): void {
 
   this.subs.unsubscribe();
   window.removeEventListener('loader-hidden', this.onLoaderHidden);
+  if (this.timerMostraVideoScheda) {
+    clearTimeout(this.timerMostraVideoScheda);
+    this.timerMostraVideoScheda = null;
+  }
+  this.rimuoviSbloccoAudioScheda();
+  try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
   try { if (this.playerScheda) this.playerScheda.dispose(); } catch {}
 }
 
@@ -619,4 +685,111 @@ secondiInLeggibile(secondi: number | null | undefined): string {
   }
   return sec > 0 ? `${min}m ${sec}s` : `${min}m`;
 }
+
+
+ private sincronizzaAvvioTrailerScheda(): void {
+   if (!this.playerScheda) return;
+   if (!this.mostraVideoScheda) return;
+
+   // se utente ha disabilitato audio, parto mutato e fine
+   if (this.audioBloccatoDaUtente) {
+     try { this.playerScheda.muted(true); } catch {}
+     try { this.playerScheda.currentTime(0); } catch {}
+     try { this.playerScheda.play(); } catch {}
+     return;
+   }
+
+   // utente vuole audio: provo play con audio
+   try { this.playerScheda.muted(false); } catch {}
+   try { this.playerScheda.currentTime(0); } catch {}
+
+   try {
+     const p = this.playerScheda.play();
+     if (p && typeof p.then === 'function') {
+       p.then(() => {
+         // ok: audio concesso
+         this.soloBrowserBlocca = false;
+         try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+         this.rimuoviSbloccoAudioScheda();
+       }).catch(() => {
+         // browser blocca autoplay con audio -> ripiego mutato  preparo click “ovunque” per restart con audio
+         this.attivaFallbackSoloBrowserBlocca();
+       });
+     }
+   } catch {
+     this.attivaFallbackSoloBrowserBlocca();
+   }
+ }
+
+ private attivaFallbackSoloBrowserBlocca(): void {
+   if (!this.playerScheda) return;
+   if (this.audioBloccatoDaUtente) return; // se utente ha scelto "senza audio", niente fallback
+
+   this.soloBrowserBlocca = true;
+   try { this.audioGlobaleService.setSoloBrowserBlocca(true); } catch {}
+
+   // parto mutato (così almeno si vede)
+   try { this.playerScheda.muted(true); } catch {}
+   try { this.playerScheda.currentTime(0); } catch {}
+   try { this.playerScheda.play(); } catch {}
+
+   // al primo click ovunque: restart da capo con audio
+   this.preparaSbloccoAudioScheda();
+ }
+
+ private preparaSbloccoAudioScheda(): void {
+   if (this.handlerSbloccoAudioScheda) return;
+   if (this.audioBloccatoDaUtente) return;
+
+   this.handlerSbloccoAudioScheda = () => {
+     this.rimuoviSbloccoAudioScheda();
+     if (!this.playerScheda) return;
+     if (this.audioBloccatoDaUtente) return;
+
+     // restart pulito con audio
+     try { this.playerScheda.pause(); } catch {}
+     try { this.playerScheda.currentTime(0); } catch {}
+     try { this.playerScheda.muted(false); } catch {}
+
+     try {
+       const p = this.playerScheda.play();
+       if (p && typeof p.then === 'function') {
+         p.then(() => {
+           this.soloBrowserBlocca = false;
+           try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+         }).catch(() => {
+           // se ancora bloccato, torno al fallback (mutato  copertura)
+           this.attivaFallbackSoloBrowserBlocca();
+         });
+       }
+     } catch {
+       this.attivaFallbackSoloBrowserBlocca();
+     }
+   };
+
+   window.addEventListener('click', this.handlerSbloccoAudioScheda, { once: true, passive: true, capture: true });
+ }
+
+ private rimuoviSbloccoAudioScheda(): void {
+   const h = this.handlerSbloccoAudioScheda;
+   if (!h) return;
+   try { window.removeEventListener('click', h, true); } catch {}
+   this.handlerSbloccoAudioScheda = null;
+ }
+
+  private arrestaTrailerSchedaSubito(): void {
+   if (this.timerMostraVideoScheda) {
+     clearTimeout(this.timerMostraVideoScheda);
+     this.timerMostraVideoScheda = null;
+   }
+
+   this.mostraVideoScheda = false;
+   this.soloBrowserBlocca = false;
+
+   try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+   this.rimuoviSbloccoAudioScheda();
+
+   try { this.playerScheda?.pause(); } catch {}
+   try { this.playerScheda?.currentTime?.(0); } catch {}
+ }
 }
