@@ -388,8 +388,10 @@ fogliaDaTipo(tipo: string): string {
 }
 
 tipoDaClick(loc: { tipo: string }): string {
+  const tipoLoc = String(loc?.tipo || '').toLowerCase();
+  if (tipoLoc === 'film' || tipoLoc === 'serie') return tipoLoc;
+  // fallback solo per locandine demo senza tipo esplicito
   const selezionato = this.tipoContenuto.leggiTipo();
-  if (selezionato === 'film_serie') return String(loc?.tipo || '').toLowerCase() === 'serie' ? 'serie' : 'film';
   return selezionato === 'serie' ? 'serie' : 'film';
 }
 

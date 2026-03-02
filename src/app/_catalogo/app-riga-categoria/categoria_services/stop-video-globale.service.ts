@@ -21,9 +21,13 @@ export class StopVideoGlobaleService {
     });
   }
 
-  richiediSoloFadeAudio(durataMs: number): Promise<void> {
+   richiediSoloFadeAudio(durataMs: number): Promise<void> {
     return new Promise<void>((resolve) => {
-      this.richiesteFadeAudio$.next({ durataMs: Math.max(0, durataMs || 0), done: resolve });
+      let risolto = false;
+      const safeResolve = () => { if (!risolto) { risolto = true; resolve(); } };
+      this.richiesteFadeAudio$.next({ durataMs: Math.max(0, durataMs || 0), done: safeResolve });
+      // fallback: se nessuno è in ascolto (es. nella scheda senza player video), risolve comunque
+      setTimeout(safeResolve, Math.max(durataMs + 50, 100));
     });
   }
 }

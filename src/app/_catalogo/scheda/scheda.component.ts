@@ -206,6 +206,38 @@ private verificaEAvviaAnimazioni(): void {
     const id = idRaw ? Number(idRaw) : NaN;
     if (!idRaw || Number.isNaN(id)) return;
 
+    // Reset animazioni e flag per ogni cambio di contenuto
+    this.startAnim = false;
+    this.startAnimTitolo = false;
+    this.startAnimDescrizione = false;
+    this._sfondoPronto = false;
+    this._titoloPronto = false;
+    this._descPronta = false;
+    this._tabellaPronta = false;
+    this.urlSfondoScheda = '';
+    this.imgTitoloScheda = '';
+    this.descrizioneTestuale = '';
+    this.righeCorrelate = [];
+    this.righeCorrelateInCaricamento = true;
+    window.scrollTo(0, 0);
+    // Rileggi lo state del router (valido anche su riuso del componente)
+    const navState = history.state;
+    const urlDaState = String(navState?.['urlSfondo'] || '').trim();
+    const imgTitoloDaState = String(navState?.['urlImgTitolo'] || '').trim();
+    const descDaState = String(navState?.['descrizioneTestuale'] || '').trim();
+    const tabellaDaState = navState?.['tabellaDati'] ?? null;
+
+    if (urlDaState) { this.urlSfondoScheda = urlDaState; this._sfondoPronto = true; }
+    if (imgTitoloDaState) { this.imgTitoloScheda = imgTitoloDaState; this._titoloPronto = true; }
+    if (descDaState) { this.descrizioneTestuale = descDaState; this._descPronta = true; }
+    if (tabellaDaState) {
+      this.anno          = tabellaDaState.anno           ?? null;
+      this.durata        = tabellaDaState.durata         ?? null;
+      this.episodiTotali = tabellaDaState.numero_episodi ?? null;
+      this.regista       = String(tabellaDaState.regista || '');
+      this._tabellaPronta = true;
+    }
+
     this.idContenuto = id;
     this.tipoContenuto = this.leggiTipoDaUrl();
 
