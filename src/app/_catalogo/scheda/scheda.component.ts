@@ -751,10 +751,11 @@ secondiInLeggibile(secondi: number | null | undefined): string {
    if (this.handlerSbloccoAudioScheda) return;
    if (this.audioBloccatoDaUtente) return;
 
-   this.handlerSbloccoAudioScheda = () => {
+      this.handlerSbloccoAudioScheda = () => {
      this.rimuoviSbloccoAudioScheda();
      if (!this.playerScheda) return;
      if (this.audioBloccatoDaUtente) return;
+     if (!this.mostraVideoScheda) return;
 
      // restart pulito con audio
     // resume AudioContext + ripristina gain
