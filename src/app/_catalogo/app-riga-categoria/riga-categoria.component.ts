@@ -20,6 +20,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   @Input() categoria = '';
 @Input() idCategoria = '';
 @Input() tickResetPagine = 0;
+@Input() ritardoNavigazioneStessaTipologiaMs = 0;
   @Input() titolo = '';
    @ViewChildren('elementoLocandina', { read: ElementRef })
  elementiLocandina!: QueryList<ElementRef>;
@@ -429,7 +430,8 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
 
   const tipo = this.tipoDaClick(loc);
   const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
-
+    const tipoCorrente = this.tipoContenuto.leggiTipo();
+  const stessaTipologia = tipoCorrente === tipo;
   if (this.timerEntrata) clearTimeout(this.timerEntrata);
   if (this.timerUscita) clearTimeout(this.timerUscita);
 
@@ -455,8 +457,9 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
     ? this.api.getFilm(id)
     : this.api.getSerie(id);
 
-  const [_, tradRes, tabellaRes] = await Promise.all([
+    const [_, __, tradRes, tabellaRes] = await Promise.all([
     caricaImmagine(urlSfondo),
+    caricaImmagine(urlImgTitolo),
     firstValueFrom(traduzioni$.pipe(take(1))).catch(() => null),
     firstValueFrom(tabella$.pipe(take(1))).catch(() => null),
   ]);
@@ -465,7 +468,11 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
   const tabellaDati = (tabellaRes as any)?.data ?? null;
 
   await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
-
+     if (stessaTipologia && this.ritardoNavigazioneStessaTipologiaMs > 0) {
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, this.ritardoNavigazioneStessaTipologiaMs)
+    );
+  }
   this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo, descrizioneTestuale, tabellaDati } });
 }
 }

@@ -76,7 +76,8 @@ playerScheda: any = null;
 mostraVideoScheda = false;
 durataFadeSchedaMs = 400;
 private timerMostraVideoScheda: any = null;
-
+private playerSchedaPronto = false;
+private avvioTrailerSchedaRichiesto = false;
 // === AUDIO (collegato ad AudioGlobaleService) ===
 audioBloccatoDaUtente = false;
 soloBrowserBlocca = false;
@@ -105,25 +106,14 @@ ngAfterViewInit(): void {
     });
 
    this.playerScheda.ready(() => {
+    this.playerSchedaPronto = true;
     try { this.inizializzaWebAudio(); } catch {}
-  if (this.timerMostraVideoScheda) {
-   clearTimeout(this.timerMostraVideoScheda);
-   this.timerMostraVideoScheda = null;
- }
+    this.programmaAvvioTrailerSchedaSePossibile();
 
- this.timerMostraVideoScheda = setTimeout(() => {
-   this.timerMostraVideoScheda = null;
-    this.mostraVideoScheda = true;
-
-    // QUESTO MANCAVA: appena lo mostri, devi dirgli di partire
-    this.sincronizzaAvvioTrailerScheda();
-
- }, 1900);
-
-  this.playerScheda.on('ended', () => {
-    this.mostraVideoScheda = false;
+    this.playerScheda.on('ended', () => {
+      this.mostraVideoScheda = false;
+    });
   });
-});
   }, 50);
 }
 
@@ -154,13 +144,7 @@ constructor(
     this.startAnimDescrizione = true;
 
     // ← AGGIUNTO: avvia il trailer anche su navigazione stesso-tipo
-    if (this.playerScheda && !this.timerMostraVideoScheda) {
-      this.timerMostraVideoScheda = setTimeout(() => {
-        this.timerMostraVideoScheda = null;
-        this.mostraVideoScheda = true;
-        this.sincronizzaAvvioTrailerScheda();
-      }, 1900);
-    }
+ this.richiediAvvioTrailerScheda();
 
     const aspetta = () => {
       const el = document.querySelector('.descrizione');
@@ -311,6 +295,7 @@ constructor(
     this.startAnim = false;
     this.startAnimTitolo = false;
     this.startAnimDescrizione = false;
+    this.avvioTrailerSchedaRichiesto = false;
     this._sfondoPronto = false;
     this._titoloPronto = false;
     this._descPronta = false;
@@ -318,6 +303,20 @@ constructor(
     this.urlSfondoScheda = '';
     this.imgTitoloScheda = '';
     this.descrizioneTestuale = '';
+
+      this.descrizione = '';
+  this.slugCorrente = '';
+
+  this.anno = null;
+  this.durata = null;
+  this.episodiTotali = null;
+  this.regista = '';
+
+  this.stagioni = [];
+  this.serieData = {};
+  this.stagioneSelezionata = null;
+  this.stagioneCachata.clear();
+
     this.righeCorrelate = [];
     this.righeCorrelateInCaricamento = true;
     window.scrollTo(0, 0);
@@ -339,17 +338,11 @@ constructor(
       this._tabellaPronta = true;
     }
 
-  // ← AGGIUNTO
-    if (this._loaderNascosto && this._sfondoPronto && this._titoloPronto && this._descPronta && this._tabellaPronta) {
-      this.startAnim = true;
-      this.startAnimTitolo = true;
-      this.startAnimDescrizione = true;
-      this.schedaPronta.segnaPronte();
-    }
+
 
     this.idContenuto = id;
     this.tipoContenuto = this.leggiTipoDaUrl();
-
+    this.verificaEAvviaAnimazioni();
     // ── Ripristino da cache (es. back button da /contatti) ──
     const lingua = this.cambioLingua.leggiCodiceLingua();
     const cached = this.tipoContenuto
@@ -382,22 +375,7 @@ constructor(
       this.righeCorrelate = cached.righeCorrelate ?? [];
       this.righeCorrelateInCaricamento = false;
 
-      this.schedaPronta.segnaPronte();
-      requestAnimationFrame(() => {
-        this.startAnim            = true;
-        this.startAnimTitolo      = true;
-        this.startAnimDescrizione = true;
-      });
- if (this.timerMostraVideoScheda) {
-   clearTimeout(this.timerMostraVideoScheda);
-   this.timerMostraVideoScheda = null;
- }
-
- this.timerMostraVideoScheda = setTimeout(() => {
-   this.timerMostraVideoScheda = null;
-   this.mostraVideoScheda = true;
-   this.sincronizzaAvvioTrailerScheda();
- }, 1900);
+      this.verificaEAvviaAnimazioni();
       return;
     }
     // ── fine ripristino da cache ──
@@ -573,6 +551,7 @@ ngOnDestroy(): void {
     clearTimeout(this.timerMostraVideoScheda);
     this.timerMostraVideoScheda = null;
   }
+
   this.rimuoviSbloccoAudioScheda();
   try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
   try { if (this.playerScheda) this.playerScheda.dispose(); } catch {}
@@ -820,7 +799,7 @@ secondiInLeggibile(secondi: number | null | undefined): string {
      clearTimeout(this.timerMostraVideoScheda);
      this.timerMostraVideoScheda = null;
    }
-
+   this.avvioTrailerSchedaRichiesto = false;
    this.mostraVideoScheda = false;
    this.soloBrowserBlocca = false;
 
@@ -874,5 +853,26 @@ private sfumaGuadagnoVerso(target: number, durataMs: number): Promise<void> {
       nativeTimeout(resolve, Math.max(0, durataMs));
     } catch { resolve(); }
   });
+}
+
+private richiediAvvioTrailerScheda(): void {
+  this.avvioTrailerSchedaRichiesto = true;
+  this.programmaAvvioTrailerSchedaSePossibile();
+}
+
+private programmaAvvioTrailerSchedaSePossibile(): void {
+  if (!this.avvioTrailerSchedaRichiesto) return;
+  if (!this.playerSchedaPronto) return;
+  if (!this.playerScheda) return;
+  if (this.timerMostraVideoScheda) return;
+  if (this.mostraVideoScheda) return;
+
+  this.avvioTrailerSchedaRichiesto = false;
+
+  this.timerMostraVideoScheda = setTimeout(() => {
+    this.timerMostraVideoScheda = null;
+    this.mostraVideoScheda = true;
+    this.sincronizzaAvvioTrailerScheda();
+  }, 1900);
 }
 }
