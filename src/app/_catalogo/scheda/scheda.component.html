@@ -13,7 +13,8 @@
 <span class="sfumatura"></span>
 
 <div class="scheda">
-  <video-js
+   <video-js
+  *ngIf="mostraPlayerSchedaNelDom"
   #playerSchedaRef
   id="player-scheda-trailer"
   class="video-js senza-controlli"
@@ -211,13 +212,14 @@
       *ngFor="let riga of righeCorrelate; trackBy: tracciaRigaCorrelata"
     >
       <app-riga-categoria
-        [idCategoria]="riga.idCategoria"
-        [categoria]="riga.category"
-        [locandine]="riga.locandine"
-        [tickResetPagine]="0"
-        [locandineVisibili]="6"
-        [ritardoNavigazioneStessaTipologiaMs]="100"
-      ></app-riga-categoria>
+  [idCategoria]="riga.idCategoria"
+  [categoria]="riga.category"
+  [locandine]="riga.locandine"
+  [tickResetPagine]="0"
+  [locandineVisibili]="6"
+  [ritardoNavigazioneStessaTipologiaMs]="100"
+  [attendiChiusuraPlayerSchedaPrimaDiNavigare]="true"
+></app-riga-categoria>
     </ng-container>
   </div>
 

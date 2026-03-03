@@ -21,6 +21,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
 @Input() idCategoria = '';
 @Input() tickResetPagine = 0;
 @Input() ritardoNavigazioneStessaTipologiaMs = 0;
+@Input() attendiChiusuraPlayerSchedaPrimaDiNavigare = false;
   @Input() titolo = '';
    @ViewChildren('elementoLocandina', { read: ElementRef })
  elementiLocandina!: QueryList<ElementRef>;
@@ -435,7 +436,7 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
   if (this.timerEntrata) clearTimeout(this.timerEntrata);
   if (this.timerUscita) clearTimeout(this.timerUscita);
 
-  const slug = slugDaLocandina(loc.src);
+     const slug = slugDaLocandina(loc.src);
   const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
   const lingua = this.cambioLingua.leggiCodiceLingua();
   const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
@@ -448,7 +449,6 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
       img.src = src;
     });
 
-  // Carica sfondo E traduzioni in parallelo — rimani in catalogo finché non sono pronti entrambi
   const traduzioni$ = tipo === 'film'
     ? this.api.getFilmTraduzioni(id, lingua)
     : this.api.getSerieTraduzioni(id, lingua);
@@ -457,7 +457,13 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
     ? this.api.getFilm(id)
     : this.api.getSerie(id);
 
-    const [_, __, tradRes, tabellaRes] = await Promise.all([
+  if (this.attendiChiusuraPlayerSchedaPrimaDiNavigare) {
+    await this.stopVideoGlobale
+      .richiediChiusuraCompletaPlayerScheda(400)
+      .catch(() => {});
+  }
+
+  const [_, __, tradRes, tabellaRes] = await Promise.all([
     caricaImmagine(urlSfondo),
     caricaImmagine(urlImgTitolo),
     firstValueFrom(traduzioni$.pipe(take(1))).catch(() => null),
@@ -467,12 +473,18 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
   const descrizioneTestuale = String((tradRes as any)?.data?.descrizione || '');
   const tabellaDati = (tabellaRes as any)?.data ?? null;
 
-  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
-     if (stessaTipologia && this.ritardoNavigazioneStessaTipologiaMs > 0) {
+  if (!this.attendiChiusuraPlayerSchedaPrimaDiNavigare) {
+    await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+  }
+
+   if (this.ritardoNavigazioneStessaTipologiaMs > 0) {
     await new Promise<void>((resolve) =>
       setTimeout(resolve, this.ritardoNavigazioneStessaTipologiaMs)
     );
   }
-  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo, descrizioneTestuale, tabellaDati } });
+
+  this.router.navigateByUrl(url, {
+    state: { urlSfondo, urlImgTitolo, descrizioneTestuale, tabellaDati }
+  });
 }
 }

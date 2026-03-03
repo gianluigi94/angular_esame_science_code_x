@@ -73,53 +73,30 @@ righeCorrelate: {
 }[] = [];
 righeCorrelateInCaricamento = true;
 
-playerScheda: any = null;
-mostraVideoScheda = false;
-durataFadeSchedaMs = 400;
-private timerMostraVideoScheda: any = null;
-private timerResetPlayerScheda: any = null;
-private playerSchedaPronto = false;
-private avvioTrailerSchedaRichiesto = false;
+ playerScheda: any = null;
+ mostraPlayerSchedaNelDom = false;
+ mostraVideoScheda = false;
+ durataFadeSchedaMs = 400;
+ private timerInserisciPlayerSchedaNelDom: any = null;
+ private timerMostraVideoScheda: any = null;
+ private timerResetPlayerScheda: any = null;
+ private playerSchedaPronto = false;
+ private avvioTrailerSchedaRichiesto = false;
 // === AUDIO (collegato ad AudioGlobaleService) ===
 audioBloccatoDaUtente = false;
 soloBrowserBlocca = false;
 private distrutto = false;
 private handlerSbloccoAudioScheda: any = null;
 
-  @ViewChild('playerSchedaRef') playerSchedaRef!: ElementRef;
+   private _playerSchedaRef: ElementRef | null = null;
 
-ngAfterViewInit(): void {
-  setTimeout(() => {
-    const el = this.playerSchedaRef?.nativeElement;
-    if (!el) return;
+ @ViewChild('playerSchedaRef')
+ set playerSchedaRef(ref: ElementRef | undefined) {
+   this._playerSchedaRef = ref ?? null;
+   if (ref) this.inizializzaPlayerSchedaDaRef(ref);
+ }
 
-    el.setAttribute('crossorigin', 'anonymous');
-
-    this.playerScheda = videojs(el, {
-      controls: false,
-      autoplay: false,
-      muted: false,
-      preload: 'auto',
-      loop: false,
-      playsinline: true,
-      sources: [{
-        src: 'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_noi_non_siamo_soli.mp4',
-        type: 'video/mp4'
-      }]
-    });
-
-   this.playerScheda.ready(() => {
-    this.playerSchedaPronto = true;
-    try { this.inizializzaWebAudio(); } catch {}
-    this.programmaAvvioTrailerSchedaSePossibile();
-
-           this.playerScheda.on('ended', () => {
-      this.mostraVideoScheda = false;
-      this.programmaResetPlayerSchedaDopoScomparsa();
-    });
-  });
-  }, 50);
-}
+ ngAfterViewInit(): void {}
 
 constructor(
   private route: ActivatedRoute,
@@ -149,7 +126,7 @@ constructor(
     this.startAnimDescrizione = true;
 
     // ← AGGIUNTO: avvia il trailer anche su navigazione stesso-tipo
- this.richiediAvvioTrailerScheda();
+ this.programmaInserimentoPlayerSchedaNelDom();
 
     const aspetta = () => {
       const el = document.querySelector('.descrizione');
@@ -294,8 +271,9 @@ constructor(
     const idRaw = pm.get('id');
     const id = idRaw ? Number(idRaw) : NaN;
     if (!idRaw || Number.isNaN(id)) return;
-    this.schedaPronta.reset();
+        this.schedaPronta.reset();
     this.arrestaTrailerSchedaSubito();
+    this.smontaPlayerSchedaDalDomSubito();
     // Reset animazioni e flag per ogni cambio di contenuto
     this.startAnim = false;
     this.startAnimTitolo = false;
@@ -479,15 +457,23 @@ constructor(
     }
   });
 
+    this.subs.add(
+     this.stopVideoGlobale.osservaRichiesteFadeAudio$().subscribe(({ durataMs, done }) => {
+       if (!this.playerScheda || !this.mostraVideoScheda) {
+         done();
+         return;
+       }
+       this.sfumaGuadagnoVerso(0, durataMs).finally(() => done());
+     })
+   );
+
    this.subs.add(
-    this.stopVideoGlobale.osservaRichiesteFadeAudio$().subscribe(({ durataMs, done }) => {
-      if (!this.playerScheda || !this.mostraVideoScheda) {
-        done();
-        return;
-      }
-      this.sfumaGuadagnoVerso(0, durataMs).finally(() => done());
-    })
-  );
+     this.stopVideoGlobale.osservaRichiesteChiusuraPlayerScheda$().subscribe(({ durataMs, done }) => {
+       this.chiudiPlayerSchedaConFadeEReset(durataMs).finally(() => done());
+     })
+   );
+
+
 }
 
 
@@ -563,6 +549,10 @@ ngOnDestroy(): void {
 
   this.subs.unsubscribe();
   window.removeEventListener('loader-hidden', this.onLoaderHidden);
+    if (this.timerInserisciPlayerSchedaNelDom) {
+    clearTimeout(this.timerInserisciPlayerSchedaNelDom);
+    this.timerInserisciPlayerSchedaNelDom = null;
+  }
   if (this.timerMostraVideoScheda) {
     clearTimeout(this.timerMostraVideoScheda);
     this.timerMostraVideoScheda = null;
@@ -921,7 +911,7 @@ private programmaAvvioTrailerSchedaSePossibile(): void {
     this.timerMostraVideoScheda = null;
     this.mostraVideoScheda = true;
     this.sincronizzaAvvioTrailerScheda();
-  }, 1900);
+  }, 1000);
 }
 
 
@@ -950,4 +940,130 @@ private programmaAvvioTrailerSchedaSePossibile(): void {
     this.resettaPlayerSchedaPerNuovoAvvio();
   }, attesa);
 }
+
+    private chiudiPlayerSchedaConFadeEReset(durataMs: number): Promise<void> {
+   return new Promise<void>((resolve) => {
+     if (this.timerInserisciPlayerSchedaNelDom) {
+       clearTimeout(this.timerInserisciPlayerSchedaNelDom);
+       this.timerInserisciPlayerSchedaNelDom = null;
+     }
+     if (this.timerMostraVideoScheda) {
+       clearTimeout(this.timerMostraVideoScheda);
+       this.timerMostraVideoScheda = null;
+     }
+     if (this.timerResetPlayerScheda) {
+       clearTimeout(this.timerResetPlayerScheda);
+       this.timerResetPlayerScheda = null;
+     }
+
+     this.avvioTrailerSchedaRichiesto = false;
+     this.rimuoviSbloccoAudioScheda();
+     this.soloBrowserBlocca = false;
+     try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+
+     const attesaVisiva = Math.max(0, durataMs || this.durataFadeSchedaMs || 0);
+     const eraVisibile = this.mostraVideoScheda;
+
+     this.durataFadeSchedaMs = attesaVisiva;
+     this.mostraVideoScheda = false;
+
+     if (!this.playerScheda) {
+       this.smontaPlayerSchedaDalDomSubito();
+       resolve();
+       return;
+     }
+
+     if (!eraVisibile) {
+       this.resettaPlayerSchedaPerNuovoAvvio();
+       this.smontaPlayerSchedaDalDomSubito();
+       resolve();
+       return;
+     }
+
+     try { this.playerScheda?.muted?.(false); } catch {}
+     this.sfumaGuadagnoVerso(0, attesaVisiva).finally(() => {
+       this.resettaPlayerSchedaPerNuovoAvvio();
+       this.smontaPlayerSchedaDalDomSubito();
+       resolve();
+     });
+   });
+ }
+
+
+  private inizializzaPlayerSchedaDaRef(ref: ElementRef): void {
+   if (this.playerScheda) return;
+
+   setTimeout(() => {
+     const el = ref?.nativeElement;
+     if (!el || this.playerScheda) return;
+
+     el.setAttribute('crossorigin', 'anonymous');
+
+     this.playerScheda = videojs(el, {
+       controls: false,
+       autoplay: false,
+       muted: false,
+       preload: 'auto',
+       loop: false,
+       playsinline: true,
+       sources: [{
+         src: 'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_noi_non_siamo_soli.mp4',
+         type: 'video/mp4'
+       }]
+     });
+
+     this.playerScheda.ready(() => {
+       this.playerSchedaPronto = true;
+       try { this.inizializzaWebAudio(); } catch {}
+       this.programmaAvvioTrailerSchedaSePossibile();
+
+       this.playerScheda.on('ended', () => {
+         this.mostraVideoScheda = false;
+         this.programmaResetPlayerSchedaDopoScomparsa();
+       });
+     });
+   }, 50);
+ }
+
+ private programmaInserimentoPlayerSchedaNelDom(): void {
+   if (this.mostraPlayerSchedaNelDom) return;
+   if (this.timerInserisciPlayerSchedaNelDom) return;
+
+   this.timerInserisciPlayerSchedaNelDom = setTimeout(() => {
+     this.timerInserisciPlayerSchedaNelDom = null;
+     this.mostraPlayerSchedaNelDom = true;
+     this.richiediAvvioTrailerScheda();
+   }, 500);
+ }
+
+ private smontaPlayerSchedaDalDomSubito(): void {
+   if (this.timerInserisciPlayerSchedaNelDom) {
+     clearTimeout(this.timerInserisciPlayerSchedaNelDom);
+     this.timerInserisciPlayerSchedaNelDom = null;
+   }
+   if (this.timerMostraVideoScheda) {
+     clearTimeout(this.timerMostraVideoScheda);
+     this.timerMostraVideoScheda = null;
+   }
+   if (this.timerResetPlayerScheda) {
+     clearTimeout(this.timerResetPlayerScheda);
+     this.timerResetPlayerScheda = null;
+   }
+
+   this.mostraVideoScheda = false;
+   this.mostraPlayerSchedaNelDom = false;
+   this.playerSchedaPronto = false;
+
+   try { this.nodoSorgente?.disconnect?.(); } catch {}
+   try { this.nodoGuadagno?.disconnect?.(); } catch {}
+
+   this.nodoSorgente = null;
+   this.nodoGuadagno = null;
+   this.elementoVideoReale = null;
+
+   const playerDaSmontare = this.playerScheda;
+   this.playerScheda = null;
+
+   try { playerDaSmontare?.dispose?.(); } catch {}
+ }
 }
