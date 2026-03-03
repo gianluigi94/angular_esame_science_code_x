@@ -81,6 +81,7 @@ private avvioTrailerSchedaRichiesto = false;
 // === AUDIO (collegato ad AudioGlobaleService) ===
 audioBloccatoDaUtente = false;
 soloBrowserBlocca = false;
+private distrutto = false;
 private handlerSbloccoAudioScheda: any = null;
 
   @ViewChild('playerSchedaRef') playerSchedaRef!: ElementRef;
@@ -526,6 +527,7 @@ private caricaRigheCorrelate(mostraCaricamento = true): void {
 }
 
 ngOnDestroy(): void {
+  this.distrutto = true;
   if (this.tipoContenuto && this.idContenuto) {
     const lingua = this.cambioLingua.leggiCodiceLingua();
     this.schedaCache.set(this.tipoContenuto, this.idContenuto, lingua, {
@@ -775,12 +777,11 @@ secondiInLeggibile(secondi: number | null | undefined): string {
            this.soloBrowserBlocca = false;
            try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
          }).catch(() => {
-           // se ancora bloccato, torno al fallback (mutato  copertura)
-           this.attivaFallbackSoloBrowserBlocca();
+           if (!this.distrutto) this.attivaFallbackSoloBrowserBlocca();
          });
        }
      } catch {
-       this.attivaFallbackSoloBrowserBlocca();
+       if (!this.distrutto) this.attivaFallbackSoloBrowserBlocca();
      }
    };
 
