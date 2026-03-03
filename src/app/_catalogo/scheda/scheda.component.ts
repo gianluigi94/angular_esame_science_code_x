@@ -10,6 +10,7 @@ import { SchedaCacheService } from './scheda_service/scheda-cache.service';
 import { take } from 'rxjs/operators';
 import {  mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+import { StopVideoGlobaleService } from '../app-riga-categoria/categoria_services/stop-video-globale.service';
 export interface Episodio {
   titolo: string;
   descrizione: string;
@@ -129,6 +130,7 @@ constructor(
   private cambioLingua: CambioLinguaService,
   private schedaPronta: SchedaProntaService,
   private audioGlobaleService: AudioGlobaleService,
+  private stopVideoGlobale: StopVideoGlobaleService,
 ) {}
 
  private verificaEAvviaAnimazioni(): void {
@@ -476,6 +478,16 @@ constructor(
       });
     }
   });
+
+   this.subs.add(
+    this.stopVideoGlobale.osservaRichiesteFadeAudio$().subscribe(({ durataMs, done }) => {
+      if (!this.playerScheda || !this.mostraVideoScheda) {
+        done();
+        return;
+      }
+      this.sfumaGuadagnoVerso(0, durataMs).finally(() => done());
+    })
+  );
 }
 
 
@@ -561,7 +573,12 @@ ngOnDestroy(): void {
   }
   this.rimuoviSbloccoAudioScheda();
   try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
-  try { if (this.playerScheda) this.playerScheda.dispose(); } catch {}
+
+  // ← fade-out audio, poi dispose
+  const playerDaCancellare = this.playerScheda;
+  this.sfumaGuadagnoVerso(0, this.durataFadeSchedaMs).finally(() => {
+    try { if (playerDaCancellare) playerDaCancellare.dispose(); } catch {}
+  });
 }
 
   leggiTipoDaUrl(): 'film' | 'serie' | null {
@@ -702,21 +719,22 @@ secondiInLeggibile(secondi: number | null | undefined): string {
 }
 
 
- private sincronizzaAvvioTrailerScheda(): void {
-   if (!this.playerScheda) return;
-   if (!this.mostraVideoScheda) return;
+private sincronizzaAvvioTrailerScheda(): void {
+  if (!this.playerScheda) return;
+  if (!this.mostraVideoScheda) return;
 
-   // se utente ha disabilitato audio, parto mutato e fine
-   if (this.audioBloccatoDaUtente) {
-     try { this.playerScheda.muted(true); } catch {}
-     try { this.playerScheda.currentTime(0); } catch {}
-     try { this.playerScheda.play(); } catch {}
-     return;
-   }
+  if (this.audioBloccatoDaUtente) {
+    try { this.playerScheda.muted(true); } catch {}
+    try { this.playerScheda.currentTime(0); } catch {}
+    try { this.playerScheda.play(); } catch {}
+    return;
+  }
 
-   // utente vuole audio: provo play con audio
-   try { this.playerScheda.muted(false); } catch {}
-   try { this.playerScheda.currentTime(0); } catch {}
+  // ← AGGIUNTO: il gain potrebbe essere rimasto a 0 dal fade di navigazione
+  try { this.sfumaGuadagnoVerso(1, 0); } catch {}
+
+  try { this.playerScheda.muted(false); } catch {}
+  try { this.playerScheda.currentTime(0); } catch {}
 
    try {
      const p = this.playerScheda.play();
