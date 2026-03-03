@@ -76,6 +76,7 @@ playerScheda: any = null;
 mostraVideoScheda = false;
 durataFadeSchedaMs = 400;
 private timerMostraVideoScheda: any = null;
+private timerResetPlayerScheda: any = null;
 private playerSchedaPronto = false;
 private avvioTrailerSchedaRichiesto = false;
 // === AUDIO (collegato ad AudioGlobaleService) ===
@@ -111,8 +112,9 @@ ngAfterViewInit(): void {
     try { this.inizializzaWebAudio(); } catch {}
     this.programmaAvvioTrailerSchedaSePossibile();
 
-    this.playerScheda.on('ended', () => {
+           this.playerScheda.on('ended', () => {
       this.mostraVideoScheda = false;
+      this.programmaResetPlayerSchedaDopoScomparsa();
     });
   });
   }, 50);
@@ -553,7 +555,10 @@ ngOnDestroy(): void {
     clearTimeout(this.timerMostraVideoScheda);
     this.timerMostraVideoScheda = null;
   }
-
+  if (this.timerResetPlayerScheda) {
+    clearTimeout(this.timerResetPlayerScheda);
+    this.timerResetPlayerScheda = null;
+  }
   this.rimuoviSbloccoAudioScheda();
   try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
   try { if (this.playerScheda) this.playerScheda.dispose(); } catch {}
@@ -755,7 +760,23 @@ secondiInLeggibile(secondi: number | null | undefined): string {
      this.rimuoviSbloccoAudioScheda();
      if (!this.playerScheda) return;
      if (this.audioBloccatoDaUtente) return;
-     if (!this.mostraVideoScheda) return;
+
+    // Se il click arriva quando il trailer è già finito/nascosto,
+    // non devo riavviarlo, ma devo ripulire lo stato.
+    if (!this.mostraVideoScheda) {
+      this.soloBrowserBlocca = false;
+      try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+
+      try {
+        if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+          this.contestoAudio.resume().catch(() => {});
+        }
+      } catch {}
+
+      try { this.sfumaGuadagnoVerso(1, 0); } catch {}
+      this.resettaPlayerSchedaPerNuovoAvvio();
+      return;
+    }
 
      // restart pulito con audio
     // resume AudioContext + ripristina gain
@@ -801,6 +822,11 @@ secondiInLeggibile(secondi: number | null | undefined): string {
      clearTimeout(this.timerMostraVideoScheda);
      this.timerMostraVideoScheda = null;
    }
+
+     if (this.timerResetPlayerScheda) {
+    clearTimeout(this.timerResetPlayerScheda);
+    this.timerResetPlayerScheda = null;
+  }
    this.avvioTrailerSchedaRichiesto = false;
    this.mostraVideoScheda = false;
    this.soloBrowserBlocca = false;
@@ -808,8 +834,7 @@ secondiInLeggibile(secondi: number | null | undefined): string {
    try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
    this.rimuoviSbloccoAudioScheda();
 
-   try { this.playerScheda?.pause(); } catch {}
-   try { this.playerScheda?.currentTime?.(0); } catch {}
+  this.resettaPlayerSchedaPerNuovoAvvio();
  }
 
  private ottieniVideoReale(): HTMLVideoElement | null {
@@ -868,7 +893,10 @@ private programmaAvvioTrailerSchedaSePossibile(): void {
   if (!this.playerScheda) return;
   if (this.timerMostraVideoScheda) return;
   if (this.mostraVideoScheda) return;
-
+  if (this.timerResetPlayerScheda) {
+    clearTimeout(this.timerResetPlayerScheda);
+    this.timerResetPlayerScheda = null;
+  }
   this.avvioTrailerSchedaRichiesto = false;
 
   this.timerMostraVideoScheda = setTimeout(() => {
@@ -876,5 +904,32 @@ private programmaAvvioTrailerSchedaSePossibile(): void {
     this.mostraVideoScheda = true;
     this.sincronizzaAvvioTrailerScheda();
   }, 1900);
+}
+
+
+ private resettaPlayerSchedaPerNuovoAvvio(): void {
+   try { this.playerScheda?.pause?.(); } catch {}
+   try { this.playerScheda?.currentTime?.(0); } catch {}
+   try { this.playerScheda?.muted?.(false); } catch {}
+
+   try {
+     const video = this.ottieniVideoReale();
+     video?.load?.();
+   } catch {}
+ }
+
+
+ private programmaResetPlayerSchedaDopoScomparsa(extraMs = 50): void {
+  if (this.timerResetPlayerScheda) {
+    clearTimeout(this.timerResetPlayerScheda);
+    this.timerResetPlayerScheda = null;
+  }
+
+  const attesa = Math.max(0, this.durataFadeSchedaMs + extraMs);
+
+  this.timerResetPlayerScheda = setTimeout(() => {
+    this.timerResetPlayerScheda = null;
+    this.resettaPlayerSchedaPerNuovoAvvio();
+  }, attesa);
 }
 }
