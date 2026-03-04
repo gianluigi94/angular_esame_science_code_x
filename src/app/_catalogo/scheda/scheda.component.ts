@@ -76,10 +76,36 @@ righeCorrelateInCaricamento = true;
  playerScheda: any = null;
  mostraPlayerSchedaNelDom = false;
 mostraVideoScheda = false;
-trailerInRiproduzione = false;
+trailerInRiproduzione = true;
 
 toggleTrailer(): void {
-  this.trailerInRiproduzione = !this.trailerInRiproduzione;
+  if (this.trailerInRiproduzione) {
+    // → PAUSA: cancella timer pendenti e nascondi se già visibile
+    this.trailerInRiproduzione = false;
+    if (this.timerInserisciPlayerSchedaNelDom) {
+      clearTimeout(this.timerInserisciPlayerSchedaNelDom);
+      this.timerInserisciPlayerSchedaNelDom = null;
+    }
+    if (this.timerMostraVideoScheda) {
+      clearTimeout(this.timerMostraVideoScheda);
+      this.timerMostraVideoScheda = null;
+    }
+    this.avvioTrailerSchedaRichiesto = false;
+    if (this.mostraVideoScheda) {
+      this.mostraVideoScheda = false;
+      this.sfumaGuadagnoVerso(0, this.durataFadeSchedaMs).finally(() => {
+        this.resettaPlayerSchedaPerNuovoAvvio();
+      });
+    }
+  } else {
+    // → PLAY: riavvia da capo
+    this.trailerInRiproduzione = true;
+    if (this.mostraPlayerSchedaNelDom && this.playerSchedaPronto) {
+  this.richiediAvvioTrailerScheda(true);
+} else {
+  this.programmaInserimentoPlayerSchedaNelDom();
+}
+  }
 }
  durataFadeSchedaMs = 400;
  private timerInserisciPlayerSchedaNelDom: any = null;
@@ -284,6 +310,7 @@ constructor(
     this.startAnimTitolo = false;
     this.startAnimDescrizione = false;
     this.avvioTrailerSchedaRichiesto = false;
+    this.trailerInRiproduzione = true;
     this._sfondoPronto = false;
     this._titoloPronto = false;
     this._descPronta = false;
@@ -895,12 +922,12 @@ private sfumaGuadagnoVerso(target: number, durataMs: number): Promise<void> {
   });
 }
 
-private richiediAvvioTrailerScheda(): void {
+private richiediAvvioTrailerScheda(immediato = false): void {
   this.avvioTrailerSchedaRichiesto = true;
-  this.programmaAvvioTrailerSchedaSePossibile();
+  this.programmaAvvioTrailerSchedaSePossibile(immediato);
 }
 
-private programmaAvvioTrailerSchedaSePossibile(): void {
+private programmaAvvioTrailerSchedaSePossibile(immediato = false): void {
   if (!this.avvioTrailerSchedaRichiesto) return;
   if (!this.playerSchedaPronto) return;
   if (!this.playerScheda) return;
@@ -912,11 +939,12 @@ private programmaAvvioTrailerSchedaSePossibile(): void {
   }
   this.avvioTrailerSchedaRichiesto = false;
 
+  const ritardo = immediato ? 0 : 1000;
   this.timerMostraVideoScheda = setTimeout(() => {
     this.timerMostraVideoScheda = null;
     this.mostraVideoScheda = true;
     this.sincronizzaAvvioTrailerScheda();
-  }, 1000);
+  }, ritardo);
 }
 
 
@@ -1023,9 +1051,10 @@ private programmaAvvioTrailerSchedaSePossibile(): void {
        this.programmaAvvioTrailerSchedaSePossibile();
 
        this.playerScheda.on('ended', () => {
-         this.mostraVideoScheda = false;
-         this.programmaResetPlayerSchedaDopoScomparsa();
-       });
+  this.trailerInRiproduzione = false;   // ← AGGIUNTO
+  this.mostraVideoScheda = false;
+  this.programmaResetPlayerSchedaDopoScomparsa();
+});
      });
    }, 50);
  }
