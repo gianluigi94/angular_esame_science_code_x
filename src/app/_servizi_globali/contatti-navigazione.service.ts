@@ -2,16 +2,18 @@ import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { CambioLinguaService } from './cambio-lingua.service';
 import { Authservice } from '../_benvenuto/login/_login_service/auth.service';
+import { StopVideoGlobaleService } from '../_catalogo/app-riga-categoria/categoria_services/stop-video-globale.service';
 
 @Injectable({ providedIn: 'root' })
 export class ContattiNavigazioneService {
 
-  constructor(
-    private injector: Injector,
-    private cambioLinguaService: CambioLinguaService,
-    private authService: Authservice,
-    private router: Router,
-  ) {}
+ constructor(
+  private injector: Injector,
+  private cambioLinguaService: CambioLinguaService,
+  private authService: Authservice,
+  private router: Router,
+  private stopVideoGlobale: StopVideoGlobaleService,
+) {}
 
   get sonoLoggato(): boolean {
     return !!this.authService.leggiObsAuth().value?.tk;
@@ -49,11 +51,16 @@ export class ContattiNavigazioneService {
     const saturnoNascosto = opacitaSaturno < 0.1;
     const sfondoNascosto = sfondoEl ? opacitaSfondo < 0.1 : false;
 
-    const navigaAContatti = () => {
-      const codice = this.cambioLinguaService.leggiCodiceLingua();
-      const segmento = codice === 'it' ? 'contatti' : 'contact';
-      this.router.navigate(['/', codice, segmento]);
-    };
+   const navigaAContatti = async () => {
+  const videoAttivo = Array.from(document.querySelectorAll('video'))
+    .some(v => !v.paused && !v.ended && v.readyState > 2);
+  if (videoAttivo) {
+    await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+  }
+  const codice = this.cambioLinguaService.leggiCodiceLingua();
+  const segmento = codice === 'it' ? 'contatti' : 'contact';
+  this.router.navigate(['/', codice, segmento]);
+};
 
     if (saturnoNascosto || sfondoNascosto) {
       const scena = saturnoService.getScene();

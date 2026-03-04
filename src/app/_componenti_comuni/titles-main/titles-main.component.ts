@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { isMobileOrTablet } from 'src/app/_helpers_globali/helpers';
 import { NotFoundCloseService } from './not-found-close.service';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
+import { StopVideoGlobaleService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/stop-video-globale.service';
 @Component({
   selector: 'app-titles-main',
   templateUrl: './titles-main.component.html',
@@ -18,14 +19,15 @@ export class TitlesMainComponent implements AfterViewInit {
   private light: THREE.DirectionalLight | null = null; // mi tengo un riferimento alla luce direzionale da animare (inizio con null)
   private particleGroups: THREE.Group[] = []; // mi tengo una lista di gruppi di particelle da animare (inizio vuota)
 
-  constructor(
-    private elementRef: ElementRef,
-    private performanceService: PerformanceService,
-    private animateService: AnimateService,
-    private authService: Authservice,
-    private router: Router,
-    private notFoundClose: NotFoundCloseService
-  ) {}
+constructor(
+  private elementRef: ElementRef,
+  private performanceService: PerformanceService,
+  private animateService: AnimateService,
+  private authService: Authservice,
+  private router: Router,
+  private notFoundClose: NotFoundCloseService,
+  private stopVideoGlobale: StopVideoGlobaleService,
+) {}
 
   public isLowPerf: boolean = false; // espongo un flag pubblico per sapere se devo usare modalità “low performance”
 
@@ -80,23 +82,28 @@ export class TitlesMainComponent implements AfterViewInit {
   return /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
 }
 
-onLogoClick(ev: MouseEvent): void {
+async onLogoClick(ev: MouseEvent): Promise<void> {
+  ev.preventDefault();
+  ev.stopPropagation();
+
   if (this.isContactRoute) {
-    ev.preventDefault();
-    ev.stopPropagation();
     window.history.back();
     return;
   }
 
-  if (!this.isNotFoundRoute) return;
+  if (this.isNotFoundRoute) {
+    const auth = this.authService.leggiObsAuth().value;
+    const autenticato = auth && auth.tk !== null;
+    this.notFoundClose.requestClose(!autenticato);
+    return;
+  }
 
-  ev.preventDefault();
-  ev.stopPropagation();
-
-  const auth = this.authService.leggiObsAuth().value;
-  const autenticato = auth && auth.tk !== null;
-
-  this.notFoundClose.requestClose(!autenticato);
+  const videoAttivo = Array.from(document.querySelectorAll('video'))
+  .some(v => !v.paused && !v.ended && v.readyState > 2);
+if (videoAttivo) {
+  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+}
+this.router.navigate(['/']);
 }
 get isContactRoute(): boolean {
   const url = this.router.url.split('?')[0].split('#')[0];

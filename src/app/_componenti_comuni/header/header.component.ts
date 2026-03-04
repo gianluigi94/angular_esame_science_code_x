@@ -16,6 +16,7 @@ import { Location } from '@angular/common';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 import { ContattiNavigazioneService } from 'src/app/_servizi_globali/contatti-navigazione.service';
+import { StopVideoGlobaleService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/stop-video-globale.service';
 
 @Component({
   selector: 'app-header',
@@ -54,21 +55,22 @@ headerPronto = false;
   private readonly MIN_SPINNER = 300; // imposto una durata minima dello spinner per evitare flicker
   tipoSelezionato: 'film_serie' | 'film' | 'serie' = 'film_serie';
   headerSolido = false;
-  constructor(
-    private api: ApiService,
-    private authService: Authservice,
-    private router: Router,
-    cambioLinguaService: CambioLinguaService,
-    private translate: TranslateService,
-    private http: HttpClient,
-    private location: Location,
-    private tipoContenuto: TipoContenutoService,
-    private statoSessione: StatoSessioneClientService,
-    private erroreGlobale: ErroreGlobaleService,
-    public scorrimentoCatalogo: ScorrimentoCatalogoService,
-    private audioGlobaleService: AudioGlobaleService,
-    private contattiNav: ContattiNavigazioneService,
-  ) {
+ constructor(
+  private api: ApiService,
+  private authService: Authservice,
+  private router: Router,
+  cambioLinguaService: CambioLinguaService,
+  private translate: TranslateService,
+  private http: HttpClient,
+  private location: Location,
+  private tipoContenuto: TipoContenutoService,
+  private statoSessione: StatoSessioneClientService,
+  private erroreGlobale: ErroreGlobaleService,
+  public scorrimentoCatalogo: ScorrimentoCatalogoService,
+  private audioGlobaleService: AudioGlobaleService,
+  private contattiNav: ContattiNavigazioneService,
+  private stopVideoGlobale: StopVideoGlobaleService,
+) {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
     this.cambioLinguaService = cambioLinguaService; // mi salvo il servizio di cambio lingua nella proprieta' del componente
     this.iconaLingua$ = this.cambioLinguaService.iconaLingua$; // mi aggancio all'evento dell'icona della lingua per mostrarla in modo reattivo
@@ -408,7 +410,13 @@ this.headerPronto = true;
    return pref + '/welcome/login';
  }
 onContattiClick(event: Event): void {
-    event.preventDefault();
-    this.contattiNav.vai();
-  }
+  event.preventDefault();
+  this.contattiNav.vai();
+}
+
+async onTornaCatalogoClick(event: Event): Promise<void> {
+  event.preventDefault();
+  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+  this.router.navigateByUrl(this.baseCatalogoDaUrl());
+}
 }

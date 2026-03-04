@@ -8,10 +8,11 @@
 
  <!-- torna al catalogo: visibile solo nella scheda -->
     <a
-     *ngIf="authVisuale?.tk && paginaScheda()"
-      class="torna-catalogo"
-      [routerLink]="baseCatalogoDaUrl()"
-    >
+    *ngIf="authVisuale?.tk && paginaScheda()"
+  class="torna-catalogo"
+  (click)="onTornaCatalogoClick($event)"
+
+>
       <img
         src="assets/pellicola.webp"
         class="icona-pellicola"
