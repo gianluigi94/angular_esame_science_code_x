@@ -34,17 +34,20 @@
   <div class="bottoni_film">
     <button type="button" class="riprendi">
       Riprendi Visione
-      <span class="icon play" aria-hidden="true">&#9658;</span>
+      <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
     </button>
     <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci">
       Riproduci
       <span class="icon play" aria-hidden="true">&#9658;</span>
     </button>
 
-    <button type="button" class="riproduci">
-      Trailer
-      <span class="icon play" aria-hidden="true">&#9658;</span>
-    </button>
+<button type="button" class="riproduci" (click)="toggleTrailer()">
+  Trailer
+  <span class="icon-wrapper" aria-hidden="true">
+    <span *ngIf="!trailerInRiproduzione" class="icon play">&#9658;</span>
+    <span *ngIf="trailerInRiproduzione"  class="icon pausa"></span>
+  </span>
+</button>
 
     <app-bottone-preferiti> </app-bottone-preferiti>
   </div>

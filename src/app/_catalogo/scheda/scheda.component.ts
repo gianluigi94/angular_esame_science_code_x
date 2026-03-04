@@ -75,7 +75,12 @@ righeCorrelateInCaricamento = true;
 
  playerScheda: any = null;
  mostraPlayerSchedaNelDom = false;
- mostraVideoScheda = false;
+mostraVideoScheda = false;
+trailerInRiproduzione = false;
+
+toggleTrailer(): void {
+  this.trailerInRiproduzione = !this.trailerInRiproduzione;
+}
  durataFadeSchedaMs = 400;
  private timerInserisciPlayerSchedaNelDom: any = null;
  private timerMostraVideoScheda: any = null;
