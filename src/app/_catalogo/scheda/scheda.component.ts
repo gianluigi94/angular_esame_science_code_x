@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import videojs from 'video.js';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -105,6 +105,35 @@ toggleTrailer(): void {
 } else {
   this.programmaInserimentoPlayerSchedaNelDom();
 }
+  }
+}
+
+@HostListener('window:blur')
+gestisciBlurFinestra(): void {
+  if (!this.playerScheda) return;
+  if (!this.mostraVideoScheda) return;
+
+  this.avvioTrailerSchedaRichiesto = false;
+  if (this.timerMostraVideoScheda) {
+    clearTimeout(this.timerMostraVideoScheda);
+    this.timerMostraVideoScheda = null;
+  }
+
+  this.mostraVideoScheda = false;
+
+  this.sfumaGuadagnoVerso(0, this.durataFadeSchedaMs).finally(() => {
+    try { this.playerScheda?.pause?.(); } catch {}
+    try { this.playerScheda?.currentTime?.(0); } catch {}
+  });
+}
+
+@HostListener('window:focus')
+gestisciFocusFinestra(): void {
+  if (!this.trailerInRiproduzione) return;    // utente aveva premuto pausa: non ripartire
+  if (!this.playerScheda) return;
+
+  if (this.mostraPlayerSchedaNelDom && this.playerSchedaPronto) {
+    this.richiediAvvioTrailerScheda(true);
   }
 }
  durataFadeSchedaMs = 400;
