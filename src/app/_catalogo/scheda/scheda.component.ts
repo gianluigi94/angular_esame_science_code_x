@@ -52,7 +52,7 @@ private stagioneCachata = new Set<string>();
   startAnim = false;
   startAnimTitolo = false;
   startAnimDescrizione = false;
-
+  segnale_cambio = false;
   // etichette UI — aggiornate insieme al titolo/descrizione
   labelRiprendi = '';
   labelRiproduci = '';
@@ -372,15 +372,19 @@ preloadPromise.then(() => {
 
   const secondoPreload = new Image();
   secondoPreload.onload = secondoPreload.onerror = () => {
-    this.imgTitoloScheda = urlTitolo;
+  this.imgTitoloScheda = urlTitolo;
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-         this.commitLabelUISincronizzate();
-        this.startAnimTitolo = true;
-        this.startAnimDescrizione = true;
-      });
+      this.segnale_cambio = true;
+this.commitLabelUISincronizzate();
+this.schedaPronta.impostaLabelTorna(
+  this.cambioLingua.leggiCodiceLingua() === 'it' ? 'Ritorna al catalogo ⮨' : 'Back to catalog ⮨'
+);
+      this.startAnimTitolo = true;
+      this.startAnimDescrizione = true;
     });
-  };
+  });
+};
   secondoPreload.src = urlTitolo;
 });
 

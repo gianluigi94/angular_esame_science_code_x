@@ -5,10 +5,12 @@ import { BehaviorSubject } from 'rxjs';
 export class SchedaProntaService {
   private _pronta$ = new BehaviorSubject<boolean>(true);
   schedaPronta$ = this._pronta$.asObservable();
+  loaderGlobalmenteNascosto = false;
 
-  loaderGlobalmenteNascosto = false; // ← AGGIUNTO: flag persistente, non si resetta mai
+  private _labelTorna$ = new BehaviorSubject<string>('');
+  labelTorna$ = this._labelTorna$.asObservable();
+  impostaLabelTorna(label: string): void { this._labelTorna$.next(label); }
 
   reset(): void { this._pronta$.next(false); }
-
   segnaPronte(): void { this._pronta$.next(true); }
 }

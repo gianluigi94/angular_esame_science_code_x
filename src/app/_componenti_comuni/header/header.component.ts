@@ -17,7 +17,7 @@ import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 import { ContattiNavigazioneService } from 'src/app/_servizi_globali/contatti-navigazione.service';
 import { StopVideoGlobaleService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/stop-video-globale.service';
-
+import { SchedaProntaService } from 'src/app/_catalogo/scheda/scheda_service/scheda-pronta.service';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
@@ -55,6 +55,7 @@ headerPronto = false;
   private readonly MIN_SPINNER = 300; // imposto una durata minima dello spinner per evitare flicker
   tipoSelezionato: 'film_serie' | 'film' | 'serie' = 'film_serie';
   headerSolido = false;
+  labelTornaCatalogo = '';
  constructor(
   private api: ApiService,
   private authService: Authservice,
@@ -62,6 +63,7 @@ headerPronto = false;
   cambioLinguaService: CambioLinguaService,
   private translate: TranslateService,
   private http: HttpClient,
+  private schedaPronta: SchedaProntaService,
   private location: Location,
   private tipoContenuto: TipoContenutoService,
   private statoSessione: StatoSessioneClientService,
@@ -72,8 +74,9 @@ headerPronto = false;
   private stopVideoGlobale: StopVideoGlobaleService,
 ) {
     this.tipoSelezionato = this.tipoContenuto.leggiTipo();
-    this.cambioLinguaService = cambioLinguaService; // mi salvo il servizio di cambio lingua nella proprieta' del componente
-    this.iconaLingua$ = this.cambioLinguaService.iconaLingua$; // mi aggancio all'evento dell'icona della lingua per mostrarla in modo reattivo
+    this.cambioLinguaService = cambioLinguaService;
+this.labelTornaCatalogo = this.isIt ? 'Ritorna al catalogo ⮨' : 'Back to catalog ⮨';
+this.iconaLingua$ = this.cambioLinguaService.iconaLingua$;
     this.spinnerScroll$ = this.scorrimentoCatalogo.spinnerScroll$;
 
 
@@ -150,14 +153,15 @@ this.headerPronto = true;
     return /^\/(it|en)\/(catalogo|catalog)\/(film|movies|serie|series)\/\d+(\/|$)/.test(url);
   }
 
-  ngOnInit(): void {
-    if (this.authVisuale?.tk) this.caricaCategorieMenu();
-        this.audioGlobaleService.soloBlocca$
-      .pipe(takeUntil(this.distruggi$))
-      .subscribe((v) => {
-        this.solo_brawser_blocca = !!v;
-      });
-  }
+ngOnInit(): void {
+  if (this.authVisuale?.tk) this.caricaCategorieMenu();
+  this.audioGlobaleService.soloBlocca$
+    .pipe(takeUntil(this.distruggi$))
+    .subscribe((v) => { this.solo_brawser_blocca = !!v; });
+  this.schedaPronta.labelTorna$
+    .pipe(takeUntil(this.distruggi$))
+    .subscribe(label => { if (label) this.labelTornaCatalogo = label; });
+}
 
   /**
    * Metodo eseguito alla distruzione del componente.
