@@ -54,6 +54,9 @@ private stagioneCachata = new Set<string>();
   startAnimDescrizione = false;
 
   private slugCorrente = '';
+private _preloadTitoloPromise: Promise<void> | null = null;
+private _nuovoTitoloPrecaricato = '';
+private _prefetchDescPromise: Promise<string> | null = null;
   private subs = new Subscription();
 
   // --- FLAG DI SINCRONIZZAZIONE ---
@@ -286,9 +289,43 @@ if (this.mostraVideoScheda) {
     this._tabellaPronta = true;
   }
 
- this.subs.add(
-  this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
-    const lingua = this.cambioLingua.leggiCodiceLingua();
+this.subs.add(
+  this.cambioLingua.cambioLinguaAvviato$.subscribe((codice: string) => {
+    if (this.tipoContenuto === 'serie') this.caricamentoStagioneInCorso = true;
+
+    if (this.slugCorrente) {
+      const url = `assets/titoli_${codice}/titolo_${codice}_${this.slugCorrente}.webp`;
+      this._nuovoTitoloPrecaricato = url;
+      this._preloadTitoloPromise = new Promise<void>(resolve => {
+        const img = new Image();
+        img.onload = img.onerror = () => resolve();
+        img.src = url;
+      });
+    } else {
+      this._nuovoTitoloPrecaricato = '';
+      this._preloadTitoloPromise = Promise.resolve();
+    }
+
+    if (this.idContenuto && this.tipoContenuto) {
+      const fetch$ = this.tipoContenuto === 'film'
+        ? this.api.getFilmTraduzioni(this.idContenuto, codice)
+        : this.api.getSerieTraduzioni(this.idContenuto, codice);
+
+      this._prefetchDescPromise = new Promise<string>(resolve => {
+        fetch$.pipe(take(1)).subscribe({
+          next: (res) => resolve(String(res?.data?.descrizione || '')),
+          error: () => resolve(''),
+        });
+      });
+    } else {
+      this._prefetchDescPromise = Promise.resolve('');
+    }
+  })
+);
+
+this.subs.add(
+ this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+  const lingua = this.cambioLingua.leggiCodiceLingua();
 
     const nuovoTitolo = this.slugCorrente
       ? this.imgTitoloDaSlug(this.slugCorrente)
@@ -300,23 +337,25 @@ if (this.mostraVideoScheda) {
 
     const continuaDopoFade = () => {
       if (this.idContenuto && this.tipoContenuto) {
-        const fetch$ = this.tipoContenuto === 'film'
-          ? this.api.getFilmTraduzioni(this.idContenuto, lingua)
-          : this.api.getSerieTraduzioni(this.idContenuto, lingua);
 
-        fetch$.subscribe((res) => {
-          const nuovaDesc = String(res?.data?.descrizione || '');
+
+        const descPromise = this._prefetchDescPromise ?? Promise.resolve('');
+        this._prefetchDescPromise = null;
+        descPromise.then((nuovaDesc) => {
           this.logUrlTrailerCorrente();
-    const primoPreload = new Image();
-primoPreload.onload = primoPreload.onerror = () => {
+    const preloadPromise = this._preloadTitoloPromise ?? Promise.resolve();
+const urlTitolo = this._nuovoTitoloPrecaricato || nuovoTitolo;
+this._preloadTitoloPromise = null;
+this._nuovoTitoloPrecaricato = '';
 
+preloadPromise.then(() => {
   this.startAnimTitolo = false;
   this.startAnimDescrizione = false;
   this.descrizioneTestuale = nuovaDesc;
 
   const secondoPreload = new Image();
   secondoPreload.onload = secondoPreload.onerror = () => {
-    this.imgTitoloScheda = nuovoTitolo;
+    this.imgTitoloScheda = urlTitolo;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         this.startAnimTitolo = true;
@@ -324,9 +363,8 @@ primoPreload.onload = primoPreload.onerror = () => {
       });
     });
   };
-  secondoPreload.src = nuovoTitolo;
-};
-primoPreload.src = nuovoTitolo;
+  secondoPreload.src = urlTitolo;
+});
 
           this.caricaRigheCorrelate(false);
 
