@@ -208,14 +208,17 @@ private verificaEAvviaAnimazioni(): void {
     this.startAnimTitolo = true;
     this.startAnimDescrizione = true;
 
-    const aspetta = () => {
-      const el = document.querySelector('.descrizione');
-      if (el && el.textContent && el.textContent.trim().length > 3) {
-        this.schedaPronta.segnaPronte();
-      } else {
-        requestAnimationFrame(aspetta);
-      }
-    };
+   const aspetta = () => {
+  const el = document.querySelector('.descrizione');
+  const descPronta = el && el.textContent && el.textContent.trim().length > 3;
+  const labelPronta = this.labelRiprendi !== '' && this.labelRiprendi !== 'ui.scheda.riprendi.label';
+
+  if (descPronta && labelPronta) {
+    this.schedaPronta.segnaPronte();
+  } else {
+    requestAnimationFrame(aspetta);
+  }
+};
 
     requestAnimationFrame(aspetta);
   });
@@ -728,9 +731,13 @@ ngOnDestroy(): void {
     this.timerMostraVideoScheda = null;
   }
   if (this.timerResetPlayerScheda) {
-    clearTimeout(this.timerResetPlayerScheda);
-    this.timerResetPlayerScheda = null;
-  }
+  clearTimeout(this.timerResetPlayerScheda);
+  this.timerResetPlayerScheda = null;
+}
+if (this._retryLabelTimer) {
+  clearTimeout(this._retryLabelTimer);
+  this._retryLabelTimer = null;
+}
   this.rimuoviSbloccoAudioScheda();
   try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
 
@@ -1300,9 +1307,14 @@ private aggiornaEtichetteUI(): void {
   this.labelEpisodio       = this.translate.instant('ui.scheda.episodio.label');
 }
 
+private _retryLabelTimer: any = null;
+
 private async commitLabelUISincronizzate(): Promise<void> {
-  // Aspetto che almeno una chiave UI sia disponibile per la lingua corrente.
-  // Questo rende il primo avvio identico al cambio lingua: commit quando translate è pronto.
+  if (this._retryLabelTimer) {
+    clearTimeout(this._retryLabelTimer);
+    this._retryLabelTimer = null;
+  }
+
   try {
     await new Promise<void>((resolve) => {
       this.translate.get('ui.scheda.riprendi.label').pipe(take(1)).subscribe({
@@ -1313,5 +1325,14 @@ private async commitLabelUISincronizzate(): Promise<void> {
   } catch {}
 
   this.aggiornaEtichetteUI();
+
+  // translate.get() risolve anche con la chiave stessa se le traduzioni
+  // non sono ancora caricate. Se è così, riproviamo ogni 300ms.
+  if (this.labelRiprendi === 'ui.scheda.riprendi.label') {
+    this._retryLabelTimer = setTimeout(() => {
+      this._retryLabelTimer = null;
+      if (!this.distrutto) this.commitLabelUISincronizzate();
+    }, 300);
+  }
 }
 }
