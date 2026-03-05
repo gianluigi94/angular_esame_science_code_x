@@ -11,6 +11,8 @@ import { take } from 'rxjs/operators';
 import {  mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 import { StopVideoGlobaleService } from '../app-riga-categoria/categoria_services/stop-video-globale.service';
+import { TranslateService } from '@ngx-translate/core';
+
 export interface Episodio {
   titolo: string;
   descrizione: string;
@@ -163,6 +165,7 @@ constructor(
   private router: Router,
   private location: Location,
   private api: ApiService,
+  private translate: TranslateService,
   private schedaCache: SchedaCacheService,
   private cambioLingua: CambioLinguaService,
   private schedaPronta: SchedaProntaService,

@@ -33,13 +33,13 @@
   </div>
   <div class="bottoni_film">
     <button type="button" class="riprendi">
-      Riprendi Visione
-      <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
-    </button>
+  {{ 'ui.scheda.riprendi.label' | translate }}
+  <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
+</button>
     <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci">
-      Riproduci
-      <span class="icon play" aria-hidden="true">&#9658;</span>
-    </button>
+  {{ 'ui.scheda.riproduci.label' | translate }}
+  <span class="icon play" aria-hidden="true">&#9658;</span>
+</button>
 
 <button type="button" class="riproduci" (click)="toggleTrailer()">
   Trailer
@@ -58,28 +58,26 @@
   </div>
 
   <div class="tabella">
-    <p *ngIf="anno">
-      <span class="cubo">Anno:</span>
-      {{ anno }}
-    </p>
+  <p *ngIf="anno">
+    <span class="cubo">{{ 'ui.scheda.anno.label' | translate }}:</span>
+    {{ anno }}
+  </p>
 
-    <!-- Solo film -->
-    <p *ngIf="tipoContenuto === 'film' && durata">
-      <span class="cubo">Durata:</span>
-      {{ secondiInLeggibile(durata) }}
-    </p>
+  <p *ngIf="tipoContenuto === 'film' && durata">
+    <span class="cubo">{{ 'ui.scheda.durata.label' | translate }}:</span>
+    {{ secondiInLeggibile(durata) }}
+  </p>
 
-    <p *ngIf="regista">
-      <span class="cubo">Regista:</span>
-      {{ regista }}
-    </p>
+  <p *ngIf="regista">
+    <span class="cubo">{{ 'ui.scheda.regista.label' | translate }}:</span>
+    {{ regista }}
+  </p>
 
-    <!-- Solo serie -->
-    <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
-      <span class="cubo">Episodi Totali:</span>
-      {{ episodiTotali }}
-    </p>
-  </div>
+  <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
+    <span class="cubo">{{ 'ui.scheda.numero_episodi.label' | translate }}:</span>
+    {{ episodiTotali }}
+  </p>
+</div>
 
   <div class="episodi" *ngIf="tipoContenuto === 'serie'">
     <nav class="menu-stagioni" aria-label="Seleziona stagione">
@@ -97,7 +95,7 @@
         "
         (click)="selezionaStagione(toString(stag.numero_stagione))"
       >
-        Stagione {{ stag.numero_stagione }}
+        {{ 'ui.scheda.stagione.label' | translate }} {{ stag.numero_stagione }}
       </button>
     </nav>
 
@@ -111,7 +109,7 @@
       [attr.aria-busy]="caricamentoStagioneInCorso"
     >
       <h3 class="titolo-stagione-corrente">
-        Stagione {{ stagioneSelezionata }}
+        {{ 'ui.scheda.stagione.label' | translate }} {{ stagioneSelezionata }}
       </h3>
 
       <ul
@@ -162,7 +160,7 @@
           </div>
 
           <div class="titolo_durata">
-            Episodio {{ i + 1 }}
+            {{ 'ui.scheda.episodio.label' | translate }} {{ i + 1 }}
             <span class="titolo_ep">{{
               serieData[stagioneSelezionata || getChiavi(serieData)[0]][
                 episodio
@@ -216,6 +214,7 @@
     >
       <app-riga-categoria
   [idCategoria]="riga.idCategoria"
+  [abilitaSalvataggiSessionStorage]="false"
   [categoria]="riga.category"
   [locandine]="riga.locandine"
   [tickResetPagine]="0"

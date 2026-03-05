@@ -22,6 +22,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
 @Input() tickResetPagine = 0;
 @Input() ritardoNavigazioneStessaTipologiaMs = 0;
 @Input() attendiChiusuraPlayerSchedaPrimaDiNavigare = false;
+@Input() abilitaSalvataggiSessionStorage = true;
   @Input() titolo = '';
    @ViewChildren('elementoLocandina', { read: ElementRef })
  elementiLocandina!: QueryList<ElementRef>;
@@ -157,6 +158,7 @@ impostaPaginaIniziale(pagina: number): void {
 }
 
 registraClickScrollCategoria(): void {
+  if (!this.abilitaSalvataggiSessionStorage) return;
   try {
     const chiave = 'storico_scroll_categorie';
     const raw = sessionStorage.getItem(chiave);
@@ -426,8 +428,10 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
   if (!id) return;
 
   try {
+  if (this.abilitaSalvataggiSessionStorage) {
     sessionStorage.setItem('ultima_categoria_click', String(this.idCategoria || '').trim());
-  } catch {}
+  }
+} catch {}
 
   const tipo = this.tipoDaClick(loc);
   const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
