@@ -35,7 +35,7 @@ imgTitoloScheda = '';
 
 
 
-
+private _labelPronte = false;
 anno: number | null = null;
 durata: number | null = null;       // minuti — solo film
 episodiTotali: number | null = null; // solo serie
@@ -52,6 +52,16 @@ private stagioneCachata = new Set<string>();
   startAnim = false;
   startAnimTitolo = false;
   startAnimDescrizione = false;
+
+  // etichette UI — aggiornate insieme al titolo/descrizione
+  labelRiprendi = '';
+  labelRiproduci = '';
+  labelAnno = '';
+  labelDurata = '';
+  labelRegista = '';
+  labelEpisodiTotali = '';
+  labelStagione = '';
+  labelEpisodio = '';
 
   private slugCorrente = '';
 private _preloadTitoloPromise: Promise<void> | null = null;
@@ -176,7 +186,7 @@ constructor(
   private stopVideoGlobale: StopVideoGlobaleService,
 ) {}
 
- private verificaEAvviaAnimazioni(): void {
+private verificaEAvviaAnimazioni(): void {
   const tuttoPronto =
     this._loaderNascosto &&
     this._sfondoPronto &&
@@ -186,22 +196,29 @@ constructor(
 
   if (!tuttoPronto) return;
 
- requestAnimationFrame(() => {
-  this.startAnim = true;
-  this.startAnimTitolo = true;
-  this.startAnimDescrizione = true;
+  // ✅ Primo avvio: sincronizzo le label nello stesso “momento” in cui
+  // so che immagine/descrizione/tabella sono pronte.
+  if (!this._labelPronte) {
+    this._labelPronte = true;
+    this.commitLabelUISincronizzate(); // non blocca animazioni, ma evita label vuote
+  }
 
-  const aspetta = () => {
-    const el = document.querySelector('.descrizione');
-    if (el && el.textContent && el.textContent.trim().length > 3) {
-      this.schedaPronta.segnaPronte();
-    } else {
-      requestAnimationFrame(aspetta);
-    }
-  };
+  requestAnimationFrame(() => {
+    this.startAnim = true;
+    this.startAnimTitolo = true;
+    this.startAnimDescrizione = true;
 
-  requestAnimationFrame(aspetta);
-});
+    const aspetta = () => {
+      const el = document.querySelector('.descrizione');
+      if (el && el.textContent && el.textContent.trim().length > 3) {
+        this.schedaPronta.segnaPronte();
+      } else {
+        requestAnimationFrame(aspetta);
+      }
+    };
+
+    requestAnimationFrame(aspetta);
+  });
 }
   private imgTitoloDaSlug(slug: string): string {
     if (!slug) return '';
@@ -358,6 +375,7 @@ preloadPromise.then(() => {
     this.imgTitoloScheda = urlTitolo;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+         this.commitLabelUISincronizzate();
         this.startAnimTitolo = true;
         this.startAnimDescrizione = true;
       });
@@ -414,6 +432,7 @@ preloadPromise.then(() => {
     this._titoloPronto = false;
     this._descPronta = false;
     this._tabellaPronta = false;
+    this._labelPronte = false;
     this.urlSfondoScheda = '';
     this.imgTitoloScheda = '';
     this.descrizioneTestuale = '';
@@ -1264,5 +1283,31 @@ private costruisciUrlTrailer(): string {
   const folder = lang === 'it' ? 'mp4-trailer-it' : 'mp4-trailer-en';
   const prefix = lang === 'it' ? 'trailer_ita_' : 'trailer_en_';
   return `https://d2kd3i5q9rl184.cloudfront.net/${folder}/${prefix}${this.slugCorrente}.mp4`;
+}
+
+private aggiornaEtichetteUI(): void {
+  this.labelRiprendi       = this.translate.instant('ui.scheda.riprendi.label');
+  this.labelRiproduci      = this.translate.instant('ui.scheda.riproduci.label');
+  this.labelAnno           = this.translate.instant('ui.scheda.anno.label');
+  this.labelDurata         = this.translate.instant('ui.scheda.durata.label');
+  this.labelRegista        = this.translate.instant('ui.scheda.regista.label');
+  this.labelEpisodiTotali  = this.translate.instant('ui.scheda.numero_episodi.label');
+  this.labelStagione       = this.translate.instant('ui.scheda.stagione.label');
+  this.labelEpisodio       = this.translate.instant('ui.scheda.episodio.label');
+}
+
+private async commitLabelUISincronizzate(): Promise<void> {
+  // Aspetto che almeno una chiave UI sia disponibile per la lingua corrente.
+  // Questo rende il primo avvio identico al cambio lingua: commit quando translate è pronto.
+  try {
+    await new Promise<void>((resolve) => {
+      this.translate.get('ui.scheda.riprendi.label').pipe(take(1)).subscribe({
+        next: () => resolve(),
+        error: () => resolve(),
+      });
+    });
+  } catch {}
+
+  this.aggiornaEtichetteUI();
 }
 }

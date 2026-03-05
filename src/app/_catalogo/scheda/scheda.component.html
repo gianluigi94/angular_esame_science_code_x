@@ -33,11 +33,11 @@
   </div>
   <div class="bottoni_film">
     <button type="button" class="riprendi">
-  {{ 'ui.scheda.riprendi.label' | translate }}
+  {{ labelRiprendi }}
   <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
 </button>
     <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci">
-  {{ 'ui.scheda.riproduci.label' | translate }}
+  {{ labelRiproduci }}
   <span class="icon play" aria-hidden="true">&#9658;</span>
 </button>
 
@@ -59,22 +59,22 @@
 
   <div class="tabella">
   <p *ngIf="anno">
-    <span class="cubo">{{ 'ui.scheda.anno.label' | translate }}:</span>
+    <span class="cubo">{{ labelAnno }}:</span>
     {{ anno }}
   </p>
 
   <p *ngIf="tipoContenuto === 'film' && durata">
-    <span class="cubo">{{ 'ui.scheda.durata.label' | translate }}:</span>
+    <span class="cubo">{{ labelDurata }}:</span>
     {{ secondiInLeggibile(durata) }}
   </p>
 
   <p *ngIf="regista">
-    <span class="cubo">{{ 'ui.scheda.regista.label' | translate }}:</span>
+    <span class="cubo">{{ labelRegista }}:</span>
     {{ regista }}
   </p>
 
   <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
-    <span class="cubo">{{ 'ui.scheda.numero_episodi.label' | translate }}:</span>
+    <span class="cubo">{{ labelEpisodiTotali }}:</span>
     {{ episodiTotali }}
   </p>
 </div>
@@ -95,7 +95,7 @@
         "
         (click)="selezionaStagione(toString(stag.numero_stagione))"
       >
-        {{ 'ui.scheda.stagione.label' | translate }} {{ stag.numero_stagione }}
+        {{ labelStagione }} {{ stag.numero_stagione }}
       </button>
     </nav>
 
@@ -109,7 +109,7 @@
       [attr.aria-busy]="caricamentoStagioneInCorso"
     >
       <h3 class="titolo-stagione-corrente">
-        {{ 'ui.scheda.stagione.label' | translate }} {{ stagioneSelezionata }}
+        {{ labelStagione }} {{ stagioneSelezionata }}
       </h3>
 
       <ul
@@ -160,7 +160,7 @@
           </div>
 
           <div class="titolo_durata">
-            {{ 'ui.scheda.episodio.label' | translate }} {{ i + 1 }}
+            {{ labelEpisodio }} {{ i + 1 }}
             <span class="titolo_ep">{{
               serieData[stagioneSelezionata || getChiavi(serieData)[0]][
                 episodio
