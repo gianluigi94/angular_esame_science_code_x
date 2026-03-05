@@ -483,3 +483,25 @@ app-spinner{
 .ptwo{
   margin-left: 5px!important;
 }
+:host ::ng-deep .senza-controlli {
+  .vjs-control-bar,
+  .vjs-big-play-button,
+  .vjs-loading-spinner,
+  .vjs-error-display,
+  .vjs-text-track-display {
+    display: none !important;
+  }
+
+  .vjs-tech {
+    object-fit: cover;
+  }
+}
+
+:host ::ng-deep #player-scheda-trailer .vjs-modal-dialog,
+:host ::ng-deep #player-scheda-trailer .vjs-text-track-settings,
+:host ::ng-deep #player-scheda-trailer .vjs-dialog {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

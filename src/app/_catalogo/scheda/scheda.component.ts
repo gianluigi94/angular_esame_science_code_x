@@ -180,25 +180,22 @@ constructor(
 
   if (!tuttoPronto) return;
 
-  requestAnimationFrame(() => {
-    this.startAnim = true;
-    this.startAnimTitolo = true;
-    this.startAnimDescrizione = true;
+ requestAnimationFrame(() => {
+  this.startAnim = true;
+  this.startAnimTitolo = true;
+  this.startAnimDescrizione = true;
 
-    // ← AGGIUNTO: avvia il trailer anche su navigazione stesso-tipo
- this.programmaInserimentoPlayerSchedaNelDom();
+  const aspetta = () => {
+    const el = document.querySelector('.descrizione');
+    if (el && el.textContent && el.textContent.trim().length > 3) {
+      this.schedaPronta.segnaPronte();
+    } else {
+      requestAnimationFrame(aspetta);
+    }
+  };
 
-    const aspetta = () => {
-      const el = document.querySelector('.descrizione');
-      if (el && el.textContent && el.textContent.trim().length > 3) {
-        this.schedaPronta.segnaPronte();
-      } else {
-        requestAnimationFrame(aspetta);
-      }
-    };
-
-    requestAnimationFrame(aspetta);
-  });
+  requestAnimationFrame(aspetta);
+});
 }
   private imgTitoloDaSlug(slug: string): string {
     if (!slug) return '';
@@ -249,9 +246,13 @@ constructor(
          this.contestoAudio.resume().catch(() => {});
        }
      } catch {}
-     try { this.sfumaGuadagnoVerso(1, 0); } catch {}
-     try { this.playerScheda?.muted?.(false); } catch {}
-     this.sincronizzaAvvioTrailerScheda();
+    try { this.sfumaGuadagnoVerso(1, 80); } catch {}
+try { this.playerScheda?.muted?.(false); } catch {}
+if (this.mostraVideoScheda) {
+  this.proseguiAvvioTrailerScheda();
+} else {
+  this.sincronizzaAvvioTrailerScheda();
+}
    }),
  );
 
@@ -282,32 +283,47 @@ constructor(
     this._tabellaPronta = true;
   }
 
-  this.subs.add(
-    this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
-      const lingua = this.cambioLingua.leggiCodiceLingua();
+ this.subs.add(
+  this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
+    const lingua = this.cambioLingua.leggiCodiceLingua();
 
-      const nuovoTitolo = this.slugCorrente
-        ? this.imgTitoloDaSlug(this.slugCorrente)
-        : this.imgTitoloScheda;
+    const nuovoTitolo = this.slugCorrente
+      ? this.imgTitoloDaSlug(this.slugCorrente)
+      : this.imgTitoloScheda;
 
+    const trailerEraAttivo =
+      this.trailerInRiproduzione &&
+      (this.mostraVideoScheda || this.mostraPlayerSchedaNelDom || !!this.timerMostraVideoScheda);
+
+    const continuaDopoFade = () => {
       if (this.idContenuto && this.tipoContenuto) {
         const fetch$ = this.tipoContenuto === 'film'
           ? this.api.getFilmTraduzioni(this.idContenuto, lingua)
           : this.api.getSerieTraduzioni(this.idContenuto, lingua);
 
-       fetch$.subscribe((res) => {
+        fetch$.subscribe((res) => {
           const nuovaDesc = String(res?.data?.descrizione || '');
-          this.startAnimTitolo = false;
-          this.startAnimDescrizione = false;
-          this.imgTitoloScheda = nuovoTitolo;
-          this.descrizioneTestuale = nuovaDesc;
+          this.logUrlTrailerCorrente();
+    const primoPreload = new Image();
+primoPreload.onload = primoPreload.onerror = () => {
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              this.startAnimTitolo = true;
-              this.startAnimDescrizione = true;
-            });
-          });
+  this.startAnimTitolo = false;
+  this.startAnimDescrizione = false;
+  this.descrizioneTestuale = nuovaDesc;
+
+  const secondoPreload = new Image();
+  secondoPreload.onload = secondoPreload.onerror = () => {
+    this.imgTitoloScheda = nuovoTitolo;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.startAnimTitolo = true;
+        this.startAnimDescrizione = true;
+      });
+    });
+  };
+  secondoPreload.src = nuovoTitolo;
+};
+primoPreload.src = nuovoTitolo;
 
           this.caricaRigheCorrelate(false);
 
@@ -315,6 +331,10 @@ constructor(
             this.stagioneCachata.clear();
             this.serieData = {};
             this.selezionaStagione(this.stagioneSelezionata);
+          }
+
+          if (trailerEraAttivo && this.slugCorrente) {
+            this.programmaInserimentoPlayerSchedaNelDom();
           }
         });
       } else {
@@ -324,8 +344,17 @@ constructor(
           requestAnimationFrame(() => (this.startAnimTitolo = true));
         });
       }
-    })
-  );
+    };
+
+    if (trailerEraAttivo) {
+      this.chiudiPlayerSchedaConFadeEReset(350).finally(() => {
+        continuaDopoFade();
+      });
+    } else {
+      continuaDopoFade();
+    }
+  })
+);
 
   this.route.paramMap.subscribe((pm) => {
     const idRaw = pm.get('id');
@@ -393,42 +422,48 @@ constructor(
       ? this.schedaCache.get(this.tipoContenuto, id, lingua)
       : null;
 
-    if (cached) {
-      this.descrizione         = cached.descrizione;
-      this.descrizioneTestuale = cached.descrizioneTestuale;
-      this.urlSfondoScheda     = cached.urlSfondoScheda;
-      this.imgTitoloScheda     = cached.imgTitoloScheda;
-      this.anno                = cached.anno;
-      this.durata              = cached.durata;
-      this.episodiTotali       = cached.episodiTotali;
-      this.regista             = cached.regista;
-      this.slugCorrente        = cached.slugCorrente;
-      this.stagioni            = cached.stagioni;
-      this.stagioneSelezionata = cached.stagioneSelezionata;
-      this.serieData           = cached.serieData;
+  if (cached) {
+  this.descrizione         = cached.descrizione;
+  this.descrizioneTestuale = cached.descrizioneTestuale;
+  this.urlSfondoScheda     = cached.urlSfondoScheda;
+  this.imgTitoloScheda     = cached.imgTitoloScheda;
+  this.anno                = cached.anno;
+  this.durata              = cached.durata;
+  this.episodiTotali       = cached.episodiTotali;
+  this.regista             = cached.regista;
+  this.slugCorrente        = cached.slugCorrente;
+  this.stagioni            = cached.stagioni;
+  this.stagioneSelezionata = cached.stagioneSelezionata;
+  this.serieData           = cached.serieData;
 
-      for (const k of Object.keys(cached.serieData)) {
-        this.stagioneCachata.add(k);
-      }
+  for (const k of Object.keys(cached.serieData)) {
+    this.stagioneCachata.add(k);
+  }
 
-      this._sfondoPronto  = true;
-      this._titoloPronto  = true;
-      this._descPronta    = true;
-      this._tabellaPronta = true;
+  this._sfondoPronto  = true;
+  this._titoloPronto  = true;
+  this._descPronta    = true;
+  this._tabellaPronta = true;
 
-      this.righeCorrelate = cached.righeCorrelate ?? [];
-      this.righeCorrelateInCaricamento = false;
+  this.righeCorrelate = cached.righeCorrelate ?? [];
+  this.righeCorrelateInCaricamento = false;
 
-      this.verificaEAvviaAnimazioni();
-      return;
-    }
+  this.verificaEAvviaAnimazioni();
+
+  if (this.slugCorrente) {
+    this.programmaInserimentoPlayerSchedaNelDom();
+  }
+
+  return;
+}
     // ── fine ripristino da cache ──
 
     if (this.tipoContenuto === 'film') {
         this.api.getFilm(id).subscribe((res) => {
-        this.descrizione = String(res?.data?.descrizione || '');
-        this.slugCorrente = this.slugDaDescrizione(this.descrizione);
+  this.descrizione = String(res?.data?.descrizione || '');
+  this.slugCorrente = this.slugDaDescrizione(this.descrizione);
 
+  this.logUrlTrailerCorrente();
         this.anno          = res?.data?.anno    ?? null;
         this.durata        = res?.data?.durata  ?? null;
         this.regista       = String(res?.data?.regista || '');
@@ -446,7 +481,11 @@ constructor(
         this._tabellaPronta = true;
 
         this.verificaEAvviaAnimazioni();
-        this.caricaRigheCorrelate();
+this.caricaRigheCorrelate();
+
+if (this.slugCorrente) {
+  this.programmaInserimentoPlayerSchedaNelDom();
+}
       });
 
       this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
@@ -473,6 +512,7 @@ constructor(
       ]).subscribe(([resSerie, resStagioni]: [any, any]) => {
         this.descrizione   = String(resSerie?.data?.descrizione || '');
         this.slugCorrente  = this.slugDaDescrizione(this.descrizione);
+        this.logUrlTrailerCorrente();
         this.anno          = resSerie?.data?.anno           ?? null;
         this.episodiTotali = resSerie?.data?.numero_episodi ?? null;
         this.regista       = String(resSerie?.data?.regista || '');
@@ -489,8 +529,13 @@ constructor(
         this._titoloPronto  = true;
         this._tabellaPronta = true;
         this.verificaEAvviaAnimazioni();
-        this.caricaRigheCorrelate();
-        const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
+this.caricaRigheCorrelate();
+
+if (this.slugCorrente) {
+  this.programmaInserimentoPlayerSchedaNelDom();
+}
+
+const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
         this.stagioni = lista.map(s => ({
           id_stagione:     s.id_stagione,
           numero_stagione: s.numero_stagione,
@@ -771,8 +816,35 @@ secondiInLeggibile(secondi: number | null | undefined): string {
 
 
 private sincronizzaAvvioTrailerScheda(): void {
+  const urlCalcolata = this.costruisciUrlTrailer();
+
+
+
   if (!this.playerScheda) return;
   if (!this.mostraVideoScheda) return;
+
+  const url = urlCalcolata;
+  if (!url) {
+
+    return;
+  }
+
+  this.mostraVideoScheda = false;
+  try { this.playerScheda.src({ src: url, type: 'video/mp4' }); } catch {}
+
+  this.playerScheda.one('canplay', () => {
+    if (!this.trailerInRiproduzione) return;
+    this.mostraVideoScheda = true;
+    this.proseguiAvvioTrailerScheda();
+  });
+}
+
+
+
+private proseguiAvvioTrailerScheda(): void {
+  if (!this.playerScheda) return;
+
+
 
   if (this.audioBloccatoDaUtente) {
     try { this.playerScheda.muted(true); } catch {}
@@ -781,29 +853,28 @@ private sincronizzaAvvioTrailerScheda(): void {
     return;
   }
 
-  // ← AGGIUNTO: il gain potrebbe essere rimasto a 0 dal fade di navigazione
   try { this.sfumaGuadagnoVerso(1, 0); } catch {}
 
   try { this.playerScheda.muted(false); } catch {}
   try { this.playerScheda.currentTime(0); } catch {}
 
-   try {
-     const p = this.playerScheda.play();
-     if (p && typeof p.then === 'function') {
-       p.then(() => {
-         // ok: audio concesso
-         this.soloBrowserBlocca = false;
-         try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
-         this.rimuoviSbloccoAudioScheda();
-       }).catch(() => {
-         // browser blocca autoplay con audio -> ripiego mutato  preparo click “ovunque” per restart con audio
-         this.attivaFallbackSoloBrowserBlocca();
-       });
-     }
-   } catch {
-     this.attivaFallbackSoloBrowserBlocca();
-   }
- }
+
+  try {
+    const p = this.playerScheda.play();
+
+    if (p && typeof p.then === 'function') {
+      p.then(() => {
+        this.soloBrowserBlocca = false;
+        try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+        this.rimuoviSbloccoAudioScheda();
+      }).catch((e: any) => {
+        this.attivaFallbackSoloBrowserBlocca();
+      });
+    }
+  } catch (e) {
+    this.attivaFallbackSoloBrowserBlocca();
+  }
+}
 
  private attivaFallbackSoloBrowserBlocca(): void {
    if (!this.playerScheda) return;
@@ -957,6 +1028,8 @@ private richiediAvvioTrailerScheda(immediato = false): void {
 }
 
 private programmaAvvioTrailerSchedaSePossibile(immediato = false): void {
+
+
   if (!this.avvioTrailerSchedaRichiesto) return;
   if (!this.playerSchedaPronto) return;
   if (!this.playerScheda) return;
@@ -969,7 +1042,9 @@ private programmaAvvioTrailerSchedaSePossibile(immediato = false): void {
   this.avvioTrailerSchedaRichiesto = false;
 
   const ritardo = immediato ? 0 : 1000;
+
   this.timerMostraVideoScheda = setTimeout(() => {
+
     this.timerMostraVideoScheda = null;
     this.mostraVideoScheda = true;
     this.sincronizzaAvvioTrailerScheda();
@@ -1068,36 +1143,38 @@ private programmaAvvioTrailerSchedaSePossibile(immediato = false): void {
        preload: 'auto',
        loop: false,
        playsinline: true,
-       sources: [{
-         src: 'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_noi_non_siamo_soli.mp4',
-         type: 'video/mp4'
-       }]
+
      });
 
-     this.playerScheda.ready(() => {
-       this.playerSchedaPronto = true;
-       try { this.inizializzaWebAudio(); } catch {}
-       this.programmaAvvioTrailerSchedaSePossibile();
+    this.playerScheda.ready(() => {
 
-       this.playerScheda.on('ended', () => {
-  this.trailerInRiproduzione = false;   // ← AGGIUNTO
-  this.mostraVideoScheda = false;
-  this.programmaResetPlayerSchedaDopoScomparsa();
+  this.playerSchedaPronto = true;
+  try { this.inizializzaWebAudio(); } catch {}
+  this.programmaAvvioTrailerSchedaSePossibile();
+
+
+
+  this.playerScheda.on('ended', () => {
+    this.trailerInRiproduzione = false;
+    this.mostraVideoScheda = false;
+    this.programmaResetPlayerSchedaDopoScomparsa();
+  });
 });
-     });
    }, 50);
  }
 
  private programmaInserimentoPlayerSchedaNelDom(): void {
-   if (this.mostraPlayerSchedaNelDom) return;
-   if (this.timerInserisciPlayerSchedaNelDom) return;
 
-   this.timerInserisciPlayerSchedaNelDom = setTimeout(() => {
-     this.timerInserisciPlayerSchedaNelDom = null;
-     this.mostraPlayerSchedaNelDom = true;
-     this.richiediAvvioTrailerScheda();
-   }, 500);
- }
+
+  if (this.mostraPlayerSchedaNelDom) return;
+  if (this.timerInserisciPlayerSchedaNelDom) return;
+
+  this.timerInserisciPlayerSchedaNelDom = setTimeout(() => {
+    this.timerInserisciPlayerSchedaNelDom = null;
+    this.mostraPlayerSchedaNelDom = true;
+    this.richiediAvvioTrailerScheda();
+  }, 500);
+}
 
  private smontaPlayerSchedaDalDomSubito(): void {
    if (this.timerInserisciPlayerSchedaNelDom) {
@@ -1129,4 +1206,22 @@ private programmaAvvioTrailerSchedaSePossibile(immediato = false): void {
 
    try { playerDaSmontare?.dispose?.(); } catch {}
  }
+
+
+
+private logUrlTrailerCorrente(): void {
+  if (!this.slugCorrente) return;
+  const lang = this.cambioLingua.leggiCodiceLingua();
+  const folder = lang === 'it' ? 'mp4-trailer-it' : 'mp4-trailer-en';
+  const prefix = lang === 'it' ? 'trailer_ita_' : 'trailer_en_';
+  const url = `https://d2kd3i5q9rl184.cloudfront.net/${folder}/${prefix}${this.slugCorrente}.mp4`;
+}
+
+private costruisciUrlTrailer(): string {
+  if (!this.slugCorrente) return '';
+  const lang = this.cambioLingua.leggiCodiceLingua();
+  const folder = lang === 'it' ? 'mp4-trailer-it' : 'mp4-trailer-en';
+  const prefix = lang === 'it' ? 'trailer_ita_' : 'trailer_en_';
+  return `https://d2kd3i5q9rl184.cloudfront.net/${folder}/${prefix}${this.slugCorrente}.mp4`;
+}
 }

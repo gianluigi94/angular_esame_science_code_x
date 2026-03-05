@@ -9,5 +9,6 @@ export class SchedaProntaService {
   loaderGlobalmenteNascosto = false; // ← AGGIUNTO: flag persistente, non si resetta mai
 
   reset(): void { this._pronta$.next(false); }
+
   segnaPronte(): void { this._pronta$.next(true); }
 }
