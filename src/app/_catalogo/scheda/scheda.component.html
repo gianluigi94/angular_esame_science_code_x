@@ -6,7 +6,7 @@
 <img
   *ngIf="urlSfondoScheda"
   [src]="urlSfondoScheda"
-  alt=""
+  [alt]="altSfondoScheda"
   class="sfondo_scheda"
   [class.anim]="startAnim"
 />
@@ -25,23 +25,23 @@
 ></video-js>
   <div class="titolo-scheda" *ngIf="imgTitoloScheda">
     <img
-      [src]="imgTitoloScheda"
-      alt=""
-      class="titolo-scheda__img"
+  [src]="imgTitoloScheda"
+  [alt]="altTitoloScheda"
+  class="titolo-scheda__img"
       [class.anim]="startAnimTitolo"
     />
   </div>
   <div class="bottoni_film">
-    <button type="button" class="riprendi">
+    <button type="button" class="riprendi" [title]="labelRiprendiTitle">
   {{ labelRiprendi }}
   <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
 </button>
-    <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci">
+    <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci" [title]="labelRiproduciTitle">
   {{ labelRiproduci }}
   <span class="icon play" aria-hidden="true">&#9658;</span>
 </button>
 
-<button type="button" class="riproduci" (click)="toggleTrailer()">
+<button type="button" class="riproduci" (click)="toggleTrailer()" [title]="labelTrailerTitle">
   Trailer
   <span class="icon-wrapper" aria-hidden="true">
     <span *ngIf="!trailerInRiproduzione" class="icon play">&#9658;</span>
@@ -49,7 +49,7 @@
   </span>
 </button>
 
-    <app-bottone-preferiti> </app-bottone-preferiti>
+    <app-bottone-preferiti [titolo]="titoloScheda"></app-bottone-preferiti>
   </div>
   <div class="contenuto_info">
     <p class="descrizione" [class.anim]="startAnimDescrizione">
@@ -92,7 +92,7 @@
         [attr.aria-pressed]="
           (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
           toString(stag.numero_stagione)
-        "
+        "[title]="('ui.scheda.stagione.tittle.button' | translate) + ': ' + stag.numero_stagione"
         (click)="selezionaStagione(toString(stag.numero_stagione))"
       >
         {{ labelStagione }} {{ stag.numero_stagione }}
@@ -140,6 +140,7 @@
             );
             let i = index
           "
+          [title]="('ui.scheda.episodio.tittle.button' | translate) + ': ' + serieData[stagioneSelezionata || getChiavi(serieData)[0]][episodio].titolo"
         >
           <div class="img_contenitore_scritta">
             <div class="ritaglio">
@@ -192,7 +193,7 @@
           [attr.aria-pressed]="
             (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
             toString(stag.numero_stagione)
-          "
+          "[title]="('ui.scheda.stagione.tittle.button' | translate) + ': ' + stag.numero_stagione"
           (click)="selezionaStagione(toString(stag.numero_stagione))"
         >
           Stagione {{ stag.numero_stagione }}

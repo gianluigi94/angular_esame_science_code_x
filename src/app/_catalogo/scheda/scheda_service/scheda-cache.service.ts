@@ -6,6 +6,7 @@ export interface SchedaSnapshot {
   urlSfondoScheda: string;
   imgTitoloScheda: string;
   anno: number | null;
+  titoloScheda: string;
   durata: number | null;
   episodiTotali: number | null;
   regista: string;

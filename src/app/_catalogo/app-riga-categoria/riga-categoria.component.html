@@ -77,17 +77,17 @@
 </div>
 
 <div class="button">
-  <button class="bottone-carosello avanti" *ngIf="indicePagina < numeroMassimoPagine"
-    (click)="paginaSuccessiva()"
-    aria-label="scroll"
-    title="scroll">
-    &#9654;
-  </button>
+<button class="bottone-carosello avanti" *ngIf="indicePagina < numeroMassimoPagine"
+  (click)="paginaSuccessiva()"
+  [attr.aria-label]="'ui.carosello_due.scroll.title' | translate"
+  [title]="'ui.carosello_due.scroll.title' | translate">
+  &#9654;
+</button>
 
-  <button class="bottone-carosello indietro" *ngIf="indicePagina > 0"
-    (click)="paginaPrecedente()"
-    aria-label="scroll"
-    title="scroll">
-    &#9664;
-  </button>
+<button class="bottone-carosello indietro" *ngIf="indicePagina > 0"
+  (click)="paginaPrecedente()"
+  [attr.aria-label]="'ui.carosello_due.scroll.title' | translate"
+  [title]="'ui.carosello_due.scroll.title' | translate">
+  &#9664;
+</button>
 </div>

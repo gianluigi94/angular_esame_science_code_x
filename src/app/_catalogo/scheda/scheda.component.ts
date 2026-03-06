@@ -28,6 +28,10 @@ export interface Episodio {
 export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
   descrizione = '';
 descrizioneTestuale = '';
+titoloScheda = '';
+altSfondoScheda = '';
+altTitoloScheda = '';
+private _prefetchTitoloPromise: Promise<string> | null = null;
 tipoContenuto: 'film' | 'serie' | null = null;
 idContenuto: number | null = null;
 urlSfondoScheda = '';
@@ -54,8 +58,11 @@ private stagioneCachata = new Set<string>();
   startAnimDescrizione = false;
   segnale_cambio = false;
   // etichette UI — aggiornate insieme al titolo/descrizione
-  labelRiprendi = '';
-  labelRiproduci = '';
+  labelRiprendi      = '';
+labelRiproduci     = '';
+labelRiprendiTitle  = '';
+labelRiproduciTitle = '';
+labelTrailerTitle   = '';
   labelAnno = '';
   labelDurata = '';
   labelRegista = '';
@@ -95,7 +102,6 @@ trailerInRiproduzione = true;
 
 toggleTrailer(): void {
   if (this.trailerInRiproduzione) {
-    // → PAUSA: cancella timer pendenti e nascondi se già visibile
     this.trailerInRiproduzione = false;
     if (this.timerInserisciPlayerSchedaNelDom) {
       clearTimeout(this.timerInserisciPlayerSchedaNelDom);
@@ -112,11 +118,12 @@ toggleTrailer(): void {
         this.resettaPlayerSchedaPerNuovoAvvio();
       });
     }
+  this.aggiornaTrailerTitle();
   } else {
-    // → PLAY: riavvia da capo
     this.trailerInRiproduzione = true;
     if (this.mostraPlayerSchedaNelDom && this.playerSchedaPronto) {
   this.richiediAvvioTrailerScheda(true);
+  this.aggiornaTrailerTitle();
 } else {
   this.programmaInserimentoPlayerSchedaNelDom();
 }
@@ -331,14 +338,21 @@ this.subs.add(
         ? this.api.getFilmTraduzioni(this.idContenuto, codice)
         : this.api.getSerieTraduzioni(this.idContenuto, codice);
 
-      this._prefetchDescPromise = new Promise<string>(resolve => {
-        fetch$.pipe(take(1)).subscribe({
-          next: (res) => resolve(String(res?.data?.descrizione || '')),
-          error: () => resolve(''),
-        });
-      });
+      let resolveDesc!: (v: string) => void;
+let resolveTitolo!: (v: string) => void;
+this._prefetchDescPromise   = new Promise<string>(r => resolveDesc   = r);
+this._prefetchTitoloPromise = new Promise<string>(r => resolveTitolo = r);
+
+fetch$.pipe(take(1)).subscribe({
+  next: (res) => {
+    resolveDesc(String(res?.data?.descrizione || ''));
+    resolveTitolo(String(res?.data?.titolo     || ''));
+  },
+  error: () => { resolveDesc(''); resolveTitolo(''); },
+});
     } else {
-      this._prefetchDescPromise = Promise.resolve('');
+      this._prefetchDescPromise   = Promise.resolve('');
+this._prefetchTitoloPromise = Promise.resolve('');
     }
   })
 );
@@ -359,9 +373,13 @@ this.subs.add(
       if (this.idContenuto && this.tipoContenuto) {
 
 
-        const descPromise = this._prefetchDescPromise ?? Promise.resolve('');
-        this._prefetchDescPromise = null;
-        descPromise.then((nuovaDesc) => {
+        const descPromise   = this._prefetchDescPromise   ?? Promise.resolve('');
+const titoloPromise = this._prefetchTitoloPromise ?? Promise.resolve('');
+this._prefetchDescPromise   = null;
+this._prefetchTitoloPromise = null;
+Promise.all([descPromise, titoloPromise]).then(([nuovaDesc, nuovoTitoloScheda]) => {
+  this.titoloScheda = nuovoTitoloScheda;
+  this.aggiornaAltSfondo();
           this.logUrlTrailerCorrente();
     const preloadPromise = this._preloadTitoloPromise ?? Promise.resolve();
 const urlTitolo = this._nuovoTitoloPrecaricato || nuovoTitolo;
@@ -443,7 +461,12 @@ this.schedaPronta.impostaLabelTorna(
     this.urlSfondoScheda = '';
     this.imgTitoloScheda = '';
     this.descrizioneTestuale = '';
-
+this.titoloScheda        = '';
+this.altSfondoScheda     = '';
+this.altTitoloScheda     = '';
+this.labelRiprendiTitle  = '';
+this.labelRiproduciTitle = '';
+this.labelTrailerTitle   = '';
       this.descrizione = '';
   this.slugCorrente = '';
 
@@ -512,8 +535,10 @@ this.schedaPronta.impostaLabelTorna(
   this._descPronta    = true;
   this._tabellaPronta = true;
 
-  this.righeCorrelate = cached.righeCorrelate ?? [];
-  this.righeCorrelateInCaricamento = false;
+  this.titoloScheda = cached.titoloScheda ?? '';
+this.aggiornaAltSfondo();
+this.righeCorrelate = cached.righeCorrelate ?? [];
+this.righeCorrelateInCaricamento = false;
 
   this.verificaEAvviaAnimazioni();
 
@@ -555,9 +580,11 @@ if (this.slugCorrente) {
 }
       });
 
-      this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
-        this.descrizioneTestuale = String(res?.data?.descrizione || '');
-        this._descPronta = true;
+     this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe((res) => {
+  this.descrizioneTestuale = String(res?.data?.descrizione || '');
+  this.titoloScheda        = String(res?.data?.titolo      || '');
+  this.aggiornaAltSfondo();
+  this._descPronta = true;
         this.verificaEAvviaAnimazioni();
       });
     }
@@ -566,8 +593,10 @@ if (this.slugCorrente) {
       const lingua = this.cambioLingua.leggiCodiceLingua();
 
       this.api.getSerieTraduzioni(id, lingua).subscribe((res) => {
-        this.descrizioneTestuale = String(res?.data?.descrizione || '');
-        this._descPronta = true;
+  this.descrizioneTestuale = String(res?.data?.descrizione || '');
+  this.titoloScheda        = String(res?.data?.titolo      || '');
+  this.aggiornaAltSfondo();
+  this._descPronta = true;
         this.verificaEAvviaAnimazioni();
       });
 
@@ -704,12 +733,13 @@ ngOnDestroy(): void {
   if (this.tipoContenuto && this.idContenuto) {
     const lingua = this.cambioLingua.leggiCodiceLingua();
     this.schedaCache.set(this.tipoContenuto, this.idContenuto, lingua, {
-      descrizione: this.descrizione,
+  descrizione: this.descrizione,
       descrizioneTestuale: this.descrizioneTestuale,
       urlSfondoScheda: this.urlSfondoScheda,
       imgTitoloScheda: this.imgTitoloScheda,
       anno: this.anno,
       durata: this.durata,
+      titoloScheda: this.titoloScheda,
       episodiTotali: this.episodiTotali,
       regista: this.regista,
       slugCorrente: this.slugCorrente,
@@ -1226,10 +1256,11 @@ private programmaAvvioTrailerSchedaSePossibile(immediato = false): void {
 
 
   this.playerScheda.on('ended', () => {
-    this.trailerInRiproduzione = false;
-    this.mostraVideoScheda = false;
-    this.programmaResetPlayerSchedaDopoScomparsa();
-  });
+  this.trailerInRiproduzione = false;
+  this.mostraVideoScheda = false;
+  this.aggiornaTrailerTitle();
+  this.programmaResetPlayerSchedaDopoScomparsa();
+});
 });
    }, 50);
  }
@@ -1305,6 +1336,7 @@ private aggiornaEtichetteUI(): void {
   this.labelEpisodiTotali  = this.translate.instant('ui.scheda.numero_episodi.label');
   this.labelStagione       = this.translate.instant('ui.scheda.stagione.label');
   this.labelEpisodio       = this.translate.instant('ui.scheda.episodio.label');
+  this.aggiornaAltSfondo();
 }
 
 private _retryLabelTimer: any = null;
@@ -1334,5 +1366,20 @@ private async commitLabelUISincronizzate(): Promise<void> {
       if (!this.distrutto) this.commitLabelUISincronizzate();
     }, 300);
   }
+}
+
+private aggiornaAltSfondo(): void {
+  this.altSfondoScheda    = this.translate.instant('ui.carosello.altSfondo', { titolo: this.titoloScheda });
+  this.altTitoloScheda    = this.translate.instant('ui.carosello.altTitolo', { titolo: this.titoloScheda });
+  this.labelRiprendiTitle  = this.translate.instant('ui.scheda.riprendi.title.two',  { titolo: this.titoloScheda });
+this.labelRiproduciTitle = this.translate.instant('ui.scheda.riproduci.title.two', { titolo: this.titoloScheda });
+  this.aggiornaTrailerTitle();
+}
+
+private aggiornaTrailerTitle(): void {
+  const chiave = this.trailerInRiproduzione
+    ? 'ui.scheda.trailer.title.pause'
+    : 'ui.scheda.trailer.title';
+  this.labelTrailerTitle = this.translate.instant(chiave, { title: this.titoloScheda });
 }
 }
