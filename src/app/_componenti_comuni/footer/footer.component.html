@@ -7,7 +7,7 @@
 
     © 2026 Science&nbsp;Code<span>X</span>
 
-    <ng-container *ngIf="!isContactRoute; else tornaTemplate">
+    <ng-container *ngIf="!isContactRoute && !is404Route; else tornaTemplate">
       <a class="link_cont"
          (click)="onContattiClick($event)"
          [innerHTML]="'ui.footer.contatti.label' | translate"

@@ -109,4 +109,12 @@ get isContactRoute(): boolean {
   const url = this.router.url.split('?')[0].split('#')[0];
   return /^\/(it\/contatti|en\/contact)(\/|$)/.test(url);
 }
+
+get isWelcomeRoute(): boolean {
+  const url = this.router.url.split('?')[0].split('#')[0];
+  return (
+    /^\/(it|en)\/(benvenuto|welcome)(\/|$)/.test(url) &&
+    !/^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url)
+  );
+}
 }

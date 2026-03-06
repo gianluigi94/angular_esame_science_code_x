@@ -25,13 +25,22 @@ export class FooterComponent {
     return !!this.authService.leggiObsAuth().value?.tk;
   }
 
-  tornaIndietro(event: Event): void {
-    event.preventDefault();
+ tornaIndietro(event: Event): void {
+  event.preventDefault();
+  if (this.is404Route) {
+    this.router.navigate(['/']).then(() => window.location.reload());
+  } else {
     window.history.back();
   }
-
+}
   onContattiClick(event: Event): void {
     event.preventDefault();
     this.contattiNav.vai();
   }
+
+  get is404Route(): boolean {
+  const url = this.router.url.split('?')[0].split('#')[0];
+  return /^\/(it\/non-trovato|en\/not-found)(\/|$)/.test(url);
+}
+
 }

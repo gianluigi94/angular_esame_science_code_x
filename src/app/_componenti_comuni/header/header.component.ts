@@ -132,7 +132,7 @@ this.headerPronto = true;
 
         setTimeout(() => {
           this.linguaInCambio = false; // disattivo lo stato di cambio lingua e tolgo lo spinner
-        }, restante); // uso il tempo restante per evitare uno spegnimento troppo rapido
+        }, restante + 1000); // uso il tempo restante per evitare uno spegnimento troppo rapido
 
         if (this.authVisuale?.tk) this.caricaCategorieMenu();
       });

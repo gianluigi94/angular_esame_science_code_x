@@ -3,7 +3,7 @@
   <div class="home-container">
    <!-- titolo principale: NON viene più distrutto/ricreato, cambia solo comportamento -->
 <a class="title-link" (click)="onLogoClick($event)">
-  <h1 id="titles" class="main-title" [attr.translate]="'no'">
+  <h1 id="titles" class="main-title" [attr.translate]="'no'" [title]="!isWelcomeRoute ? ('ui.main.tornaIndietro' | translate) : ''">
     <span class="first" data-titolo-first>Science <br> code</span>
     <span id="x_low" *ngIf="isLowPerf" #xRef class="x x-low" data-titolo-x>X</span>
     <span id="x_hegh" *ngIf="!isLowPerf" #xRef class="x x-high" data-titolo-x>X</span>
