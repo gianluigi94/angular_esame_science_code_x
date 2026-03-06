@@ -1,0 +1,1082 @@
+
+
+import { AfterViewInit, Component, OnDestroy, ViewEncapsulation, Input, OnChanges, SimpleChanges } from '@angular/core';
+import videojs from 'video.js';
+import type Player from 'video.js/dist/types/player';
+
+@Component({
+  selector: 'app-player-video',
+  templateUrl: './player-video.component.html',
+  styleUrls: ['./player-video.component.scss'],
+  encapsulation: ViewEncapsulation.None,
+})
+export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges {
+
+
+
+  private doppioAvvioEseguito = false;
+    @Input() risorse: { auto: string; '1080': string; '720': string; '360': string } | null = {
+  auto:   'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/master.m3u8',
+  '1080': 'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/1080/with-audio.m3u8',
+  '720':  'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/720/with-audio.m3u8',
+  '360':  'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/360/with-audio.m3u8',
+};
+  URL_MASTER = '';
+  URL_1080   = '';
+  URL_720    = '';
+  URL_360    = '';
+
+
+
+
+  freezeCanvas: HTMLCanvasElement | null = null;
+  freezeAttiva = false;
+    private inactivityTimeout?: ReturnType<typeof setTimeout>;
+  audioCtx: AudioContext | null = null;
+  gainNode: GainNode | null = null;
+  mediaSourceNode: MediaElementAudioSourceNode | null = null;
+  avvioConsentito = false;
+  playInterno = false;
+  private readonly FADE_PAUSA_MS = 280;
+  private readonly FADE_PLAY_MS  = 320;
+  private readonly WARMUP_DELAY_MS = 90;
+  private pauseToken = 0;
+  private originalPause: any;
+  private originalPlay: any;
+  private readonly START_BUFFER_S = 5;
+
+  videoLingua: string | null = localStorage.getItem('video_lingua');
+
+  private player?: Player;
+  currentLang: 'en' | 'it' =
+    localStorage.getItem('lingua_sistema') === 'italiano' ? 'it' : 'en';
+
+
+
+
+
+  private getLabel(label: string): string {
+    if (this.currentLang === 'it') {
+      return label === 'en' ? 'Inglese' : label === 'it' ? 'Italiano' : label;
+    } else {
+      return label === 'en' ? 'English' : label === 'it' ? 'Italian' : label;
+    }
+  }
+
+    ngOnChanges(changes: SimpleChanges): void {
+    if ('risorse' in changes && this.risorse && this.player) {
+      this.cambiaContenuto(this.risorse);
+    }
+
+
+  }
+
+  private progressIndex = 0;
+
+  ngAfterViewInit(): void {
+
+    this.player = videojs('vid1', {
+      controls: true,
+      preload: 'auto',
+
+    });
+
+      (this.player as any).language?.(this.currentLang);
+  this.updateMenuLabels();
+
+
+
+    this.player.ready(() => {
+      this.creaMascheraAvvio();
+      this.mostraMascheraAvvio();
+      this.setupAudioGraph();
+      this.setGain(0);
+      try { (this.player as any).muted?.(true); } catch {}
+
+
+
+      this.originalPause = (this.player as any).pause.bind(this.player);
+      this.originalPlay  = (this.player as any).play.bind(this.player);
+
+      (this.player as any).pause = () => {
+        if (this.playInterno) return this.originalPause();
+        if (this.player?.paused?.()) return;
+        const myToken = ++this.pauseToken;
+        this.fadeGainTo(0, this.FADE_PAUSA_MS).finally(() => {
+          if (myToken !== this.pauseToken) return;
+          try { this.originalPause(); } catch { try { (this.player as any).pause(); } catch {} }
+        });
+      };
+
+      (this.player as any).play = () => {
+        this.pauseToken++;
+        if (this.playInterno) return this.originalPlay();
+        Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
+          this.setGain(0);
+  try { (this.player as any).muted?.(false); } catch {}
+  try {
+    const tech: any = (this.player as any).tech?.(true);
+    const ve: HTMLVideoElement | undefined = tech?.el?.();
+    if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+  } catch {}
+        const p = this.originalPlay();
+        if (this.avvioConsentito) this.armFadeInOnce();
+
+  (this.player as any).one?.('playing', () => {
+    try { (this.player as any).muted?.(false); } catch {}
+    try {
+      const tech: any = (this.player as any).tech?.(true);
+      const ve: HTMLVideoElement | undefined = tech?.el?.();
+      if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+    } catch {}
+    Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
+  });
+  setTimeout(() => {
+    try { (this.player as any).muted?.(false); } catch {}
+    try {
+      const tech: any = (this.player as any).tech?.(true);
+      const ve: HTMLVideoElement | undefined = tech?.el?.();
+      if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+    } catch {}
+  }, 300);
+        return p;
+      };
+    });
+
+    setTimeout(() => {
+      const currentTimeEl = document.querySelector(
+        '.vjs-current-time'
+      ) as HTMLElement;
+      const remainingTimeEl = document.querySelector(
+        '.vjs-remaining-time'
+      ) as HTMLElement;
+
+      const toggleDisplay = () => {
+        if (remainingTimeEl.style.display !== 'none') {
+          remainingTimeEl.style.display = 'none';
+          currentTimeEl.style.display = 'block';
+        } else {
+          remainingTimeEl.style.display = 'block';
+          currentTimeEl.style.display = 'none';
+        }
+      };
+
+      currentTimeEl?.addEventListener('click', toggleDisplay);
+      remainingTimeEl?.addEventListener('click', toggleDisplay);
+    }, 200);
+
+        this.player.ready(() => {
+      if (this.risorse) {
+        this.cambiaContenuto(this.risorse);
+      }
+
+
+
+      let controlBarShown = false;
+      this.player?.on('play', () => {
+        if (!controlBarShown) {
+          controlBarShown = true;
+          const controlBar = document.querySelector(
+            '.vjs-control-bar'
+          ) as HTMLElement | null;
+          if (controlBar) {
+            controlBar.classList.add('show-control-bar');
+          }
+        }
+      });
+
+      const controlBar: any = (this.player as any)?.getChild?.('ControlBar');
+
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile && controlBar) {
+const Button = videojs.getComponent('Button') as any;
+
+class MobilePlayButton extends (Button as any) {
+  constructor(player: any, options: any) {
+    super(player, options);
+    (this as any)['controlText']('Play');
+    (this as any)['addClass']('vjs-mobile-play-button');
+  }
+  handleClick() {
+    (this as any)['player_'].play();
+  }
+}
+(videojs as any).registerComponent('MobilePlayButton', MobilePlayButton as any);
+
+class MobilePauseButton extends (Button as any) {
+  constructor(player: any, options: any) {
+    super(player, options);
+    (this as any)['controlText']('Pause');
+    (this as any)['addClass']('vjs-mobile-pause-button');
+  }
+  handleClick() {
+    (this as any)['player_'].pause();
+  }
+}
+(videojs as any).registerComponent('MobilePauseButton', MobilePauseButton as any);
+
+class MobileSkipForwardButton extends (Button as any) {
+  constructor(player: any, options: any) {
+    super(player, options);
+    (this as any)['controlText']('Avanti');
+    (this as any)['addClass']('vjs-mobile-skip-forward-button');
+  }
+  handleClick() {
+    const p = (this as any)['player_'];
+    const newTime = p.currentTime() + 10;
+    p.currentTime(newTime);
+  }
+}
+(videojs as any).registerComponent('MobileSkipForwardButton', MobileSkipForwardButton as any);
+
+class MobileSkipBackwardButton extends (Button as any) {
+  constructor(player: any, options: any) {
+    super(player, options);
+    (this as any)['controlText']('Indietro');
+    (this as any)['addClass']('vjs-mobile-skip-backward-button');
+  }
+  handleClick() {
+    const p = (this as any)['player_'];
+    const newTime = Math.max(0, p.currentTime() - 10);
+    p.currentTime(newTime);
+  }
+}
+(videojs as any).registerComponent('MobileSkipBackwardButton', MobileSkipBackwardButton as any);
+
+
+
+
+        const mobilePlayButton = new (MobilePlayButton as any)(this.player!, {});
+        const mobilePauseButton = new (MobilePauseButton as any)(this.player!, {});
+
+        controlBar!.addChild('MobileSkipBackwardButton', {}, this.progressIndex);
+        controlBar!.addChild('MobileSkipForwardButton', {}, this.progressIndex + 1);
+
+        if (this.player!.paused()) {
+          controlBar!.addChild(mobilePlayButton, {}, this.progressIndex + 2);
+        } else {
+          controlBar!.addChild(mobilePauseButton, {}, this.progressIndex + 2);
+        }
+
+        this.player!.on('play', () => {
+          if (controlBar!.children().includes(mobilePlayButton)) {
+            controlBar!.removeChild(mobilePlayButton);
+          }
+          if (!controlBar!.children().includes(mobilePauseButton)) {
+            controlBar!.addChild(mobilePauseButton, {}, this.progressIndex + 2);
+          }
+        });
+
+        this.player!.on('pause', () => {
+          if (controlBar!.children().includes(mobilePauseButton)) {
+            controlBar!.removeChild(mobilePauseButton);
+          }
+          if (!controlBar!.children().includes(mobilePlayButton)) {
+            controlBar!.addChild(mobilePlayButton, {}, this.progressIndex + 2);
+          }
+        });
+      }
+
+      this.progressIndex = controlBar
+        ?.children?.()
+        ?.findIndex((c: any) => c.name && c.name() === 'ProgressControl') ?? 0;
+
+      const maybeHotkeys = (this.player as any).hotkeys;
+      if (typeof maybeHotkeys === 'function') {
+        maybeHotkeys({
+          volumeStep: 0.1,
+          seekStep: 5,
+          enableModifiersForNumbers: false,
+        });
+      }
+
+
+const MenuButton = videojs.getComponent('MenuButton') as any;
+const MenuItem  = videojs.getComponent('MenuItem') as any;
+
+      const self = this;
+            const QualityMenuItem = class extends (MenuItem as any) {
+        private tipo: 'auto'|'1080'|'720'|'360';
+        private label: string;
+
+  constructor(player: any, options: any) {
+    super(player, options);
+              this.tipo  = options.tipo;
+          this.label = options.label;
+    (this as any)['addClass']('vjs-quality-menu-item');
+    (this as any)['updateLabel']();
+  }
+
+  async handleClick() {
+    const p = (this as any)['player_'];
+              const currentTime = p.currentTime();
+          const isPaused = p.paused();
+          const url =
+          this.tipo === 'auto' ? self.URL_MASTER :
+            this.tipo === '1080' ? self.URL_1080  :
+            this.tipo === '720'  ? self.URL_720   :
+            this.tipo === '360'  ? self.URL_360   : '';
+          if (!url) return;
+          await Promise.resolve(self.audioCtx?.resume?.()).catch(()=>{}); await self.fadeGainTo(0, self.FADE_PAUSA_MS);
+    self.mostraFreezeFrame(p);
+    p.src({ src: url, type: 'application/x-mpegURL' });
+
+    const rimuoviFreeze = () => {
+      self.nascondiFreezeFrame();
+      p.off('loadeddata', rimuoviFreeze);
+      p.off('error', rimuoviFreeze);
+    };
+    p.on('loadeddata', rimuoviFreeze);
+    p.on('error', rimuoviFreeze);
+    p.ready(() => {
+      p.currentTime(currentTime);
+      if (!isPaused) p.play();
+    });
+
+    const items =
+      p.getChild('ControlBar')
+        ?.getChild('QualityMenuButton')
+        ?.menu?.children?.() || [];
+
+    items.forEach((item: any) => item?.updateLabel?.());
+  }
+
+  updateLabel() {
+    const p = (this as any)['player_'];
+              const currentSrc = p.currentSource?.()?.src || '';
+          const urlCorrente =
+          this.tipo === 'auto' ? self.URL_MASTER :
+            this.tipo === '1080' ? self.URL_1080  :
+            this.tipo === '720'  ? self.URL_720   :
+            this.tipo === '360'  ? self.URL_360   : '';
+          const selected = !!urlCorrente && currentSrc.includes(urlCorrente);
+
+    const el = (this as any)['el']() as HTMLElement;
+    if (selected) {
+      el.classList.add('vjs-selected');
+    } else {
+      el.classList.remove('vjs-selected');
+    }
+    el.innerHTML = this.label;
+  }
+};
+
+const QualityMenuButton = class extends (MenuButton as any) {
+  constructor(player: any, options: any) {
+    super(player, options);
+    (this as any)['addClass']('vjs-quality-menu-button');
+
+    const el = (this as any)['el']?.();
+    if (el) {
+      el.classList.add('vjs-icon-placeholder');
+
+      const currentLang = (this as any)['player_'].language?.() ?? 'en';
+      const titleText = currentLang === 'it' ? 'Qualità video' : 'Video quality';
+      el.setAttribute('title', titleText);
+
+      const span = document.createElement('span');
+      span.className = 'vjs-quality-label';
+      el.appendChild(span);
+    }
+  }
+
+  createItems() {
+                            const currentLang = (this as any)['player_'].language?.() ?? 'en';
+          const autoLabel = currentLang === 'it' ? 'Auto' : 'Auto';
+          return [
+            { label: autoLabel, tipo: 'auto' as const },
+            { label: '1080p',   tipo: '1080' as const },
+            { label: '720p',    tipo: '720'  as const },
+            { label: '360p',    tipo: '360'  as const },
+          ].map((q) => new (QualityMenuItem as any)((this as any)['player_'], q));
+  }
+};
+
+(videojs as any).registerComponent('QualityMenuButton', QualityMenuButton as any);
+      controlBar?.addChild('QualityMenuButton', {});
+
+      const audioTracks = (this.player as any).audioTracks?.();
+      audioTracks?.addEventListener?.('addtrack', () => {
+        setTimeout(() => {
+          const items = document.querySelectorAll(
+            '.vjs-audio-button .vjs-menu-content .vjs-menu-item'
+          );
+
+          const player = this.player as Player;
+          const tracks = (player as any).audioTracks?.();
+
+                const switchAudio = async (lang: 'en' | 'it') => {
+            const p: any = this.player as any;
+            const stavaSuonando = !p.paused?.();
+
+            await Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
+            await this.fadeGainTo(0, this.FADE_PAUSA_MS);
+
+            this.playInterno = true;
+            try { this.originalPause?.(); } catch { try { p.pause?.(); } catch {} }
+
+            await this.impostaLinguaAudio(lang, true, true);
+
+            const t = Number(p.currentTime?.() ?? 0);
+            try { p.currentTime?.(t + 0.01); } catch {}
+
+            const onReady = async () => {
+              p.off?.('canplay', onReady);
+              if (stavaSuonando) {
+                try { await Promise.resolve(this.originalPlay?.()); } catch {}
+                this.playInterno = false;
+                await this.fadeGainTo(1, this.FADE_PLAY_MS);
+              } else {
+                this.playInterno = false;
+              }
+            };
+            p.on?.('canplay', onReady);
+
+            setTimeout(async () => {
+              try { p.off?.('canplay', onReady); } catch {}
+              if (stavaSuonando) {
+                try { await Promise.resolve(this.originalPlay?.()); } catch {}
+                this.playInterno = false;
+                await this.fadeGainTo(1, this.FADE_PLAY_MS);
+              } else {
+                this.playInterno = false;
+              }
+            }, 600);
+          };
+
+          items.forEach((item) => {
+            const text = item.textContent?.trim().toLowerCase();
+
+            if (text?.includes('inglese') || text?.includes('english')) {
+              item.textContent = this.getLabel('en');
+              (item as HTMLElement).id = 'en_button';
+              item.addEventListener('pointerdown', () => switchAudio('en'));
+            }
+
+            if (text?.includes('italiano') || text?.includes('italian')) {
+              item.textContent = this.getLabel('it');
+              (item as HTMLElement).id = 'it_button';
+              item.addEventListener('pointerdown', () => switchAudio('it'));
+            }
+          });
+
+          const savedLang = localStorage.getItem('video_lingua');
+          if (savedLang) {
+            for (let i = 0; i < tracks.length; i++) {
+              const label = tracks[i].label.toLowerCase();
+              if (
+                (savedLang === 'italiano' || savedLang === 'italiano_provisorio') &&
+                label.includes('italiano')
+              ) {
+                tracks[i].enabled = true;
+              }
+              if (
+                (savedLang === 'inglese' || savedLang === 'inglese_provisorio') &&
+                label.includes('inglese')
+              ) {
+                tracks[i].enabled = true;
+              }
+            }
+          }
+          if (!this.doppioAvvioEseguito) this.doppioAvvioSeRichiesto();
+        });
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const isQualityButton = target.closest('.vjs-quality-menu-button');
+      const isAudioButton = target.closest('.vjs-audio-button');
+      const isInsideMenu = target.closest('.vjs-menu');
+
+      if (!isQualityButton && !isAudioButton && !isInsideMenu) {
+        const openedMenus = document.querySelectorAll('.vjs-menu.vjs-lock-showing');
+        openedMenus.forEach((menu) => {
+          const menuParent = menu.closest('.vjs-menu-button');
+          if (menuParent) {
+            menuParent.classList.remove('vjs-menu-button-active');
+            menu.classList.remove('vjs-lock-showing');
+          }
+        });
+      }
+    });
+
+    const videoElement = document.getElementById('vid1');
+
+    videoElement?.addEventListener('mousemove', () => {
+      const controlBar = document.querySelector(
+        '.vjs-control-bar.show-control-bar'
+      ) as HTMLElement | null;
+      if (controlBar) {
+        controlBar.classList.remove('vjs-control-bar-transition');
+      }
+
+      clearTimeout(this.inactivityTimeout);
+      this.inactivityTimeout = setTimeout(() => {
+        const cb = document.querySelector(
+          '.vjs-control-bar.show-control-bar'
+        ) as HTMLElement | null;
+        if (cb) {
+          cb.classList.remove('show-control-bar');
+          cb.classList.add('vjs-control-bar-transition');
+        }
+      }, 2000);
+    });
+
+    videoElement?.addEventListener('touchstart', () => {
+      const controlBar = document.querySelector(
+        '.vjs-control-bar.show-control-bar'
+      ) as HTMLElement | null;
+      if (controlBar) {
+        controlBar.classList.remove('vjs-control-bar-transition');
+      }
+
+      clearTimeout(this.inactivityTimeout);
+      this.inactivityTimeout = setTimeout(() => {
+        const cb = document.querySelector(
+          '.vjs-control-bar.show-control-bar'
+        ) as HTMLElement | null;
+        if (cb) {
+          cb.classList.remove('show-control-bar');
+          cb.classList.add('vjs-control-bar-transition');
+        }
+      }, 2000);
+    });
+
+    this.inactivityTimeout = setTimeout(() => {}, 2000);
+  }
+
+  ngOnDestroy(): void {
+    this.nascondiFreezeFrame();
+    try { this.startupMaskEl?.remove(); } catch {}
+    this.player?.dispose();
+    try { this.audioCtx?.close(); } catch {}
+  }
+
+    private cambiaContenuto(r: { auto: string; '1080': string; '720': string; '360': string }): void {
+      this.doppioAvvioEseguito = false;
+      this.mostraMascheraAvvio();
+
+    this.URL_MASTER = r.auto  || '';
+    this.URL_1080   = r['1080'] || '';
+    this.URL_720    = r['720']  || '';
+    this.URL_360    = r['360']  || '';
+    if (!this.player) return;
+     (this.player as any).src({ src: this.URL_MASTER, type: 'application/x-mpegURL' });
+ (this.player as any).load?.();
+    this.aggiornaVociMenuQualita();
+  }
+
+  private aggiornaVociMenuQualita(): void {
+    try {
+      const items =
+        (this.player as any)?.getChild?.('ControlBar')
+          ?.getChild?.('QualityMenuButton')
+          ?.menu?.children?.() || [];
+      items.forEach((it: any) => it.updateLabel?.());
+    } catch {}
+  }
+
+
+
+
+  private updateMenuLabels() {
+    setTimeout(() => {
+      const audioItems = document.querySelectorAll(
+        '.vjs-audio-button .vjs-menu-content .vjs-menu-item'
+      );
+      audioItems.forEach((item) => {
+        const text = item.textContent?.trim().toLowerCase();
+
+        if (text?.includes('inglese') || text?.includes('english')) {
+          item.textContent = this.getLabel('en');
+        }
+        if (text?.includes('italiano') || text?.includes('italian')) {
+          item.textContent = this.getLabel('it');
+        }
+      });
+
+      const subtitleItems = document.querySelectorAll(
+        '.vjs-subs-caps-button .vjs-menu-content .vjs-menu-item'
+      );
+      subtitleItems.forEach((item) => {
+        const text = item.textContent?.trim().toLowerCase();
+
+        if (text?.includes('english') || text?.includes('inglese')) {
+          item.textContent = this.getLabel('en');
+        }
+        if (text?.includes('italian') || text?.includes('italiano')) {
+          item.textContent = this.getLabel('it');
+        }
+      });
+    }, 100);
+  }
+mostraFreezeFrame(p: any) {
+  try {
+    const playerEl = p?.el?.() as HTMLElement | null;
+    const videoEl = playerEl?.querySelector('video.vjs-tech') as HTMLVideoElement | null;
+    const trackEl = playerEl?.querySelector('.vjs-text-track-display') as HTMLElement | null;
+    if (!playerEl || !videoEl || !trackEl) {
+      console.warn('FreezeFrame: elementi mancanti', { playerEl, videoEl, trackEl });
+      return;
+    }
+
+    if (!this.freezeCanvas) {
+      this.freezeCanvas = document.createElement('canvas');
+      this.freezeCanvas.className = 'vjs-player-freeze';
+      this.freezeCanvas.style.pointerEvents = 'none';
+    }
+
+    const rootRect = playerEl.getBoundingClientRect();
+    const regionRect = trackEl.getBoundingClientRect();
+    console.log('FreezeFrame: rootRect', rootRect);
+    console.log('FreezeFrame: regionRect', regionRect);
+
+    const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    this.freezeCanvas.width = Math.max(1, Math.floor(regionRect.width * dpr));
+    this.freezeCanvas.height = Math.max(1, Math.floor(regionRect.height * dpr));
+
+    const left = Math.max(0, Math.round(regionRect.left - rootRect.left));
+    const top = Math.max(0, Math.round(regionRect.top - rootRect.top));
+    this.freezeCanvas.style.position = 'absolute';
+    this.freezeCanvas.style.left = left + 'px';
+    this.freezeCanvas.style.top = top + 'px';
+    this.freezeCanvas.style.width = Math.round(regionRect.width) + 'px';
+    this.freezeCanvas.style.height = Math.round(regionRect.height) + 'px';
+
+    const ctx = this.freezeCanvas.getContext('2d');
+    if (!ctx) {
+      console.error('FreezeFrame: impossibile ottenere context 2d');
+      return;
+    }
+
+    ctx.drawImage(
+      videoEl,
+      0,
+      0,
+      this.freezeCanvas.width,
+      this.freezeCanvas.height
+    );
+    console.log('FreezeFrame: disegnato frame');
+
+    if (!this.freezeCanvas.isConnected) {
+      playerEl.appendChild(this.freezeCanvas);
+      console.log('FreezeFrame: canvas aggiunto al player');
+    }
+    this.freezeAttiva = true;
+  } catch (err) {
+    console.error('FreezeFrame: errore', err);
+  }
+}
+
+
+nascondiFreezeFrame() {
+  if (this.freezeCanvas?.isConnected) {
+    this.freezeCanvas.remove();
+    console.log('FreezeFrame: canvas rimosso');
+  }
+  this.freezeAttiva = false;
+}
+
+private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
+  try {
+    if (!this.player || !(this.player as any).audioTracks) return false;
+    const tracks = (this.player as any).audioTracks();
+    let found = false;
+    for (let i = 0; i < tracks.length; i++) tracks[i].enabled = false;
+    for (let i = 0; i < tracks.length; i++) {
+      const label = (tracks[i].label || '').toLowerCase();
+      if (label.includes(labelCheck)) {
+        tracks[i].enabled = true;
+        found = true;
+      }
+    }
+    return found;
+  } catch {
+    return false;
+  }
+}
+
+
+
+  private setupAudioGraph(): void {
+    try {
+      const tech: any = (this.player as any)?.tech?.(true);
+      const videoEl: HTMLVideoElement | undefined = tech?.el?.();
+      if (!videoEl) return;
+      const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!this.audioCtx) this.audioCtx = new AC();
+      if (!this.gainNode && this.audioCtx) this.gainNode = this.audioCtx.createGain();
+      if (!this.mediaSourceNode && this.audioCtx && this.gainNode) {
+        this.mediaSourceNode = this.audioCtx.createMediaElementSource(videoEl);
+        this.mediaSourceNode.connect(this.gainNode).connect(this.audioCtx.destination);
+      }
+      this.setGain(0);
+    } catch {}
+  }
+  private setGain(v: number): void {
+    try { if (this.gainNode) this.gainNode.gain.value = v; } catch {}
+  }
+  private async fadeGainTo(dest: number, ms: number): Promise<void> {
+    try {
+      if (!this.audioCtx || !this.gainNode) return;
+      const now = this.audioCtx.currentTime;
+      const g = this.gainNode.gain;
+      const start = g.value;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(start, now);
+      g.linearRampToValueAtTime(dest, now + (ms / 1000));
+      await this.sleep(ms);
+      g.setValueAtTime(dest, this.audioCtx.currentTime);
+    } catch {}
+  }
+  private armFadeInOnce(): void {
+    try {
+      let fired = false;
+      const fire = () => {
+        if (fired) return; fired = true;
+
+        try { (this.player as any).muted?.(false); } catch {}
+        try {
+          const tech: any = (this.player as any).tech?.(true);
+          const ve: HTMLVideoElement | undefined = tech?.el?.();
+          if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+        } catch {}
+        Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
+
+                const doFade = () => {
+          if (!this.player?.paused?.()) this.fadeGainTo(1, this.FADE_PLAY_MS);
+          else this.setGain(1);
+        };
+        const t = Number((this.player as any).currentTime?.() ?? 0);
+        if (t < 0.12) setTimeout(doFade, this.WARMUP_DELAY_MS); else doFade();
+      };
+      if (!this.player?.paused?.()) setTimeout(fire, 0);
+      (this.player as any).one?.('playing', fire);
+      (this.player as any).one?.('canplay', fire);
+      (this.player as any).one?.('timeupdate', fire);
+      setTimeout(() => { if (!fired && !this.player?.paused?.()) fire(); }, 700);
+    } catch {}
+  }
+
+  private async doppioAvvioSeRichiesto(): Promise<void> {
+    try {
+      if (!this.player) return;
+          const root = (this.player as any).el?.() as HTMLElement | null;
+    await this.waitForFullscreen(root, 2500);
+            this.mostraMascheraAvvio();
+      const fallbackTimer = setTimeout(() => this.nascondiMascheraAvvio(), 30000);
+
+      await this.audioCtx?.resume?.();
+      this.setGain(0);
+      try { (this.player as any).muted?.(true); } catch {}
+
+      const tracks = await this.waitForAudioTracks(2000);
+      if (!tracks || tracks.length === 0) { return; }
+
+      const corretta = this.deduciLinguaCorretta();
+      const opposta: 'en'|'it' = (corretta === 'it') ? 'en' : 'it';
+
+      try { (this.player as any).currentTime?.(0); } catch {}
+           await this.impostaLinguaAudio(opposta, false, false);
+      await this.sleep(120);
+      await new Promise<void>((resolve) => {
+        let ok = false;
+        const onTime = () => {
+          const t = Number((this.player as any).currentTime?.() ?? 0);
+          if (t >= 0.08) { ok = true; off(); }
+        };
+        const off = () => {
+          (this.player as any).off?.('timeupdate', onTime);
+          resolve();
+        };
+        (this.player as any).on?.('timeupdate', onTime);
+        Promise.resolve((this.player as any).play?.()).catch(()=>{}).finally(async () => {
+          await this.sleep(600);
+          if (!ok) off();
+        });
+      });
+      this.playInterno = true;
+      try { this.originalPause?.(); } catch { try { (this.player as any).pause?.(); } catch {} }
+      this.playInterno = false;
+
+      await this.sleep(150);
+      try { (this.player as any).currentTime?.(0); } catch {}
+      await this.impostaLinguaAudio(corretta, false, false);
+      await this.waitBufferFromZero(this.START_BUFFER_S, 12000);
+
+      try { (this.player as any).currentTime?.(0); } catch {}
+      await this.audioCtx?.resume?.();
+      try { (this.player as any).muted?.(false); } catch {}
+
+            try {
+        const tech: any = (this.player as any).tech?.(true);
+        const ve: HTMLVideoElement | undefined = tech?.el?.();
+        if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+      } catch {}
+
+      this.setGain(0);
+      this.avvioConsentito = false;
+
+
+
+      setTimeout(() => {
+        try { (this.player as any).muted?.(false); } catch {}
+        try {
+          const tech: any = (this.player as any).tech?.(true);
+          const ve: HTMLVideoElement | undefined = tech?.el?.();
+          if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+        } catch {}
+        Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
+      }, 0);
+      (this.player as any).one?.('playing', () => {
+        try { (this.player as any).muted?.(false); } catch {}
+        try {
+          const tech: any = (this.player as any).tech?.(true);
+          const ve: HTMLVideoElement | undefined = tech?.el?.();
+          if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+        } catch {}
+        Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
+      });
+      (this.player as any).one?.('volumechange', () => {
+        try { (this.player as any).muted?.(false); } catch {}
+        try {
+          const tech: any = (this.player as any).tech?.(true);
+          const ve: HTMLVideoElement | undefined = tech?.el?.();
+          if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+        } catch {}
+      });
+
+           const p: any = this.player;
+      this.agganciaNascondiSuPrimoFrame(p, fallbackTimer);
+
+      this.playInterno = true;
+      try { await Promise.resolve(this.originalPlay?.()); } catch {}
+      this.playInterno = false;
+      await this.waitMinHeadroom(2.0, 5000);
+      this.avvioConsentito = true;
+      await this.fadeGainTo(1, this.FADE_PLAY_MS);
+      try { this.setGain(1); } catch {}
+      this.doppioAvvioEseguito = true;
+
+    } catch {}
+  }
+
+  private async impostaLinguaAudio(lang: 'en'|'it', persist = true, smooth = false): Promise<void> {
+    try {
+      const player: any = this.player as any;
+      const tr = player.audioTracks?.();
+      if (!tr) return;
+      const target = (lang === 'it') ? ['italiano','italian'] : ['inglese','english'];
+      for (let i=0;i<tr.length;i++) tr[i].enabled = false;
+      for (let i=0;i<tr.length;i++){
+        const lbl = (tr[i].label || '').toLowerCase();
+        if (target.some(t => lbl.includes(t))) tr[i].enabled = true;
+      }
+      if (persist) localStorage.setItem('video_lingua', lang === 'it' ? 'italiano' : 'inglese');
+          if (smooth) {
+      const t = Number((this.player as any).currentTime?.() ?? 0);
+      try {
+        (this.player as any).currentTime?.(Math.max(0, t + 0.5));
+        await this.sleep(30);
+        (this.player as any).currentTime?.(t);
+      } catch {}
+    }
+    } catch {}
+  }
+  private deduciLinguaCorretta(): 'en'|'it' {
+    const saved = localStorage.getItem('video_lingua');
+    if (saved === 'italiano') return 'it';
+    if (saved === 'inglese')  return 'en';
+    try {
+      const tr: any = (this.player as any).audioTracks?.();
+      if (tr) {
+        for (let i=0;i<tr.length;i++){
+          const lbl = (tr[i].label || '').toLowerCase();
+          if (tr[i].enabled && (lbl.includes('italiano') || lbl.includes('italian'))) return 'it';
+          if (tr[i].enabled && (lbl.includes('inglese')  || lbl.includes('english'))) return 'en';
+        }
+      }
+    } catch {}
+    return this.currentLang;
+  }
+  private async waitForAudioTracks(timeoutMs=2000): Promise<any|null> {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const tr: any = (this.player as any).audioTracks?.();
+      if (tr && tr.length > 0) return tr;
+      await this.sleep(50);
+    }
+    return (this.player as any).audioTracks?.() ?? null;
+  }
+  private async waitBufferFromZero(targetS: number, timeoutMs: number): Promise<boolean> {
+    const start = Date.now();
+    try { (this.player as any).currentTime?.(0); } catch {}
+    Promise.resolve((this.player as any).play?.()).catch(()=>{});
+    while (Date.now() - start < timeoutMs) {
+      const end = this.calcolaBufferedEndCompat();
+      if (end >= targetS - 0.1) {
+        this.playInterno = true; try { this.originalPause?.(); } catch {}
+        this.playInterno = false; return true;
+      }
+      await this.sleep(50);
+    }
+    this.playInterno = true; try { this.originalPause?.(); } catch {}
+    this.playInterno = false; return false;
+  }
+  private calcolaBufferedEndCompat(): number {
+    try {
+      const tech: any = (this.player as any).tech?.(true);
+      const el = tech?.el?.();
+      const tr: TimeRanges | undefined = (this.player as any)?.buffered?.() ?? el?.buffered;
+      const ct = Number((this.player as any).currentTime?.() ?? 0);
+      if (!tr || tr.length === 0) return ct;
+      let end = Number(tr.end(tr.length - 1) ?? ct);
+      for (let i=0;i<tr.length;i++){
+        const s = Number(tr.start(i) ?? 0);
+        const e = Number(tr.end(i) ?? ct);
+        if (s <= ct && ct <= e) { end = e; break; }
+      }
+      return end;
+    } catch { return Number((this.player as any).currentTime?.() ?? 0); }
+  }
+  private sleep(ms:number){ return new Promise<void>(r=>setTimeout(r,ms)); }
+
+
+  private startupMaskEl: HTMLDivElement | null = null;
+
+  private creaMascheraAvvio(): void {
+    try {
+      if (!this.player) return;
+      const root = (this.player as any).el?.() as HTMLElement | null;
+      if (!root) return;
+      if (!this.startupMaskEl) {
+         this.startupMaskEl = document.createElement('div');
+ this.startupMaskEl.className = 'vjs-startup-mask vjs-startup-mask--hide';
+        root.appendChild(this.startupMaskEl);
+      }
+    } catch {}
+  }
+    private mostraMascheraAvvio(): void {
+    this.creaMascheraAvvio();
+    try {
+            const root = (this.player as any)?.el?.() as HTMLElement | null;
+      if (root && this.startupMaskEl) { try { root.appendChild(this.startupMaskEl); } catch {} }
+      this.startupMaskEl?.classList.remove('vjs-startup-mask--hide');
+      void (this.startupMaskEl?.offsetWidth);
+      this.setGain(0);
+      try { (this.player as any)?.muted?.(true); } catch {}
+    } catch {}
+    setTimeout(() => {
+      try { this.startupMaskEl?.classList.remove('vjs-startup-mask--hide'); } catch {}
+    }, 0);
+  }
+  private nascondiMascheraAvvio(): void {
+    if (!this.startupMaskEl) return;
+    this.startupMaskEl.classList.add('vjs-startup-mask--hide');
+  }
+
+
+  private agganciaNascondiSuPrimoFrame(p: any, fallbackTimer: any): void {
+    const tech: any = p?.tech?.(true);
+    const video: HTMLVideoElement | undefined = tech?.el?.();
+    let done = false;
+    const cleanup = () => {
+      if (done) return; done = true;
+      p.off?.('loadeddata', onLoadedPaint);
+      p.off?.('playing', onLoadedPaint);
+      p.off?.('timeupdate', onLoadedPaint);
+    };
+        const hideNow = () => {
+      cleanup();
+      this.waitMinHeadroom(2.0, 5000).finally(() => {
+        this.nascondiMascheraAvvio();
+        clearTimeout(fallbackTimer);
+      });
+    };
+    const onLoadedPaint = () => {
+      requestAnimationFrame(() => requestAnimationFrame(hideNow));
+    };
+    try {
+      if (video && (video as any).requestVideoFrameCallback) {
+        (video as any).requestVideoFrameCallback(() => hideNow());
+      } else {
+        p.on?.('loadeddata', onLoadedPaint);
+        p.on?.('playing', onLoadedPaint);
+        p.on?.('timeupdate', onLoadedPaint);
+      }
+      if (video && video.readyState >= 2) onLoadedPaint();
+    } catch {
+      p.on?.('loadeddata', onLoadedPaint);
+    }
+  }
+
+
+private isInFullscreen(target: HTMLElement | null): boolean {
+  const d = document as any;
+  const fsEl: Element | null =
+    document.fullscreenElement ||
+    d.webkitFullscreenElement ||
+    d.mozFullScreenElement ||
+    d.msFullscreenElement || null;
+
+  return !!(fsEl && target && (fsEl === target || target.contains(fsEl)));
+}
+
+private waitForFullscreen(target: HTMLElement | null, timeoutMs = 2500): Promise<boolean> {
+  if (this.isInFullscreen(target)) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    let done = false;
+    const d = document as any;
+    const onChange = () => {
+      if (done) return;
+      if (this.isInFullscreen(target)) {
+        done = true;
+        cleanup();
+        resolve(true);
+      }
+    };
+    const cleanup = () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      d.removeEventListener?.('webkitfullscreenchange', onChange);
+      d.removeEventListener?.('mozfullscreenchange', onChange);
+      d.removeEventListener?.('MSFullscreenChange', onChange);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    d.addEventListener?.('webkitfullscreenchange', onChange);
+    d.addEventListener?.('mozfullscreenchange', onChange);
+    d.addEventListener?.('MSFullscreenChange', onChange);
+
+    setTimeout(() => {
+      if (done) return;
+      done = true;
+      cleanup();
+      resolve(false);
+    }, timeoutMs);
+  });
+}
+
+private async waitMinHeadroom(minHeadroomSec = 2.0, timeoutMs = 4000): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    let ct = 0;
+    try { ct = Number((this.player as any).currentTime?.() ?? 0); } catch {}
+    const end = this.calcolaBufferedEndCompat();
+    const headroom = end - ct;
+
+    let readyOk = true;
+    try {
+      const tech: any = (this.player as any).tech?.(true);
+      const ve: HTMLVideoElement | undefined = tech?.el?.();
+      readyOk = !!ve && ve.readyState >= 3;
+    } catch {}
+
+    if (readyOk && headroom >= minHeadroomSec) return true;
+    await this.sleep(50);
+  }
+  return false;
+}
+
+}
+
+

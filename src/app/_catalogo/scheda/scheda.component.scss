@@ -78,6 +78,7 @@ app-footer{
   width: 100%;
   overflow-x: hidden;
   min-height: 100vh;
+
 }
 
 
@@ -504,4 +505,33 @@ app-spinner{
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+app-player-video {
+  z-index: 9999999;
+  position: fixed;
+  left: 0;
+  top:0;
+  width: 100vw!important;
+  height: 100vh!important;
+}
+.scheda.verso-player {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.8s ease;
+}
+
+@keyframes uscita-sfondo {
+  from {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+.sfondo_scheda.zoom-out {
+  animation: uscita-sfondo 2s ease forwards;
 }

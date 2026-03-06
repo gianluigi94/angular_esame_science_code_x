@@ -9,10 +9,11 @@
   [alt]="altSfondoScheda"
   class="sfondo_scheda"
   [class.anim]="startAnim"
+  [class.zoom-out]="transitioneVersoPLayer"
 />
 <span class="sfumatura"></span>
 
-<div class="scheda">
+<div class="scheda" [class.verso-player]="transitioneVersoPLayer">
    <video-js
   *ngIf="mostraPlayerSchedaNelDom"
   #playerSchedaRef
@@ -36,7 +37,7 @@
   {{ labelRiprendi }}
   <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
 </button>
-    <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci" [title]="labelRiproduciTitle">
+    <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci" [title]="labelRiproduciTitle" (click)="onRiproduci()">
   {{ labelRiproduci }}
   <span class="icon play" aria-hidden="true">&#9658;</span>
 </button>
@@ -134,14 +135,15 @@
         "
       >
         <li
-          *ngFor="
-            let episodio of getChiavi(
-              serieData[stagioneSelezionata || getChiavi(serieData)[0]]
-            );
-            let i = index
-          "
-          [title]="('ui.scheda.episodio.tittle.button' | translate) + ': ' + serieData[stagioneSelezionata || getChiavi(serieData)[0]][episodio].titolo"
-        >
+  *ngFor="
+    let episodio of getChiavi(
+      serieData[stagioneSelezionata || getChiavi(serieData)[0]]
+    );
+    let i = index
+  "
+  [title]="('ui.scheda.episodio.tittle.button' | translate) + ': ' + serieData[stagioneSelezionata || getChiavi(serieData)[0]][episodio].titolo"
+  (click)="onClicEpisodio(i + 1)"
+>
           <div class="img_contenitore_scritta">
             <div class="ritaglio">
               <span class="on_play" aria-hidden="true">&#9658;</span>
@@ -228,3 +230,4 @@
 
   <app-footer></app-footer>
 </div>
+<app-player-video *ngIf="mostraPlayerVideo"></app-player-video>

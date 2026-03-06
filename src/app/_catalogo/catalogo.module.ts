@@ -8,11 +8,13 @@ import { SaturnoModule } from '../_componenti_comuni/saturno/saturno.module';
 import { RigaCategoriaComponent } from './app-riga-categoria/riga-categoria.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { SchedaComponent } from './scheda/scheda.component';
+import { PlayerVideoComponent } from './player-video/player-video.component';
 @NgModule({
   declarations: [
     CatalogoComponent,
     RigaCategoriaComponent,
-    SchedaComponent
+    SchedaComponent,
+    PlayerVideoComponent
   ],
   imports: [
     CommonModule,

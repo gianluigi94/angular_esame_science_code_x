@@ -99,6 +99,8 @@ righeCorrelateInCaricamento = true;
  mostraPlayerSchedaNelDom = false;
 mostraVideoScheda = false;
 trailerInRiproduzione = true;
+mostraPlayerVideo = false;
+transitioneVersoPLayer = false;
 
 toggleTrailer(): void {
   if (this.trailerInRiproduzione) {
@@ -129,7 +131,27 @@ toggleTrailer(): void {
 }
   }
 }
+onRiproduci(): void {
+  this.avviaTransizionePlayer();
+}
 
+onClicEpisodio(numeroEpisodio: number): void {
+  this.avviaTransizionePlayer();
+}
+
+private avviaTransizionePlayer(): void {
+  if (this.trailerInRiproduzione) {
+    const btnTrailer = document.querySelector<HTMLElement>('button.riproduci[title="' + this.labelTrailerTitle + '"]');
+    btnTrailer?.click();
+  }
+
+  setTimeout(() => {
+    this.transitioneVersoPLayer = true;
+    setTimeout(() => {
+      this.mostraPlayerVideo = true;
+    }, 2000);
+  }, this.durataFadeSchedaMs + 50);
+}
 @HostListener('window:blur')
 gestisciBlurFinestra(): void {
   if (!this.playerScheda) return;
