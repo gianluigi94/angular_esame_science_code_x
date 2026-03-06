@@ -195,26 +195,23 @@ export class CaroselloVideoUtility {
       return;
     }
 
-    ctx.mostraVideo = true; // Mostro il video ora che sono pronto a tentare la riproduzione
+   CaroselloAudioUtility.inizializzaWebAudioSuVideoReale(ctx);
+try {
+  if (ctx.nodoGuadagno && ctx.contestoAudio) {
+    const t0 = ctx.contestoAudio.currentTime;
+    ctx.nodoGuadagno.gain.cancelScheduledValues(t0);
+    ctx.nodoGuadagno.gain.setValueAtTime(0, t0);
+  }
+} catch {}
 
-    CaroselloAudioUtility.inizializzaWebAudioSuVideoReale(ctx); // Preparo WebAudio prima del play per poter fare fade-in appena parte
-    try {
-      // Provo a impostare il gain a zero subito, senza aspettare resume
-      if (ctx.nodoGuadagno && ctx.contestoAudio) {
-        // Controllo che GainNode e AudioContext esistano
-        const t0 = ctx.contestoAudio.currentTime; // Leggo il tempo corrente dell'AudioContext
-        ctx.nodoGuadagno.gain.cancelScheduledValues(t0); // Cancello eventuali automazioni precedenti
-        ctx.nodoGuadagno.gain.setValueAtTime(0, t0); // Imposto il gain a 0 al tempo corrente
-      }
-    } catch {} // Ignoro errori di WebAudio per non bloccare l'avvio
+await new Promise((r) => setTimeout(r, 140));
+if (token !== ctx.numeroSequenzaAvvio) return;
+if (!ctx.alTop || ctx.pausaPerScroll || ctx.pausaPerBlur) {
+  ctx.mostraVideo = false;
+  return;
+}
 
-    await new Promise((r) => setTimeout(r, 140)); // Inserisco un micro-delay per aiutare alcuni casi di sync (es. /login)
-    if (token !== ctx.numeroSequenzaAvvio) return; // Esco se nel frattempo e' cambiata la sequenza
-    if (!ctx.alTop || ctx.pausaPerScroll || ctx.pausaPerBlur) {
-      // Ricontrollo lo stato dopo il delay
-      ctx.mostraVideo = false; // Nascondo il video se non posso riprodurre
-      return; // Esco senza avviare
-    }
+ctx.mostraVideo = true;
 
     ctx.player.one('playing', () => {
   if (token !== ctx.numeroSequenzaAvvio) return;

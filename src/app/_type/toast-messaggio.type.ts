@@ -6,4 +6,5 @@ export interface ToastMessage {
   azione?: 'ripeti_accesso';
   chiave?: string;
   mostraSpinner?: boolean;
+
 }
