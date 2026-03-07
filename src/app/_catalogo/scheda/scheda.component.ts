@@ -145,13 +145,12 @@ private avviaTransizionePlayer(): void {
     btnTrailer?.click();
   }
 
+  this.transitioneVersoPLayer = true;
   setTimeout(() => {
-    this.transitioneVersoPLayer = true;
-    setTimeout(() => {
-      this.mostraPlayerVideo = true;
-    }, 2000);
-  }, this.durataFadeSchedaMs + 50);
+    this.mostraPlayerVideo = true;
+  }, 2000);
 }
+
 @HostListener('window:blur')
 gestisciBlurFinestra(): void {
   if (!this.playerScheda) return;

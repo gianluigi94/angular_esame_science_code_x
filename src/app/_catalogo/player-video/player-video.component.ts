@@ -87,11 +87,32 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
 
 
     this.player.ready(() => {
-      this.creaMascheraAvvio();
-      this.mostraMascheraAvvio();
-      this.setupAudioGraph();
-      this.setGain(0);
-      try { (this.player as any).muted?.(true); } catch {}
+  this.creaMascheraAvvio();
+  this.mostraMascheraAvvio();
+  this.setupAudioGraph();
+  this.setGain(0);
+  try { (this.player as any).muted?.(true); } catch {}
+
+  const animationDone = new Promise<void>(r => setTimeout(r, 2000));
+  const videoReady = new Promise<void>(r => {
+    if ((this.player as any).readyState?.() >= 3) { r(); return; }
+    (this.player as any).one?.('canplay', () => r());
+  });
+
+  Promise.all([animationDone, videoReady]).then(() => {
+    const wrapper = ((this.player as any).el?.() as HTMLElement)
+      ?.closest<HTMLElement>('.video-wrapper');
+    if (wrapper) wrapper.style.opacity = '1';
+    try {
+      const el = (this.player as any).el?.() as HTMLElement;
+      const req =
+        el?.requestFullscreen?.() ??
+        (el as any)?.webkitRequestFullscreen?.() ??
+        (el as any)?.mozRequestFullScreen?.() ??
+        (el as any)?.msRequestFullscreen?.();
+      Promise.resolve(req).catch(() => {});
+    } catch {}
+  });
 
 
 
