@@ -136,7 +136,7 @@ onRiproduci(): void {
 }
 
 onClicEpisodio(numeroEpisodio: number): void {
-  this.avviaTransizionePlayer();
+  this.avviaTransizionePlayer(numeroEpisodio);
 }
 
 private avviaTransizionePlayer(episodio?: number): void {
