@@ -36,7 +36,7 @@ tipoContenuto: 'film' | 'serie' | null = null;
 idContenuto: number | null = null;
 urlSfondoScheda = '';
 imgTitoloScheda = '';
-
+private _paramRiproduzioneInAttesa: string | null = null;
 
 
 private _labelPronte = false;
@@ -82,7 +82,7 @@ private _sfondoPronto = false;
 private _titoloPronto = false;
 private _descPronta = false;
 private _tabellaPronta = false;
-
+private _primaNavigazione = true;
 private contestoAudio: any = null;
 private nodoSorgente: any = null;
 private nodoGuadagno: any = null;
@@ -230,7 +230,15 @@ private verificaEAvviaAnimazioni(): void {
   // so che immagine/descrizione/tabella sono pronte.
   if (!this._labelPronte) {
     this._labelPronte = true;
-    this.commitLabelUISincronizzate(); // non blocca animazioni, ma evita label vuote
+    this.commitLabelUISincronizzate();
+  }
+
+  const _param = this._paramRiproduzioneInAttesa;
+  this._paramRiproduzioneInAttesa = null;
+  if (_param && !this.mostraPlayerVideo) {
+    const ep = _param.startsWith('ep') ? Number(_param.replace('ep', '')) : undefined;
+    this.avviaTransizionePlayer(ep);
+    return;
   }
 
   requestAnimationFrame(() => {
@@ -475,8 +483,14 @@ this.schedaPronta.impostaLabelTorna(
     this.startAnimTitolo = false;
     this.startAnimDescrizione = false;
     this.avvioTrailerSchedaRichiesto = false;
-    this.trailerInRiproduzione = true;
-    this._sfondoPronto = false;
+this.trailerInRiproduzione = true;
+if (this._primaNavigazione) {
+  const _sp = new URLSearchParams(window.location.search);
+  this._paramRiproduzioneInAttesa = _sp.get('riproduzione') || _sp.get('play') || null;
+}
+this._primaNavigazione = false;
+
+this._sfondoPronto = false;
     this._titoloPronto = false;
     this._descPronta = false;
     this._tabellaPronta = false;
@@ -565,9 +579,9 @@ this.righeCorrelateInCaricamento = false;
 
   this.verificaEAvviaAnimazioni();
 
-  if (this.slugCorrente) {
-    this.programmaInserimentoPlayerSchedaNelDom();
-  }
+ if (this.slugCorrente && !this._paramRiproduzioneInAttesa) {
+  this.programmaInserimentoPlayerSchedaNelDom();
+}
 
   return;
 }
@@ -598,7 +612,7 @@ this.righeCorrelateInCaricamento = false;
         this.verificaEAvviaAnimazioni();
 this.caricaRigheCorrelate();
 
-if (this.slugCorrente) {
+if (this.slugCorrente && !this._paramRiproduzioneInAttesa) {
   this.programmaInserimentoPlayerSchedaNelDom();
 }
       });
@@ -650,7 +664,7 @@ if (this.slugCorrente) {
         this.verificaEAvviaAnimazioni();
 this.caricaRigheCorrelate();
 
-if (this.slugCorrente) {
+if (this.slugCorrente && !this._paramRiproduzioneInAttesa) {
   this.programmaInserimentoPlayerSchedaNelDom();
 }
 
