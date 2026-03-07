@@ -139,12 +139,16 @@ onClicEpisodio(numeroEpisodio: number): void {
   this.avviaTransizionePlayer();
 }
 
-private avviaTransizionePlayer(): void {
+private avviaTransizionePlayer(episodio?: number): void {
   if (this.trailerInRiproduzione) {
     const btnTrailer = document.querySelector<HTMLElement>('button.riproduci[title="' + this.labelTrailerTitle + '"]');
     btnTrailer?.click();
   }
-
+  const valore = episodio ? `ep${episodio}` : 'true';
+  const lingua = this.cambioLingua.leggiCodiceLingua();
+  const nomeParam = lingua === 'it' ? 'riproduzione' : 'play';
+  const pathCorrente = this.location.path(true).split('?')[0];
+  this.location.replaceState(`${pathCorrente}?${nomeParam}=${valore}`);
   this.mostraPlayerVideo = true;
   this.transitioneVersoPLayer = true;
 }
