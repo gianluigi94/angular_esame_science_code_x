@@ -148,9 +148,20 @@ private avviaTransizionePlayer(episodio?: number): void {
   const lingua = this.cambioLingua.leggiCodiceLingua();
   const nomeParam = lingua === 'it' ? 'riproduzione' : 'play';
   const pathCorrente = this.location.path(true).split('?')[0];
-  this.location.replaceState(`${pathCorrente}?${nomeParam}=${valore}`);
+  window.history.pushState(null, '', `${pathCorrente}?${nomeParam}=${valore}`);
+  this.schedaPronta.impostaUrlScheda(pathCorrente);
+  this.schedaPronta.impostaPlayerAperto(true);
   this.mostraPlayerVideo = true;
   this.transitioneVersoPLayer = true;
+}
+
+@HostListener('window:popstate')
+gestisciPopState(): void {
+  if (this.mostraPlayerVideo) {
+    this.mostraPlayerVideo = false;
+    this.transitioneVersoPLayer = false;
+    this.schedaPronta.impostaPlayerAperto(false);
+  }
 }
 
 @HostListener('window:blur')
@@ -710,9 +721,19 @@ const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
      })
    );
 
-   this.subs.add(
+ this.subs.add(
      this.stopVideoGlobale.osservaRichiesteChiusuraPlayerScheda$().subscribe(({ durataMs, done }) => {
        this.chiudiPlayerSchedaConFadeEReset(durataMs).finally(() => done());
+     })
+   );
+
+ this.subs.add(
+     this.schedaPronta.chiudiPlayer$.subscribe(() => {
+       this.mostraPlayerVideo = false;
+       this.transitioneVersoPLayer = false;
+       this.schedaPronta.impostaPlayerAperto(false);
+       const pathPulito = this.location.path(true).split('?')[0];
+       this.location.replaceState(pathPulito);
      })
    );
 

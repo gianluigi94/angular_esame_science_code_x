@@ -13,6 +13,7 @@
   (click)="onTornaCatalogoClick($event)"
 
 >
+
       <img
         src="assets/pellicola.webp"
         class="icona-pellicola"
@@ -21,7 +22,9 @@
       />
       {{ labelTornaCatalogo }}
     </a>
-
+<a *ngIf="playerAperto" class="torna-catalogo" (click)="tornaAllaScheda()">
+  {{ isIt ? 'Ritorna alla scheda ⮨' : 'Back to detail ⮨' }}
+</a>
     <!-- menu "Le nostre categorie" sole se si è loggati, si mostrano al passaggio del mause -->
  <ul
   class="menu-categorie"

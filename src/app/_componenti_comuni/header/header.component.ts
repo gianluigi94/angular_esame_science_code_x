@@ -55,6 +55,8 @@ headerPronto = false;
   private readonly MIN_SPINNER = 300; // imposto una durata minima dello spinner per evitare flicker
   tipoSelezionato: 'film_serie' | 'film' | 'serie' = 'film_serie';
   headerSolido = false;
+  playerAperto = false;
+  urlScheda = '';
   labelTornaCatalogo = '';
  constructor(
   private api: ApiService,
@@ -161,6 +163,12 @@ ngOnInit(): void {
   this.schedaPronta.labelTorna$
     .pipe(takeUntil(this.distruggi$))
     .subscribe(label => { if (label) this.labelTornaCatalogo = label; });
+  this.schedaPronta.playerAperto$
+    .pipe(takeUntil(this.distruggi$))
+    .subscribe(v => { this.playerAperto = v; });
+    this.schedaPronta.urlScheda$
+    .pipe(takeUntil(this.distruggi$))
+    .subscribe(v => { this.urlScheda = v; });
 }
 
   /**
@@ -422,5 +430,9 @@ async onTornaCatalogoClick(event: Event): Promise<void> {
   event.preventDefault();
   await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
   this.router.navigateByUrl(this.baseCatalogoDaUrl());
+}
+
+tornaAllaScheda(): void {
+  this.schedaPronta.richiediChiusuraPlayer();
 }
 }
