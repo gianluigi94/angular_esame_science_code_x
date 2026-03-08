@@ -26,8 +26,12 @@ export class SchedaProntaService {
   chiudiPlayer$ = this._chiudiPlayer$.asObservable();
   richiediChiusuraPlayer(): void { this._chiudiPlayer$.next(); }
 
-  private _fadeEChiudi$ = new Subject<void>();
+ private _fadeEChiudi$ = new Subject<void>();
   fadeEChiudi$ = this._fadeEChiudi$.asObservable();
   richiediFadeEChiudi(): void { this._fadeEChiudi$.next(); }
+
+  private _fadeFilmPlayer$ = new Subject<number>();
+  fadeFilmPlayer$ = this._fadeFilmPlayer$.asObservable();
+  richiediFadeFilmPlayer(durataMs: number): void { this._fadeFilmPlayer$.next(durataMs); }
 
 }

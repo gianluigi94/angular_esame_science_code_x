@@ -87,6 +87,12 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
       })
     );
 
+    this.subs.add(
+      this.schedaPronta.fadeFilmPlayer$.subscribe((durataMs) => {
+        this.fadeGainTo(0, durataMs);
+      })
+    );
+
     this.player = videojs('vid1', {
       controls: true,
       preload: 'auto',

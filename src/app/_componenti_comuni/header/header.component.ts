@@ -428,7 +428,13 @@ onContattiClick(event: Event): void {
 
 async onTornaCatalogoClick(event: Event): Promise<void> {
   event.preventDefault();
-  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+  if (this.playerAperto) {
+    this.schedaPronta.richiediFadeFilmPlayer(350);
+    await new Promise<void>(r => setTimeout(r, 350));
+    this.schedaPronta.impostaPlayerAperto(false);
+  } else {
+    await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
+  }
   this.router.navigateByUrl(this.baseCatalogoDaUrl());
 }
 
