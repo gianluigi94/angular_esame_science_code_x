@@ -1,4 +1,4 @@
-<header [class.solido]="headerSolido">
+<header [class.solido]="headerSolido" [class.player-aperto]="headerNascosto">
   <!-- html dell header che è diversa se sono loggato oppure no -->
 
   <!-- SINISTRA  -->
@@ -22,7 +22,7 @@
       />
       {{ labelTornaCatalogo }}
     </a>
-<a *ngIf="playerAperto" class="torna-catalogo" (click)="tornaAllaScheda()">
+<a *ngIf="playerAperto" class="torna-catalogo torno" (click)="tornaAllaScheda()">
   {{ isIt ? 'Ritorna alla scheda ⮨' : 'Back to detail ⮨' }}
 </a>
     <!-- menu "Le nostre categorie" sole se si è loggati, si mostrano al passaggio del mause -->
@@ -115,7 +115,7 @@
   </div>
 
   <!-- DESTRA -->
-  <div class="destra">
+  <div class="destra" *ngIf="!playerAperto">
     <!-- SE LOGGATO: categorie, audio,  lingua, menu utente -->
      <!-- Questa formula abbreviata dice: prova a leggere il token da authVisuale (se authVisuale esiste) e se il token ha un valore mostrerà il container, altrimenti il template -->
     <ng-container *ngIf="authVisuale?.tk; else vistaNonLoggato">

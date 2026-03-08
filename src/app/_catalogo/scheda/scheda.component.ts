@@ -151,6 +151,7 @@ private avviaTransizionePlayer(episodio?: number): void {
   window.history.pushState(null, '', `${pathCorrente}?${nomeParam}=${valore}`);
   this.schedaPronta.impostaUrlScheda(pathCorrente);
   this.schedaPronta.impostaPlayerAperto(true);
+  this.schedaPronta.impostaHeaderNascosto(true);
   this.mostraPlayerVideo = true;
   this.transitioneVersoPLayer = true;
 }
@@ -729,9 +730,10 @@ const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
 
 this.subs.add(
      this.schedaPronta.chiudiPlayer$.subscribe(() => {
-       this.mostraPlayerVideo = false;
+      this.mostraPlayerVideo = false;
        this.transitioneVersoPLayer = false;
        this.schedaPronta.impostaPlayerAperto(false);
+       this.schedaPronta.impostaHeaderNascosto(false);
        const pathPulito = this.location.path(true).split('?')[0];
        this.location.replaceState(pathPulito);
 

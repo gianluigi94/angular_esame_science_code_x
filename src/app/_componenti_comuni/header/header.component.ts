@@ -29,7 +29,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   menuCategorieAperto = false; // mi segno se il menu delle categorie è aperto
   menuTipoAperto = false; // mi segno se il menu tipo contenuto è aperto
   linguaInCambio: boolean = false; // mi segno se sto eseguendo un cambio lingua (per bloccare interazioni e mostrare spinner)
-
+  headerNascosto = false;
   solo_brawser_blocca = false; // capisco se è solo l'audio bloccato dall brawser e non dall'utente
   disabilitaLingua = false; // mi imposto se devo disabilitare il cambio lingua in UI
 
@@ -166,6 +166,9 @@ ngOnInit(): void {
   this.schedaPronta.playerAperto$
     .pipe(takeUntil(this.distruggi$))
     .subscribe(v => { this.playerAperto = v; });
+  this.schedaPronta.headerNascosto$
+    .pipe(takeUntil(this.distruggi$))
+    .subscribe(v => { this.headerNascosto = v; });
     this.schedaPronta.urlScheda$
     .pipe(takeUntil(this.distruggi$))
     .subscribe(v => { this.urlScheda = v; });

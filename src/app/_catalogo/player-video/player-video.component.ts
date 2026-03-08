@@ -39,6 +39,7 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
   mediaSourceNode: MediaElementAudioSourceNode | null = null;
   avvioConsentito = false;
   playInterno = false;
+  fallbackMutatoAttivo = false;
   private readonly FADE_PAUSA_MS = 280;
   private readonly FADE_PLAY_MS  = 320;
   private readonly WARMUP_DELAY_MS = 90;
@@ -104,12 +105,27 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
 
 
 
-    this.player.ready(() => {
+  this.player.ready(() => {
   this.creaMascheraAvvio();
   this.mostraMascheraAvvio();
   this.setupAudioGraph();
   this.setGain(0);
   try { (this.player as any).muted?.(true); } catch {}
+
+  (this.player as any).on?.('volumechange', () => {
+    if (!this.avvioConsentito) return;
+    const isMuted = (this.player as any).muted?.();
+    if (!isMuted) {
+      Promise.resolve(this.audioCtx?.resume?.()).catch(() => {});
+      if (!this.player?.paused?.()) {
+        this.fadeGainTo(1, this.FADE_PLAY_MS);
+      } else {
+        this.setGain(1);
+      }
+    } else {
+      this.setGain(0);
+    }
+  });
 
   const animationDone = new Promise<void>(r => setTimeout(r, 2000));
   const videoReady = new Promise<void>(r => {
@@ -147,37 +163,12 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
         });
       };
 
-      (this.player as any).play = () => {
+       (this.player as any).play = () => {
         this.pauseToken++;
         if (this.playInterno) return this.originalPlay();
-        Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
-          this.setGain(0);
-  try { (this.player as any).muted?.(false); } catch {}
-  try {
-    const tech: any = (this.player as any).tech?.(true);
-    const ve: HTMLVideoElement | undefined = tech?.el?.();
-    if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
-  } catch {}
+        this.setGain(0);
         const p = this.originalPlay();
         if (this.avvioConsentito) this.armFadeInOnce();
-
-  (this.player as any).one?.('playing', () => {
-    try { (this.player as any).muted?.(false); } catch {}
-    try {
-      const tech: any = (this.player as any).tech?.(true);
-      const ve: HTMLVideoElement | undefined = tech?.el?.();
-      if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
-    } catch {}
-    Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
-  });
-  setTimeout(() => {
-    try { (this.player as any).muted?.(false); } catch {}
-    try {
-      const tech: any = (this.player as any).tech?.(true);
-      const ve: HTMLVideoElement | undefined = tech?.el?.();
-      if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
-    } catch {}
-  }, 300);
         return p;
       };
     });
@@ -205,7 +196,7 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
     }, 200);
 
         this.player.ready(() => {
-      if (this.risorse) {
+    if (this.risorse) {
         this.cambiaContenuto(this.risorse);
       }
 
@@ -587,6 +578,7 @@ const QualityMenuButton = class extends (MenuButton as any) {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+
     this.nascondiFreezeFrame();
     try { this.startupMaskEl?.remove(); } catch {}
     this.player?.dispose();
@@ -800,19 +792,25 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
   }
 
   private async doppioAvvioSeRichiesto(): Promise<void> {
+    console.log('[doppio] INIZIO');
+    this.doppioAvvioEseguito = true;
     try {
-      if (!this.player) return;
+      if (!this.player) { console.log('[doppio] USCITA: no player'); return; }
           const root = (this.player as any).el?.() as HTMLElement | null;
-    await this.waitForFullscreen(root, 2500);
-            this.mostraMascheraAvvio();
+               const fullscreenOk = await this.waitForFullscreen(root, 2500);
+     if (!fullscreenOk) {
+       await this.avviaFallbackMutato();
+       return;
+     }
+      this.mostraMascheraAvvio();
       const fallbackTimer = setTimeout(() => this.nascondiMascheraAvvio(), 30000);
 
-      await this.audioCtx?.resume?.();
       this.setGain(0);
       try { (this.player as any).muted?.(true); } catch {}
 
       const tracks = await this.waitForAudioTracks(2000);
-      if (!tracks || tracks.length === 0) { return; }
+      console.log('[doppio] tracks trovate:', tracks?.length);
+      if (!tracks || tracks.length === 0) { console.log('[doppio] USCITA: no tracks'); return; }
 
       const corretta = this.deduciLinguaCorretta();
       const opposta: 'en'|'it' = (corretta === 'it') ? 'en' : 'it';
@@ -843,10 +841,11 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
       await this.sleep(150);
       try { (this.player as any).currentTime?.(0); } catch {}
       await this.impostaLinguaAudio(corretta, false, false);
+      console.log('[doppio] inizio waitBuffer');
       await this.waitBufferFromZero(this.START_BUFFER_S, 12000);
+      console.log('[doppio] waitBuffer completato');
 
       try { (this.player as any).currentTime?.(0); } catch {}
-      await this.audioCtx?.resume?.();
       try { (this.player as any).muted?.(false); } catch {}
 
             try {
@@ -860,46 +859,26 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
 
 
 
-      setTimeout(() => {
-        try { (this.player as any).muted?.(false); } catch {}
-        try {
-          const tech: any = (this.player as any).tech?.(true);
-          const ve: HTMLVideoElement | undefined = tech?.el?.();
-          if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
-        } catch {}
-        Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
-      }, 0);
-      (this.player as any).one?.('playing', () => {
-        try { (this.player as any).muted?.(false); } catch {}
-        try {
-          const tech: any = (this.player as any).tech?.(true);
-          const ve: HTMLVideoElement | undefined = tech?.el?.();
-          if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
-        } catch {}
-        Promise.resolve(this.audioCtx?.resume?.()).catch(()=>{});
-      });
-      (this.player as any).one?.('volumechange', () => {
-        try { (this.player as any).muted?.(false); } catch {}
-        try {
-          const tech: any = (this.player as any).tech?.(true);
-          const ve: HTMLVideoElement | undefined = tech?.el?.();
-          if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
-        } catch {}
-      });
 
-           const p: any = this.player;
+
+          const p: any = this.player;
       this.agganciaNascondiSuPrimoFrame(p, fallbackTimer);
 
       this.playInterno = true;
-      try { await Promise.resolve(this.originalPlay?.()); } catch {}
+      console.log('[doppio] chiamo originalPlay');
+      try { await Promise.resolve(this.originalPlay?.()); } catch (e) { console.log('[doppio] originalPlay errore:', e); }
       this.playInterno = false;
+      console.log('[doppio] dopo originalPlay, paused:', (this.player as any).paused?.());
       await this.waitMinHeadroom(2.0, 5000);
       this.avvioConsentito = true;
       await this.fadeGainTo(1, this.FADE_PLAY_MS);
       try { this.setGain(1); } catch {}
       this.doppioAvvioEseguito = true;
 
-    } catch {}
+
+    } catch {
+      await this.avviaFallbackMutato();
+    }
   }
 
   private async impostaLinguaAudio(lang: 'en'|'it', persist = true, smooth = false): Promise<void> {
@@ -940,14 +919,21 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
     } catch {}
     return this.currentLang;
   }
-  private async waitForAudioTracks(timeoutMs=2000): Promise<any|null> {
+private async waitForAudioTracks(timeoutMs: number): Promise<any[] | null> {
+    const p: any = this.player;
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
-      const tr: any = (this.player as any).audioTracks?.();
-      if (tr && tr.length > 0) return tr;
+      try {
+        const tr = p?.audioTracks?.();
+        if (tr && tr.length > 0) return Array.from({ length: tr.length }, (_, i) => tr[i]);
+      } catch {}
       await this.sleep(50);
     }
-    return (this.player as any).audioTracks?.() ?? null;
+    try {
+      const tr = p?.audioTracks?.();
+      if (tr && tr.length > 0) return Array.from({ length: tr.length }, (_, i) => tr[i]);
+    } catch {}
+    return null;
   }
   private async waitBufferFromZero(targetS: number, timeoutMs: number): Promise<boolean> {
     const start = Date.now();
@@ -1014,6 +1000,7 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
   private nascondiMascheraAvvio(): void {
     if (!this.startupMaskEl) return;
     this.startupMaskEl.classList.add('vjs-startup-mask--hide');
+    this.schedaPronta.impostaHeaderNascosto(false);
   }
 
 
@@ -1117,6 +1104,31 @@ private async waitMinHeadroom(minHeadroomSec = 2.0, timeoutMs = 4000): Promise<b
   return false;
 }
 
+
+ private async avviaFallbackMutato(): Promise<void> {
+  try {
+    if (!this.player) return;
+    this.avvioConsentito = false;
+    this.setGain(0);
+    try { (this.player as any).muted?.(true); } catch {}
+    try {
+      const tech: any = (this.player as any).tech?.(true);
+      const ve: HTMLVideoElement | undefined = tech?.el?.();
+      if (ve) ve.muted = true;
+    } catch {}
+
+    this.playInterno = true;
+    try { await Promise.resolve(this.originalPlay?.()); } catch {}
+    this.playInterno = false;
+
+    const p: any = this.player;
+    const fallbackTimer = setTimeout(() => this.nascondiMascheraAvvio(), 30000);
+    this.agganciaNascondiSuPrimoFrame(p, fallbackTimer);
+
+    // ← FIX: ora il video è avviato, l'utente può togliere il mute
+    this.avvioConsentito = true;
+  } catch {}
+}
 }
 
 

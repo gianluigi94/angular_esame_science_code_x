@@ -78,7 +78,6 @@ app-footer{
   width: 100%;
   overflow-x: hidden;
   min-height: 100vh;
-
 }
 
 
@@ -534,4 +533,9 @@ app-player-video {
 
 .sfondo_scheda.zoom-out {
   animation: uscita-sfondo 2s ease forwards;
+}
+
+.scheda.player-aperto {
+  height: 100vh;
+  overflow: hidden;
 }

@@ -34,4 +34,8 @@ export class SchedaProntaService {
   fadeFilmPlayer$ = this._fadeFilmPlayer$.asObservable();
   richiediFadeFilmPlayer(durataMs: number): void { this._fadeFilmPlayer$.next(durataMs); }
 
+  private _headerNascosto$ = new BehaviorSubject<boolean>(false);
+  headerNascosto$ = this._headerNascosto$.asObservable();
+  impostaHeaderNascosto(v: boolean): void { this._headerNascosto$.next(v); }
+
 }
