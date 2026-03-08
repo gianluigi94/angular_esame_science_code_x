@@ -970,10 +970,12 @@ toString(val: any): string {
 }
 
 private aggiornaUrlStagione(numeroStagione: string): void {
-  const path = this.location.path(false);
+  const pathCompleto = this.location.path(false);
+  const [path, query] = pathCompleto.split('?');
   const baseUrl = path.replace(/\/(stagione|season)\/\d+$/, '');
   const segmento = path.includes('/en/') ? 'season' : 'stagione';
-  this.location.replaceState(`${baseUrl}/${segmento}/${numeroStagione}`);
+  const nuovoPath = `${baseUrl}/${segmento}/${numeroStagione}`;
+  this.location.replaceState(query ? `${nuovoPath}?${query}` : nuovoPath);
 }
 secondiInLeggibile(secondi: number | null | undefined): string {
   if (!secondi || secondi <= 0) return '';
