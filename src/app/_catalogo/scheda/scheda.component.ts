@@ -727,13 +727,22 @@ const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
      })
    );
 
- this.subs.add(
+this.subs.add(
      this.schedaPronta.chiudiPlayer$.subscribe(() => {
        this.mostraPlayerVideo = false;
        this.transitioneVersoPLayer = false;
        this.schedaPronta.impostaPlayerAperto(false);
        const pathPulito = this.location.path(true).split('?')[0];
        this.location.replaceState(pathPulito);
+
+       this.startAnim = false;
+       this.startAnimTitolo = false;
+       this.startAnimDescrizione = false;
+       requestAnimationFrame(() => {
+         this.startAnim = true;
+         this.startAnimTitolo = true;
+         this.startAnimDescrizione = true;
+       });
      })
    );
 

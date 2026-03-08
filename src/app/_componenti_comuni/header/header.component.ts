@@ -433,6 +433,6 @@ async onTornaCatalogoClick(event: Event): Promise<void> {
 }
 
 tornaAllaScheda(): void {
-  this.schedaPronta.richiediChiusuraPlayer();
+  this.schedaPronta.richiediFadeEChiudi();
 }
 }

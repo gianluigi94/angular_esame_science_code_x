@@ -1,8 +1,9 @@
 
-
 import { AfterViewInit, Component, OnDestroy, ViewEncapsulation, Input, OnChanges, SimpleChanges } from '@angular/core';
 import videojs from 'video.js';
 import type Player from 'video.js/dist/types/player';
+import { Subscription } from 'rxjs';
+import { SchedaProntaService } from '../scheda/scheda_service/scheda-pronta.service';
 
 @Component({
   selector: 'app-player-video',
@@ -15,6 +16,7 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
 
 
   private doppioAvvioEseguito = false;
+  private subs = new Subscription();
     @Input() risorse: { auto: string; '1080': string; '720': string; '360': string } | null = {
   auto:   'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/master.m3u8',
   '1080': 'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/1080/with-audio.m3u8',
@@ -73,7 +75,17 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
 
   private progressIndex = 0;
 
+  constructor(private schedaPronta: SchedaProntaService) {}
+
   ngAfterViewInit(): void {
+
+    this.subs.add(
+      this.schedaPronta.fadeEChiudi$.subscribe(() => {
+        this.fadeGainTo(0, this.FADE_PAUSA_MS).then(() => {
+          this.schedaPronta.richiediChiusuraPlayer();
+        });
+      })
+    );
 
     this.player = videojs('vid1', {
       controls: true,
@@ -568,6 +580,7 @@ const QualityMenuButton = class extends (MenuButton as any) {
   }
 
   ngOnDestroy(): void {
+    this.subs.unsubscribe();
     this.nascondiFreezeFrame();
     try { this.startupMaskEl?.remove(); } catch {}
     this.player?.dispose();
