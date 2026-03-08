@@ -238,6 +238,7 @@ private verificaEAvviaAnimazioni(): void {
   if (_param && !this.mostraPlayerVideo) {
     const ep = _param.startsWith('ep') ? Number(_param.replace('ep', '')) : undefined;
     this.avviaTransizionePlayer(ep);
+    this.schedaPronta.segnaPronte();
     return;
   }
 
@@ -574,6 +575,9 @@ this.labelTrailerTitle   = '';
 
   this.titoloScheda = cached.titoloScheda ?? '';
 this.aggiornaAltSfondo();
+if (this.tipoContenuto === 'serie' && this.stagioneSelezionata) {
+  this.aggiornaUrlStagione(this.stagioneSelezionata);
+}
 this.righeCorrelate = cached.righeCorrelate ?? [];
 this.righeCorrelateInCaricamento = false;
 

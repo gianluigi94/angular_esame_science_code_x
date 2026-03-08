@@ -148,10 +148,10 @@ this.headerPronto = true;
     }
   }
 
-   paginaScheda(): boolean {
-    const url = this.router.url || '';
-    return /^\/(it|en)\/(catalogo|catalog)\/(film|movies|serie|series)\/\d+(\/|$)/.test(url);
-  }
+paginaScheda(): boolean {
+  const url = (this.router.url || '').split('?')[0];
+  return /^\/(it|en)\/(catalogo|catalog)\/(film|movies|serie|series)\/\d+(\/|$)/.test(url);
+}
 
 ngOnInit(): void {
   if (this.authVisuale?.tk) this.caricaCategorieMenu();
