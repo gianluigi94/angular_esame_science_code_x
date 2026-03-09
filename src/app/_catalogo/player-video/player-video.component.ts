@@ -127,7 +127,7 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
     }
   });
 
-  const animationDone = new Promise<void>(r => setTimeout(r, 2000));
+  const animationDone = new Promise<void>(r => setTimeout(r, 2200));
   const videoReady = new Promise<void>(r => {
     if ((this.player as any).readyState?.() >= 3) { r(); return; }
     (this.player as any).one?.('canplay', () => r());

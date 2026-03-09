@@ -30,10 +30,16 @@
   inset: 0;
   display: block;
   z-index: 2;
+   transition: opacity 2000ms ease;
   pointer-events: none;
   background:
+
     linear-gradient(to top, #070217 0%, #0000 75%, #0000 100%),
     linear-gradient(to right, #08021b 0%, #08021b 9%, #190221db 26%, #0000 80%, #0000 100%);
+
+    &.verso-player {
+    opacity: 0;
+  }
 }
 
 
@@ -526,8 +532,8 @@ app-player-video {
     transform: scale(1.02);
   }
   to {
-    opacity: 0;
-    transform: scale(1.12);
+    opacity: 0.03;
+    transform: scale(1.32);
   }
 }
 
