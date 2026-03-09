@@ -12,6 +12,7 @@ import { StatoSessioneClientService } from 'src/app/_servizi_globali/stato-sessi
 import { ErroreGlobaleService } from 'src/app/_servizi_globali/errore-globale.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { TipoContenuto, TipoContenutoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/tipo-contenuto.service';
+import { SchedaPlayerTransizioneTitoloService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scheda-player-transizione-titolo.service';
 import { Location } from '@angular/common';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
@@ -70,6 +71,7 @@ headerPronto = false;
   private tipoContenuto: TipoContenutoService,
   private statoSessione: StatoSessioneClientService,
   private erroreGlobale: ErroreGlobaleService,
+  private transizioneTitolo: SchedaPlayerTransizioneTitoloService,
   public scorrimentoCatalogo: ScorrimentoCatalogoService,
   private audioGlobaleService: AudioGlobaleService,
   private contattiNav: ContattiNavigazioneService,
@@ -435,6 +437,7 @@ async onTornaCatalogoClick(event: Event): Promise<void> {
     this.schedaPronta.richiediFadeFilmPlayer(350);
     await new Promise<void>(r => setTimeout(r, 350));
     this.schedaPronta.impostaPlayerAperto(false);
+    this.transizioneTitolo.ripristinaTitoloOrigineScheda();
   } else {
     await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
   }

@@ -166,6 +166,7 @@ gestisciPopState(): void {
     this.mostraPlayerVideo = false;
     this.transitioneVersoPLayer = false;
     this.schedaPronta.impostaPlayerAperto(false);
+    this.transizioneTitolo.ripristinaTitoloOrigineScheda();
   }
 }
 
@@ -739,6 +740,7 @@ this.subs.add(
        this.transitioneVersoPLayer = false;
        this.schedaPronta.impostaPlayerAperto(false);
        this.schedaPronta.impostaHeaderNascosto(false);
+       this.transizioneTitolo.ripristinaTitoloOrigineScheda();
        const pathPulito = this.location.path(true).split('?')[0];
        this.location.replaceState(pathPulito);
 
