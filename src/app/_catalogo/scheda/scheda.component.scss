@@ -65,14 +65,15 @@ app-footer{
 .titolo-scheda {
   position: relative;
   z-index: 2;
-  &__img {
-    opacity: 0;
-  height: 320px;
-  margin-top: 65px;
+
+  &__immagine {
+    width: 420px;
+    height: auto;
+    margin-top: 65px;
     margin-left: 100px;
   }
-  &__img.anim{
-    opacity: 1;
+
+  &__immagine.anim {
     animation: ingresso-titolo 0.5s ease-in-out;
   }
 }

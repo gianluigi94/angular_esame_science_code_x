@@ -24,14 +24,26 @@
   playsinline
   preload="auto"
 ></video-js>
-  <div class="titolo-scheda" *ngIf="imgTitoloScheda">
-    <img
-  [src]="imgTitoloScheda"
-  [alt]="altTitoloScheda"
-  class="titolo-scheda__img"
-      [class.anim]="startAnimTitolo"
-    />
-  </div>
+
+
+
+
+
+<!-- ////////////////////////// -->
+
+
+<div class="titolo-scheda" *ngIf="imgTitoloScheda">
+  <img
+    [attr.src]="imgTitoloScheda"
+    [alt]="altTitoloScheda"
+    class="titolo-scheda__immagine"
+    [class.anim]="startAnimTitolo"
+  />
+</div>
+
+
+
+  <!-- /////////////// -->
   <div class="bottoni_film">
     <button type="button" class="riprendi" [title]="labelRiprendiTitle">
   {{ labelRiprendi }}
