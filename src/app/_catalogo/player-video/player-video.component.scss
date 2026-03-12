@@ -616,3 +616,17 @@ span {
 }
 
 
+#ad-label {
+  position: absolute;
+  bottom: 40px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ec820a;
+  font-weight: bolder;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  z-index: 101;
+  pointer-events: none;
+  font-family: sans-serif;
+}

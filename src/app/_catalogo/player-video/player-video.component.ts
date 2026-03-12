@@ -3,8 +3,9 @@ import { AfterViewInit, Component, OnDestroy, ViewEncapsulation, Input, OnChange
 import videojs from 'video.js';
 import type Player from 'video.js/dist/types/player';
 import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { SchedaProntaService } from '../scheda/scheda_service/scheda-pronta.service';
-
+import { ApiService } from 'src/app/_servizi_globali/api.service';
 @Component({
   selector: 'app-player-video',
   templateUrl: './player-video.component.html',
@@ -17,7 +18,9 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
 
   private doppioAvvioEseguito = false;
   private subs = new Subscription();
-    @Input() risorse: { auto: string; '1080': string; '720': string; '360': string } | null = {
+    @Input() sottotitoli: { en: string; it: string } | null = null;
+@Input() infoEpisodio: { stagione: number; episodio: number } | null = null;
+@Input() risorse: { auto: string; '1080': string; '720': string; '360': string } | null = {
   auto:   'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/master.m3u8',
   '1080': 'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/1080/with-audio.m3u8',
   '720':  'https://d2kd3i5q9rl184.cloudfront.net/streaming/film/buchi_neri_e_altre_creature_dello_spazio/720/with-audio.m3u8',
@@ -48,7 +51,15 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
   private originalPlay: any;
   private readonly START_BUFFER_S = 5;
 
-  videoLingua: string | null = localStorage.getItem('video_lingua');
+// === AD BREAK ===
+private intervallo_ad_s = 20;
+private tempoVisioneAccumulato = 0;
+private ultimoCurrentTime = -1;
+private adInCorso = false;
+private tempoRitornoDopoAd = 0;
+private _vedePublicita: boolean | null = null; // cache calcolata una volta sola
+
+videoLingua: string | null = localStorage.getItem('video_lingua');
 
   private player?: Player;
   currentLang: 'en' | 'it' =
@@ -76,12 +87,22 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
 
   private progressIndex = 0;
 
-  constructor(private schedaPronta: SchedaProntaService) {}
+  constructor(
+  private schedaPronta: SchedaProntaService,
+  private api: ApiService,
+) {}
 
   ngAfterViewInit(): void {
 
-    this.subs.add(
-      this.schedaPronta.fadeEChiudi$.subscribe(() => {
+  this.api.getIntervalloPublicita().pipe(take(1)).subscribe({
+    next: (res) => {
+      const v = Number(res?.data?.valore);
+      if (v > 0) this.intervallo_ad_s = v;
+    }
+  });
+
+  this.subs.add(
+    this.schedaPronta.fadeEChiudi$.subscribe(() => {
         this.fadeGainTo(0, this.FADE_PAUSA_MS).then(() => {
           this.schedaPronta.richiediChiusuraPlayer();
         });
@@ -195,12 +216,13 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
       remainingTimeEl?.addEventListener('click', toggleDisplay);
     }, 200);
 
-        this.player.ready(() => {
+   this.player.ready(() => {
     if (this.risorse) {
         this.cambiaContenuto(this.risorse);
       }
 
-
+    (this.player as any).on?.('timeupdate', () => this.gestisciTimeUpdate());
+    (this.player as any).on?.('ended', () => this.gestisciFineVideo());
 
       let controlBarShown = false;
       this.player?.on('play', () => {
@@ -576,28 +598,224 @@ const QualityMenuButton = class extends (MenuButton as any) {
     this.inactivityTimeout = setTimeout(() => {}, 2000);
   }
 
+private utenteVedePublicita(): boolean {
+  if (this._vedePublicita !== null) return this._vedePublicita;
+
+  try {
+    // L'auth è salvato come oggetto unico sotto la chiave 'auth'
+    const authRaw = localStorage.getItem('auth') ?? sessionStorage.getItem('auth');
+    console.log('[AD] authRaw:', authRaw);
+
+    if (authRaw) {
+      const auth = JSON.parse(authRaw);
+      const abilita: number[] = auth?.abilita ?? [];
+      console.log('[AD] abilita da auth:', abilita, '| tk:', auth?.tk ? auth.tk.substring(0, 20) + '...' : 'NESSUNO');
+      this._vedePublicita = abilita.includes(3);
+      console.log('[AD] utenteVedePublicita →', this._vedePublicita);
+      return this._vedePublicita;
+    }
+
+    console.warn('[AD] nessun oggetto auth in storage');
+    this._vedePublicita = false;
+    return false;
+  } catch (e) {
+    console.error('[AD] errore:', e);
+    this._vedePublicita = false;
+    return false;
+  }
+}
+
+private gestisciTimeUpdate(): void {
+  if (this.adInCorso) return;
+  if (!this.avvioConsentito) return;
+  if (!this.utenteVedePublicita()) return;
+
+  const ct = Number((this.player as any).currentTime?.() ?? 0);
+  if (this.ultimoCurrentTime >= 0) {
+    const delta = ct - this.ultimoCurrentTime;
+    if (delta > 0 && delta < 2) {
+      this.tempoVisioneAccumulato += delta;
+    }
+  }
+  this.ultimoCurrentTime = ct;
+
+  if (this.tempoVisioneAccumulato >= this.intervallo_ad_s) {
+    this.tempoVisioneAccumulato = 0;
+    this.avviaAdBreak();
+  }
+}
+//
+private adVideoEl: HTMLVideoElement | null = null;
+
+private async avviaAdBreak(): Promise<void> {
+  if (this.adInCorso) return;
+  this.adInCorso = true;
+  this.tempoRitornoDopoAd = Number((this.player as any).currentTime?.() ?? 0);
+
+  // 1. Chiedi al backend quale pubblicità mandare (mentre il film è ancora in play)
+  let idPubblicita = 1;
+  try {
+    const res = await this.api.getProssimaPublicita().pipe(take(1)).toPromise();
+    idPubblicita = res?.data?.id_pubblicita ?? 1;
+  } catch {}
+
+  const lingua = localStorage.getItem('video_lingua') === 'italiano' ? 'it' : 'en';
+  const urlAd = `https://d2kd3i5q9rl184.cloudfront.net/pubblicita/pub_${idPubblicita}_${lingua}.mp4`;
+
+  // 2. Crea l'elemento video e imposta il src — ancora invisibile (z-index fuori dal DOM)
+  this.adVideoEl = document.createElement('video');
+  this.adVideoEl.style.cssText = `
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    z-index: 100; background: #000; object-fit: contain;
+    visibility: hidden;
+  `;
+  this.adVideoEl.playsInline = true;
+  this.adVideoEl.volume = 1;
+  this.adVideoEl.muted = false;
+  this.adVideoEl.preload = 'auto';
+  this.adVideoEl.src = urlAd;
+
+  const playerEl = (this.player as any).el?.() as HTMLElement;
+  playerEl.appendChild(this.adVideoEl);
+
+  // 3. Aspetta che il browser abbia abbastanza buffer (canplay) — film ancora in play
+  await new Promise<void>((resolve) => {
+    const timeout = setTimeout(resolve, 4000); // fallback max 4s
+    this.adVideoEl!.addEventListener('canplay', () => {
+      clearTimeout(timeout);
+      resolve();
+    }, { once: true });
+    this.adVideoEl!.addEventListener('error', () => {
+      clearTimeout(timeout);
+      resolve();
+    }, { once: true });
+    this.adVideoEl!.load();
+  });
+
+  // 4. Solo ora pausa il film e mostra la pubblicità
+  await this.fadeGainTo(0, this.FADE_PAUSA_MS);
+  this.playInterno = true;
+  try { this.originalPause?.(); } catch {}
+  this.playInterno = false;
+
+  this.adVideoEl.style.visibility = 'visible';
+
+  const adLabel = document.createElement('div');
+  adLabel.id = 'ad-label';
+  adLabel.textContent = 'Pubblicità';
+  playerEl.appendChild(adLabel);
+
+  this.adVideoEl.addEventListener('ended', () => this.riprendiDopoAd());
+  this.adVideoEl.addEventListener('error', () => this.riprendiDopoAd());
+
+  this.adVideoEl.play().catch(() => this.riprendiDopoAd());
+}
+
+private gestisciFineVideo(): void {
+  // ora gestito dall'evento 'ended' del adVideoEl
+  // ma teniamo il metodo per sicurezza
+  if (this.adInCorso) this.riprendiDopoAd();
+}
+
+private async riprendiDopoAd(): Promise<void> {
+  // Rimuovi il video pubblicitario
+ if (this.adVideoEl) {
+    this.adVideoEl.pause();
+    this.adVideoEl.remove();
+    this.adVideoEl = null;
+  }
+  document.getElementById('ad-label')?.remove();
+
+  this.adInCorso = false;
+  this.ultimoCurrentTime = -1;
+
+  // Riprendi il film dal punto esatto
+  try { (this.player as any).currentTime?.(this.tempoRitornoDopoAd); } catch {}
+  this.playInterno = true;
+  try { await Promise.resolve(this.originalPlay?.()); } catch {}
+  this.playInterno = false;
+  await this.fadeGainTo(1, this.FADE_PLAY_MS);
+}
+
   ngOnDestroy(): void {
-    this.subs.unsubscribe();
+  this.subs.unsubscribe();
 
-    this.nascondiFreezeFrame();
-    try { this.startupMaskEl?.remove(); } catch {}
-    this.player?.dispose();
-    try { this.audioCtx?.close(); } catch {}
+  this.nascondiFreezeFrame();
+  try { this.startupMaskEl?.remove(); } catch {}
+  this.player?.dispose();
+  try { this.audioCtx?.close(); } catch {}
+  this.blobUrls.forEach(u => URL.revokeObjectURL(u));
+  this.blobUrls = [];
+}
+
+private cambiaContenuto(r: { auto: string; '1080': string; '720': string; '360': string }): void {
+  this.doppioAvvioEseguito = false;
+  this.mostraMascheraAvvio();
+
+  this.URL_MASTER = r.auto  || '';
+  this.URL_1080   = r['1080'] || '';
+  this.URL_720    = r['720']  || '';
+  this.URL_360    = r['360']  || '';
+  if (!this.player) return;
+  (this.player as any).src({ src: this.URL_MASTER, type: 'application/x-mpegURL' });
+  (this.player as any).load?.();
+  this.aggiornaVociMenuQualita();
+  this.aggiornaSottotitoli();
+}
+
+private blobUrls: string[] = [];
+
+private async aggiornaSottotitoli(): Promise<void> {
+  if (!this.player || !this.sottotitoli) return;
+  try {
+    this.blobUrls.forEach(u => URL.revokeObjectURL(u));
+    this.blobUrls = [];
+
+    const tracce = (this.player as any).remoteTextTracks?.();
+    if (tracce) {
+      const da_rimuovere: any[] = [];
+      for (let i = 0; i < tracce.length; i++) da_rimuovere.push(tracce[i]);
+      da_rimuovere.forEach(t => (this.player as any).removeRemoteTextTrack?.(t));
+    }
+
+    const [srcEn, srcIt] = await Promise.all([
+      this.patchVtt(this.sottotitoli.en),
+      this.patchVtt(this.sottotitoli.it),
+    ]);
+
+    (this.player as any).addRemoteTextTrack?.({ kind: 'subtitles', src: srcEn, srclang: 'en', label: 'Inglese' }, false);
+    (this.player as any).addRemoteTextTrack?.({ kind: 'subtitles', src: srcIt, srclang: 'it', label: 'Italiano' }, false);
+  } catch {}
+}
+
+private async patchVtt(url: string): Promise<string> {
+  try {
+    const testo = await fetch(url).then(r => r.text());
+
+    let patched = testo;
+    if (this.infoEpisodio) {
+      const { stagione, episodio } = this.infoEpisodio;
+      const numWords = '(?:[1-5]|uno|due|tre|quattro|cinque|one|two|three|four|five)';
+
+      // lavora solo sui primi 200 caratteri, lascia il resto intatto
+      const testa = testo.substring(0, 200);
+      const coda  = testo.substring(200);
+
+      const testablePatchata = testa
+        .replace(new RegExp(`(stagione|season)\\s+${numWords}`, 'gi'),  (_m, kw) => `${kw} ${stagione}`)
+        .replace(new RegExp(`(episodio|episode)\\s+${numWords}`, 'gi'), (_m, kw) => `${kw} ${episodio}`);
+
+      patched = testablePatchata + coda;
+    }
+
+    const blob = new Blob([patched], { type: 'text/vtt' });
+    const blobUrl = URL.createObjectURL(blob);
+    this.blobUrls.push(blobUrl);
+    return blobUrl;
+  } catch {
+    return url;
   }
-
-    private cambiaContenuto(r: { auto: string; '1080': string; '720': string; '360': string }): void {
-      this.doppioAvvioEseguito = false;
-      this.mostraMascheraAvvio();
-
-    this.URL_MASTER = r.auto  || '';
-    this.URL_1080   = r['1080'] || '';
-    this.URL_720    = r['720']  || '';
-    this.URL_360    = r['360']  || '';
-    if (!this.player) return;
-     (this.player as any).src({ src: this.URL_MASTER, type: 'application/x-mpegURL' });
- (this.player as any).load?.();
-    this.aggiornaVociMenuQualita();
-  }
+}
 
   private aggiornaVociMenuQualita(): void {
     try {

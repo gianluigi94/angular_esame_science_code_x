@@ -1,0 +1,182 @@
+WEBVTT
+
+00:00.000 --> 00:06.920
+Serie. I codici sorgente, stagione 1 episodio 1. Ti sei mai chiesto cosa fa
+
+00:06.920 --> 00:11.240
+funzionare le tue app e i tuoi siti web preferiti è una specie di magia ma non
+
+00:11.240 --> 00:15.440
+del tipo che potresti immaginare questa magia riguarda il codice sorgente la
+
+00:15.440 --> 00:19.360
+spina dorsale di tutto il software immaginalo come un progetto un insieme
+
+00:19.360 --> 00:23.240
+di istruzioni scritte in un linguaggio comprensibile ai computer proprio come
+
+00:23.240 --> 00:26.280
+la ricetta del tuo piatto preferito ma per i computer
+
+00:26.280 --> 00:30.000
+ora queste ricette o codici sorgente non sono tutti scritti nello stesso
+
+00:30.000 --> 00:33.640
+linguaggio così come abbiamo linguaggi diversi in tutto il mondo anche i
+
+00:33.640 --> 00:36.760
+computer hanno linguaggi di programmazione diversi tra questi ci
+
+00:36.760 --> 00:41.220
+sono python noto per la sua semplicità e leggibilità java ampiamente utilizzato
+
+00:41.220 --> 00:44.520
+per la creazione di applicazioni aziendali e c++ preferito per la
+
+00:44.520 --> 00:47.800
+programmazione di sistemi lo sviluppo di giochi e altri lavori critici per le
+
+00:47.800 --> 00:51.680
+prestazioni ogni linguaggio alla sua sintassi il suo modo di elaborare la
+
+00:51.680 --> 00:55.840
+ricetta e il suo scopo quindi il codice sorgente è l'ingrediente segreto che da
+
+00:55.840 --> 00:59.840
+vita al mondo digitale che ci circonda ma come si crea questo magico codice
+
+00:59.840 --> 01:04.160
+sorgente tutto inizia con un'idea un problema da risolvere o un'attività da
+
+01:04.160 --> 01:08.000
+automatizzare questa idea viene poi trasformata in un insieme di istruzioni
+
+01:08.000 --> 01:11.520
+o in un algoritmo in grado di risolvere sistematicamente il problema in questione
+
+01:11.520 --> 01:15.360
+immaginate un algoritmo come una ricetta con ogni passaggio meticolosamente
+
+01:15.360 --> 01:19.560
+pianificato per garantire il risultato desiderato ma un algoritmo è solo un
+
+01:19.560 --> 01:23.560
+progetto la vera magia avviene quando questo algoritmo viene tradotto in codice
+
+01:23.560 --> 01:27.280
+sorgente il linguaggio che i nostri computer comprendono scrivere questo
+
+01:27.280 --> 01:31.960
+codice è di per sé una forma d'arte non basta scrivere codice che funzioni il
+
+01:31.960 --> 01:35.840
+codice deve essere pulito ed efficiente rendendolo più facile da comprendere e
+
+01:35.840 --> 01:39.160
+manutenere per gli altri questo è fondamentale per migliorare le
+
+01:39.160 --> 01:43.160
+prestazioni e la longevità del software scrivere codice sorgente è un po come
+
+01:43.160 --> 01:46.600
+comporre una sinfonia dove ogni riga gioca un ruolo cruciale nella grande
+
+01:46.600 --> 01:51.360
+orchestra del software hai mai sentito parlare di open source è codice sorgente
+
+01:51.360 --> 01:54.600
+con una particolarità ora immagina un mondo in cui tutti
+
+01:54.600 --> 01:57.920
+condividono liberamente le proprie idee un mondo in cui la collaborazione e
+
+01:57.920 --> 02:01.600
+l'innovazione non sono solo incoraggiate ma la notte benvenuti nel
+
+02:01.600 --> 02:05.720
+regno dell'open source a differenza del codice sorgente tradizionale che viene
+
+02:05.720 --> 02:09.040
+tenuto sotto chiave l'open source è accessibile a tutti che possono
+
+02:09.040 --> 02:13.120
+visualizzarlo modificarlo e distribuire è come avere una cassetta degli attrezzi
+
+02:13.120 --> 02:16.920
+comuni in cui tutti possono contribuire con strumenti e utilizzare ciò che altri
+
+02:16.920 --> 02:20.240
+hanno aggiunto questo approccio democratico ci ha portato piattaforme come
+
+02:20.240 --> 02:24.360
+wordpress che alimenta oltre il 30 per cento del web e android il sistema
+
+02:24.360 --> 02:28.120
+operativo mobile più diffuso al mondo la bellezza dell'open source risiede nella
+
+02:28.120 --> 02:30.880
+sua capacità di promuovere la creatività e accelerare i progressi
+
+02:30.880 --> 02:33.960
+tecnologici permettendoci di appoggiarci sui giganti
+
+02:33.960 --> 02:37.440
+l'open source è una testimonianza del potere dell'intelligenza collettiva nel
+
+02:37.440 --> 02:41.520
+campo dell'informatica ma da un grande potere derivano grandi responsabilità
+
+02:41.520 --> 02:46.120
+come proteggiamo il nostro prezioso codice sorgente immergendoci nel mondo
+
+02:46.120 --> 02:49.400
+della sicurezza del codice sorgente scopriamo una miriade di misure di
+
+02:49.400 --> 02:53.440
+protezione a nostra disposizione uno di questi è la revisione del codice un
+
+02:53.440 --> 02:56.600
+metodo in cui i colleghi esaminano attentamente il codice degli altri per
+
+02:56.600 --> 03:00.000
+individuare potenziali errori o vulnerabilità è come avere un secondo
+
+03:00.000 --> 03:03.560
+paio di occhi per individuare eventuali errori o sviste creando essenzialmente
+
+03:03.560 --> 03:07.680
+una rete di sicurezza per il codice in seguito abbiamo l'analisi statica del
+
+03:07.680 --> 03:11.680
+codice un processo che ispeziona il codice senza eseguirlo è come un
+
+03:11.680 --> 03:15.700
+detective alla ricerca di incongruenze o potenziali vulnerabilità nascosto
+
+03:15.700 --> 03:19.820
+nell'ombra del codice poi ci sono le pratiche di codifica sicura linee guida
+
+03:19.820 --> 03:22.940
+che i programmatori seguono per ridurre al minimo il rischio di violazioni della
+
+03:22.940 --> 03:27.020
+sicurezza è come avere un regolamento per creare una fortezza garantendo che il
+
+03:27.020 --> 03:31.140
+codice sia il più sicuro possibile e non dimentichiamoci della protezione della
+
+03:31.140 --> 03:34.940
+proprietà intellettuale tecniche come l'offuscamento che rende il codice
+
+03:34.940 --> 03:38.420
+difficile da comprendere e la crittografia che codifica il codice in un
+
+03:38.420 --> 03:42.620
+formato illegibile forniscono ulteriori livelli di sicurezza in definitiva i
+
+03:42.620 --> 03:45.820
+codici sorgente queste creazioni intricate sono sia gli elementi
+
+03:45.820 --> 03:50.020
+costitutivi che i custodi del nostro universo digitale
+

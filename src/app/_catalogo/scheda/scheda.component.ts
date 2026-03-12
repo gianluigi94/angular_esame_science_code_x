@@ -101,6 +101,9 @@ righeCorrelateInCaricamento = true;
 mostraVideoScheda = false;
 trailerInRiproduzione = true;
 mostraPlayerVideo = false;
+risorsePLayerVideo: { auto: string; '1080': string; '720': string; '360': string } | null = null;
+sottotitoliPlayerVideo: { en: string; it: string } | null = null;
+infoEpisodioPlayer: { stagione: number; episodio: number } | null = null;
 transitioneVersoPLayer = false;
 
 toggleTrailer(): void {
@@ -141,6 +144,35 @@ onClicEpisodio(numeroEpisodio: number): void {
 }
 
 private avviaTransizionePlayer(episodio?: number): void {
+  const BASE = 'https://d2kd3i5q9rl184.cloudfront.net/streaming';
+  const slug = this.slugCorrente;
+
+if (this.tipoContenuto === 'film') {
+    this.risorsePLayerVideo = {
+      auto:   `${BASE}/film/${slug}/master.m3u8`,
+      '1080': `${BASE}/film/${slug}/1080/with-audio.m3u8`,
+      '720':  `${BASE}/film/${slug}/720/with-audio.m3u8`,
+      '360':  `${BASE}/film/${slug}/360/with-audio.m3u8`,
+    };
+    this.sottotitoliPlayerVideo = {
+      en: `assets/sottotitoli/en/film/${slug}.vtt`,
+      it: `assets/sottotitoli/it/film/${slug}.vtt`,
+    };
+  } else if (this.tipoContenuto === 'serie' && episodio != null) {
+    const stagione = this.stagioneSelezionata ?? '1';
+    this.risorsePLayerVideo = {
+      auto:   `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/master.m3u8`,
+      '1080': `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/1080/with-audio.m3u8`,
+      '720':  `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/720/with-audio.m3u8`,
+      '360':  `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/360/with-audio.m3u8`,
+    };
+    this.sottotitoliPlayerVideo = {
+      en: `assets/sottotitoli/en/serie/${slug}.vtt`,
+      it: `assets/sottotitoli/it/serie/${slug}.vtt`,
+    };
+    this.infoEpisodioPlayer = { stagione: Number(stagione), episodio };
+  }
+
   if (this.trailerInRiproduzione) {
     const btnTrailer = document.querySelector<HTMLElement>('button.riproduci[title="' + this.labelTrailerTitle + '"]');
     btnTrailer?.click();

@@ -320,4 +320,12 @@ public getCategoriePerContenuto(
   };
   return this.richiestaGenerica(risorsa, 'GET', parametri);
 }
+
+public getIntervalloPublicita(): Observable<IRispostaServer> {
+  return this.richiestaGenerica(['configurazione', 'intervallo-pubblicita'], 'GET');
+}
+
+public getProssimaPublicita(): Observable<IRispostaServer> {
+  return this.richiestaGenerica(['pubblicita', 'prossima'], 'GET');
+}
 }

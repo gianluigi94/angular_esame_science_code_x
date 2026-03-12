@@ -1,0 +1,95 @@
+WEBVTT
+
+00:00.000 --> 00:01.720
+Movie
+
+00:01.720 --> 00:07.700
+Cryptography and prime numbers. Have you ever wondered how your online transactions stay secure from prying eyes?
+
+00:08.120 --> 00:11.280
+This is where the enigma of cryptography comes into play
+
+00:12.280 --> 00:16.880
+Cryptography is a method that secures communication and information through a unique language
+
+00:17.520 --> 00:23.660
+Codes it's as if we're speaking in an alien dialect that only we and the intended recipient understand
+
+00:24.020 --> 00:30.860
+From securing your online shopping sprees to maintaining the privacy of your personal messages. It's cryptography
+
+00:30.860 --> 00:36.500
+That's the unsung hero. Indeed cryptography is the invisible armor that safeguards our digital lives
+
+00:36.900 --> 00:42.580
+But how does cryptography work and what role do prime numbers play in it? Let's unravel this mystery
+
+00:43.580 --> 00:50.500
+Prime numbers those unique integers divisible only by one in themselves are essentially the bedrock of cryptography
+
+00:50.660 --> 00:54.100
+They're the carefully chosen bricks that build the wall of security
+
+00:54.540 --> 01:00.540
+The major strength of many cryptographic systems lies in the sheer difficulty of factoring large prime numbers
+
+01:01.100 --> 01:02.820
+these humble primes
+
+01:02.820 --> 01:09.180
+Seemingly simple are the unsung heroes holding immense power in the intricate complex world of cryptography
+
+01:09.300 --> 01:14.220
+Thus the simple prime numbers hold immense power in the complex world of cryptography
+
+01:14.380 --> 01:21.660
+So how do these two seemingly disparate elements cryptography and prime numbers intersect in real-world applications?
+
+01:22.500 --> 01:26.180
+Well, let's delve into the fascinating world of cryptographic algorithms
+
+01:26.820 --> 01:32.700
+Specifically RSA or revest Shamir Edelman. This algorithm is a cornerstone of modern
+
+01:33.180 --> 01:39.060
+Cryptography and it owes its strength to the enigmatic nature of prime numbers. Here's how it works
+
+01:39.740 --> 01:45.360
+RSA uses two large prime numbers and multiplies them together to create an encryption key
+
+01:45.660 --> 01:48.220
+This key is then used to encrypt our data
+
+01:48.820 --> 01:50.820
+Transforming it into a seemingly indecipherable
+
+01:51.540 --> 01:53.180
+jumble of information
+
+01:53.180 --> 02:00.780
+Now the intriguing part is the decryption process to unlock the data one would need to factor the product of these two prime numbers a
+
+02:01.140 --> 02:04.340
+Task that is computationally intensive to say the least
+
+02:05.060 --> 02:12.460
+This mathematical complexity is what makes the encryption so secure so robust against attacks
+
+02:13.300 --> 02:20.140
+Through the magic of prime numbers cryptography ensures the safe passage of our digital secrets in the vast
+
+02:20.420 --> 02:26.900
+Digital universe our security and privacy hinge on the fascinating interplay between cryptography and prime numbers
+
+02:27.620 --> 02:30.340
+We've journeyed through the enigma of cryptography
+
+02:30.780 --> 02:38.400
+Marveled at the power of prime numbers and witness their intersection in securing our digital communications this invisible armor
+
+02:38.780 --> 02:44.160
+Woven from complex algorithms and prime numbers stands as our stalwart guardian
+
+02:44.260 --> 02:52.060
+So next time you make an online transaction remember the invisible armor of cryptography and the power of prime numbers that protect your digital footprint
+
