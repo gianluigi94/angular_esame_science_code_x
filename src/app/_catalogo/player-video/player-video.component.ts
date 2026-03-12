@@ -49,7 +49,10 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
   private pauseToken = 0;
   private originalPause: any;
   private originalPlay: any;
-  private readonly START_BUFFER_S = 5;
+    private readonly START_BUFFER_S = 5;
+  private readonly INTRO_NERO_MS = 1000;
+  introNeroAttiva = false;
+  introNeroTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // === AD BREAK ===
 private intervallo_ad_s = 20;
@@ -1110,7 +1113,6 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
         const lbl = (tr[i].label || '').toLowerCase();
         if (target.some(t => lbl.includes(t))) tr[i].enabled = true;
       }
-      if (persist) localStorage.setItem('video_lingua', lang === 'it' ? 'italiano' : 'inglese');
           if (smooth) {
       const t = Number((this.player as any).currentTime?.() ?? 0);
       try {

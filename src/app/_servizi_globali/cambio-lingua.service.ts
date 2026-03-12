@@ -71,6 +71,7 @@ export class CambioLinguaService {
     }
 
     localStorage.setItem('lingua_utente', this.linguaUtente); // Salvo la lingua scelta così resta anche al prossimo avvio
+    localStorage.setItem('video_lingua', this.linguaUtente);
     this.iconaLingua$.next(this.iconaLingua); // Notifico subito la nuova icona
 
     const codice = this.leggiCodiceLingua(); // Calcolo il codice lingua 'it' o 'en'
@@ -225,15 +226,18 @@ if (scroller) {
 
     if (salvata === 'italiano' || salvata === 'inglese') { // Controllo se il valore salvato è valido
       this.linguaUtente = salvata; // Uso la lingua salvata
-    } else { // Se non c'è nulla di valido in localStorage
-      const primaria = (navigator.languages?.[0] || navigator.language || '')
-        .toLowerCase()
-        .trim(); // Leggo la lingua principale del browser
+  } else {
+  const primaria = (navigator.languages?.[0] || navigator.language || '')
+    .toLowerCase()
+    .trim();
 
-      const eItaliano = primaria === 'it' || primaria.startsWith('it-'); // Controllo se la lingua del browser è italiano
-      this.linguaUtente = eItaliano ? 'italiano' : 'inglese'; // Imposto la lingua iniziale in base al browser
-    }
+  const eItaliano = primaria === 'it' || primaria.startsWith('it-');
+  this.linguaUtente = eItaliano ? 'italiano' : 'inglese';
 
+  // ✅ salvo subito la preferenza rilevata dal browser
+  localStorage.setItem('lingua_utente', this.linguaUtente);
+  localStorage.setItem('video_lingua', this.linguaUtente);
+}
     this.iconaLingua =
       this.linguaUtente === 'italiano' ? 'assets/it.svg' : 'assets/en.svg'; // Imposto l'icona coerente con la lingua scelta
   }

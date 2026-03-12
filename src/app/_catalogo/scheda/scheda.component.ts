@@ -144,6 +144,11 @@ onClicEpisodio(numeroEpisodio: number): void {
 }
 
 private avviaTransizionePlayer(episodio?: number): void {
+  if (!this.slugCorrente) {
+    console.warn('[avviaTransizionePlayer] slug non ancora pronto, skip');
+    return;
+  }
+
   const BASE = 'https://d2kd3i5q9rl184.cloudfront.net/streaming';
   const slug = this.slugCorrente;
 

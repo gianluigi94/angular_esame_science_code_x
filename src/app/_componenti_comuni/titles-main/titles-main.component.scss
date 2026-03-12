@@ -24,13 +24,13 @@
     margin-top: -120px;
   }
 
-  &.titolo-alto .title-link {
-  pointer-events: auto;
-}
+   &.titolo-alto {
+    pointer-events: auto;
+  }
 
-&.titolo-alto .main-title {
-  cursor: pointer;
-}
+  &.titolo-alto .main-title {
+    cursor: pointer;
+  }
 
 }
 
