@@ -14,8 +14,9 @@ export class SchedaPlayerTransizioneTitoloService {
 
   this.annulla();
 
-  const first = document.querySelector('[data-titolo-first]') as HTMLElement | null;
+ const first = document.querySelector('[data-titolo-first]') as HTMLElement | null;
   const x     = document.querySelector('[data-titolo-x]')     as HTMLElement | null;
+  const link  = title.querySelector('.title-link') as HTMLElement | null;
 
   // ── PRE-CALCOLO POSIZIONE CENTRO (zero reflow durante animazione) ──
   const titleRect      = title.getBoundingClientRect();
@@ -48,6 +49,7 @@ export class SchedaPlayerTransizioneTitoloService {
 
     title.style.transition    = 'none';
     title.style.pointerEvents = 'none';
+    if (link) link.style.pointerEvents = 'none';
 
     this.tl = gsap.timeline({
       defaults: { force3D: true, immediateRender: false },
@@ -127,12 +129,14 @@ export class SchedaPlayerTransizioneTitoloService {
     const first = document.querySelector('[data-titolo-first]') as HTMLElement | null;
     const x     = document.querySelector('[data-titolo-x]') as HTMLElement | null;
 
-    if (title) {
+  if (title) {
       gsap.killTweensOf(title);
       gsap.set(title, {
         clearProps: 'x,y,scale,scaleX,scaleY,rotationX,rotationY,transform,paddingTop,marginTop,top,left,xPercent,yPercent'
       });
       title.style.pointerEvents = '';
+      const link = title.querySelector('.title-link') as HTMLElement | null;
+      if (link) link.style.pointerEvents = '';
     }
 
     if (first) {

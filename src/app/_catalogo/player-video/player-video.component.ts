@@ -653,7 +653,6 @@ private adVideoEl: HTMLVideoElement | null = null;
 private async avviaAdBreak(): Promise<void> {
   if (this.adInCorso) return;
   this.adInCorso = true;
-  this.tempoRitornoDopoAd = Number((this.player as any).currentTime?.() ?? 0);
 
   // 1. Chiedi al backend quale pubblicità mandare (mentre il film è ancora in play)
   let idPubblicita = 1;
@@ -681,10 +680,12 @@ private async avviaAdBreak(): Promise<void> {
   const playerEl = (this.player as any).el?.() as HTMLElement;
   playerEl.appendChild(this.adVideoEl);
 
-  // 3. Aspetta che il browser abbia abbastanza buffer (canplay) — film ancora in play
+ // 3. Aspetta che il browser abbia abbastanza buffer (canplay) — film ancora in play
+  let adCaricato = false;
   await new Promise<void>((resolve) => {
     const timeout = setTimeout(resolve, 4000); // fallback max 4s
     this.adVideoEl!.addEventListener('canplay', () => {
+      adCaricato = true;
       clearTimeout(timeout);
       resolve();
     }, { once: true });
@@ -695,8 +696,17 @@ private async avviaAdBreak(): Promise<void> {
     this.adVideoEl!.load();
   });
 
-  // 4. Solo ora pausa il film e mostra la pubblicità
+  // 4. Se l'ad non è caricato (Brave, AdBlock...) abbandona senza toccare il film
+  if (!adCaricato) {
+    this.adVideoEl?.remove();
+    this.adVideoEl = null;
+    this.adInCorso = false;
+    return;
+  }
+
+  // Solo ora pausa il film e mostra la pubblicità
   await this.fadeGainTo(0, this.FADE_PAUSA_MS);
+  this.tempoRitornoDopoAd = Number((this.player as any).currentTime?.() ?? 0);
   this.playInterno = true;
   try { this.originalPause?.(); } catch {}
   this.playInterno = false;
