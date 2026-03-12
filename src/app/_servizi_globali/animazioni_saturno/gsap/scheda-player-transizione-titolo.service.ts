@@ -22,7 +22,7 @@ export class SchedaPlayerTransizioneTitoloService {
   const vw             = window.innerWidth;
   const vh             = window.innerHeight;
   const targetCenterX  = vw / 2;
-  const targetCenterY  = vh / 2 + 155;
+  const targetCenterY  = vh / 2 + 180;
   const currentCenterX = titleRect.left + titleRect.width  / 2;
   const currentCenterY = titleRect.top  + titleRect.height / 2;
   const deltaX         = targetCenterX - currentCenterX;
