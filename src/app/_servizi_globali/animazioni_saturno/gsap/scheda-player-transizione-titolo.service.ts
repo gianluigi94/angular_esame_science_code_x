@@ -8,74 +8,77 @@ export class SchedaPlayerTransizioneTitoloService {
   constructor(
     private animateService: AnimateService,
   ) {}
-  animaTitoloVersocentro(
-    onComplete?: () => void
-  ): void {
-    const title = document.querySelector('.title-container') as HTMLElement | null;
-    if (!title) return;
+ animaTitoloVersocentro(onComplete?: () => void): void {
+  const title = document.querySelector('.title-container') as HTMLElement | null;
+  if (!title) return;
 
-    this.annulla();
+  this.annulla();
 
-    const first = document.querySelector('[data-titolo-first]') as HTMLElement | null;
-    const x     = document.querySelector('[data-titolo-x]')     as HTMLElement | null;
+  const first = document.querySelector('[data-titolo-first]') as HTMLElement | null;
+  const x     = document.querySelector('[data-titolo-x]')     as HTMLElement | null;
 
-    // ======================================================
-    // CONTROLLO DURATE — modifica solo questi valori
-    // ======================================================
-    const DELAY_INIZIO         = 0;
+  // ── PRE-CALCOLO POSIZIONE CENTRO (zero reflow durante animazione) ──
+  const titleRect      = title.getBoundingClientRect();
+  const vw             = window.innerWidth;
+  const vh             = window.innerHeight;
+  const targetCenterX  = vw / 2;
+  const targetCenterY  = vh / 2 + 155;
+  const currentCenterX = titleRect.left + titleRect.width  / 2;
+  const currentCenterY = titleRect.top  + titleRect.height / 2;
+  const deltaX         = targetCenterX - currentCenterX;
+  const deltaY         = targetCenterY - currentCenterY;
+
+  // ── PRE-PROMOZIONE GPU ─────────────────────────────────────────────
+  const elementi = [title, first, x].filter(Boolean) as HTMLElement[];
+  elementi.forEach(el => {
+    el.style.willChange = 'transform, opacity';
+    gsap.set(el, { force3D: true, z: 0 });
+  });
+
+  const avvia = () => {
     const DURATA_TITOLO_CENTRO = 1.45;
     const INIZIO_SCRITTE       = 0.1;
     const DURATA_SCRITTE       = 1.6;
-   const INIZIO_SPLIT         = 0.65;
+    const INIZIO_SPLIT         = 0.65;
     const DURATA_SPLIT         = 1.9;
     const SPOSTA_X             = -3600;
     const SPOSTA_FIRST         = 1200;
-    const SCALA_X              = 4.8;     // scala elemento x (secondo movimento)
-    const SCALA_FIRST          = 0.3;   // scala elemento first (secondo movimento)
-    // ======================================================
+    const SCALA_X              = 4;
+    const SCALA_FIRST          = 0.3;
 
-    const transitionOriginale = title.style.transition;
-    title.style.transition = 'none';
-    title.style.willChange = 'transform';
+    title.style.transition    = 'none';
     title.style.pointerEvents = 'none';
 
     this.tl = gsap.timeline({
-      delay: DELAY_INIZIO,
+      defaults: { force3D: true, immediateRender: false },
       onComplete: () => {
-        title.style.transition = transitionOriginale;
-        title.style.willChange = 'auto';
-        if (onComplete) onComplete();
-      },
+  elementi.forEach(el => { el.style.willChange = 'auto'; });
+  // pointerEvents resta 'none' — impostato prima dell'animazione, non va ripristinato
+  if (onComplete) onComplete();
+},
     });
 
-    // Primo movimento: titolo va al centro
     this.tl.to(title, {
-      top: '50%',
-      left: '50%',
-      xPercent: -50,
-      yPercent: -50,
-      paddingTop: 210,
-      marginTop: 0,
+      x: deltaX,
+      y: deltaY,
       scaleX: 1,
       scaleY: 1,
       duration: DURATA_TITOLO_CENTRO,
       ease: 'power2.inOut',
     }, 0);
 
-    // Secondo movimento
     if (first) {
-     this.tl.to(first, {
+      this.tl.to(first, {
         scale: SCALA_FIRST,
         duration: DURATA_SCRITTE,
         ease: 'power2.inOut',
       }, INIZIO_SCRITTE);
     }
 
-        if (x) {
+    if (x) {
       this.tl.to(x, {
         scale: SCALA_X,
-        rotationY: 55,
-        rotationX: -18,
+        rotationY: 55, rotationX: -18,
         transformPerspective: 1200,
         transformOrigin: 'center center',
         duration: DURATA_SCRITTE,
@@ -83,12 +86,10 @@ export class SchedaPlayerTransizioneTitoloService {
       }, INIZIO_SCRITTE);
     }
 
-    // Terzo movimento: x va a sinistra, first va a destra
-        if (x) {
+    if (x) {
       this.tl.to(x, {
         x: SPOSTA_X,
-        rotationY: 10,
-        rotationX: 22,
+        rotationY: 10, rotationX: 22,
         transformPerspective: 1200,
         duration: DURATA_SPLIT,
         ease: 'power2.inOut',
@@ -102,8 +103,15 @@ export class SchedaPlayerTransizioneTitoloService {
         ease: 'power2.inOut',
       }, INIZIO_SPLIT);
     }
-  }
+  };
 
+  // 3 rAF = ~50ms di "riscaldamento" layer prima di partire
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(avvia)
+    )
+  );
+}
   annulla(): void {
     if (this.tl) {
       this.tl.kill();
