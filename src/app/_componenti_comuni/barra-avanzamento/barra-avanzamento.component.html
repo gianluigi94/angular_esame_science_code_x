@@ -1,0 +1,17 @@
+<div
+  class="barra-avanzamento"
+  [class.barra-avanzamento--ad]="modalitaAd"
+  *ngIf="visibile"
+  role="slider"
+  [attr.aria-valuemin]="0"
+  [attr.aria-valuemax]="durataTotaleMs"
+  [attr.aria-valuenow]="posizioneCorrenteMs"
+  [attr.aria-label]="ariaLabel"
+  (click)="onClickBarra($event)"
+>
+  <div class="riempimento-buffer" [style.width.%]="percentualeBuffer"></div>
+  <div class="riempimento-progresso" [style.width.%]="percentualeAvanzamento"></div>
+
+  <span class="tempo-corrente" aria-hidden="true">{{ tempoCorrenteTesto }}</span>
+  <span class="tempo-totale" aria-hidden="true">{{ durataTotaleTesto }}</span>
+</div>

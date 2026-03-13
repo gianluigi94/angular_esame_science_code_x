@@ -611,6 +611,14 @@ span {
 .vjs-fullscreen .vjs-startup-mask {
   inset: 0;
 }
+
+.vjs-fullscreen {
+  cursor: pointer;
+}
+
+.vjs-fullscreen.ad-in-corso {
+  cursor: default;
+}
 .vjs-cambio-qualita .vjs-big-play-button {
   display: none !important;
 }
@@ -618,7 +626,7 @@ span {
 
 #ad-label {
   position: absolute;
-  bottom: 40px;
+  bottom: 52px;
   left: 20px;
   background: rgba(0, 0, 0, 0.6);
   color: #ec820a;
@@ -629,4 +637,35 @@ span {
   z-index: 101;
   pointer-events: none;
   font-family: sans-serif;
+}
+
+.centro-play-pausa {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9998;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  &.visibile {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .centro-icona {
+    font-size: 38px;
+    color: #f1dda8;
+    line-height: 1;
+    user-select: none;
+  }
 }

@@ -10,12 +10,12 @@ import { MainIntroComponent } from '../_benvenuto/main-intro/main-intro.componen
 import { HeaderComponent } from './header/header.component';
 import { BottoneAudioComponent } from './bottone-audio/bottone-audio.component';
 import { BottonePreferitiComponent } from './bottone-preferiti/bottone-preferiti.component';
-
 import { ToastContainerComponent } from './toast-container/toast-container.component';
 import { CaroselloNovitaComponent } from '../_catalogo/carosello-novita/carosello-novita.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { PaginaCaricamentoComponent } from './pagina-caricamento/pagina-caricamento.component';
 import { DatiPersonaliComponent } from './dati-personali/dati-personali.component';
+import { BarraAvanzamentoComponent } from './barra-avanzamento/barra-avanzamento.component';
 
 @NgModule({
   declarations: [
@@ -30,14 +30,13 @@ import { DatiPersonaliComponent } from './dati-personali/dati-personali.componen
     CaroselloNovitaComponent,
     SpinnerComponent,
     PaginaCaricamentoComponent,
-   DatiPersonaliComponent,
+    DatiPersonaliComponent,
+    BarraAvanzamentoComponent,
   ],
   imports: [
     CommonModule,
     RouterModule,
     TranslateModule,
-    // SaturnoModule
-
   ],
   exports: [
     SfondoComponent,
@@ -52,7 +51,8 @@ import { DatiPersonaliComponent } from './dati-personali/dati-personali.componen
     SpinnerComponent,
     DatiPersonaliComponent,
     PaginaCaricamentoComponent,
+    BarraAvanzamentoComponent,
   ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA] // per poter usare il tag <video-js>
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class ComponentiComuniModule {}

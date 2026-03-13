@@ -1,4 +1,27 @@
 <div class="video-wrapper">
+  <div class="player-video-wrapper">
+
+  <!-- Bottone play/pausa centrale -->
+  <div class="centro-play-pausa"
+       *ngIf="!adInCorso"
+       [class.visibile]="centroControlloVisibile"
+       (click)="togglePlayPausa()">
+    <span class="centro-icona">{{ playerInPausa ? '▶' : '⏸' }}</span>
+  </div>
+
+  <app-barra-avanzamento
+    #barraAd
+  *ngIf="adInCorso"
+  [visibile]="true"
+  [modalitaAd]="true"
+  [percentualeAvanzamento]="barraAvanzamentoService.percentualeAvanzamento"
+  [percentualeBuffer]="0"
+  [durataTotaleMs]="barraAvanzamentoService.durataTotaleMs"
+  [posizioneCorrenteMs]="barraAvanzamentoService.posizioneCorrenteMs"
+  [tempoCorrenteTesto]="barraAvanzamentoService.tempoCorrenteTesto"
+  [durataTotaleTesto]="barraAvanzamentoService.durataTotaleTesto"
+  [ariaLabel]="'Avanzamento pubblicita'"
+></app-barra-avanzamento>
   <video-js
   #target
     id="vid1"

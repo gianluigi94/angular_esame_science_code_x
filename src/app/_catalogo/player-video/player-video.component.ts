@@ -1,11 +1,13 @@
 
-import { AfterViewInit, Component, OnDestroy, ViewEncapsulation, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewEncapsulation, Input, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import videojs from 'video.js';
 import type Player from 'video.js/dist/types/player';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
+
 import { SchedaProntaService } from '../scheda/scheda_service/scheda-pronta.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { BarraAvanzamentoService } from 'src/app/_componenti_comuni/barra-avanzamento/barra-avanzamento.service';
 @Component({
   selector: 'app-player-video',
   templateUrl: './player-video.component.html',
@@ -59,8 +61,11 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
 private intervallo_ad_s = 20;
 private tempoVisioneAccumulato = 0;
 private ultimoCurrentTime = -1;
-private adInCorso = false;
+adInCorso = false;
 private tempoRitornoDopoAd = 0;
+centroControlloVisibile = false;
+playerInPausa = true;
+@ViewChild('barraAd', { read: ElementRef }) barraAdRef?: ElementRef;
 private _vedePublicita: boolean | null = null; // cache calcolata una volta sola
 
 videoLingua: string | null = localStorage.getItem('video_lingua');
@@ -81,7 +86,15 @@ videoLingua: string | null = localStorage.getItem('video_lingua');
     }
   }
 
-    ngOnChanges(changes: SimpleChanges): void {
+   togglePlayPausa(): void {
+    if (this.player?.paused?.()) {
+      (this.player as any).play?.();
+    } else {
+      (this.player as any).pause?.();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
     if ('risorse' in changes && this.risorse && this.player) {
       this.cambiaContenuto(this.risorse);
     }
@@ -91,9 +104,10 @@ videoLingua: string | null = localStorage.getItem('video_lingua');
 
   private progressIndex = 0;
 
-  constructor(
+constructor(
   private schedaPronta: SchedaProntaService,
   private api: ApiService,
+  public barraAvanzamentoService: BarraAvanzamentoService,
 ) {}
 
   ngAfterViewInit(): void {
@@ -230,6 +244,7 @@ videoLingua: string | null = localStorage.getItem('video_lingua');
 
       let controlBarShown = false;
       this.player?.on('play', () => {
+        this.playerInPausa = false;
         if (!controlBarShown) {
           controlBarShown = true;
           const controlBar = document.querySelector(
@@ -239,6 +254,10 @@ videoLingua: string | null = localStorage.getItem('video_lingua');
             controlBar.classList.add('show-control-bar');
           }
         }
+      });
+
+      this.player?.on('pause', () => {
+        this.playerInPausa = true;
       });
 
       const controlBar: any = (this.player as any)?.getChild?.('ControlBar');
@@ -314,7 +333,7 @@ class MobileSkipBackwardButton extends (Button as any) {
           controlBar!.addChild(mobilePauseButton, {}, this.progressIndex + 2);
         }
 
-        this.player!.on('play', () => {
+      this.player!.on('play', () => {
           if (controlBar!.children().includes(mobilePlayButton)) {
             controlBar!.removeChild(mobilePlayButton);
           }
@@ -567,6 +586,8 @@ const QualityMenuButton = class extends (MenuButton as any) {
         controlBar.classList.remove('vjs-control-bar-transition');
       }
 
+      this.centroControlloVisibile = true;
+
       clearTimeout(this.inactivityTimeout);
       this.inactivityTimeout = setTimeout(() => {
         const cb = document.querySelector(
@@ -576,6 +597,7 @@ const QualityMenuButton = class extends (MenuButton as any) {
           cb.classList.remove('show-control-bar');
           cb.classList.add('vjs-control-bar-transition');
         }
+        this.centroControlloVisibile = false;
       }, 2000);
     });
 
@@ -587,6 +609,8 @@ const QualityMenuButton = class extends (MenuButton as any) {
         controlBar.classList.remove('vjs-control-bar-transition');
       }
 
+      this.centroControlloVisibile = true;
+
       clearTimeout(this.inactivityTimeout);
       this.inactivityTimeout = setTimeout(() => {
         const cb = document.querySelector(
@@ -596,6 +620,7 @@ const QualityMenuButton = class extends (MenuButton as any) {
           cb.classList.remove('show-control-bar');
           cb.classList.add('vjs-control-bar-transition');
         }
+        this.centroControlloVisibile = false;
       }, 2000);
     });
 
@@ -650,6 +675,8 @@ private gestisciTimeUpdate(): void {
 }
 //
 private adVideoEl: HTMLVideoElement | null = null;
+private adTimeUpdateHandler: any = null;
+private adLoadedMetadataHandler: any = null;
 
 private async avviaAdBreak(): Promise<void> {
   if (this.adInCorso) return;
@@ -665,7 +692,7 @@ private async avviaAdBreak(): Promise<void> {
   const lingua = localStorage.getItem('video_lingua') === 'italiano' ? 'it' : 'en';
   const urlAd = `https://d2kd3i5q9rl184.cloudfront.net/pubblicita/pub_${idPubblicita}_${lingua}.mp4`;
 
-  // 2. Crea l'elemento video e imposta il src — ancora invisibile (z-index fuori dal DOM)
+   // 2. Crea l'elemento video e imposta il src — ancora invisibile (z-index fuori dal DOM)
   this.adVideoEl = document.createElement('video');
   this.adVideoEl.style.cssText = `
     position: absolute; inset: 0; width: 100%; height: 100%;
@@ -677,6 +704,22 @@ private async avviaAdBreak(): Promise<void> {
   this.adVideoEl.muted = false;
   this.adVideoEl.preload = 'auto';
   this.adVideoEl.src = urlAd;
+
+  this.barraAvanzamentoService.resetBarraAvanzamento();
+
+  this.adLoadedMetadataHandler = () => {
+    const durata = Number(this.adVideoEl?.duration ?? 0);
+    this.barraAvanzamentoService.aggiornaBarraDaValori(0, durata);
+  };
+
+  this.adTimeUpdateHandler = () => {
+    const corrente = Number(this.adVideoEl?.currentTime ?? 0);
+    const durata = Number(this.adVideoEl?.duration ?? 0);
+    this.barraAvanzamentoService.aggiornaBarraDaValori(corrente, durata);
+  };
+
+  this.adVideoEl.addEventListener('loadedmetadata', this.adLoadedMetadataHandler);
+  this.adVideoEl.addEventListener('timeupdate', this.adTimeUpdateHandler);
 
   const playerEl = (this.player as any).el?.() as HTMLElement;
   playerEl.appendChild(this.adVideoEl);
@@ -706,6 +749,8 @@ private async avviaAdBreak(): Promise<void> {
   }
 
   // Solo ora pausa il film e mostra la pubblicità
+  const playerElRoot = (this.player as any).el?.() as HTMLElement | null;
+  playerElRoot?.classList.add('ad-in-corso');
   await this.fadeGainTo(0, this.FADE_PAUSA_MS);
   this.tempoRitornoDopoAd = Number((this.player as any).currentTime?.() ?? 0);
   this.playInterno = true;
@@ -718,6 +763,10 @@ private async avviaAdBreak(): Promise<void> {
   adLabel.id = 'ad-label';
   adLabel.textContent = 'Pubblicità';
   playerEl.appendChild(adLabel);
+
+  if (this.barraAdRef?.nativeElement) {
+    playerEl.appendChild(this.barraAdRef.nativeElement);
+  }
 
   this.adVideoEl.addEventListener('ended', () => this.riprendiDopoAd());
   this.adVideoEl.addEventListener('error', () => this.riprendiDopoAd());
@@ -732,18 +781,31 @@ private gestisciFineVideo(): void {
 }
 
 private async riprendiDopoAd(): Promise<void> {
-  // Rimuovi il video pubblicitario
- if (this.adVideoEl) {
+  if (this.adVideoEl) {
+    if (this.adLoadedMetadataHandler) {
+      this.adVideoEl.removeEventListener('loadedmetadata', this.adLoadedMetadataHandler);
+    }
+    if (this.adTimeUpdateHandler) {
+      this.adVideoEl.removeEventListener('timeupdate', this.adTimeUpdateHandler);
+    }
+
     this.adVideoEl.pause();
     this.adVideoEl.remove();
     this.adVideoEl = null;
   }
+
+  this.adLoadedMetadataHandler = null;
+  this.adTimeUpdateHandler = null;
+  this.barraAvanzamentoService.resetBarraAvanzamento();
+
   document.getElementById('ad-label')?.remove();
+  this.barraAdRef?.nativeElement?.remove();
 
-  this.adInCorso = false;
+ this.adInCorso = false;
   this.ultimoCurrentTime = -1;
+  const playerElRoot = (this.player as any).el?.() as HTMLElement | null;
+  playerElRoot?.classList.remove('ad-in-corso');
 
-  // Riprendi il film dal punto esatto
   try { (this.player as any).currentTime?.(this.tempoRitornoDopoAd); } catch {}
   this.playInterno = true;
   try { await Promise.resolve(this.originalPlay?.()); } catch {}
@@ -751,8 +813,17 @@ private async riprendiDopoAd(): Promise<void> {
   await this.fadeGainTo(1, this.FADE_PLAY_MS);
 }
 
-  ngOnDestroy(): void {
+ ngOnDestroy(): void {
   this.subs.unsubscribe();
+
+  if (this.adVideoEl && this.adLoadedMetadataHandler) {
+    this.adVideoEl.removeEventListener('loadedmetadata', this.adLoadedMetadataHandler);
+  }
+  if (this.adVideoEl && this.adTimeUpdateHandler) {
+    this.adVideoEl.removeEventListener('timeupdate', this.adTimeUpdateHandler);
+  }
+
+  this.barraAvanzamentoService.resetBarraAvanzamento();
 
   this.nascondiFreezeFrame();
   try { this.startupMaskEl?.remove(); } catch {}
