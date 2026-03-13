@@ -51,6 +51,7 @@ export class PlayerVideoComponent implements AfterViewInit, OnDestroy, OnChanges
   private originalPlay: any;
     private readonly START_BUFFER_S = 5;
   private readonly INTRO_NERO_MS = 1000;
+  private readonly WARMUP_MUTO_MS = 1000;
   introNeroAttiva = false;
   introNeroTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -1076,35 +1077,54 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
       await this.waitBufferFromZero(this.START_BUFFER_S, 12000);
       console.log('[doppio] waitBuffer completato');
 
-      try { (this.player as any).currentTime?.(0); } catch {}
-      try { (this.player as any).muted?.(false); } catch {}
+     // ── FASE 1: play mutato per 2 secondi, maschera ancora attiva ──
+try { (this.player as any).currentTime?.(0); } catch {}
+this.setGain(0);
+try { (this.player as any).muted?.(true); } catch {}
+try {
+  const tech: any = (this.player as any).tech?.(true);
+  const ve: HTMLVideoElement | undefined = tech?.el?.();
+  if (ve) { ve.muted = true; }
+} catch {}
 
-            try {
-        const tech: any = (this.player as any).tech?.(true);
-        const ve: HTMLVideoElement | undefined = tech?.el?.();
-        if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
-      } catch {}
+this.playInterno = true;
+console.log('[doppio] fase1: play mutato 2s');
+try { await Promise.resolve(this.originalPlay?.()); } catch {}
+this.playInterno = false;
 
-      this.setGain(0);
-      this.avvioConsentito = false;
+await this.sleep(this.WARMUP_MUTO_MS);
 
+// ── FASE 2: pausa, torna a 0 ──
+this.playInterno = true;
+try { this.originalPause?.(); } catch {}
+this.playInterno = false;
+await this.sleep(60);
+try { (this.player as any).currentTime?.(0); } catch {}
 
+// ── FASE 3: play reale con audio, smascheramento ──
+try { (this.player as any).muted?.(false); } catch {}
+try {
+  const tech: any = (this.player as any).tech?.(true);
+  const ve: HTMLVideoElement | undefined = tech?.el?.();
+  if (ve) { ve.muted = false; if (ve.volume === 0) ve.volume = 1; }
+} catch {}
 
+this.setGain(0);
+this.avvioConsentito = false;
 
+const p: any = this.player;
+this.agganciaNascondiSuPrimoFrame(p, fallbackTimer);
 
-          const p: any = this.player;
-      this.agganciaNascondiSuPrimoFrame(p, fallbackTimer);
-
-      this.playInterno = true;
-      console.log('[doppio] chiamo originalPlay');
-      try { await Promise.resolve(this.originalPlay?.()); } catch (e) { console.log('[doppio] originalPlay errore:', e); }
-      this.playInterno = false;
-      console.log('[doppio] dopo originalPlay, paused:', (this.player as any).paused?.());
-      await this.waitMinHeadroom(2.0, 5000);
-      this.avvioConsentito = true;
-      await this.fadeGainTo(1, this.FADE_PLAY_MS);
-      try { this.setGain(1); } catch {}
-      this.doppioAvvioEseguito = true;
+this.playInterno = true;
+console.log('[doppio] fase3: originalPlay con audio');
+try { await Promise.resolve(this.originalPlay?.()); } catch (e) { console.log('[doppio] originalPlay errore:', e); }
+this.playInterno = false;
+console.log('[doppio] dopo originalPlay, paused:', (this.player as any).paused?.());
+await this.waitMinHeadroom(2.0, 5000);
+this.avvioConsentito = true;
+await this.fadeGainTo(1, this.FADE_PLAY_MS);
+try { this.setGain(1); } catch {}
+this.doppioAvvioEseguito = true;
 
 
     } catch {
