@@ -13,6 +13,7 @@ import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.serv
 import { StopVideoGlobaleService } from '../app-riga-categoria/categoria_services/stop-video-globale.service';
 import { SchedaPlayerTransizioneTitoloService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scheda-player-transizione-titolo.service';
 import { TranslateService } from '@ngx-translate/core';
+import { TitoloPaginaService } from 'src/app/_servizi_globali/titolo-pagina.service';
 
 export interface Episodio {
   titolo: string;
@@ -269,6 +270,7 @@ constructor(
   private audioGlobaleService: AudioGlobaleService,
   private stopVideoGlobale: StopVideoGlobaleService,
   private transizioneTitolo: SchedaPlayerTransizioneTitoloService,
+  private titoloPagina: TitoloPaginaService,
 ) {}
 
 private verificaEAvviaAnimazioni(): void {
@@ -1488,10 +1490,11 @@ private async commitLabelUISincronizzate(): Promise<void> {
 }
 
 private aggiornaAltSfondo(): void {
+  this.titoloPagina.impostaTitoloScheda(this.titoloScheda);
   this.altSfondoScheda    = this.translate.instant('ui.carosello.altSfondo', { titolo: this.titoloScheda });
   this.altTitoloScheda    = this.translate.instant('ui.carosello.altTitolo', { titolo: this.titoloScheda });
   this.labelRiprendiTitle  = this.translate.instant('ui.scheda.riprendi.title.two',  { titolo: this.titoloScheda });
-this.labelRiproduciTitle = this.translate.instant('ui.scheda.riproduci.title.two', { titolo: this.titoloScheda });
+  this.labelRiproduciTitle = this.translate.instant('ui.scheda.riproduci.title.two', { titolo: this.titoloScheda });
   this.aggiornaTrailerTitle();
 }
 

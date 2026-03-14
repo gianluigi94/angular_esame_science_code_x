@@ -2,12 +2,12 @@
 
 .video-wrapper {
   position: relative;
-  width: 100vw!important;
-  height: 100vh!important;
+  width: 99vw!important;
+  height: 99vh!important;
   overflow: hidden;
   opacity: 0;
   transition: opacity 0.4s ease;
-
+box-shadow: 0 0 10px 2px rgba(233, 204, 38, 0.238);
 
   .custom-controls {
     position: absolute;
@@ -46,8 +46,8 @@ video {
 #vid1 {
   border-radius: 10px !important;
   min-width: 330px;
-  width: 100dvw!important;
-  height: 100vh!important;
+  width: 99dvw!important;
+  height: 99vh!important;
 }
 
 .vjs-quality-menu-button {
@@ -225,25 +225,7 @@ span {
   cursor: pointer;
 }
 
-.vjs-saturn-progress .vjs-play-progress::before {
-  content: "";
-  position: absolute;
-  right: -0.5em;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  background-image: url("/assets/saturno.png");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  z-index: 2;
-  transition: transform 0.5s ease;
-}
 
-.vjs-saturn-progress .vjs-play-progress:hover::before {
-  transform: translateY(-50%) rotate(-90deg);
-}
 
 .vjs-startup-message {
   position: absolute;
@@ -639,32 +621,51 @@ span {
   font-family: sans-serif;
 }
 
-.centro-play-pausa {
+
+
+
+
+.video-js .vjs-menu-content,
+.video-js .vjs-menu-item,
+.video-js .vjs-control-text,
+.video-js .vjs-menu li {
+  text-transform: capitalize !important;
+}
+
+
+.vjs-cerchio-centrale {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9998;
-  width: 90px;
-  height: 90px;
+  transform: translate(-50%, -50%) scale(0);
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  background: rgba(241, 221, 168, 0.15);
+  border: 2px solid rgba(241, 221, 168, 0.4);
+  backdrop-filter: blur(4px);
   pointer-events: none;
+  z-index: 50;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 
   &.visibile {
     opacity: 1;
-    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
   }
 
-  .centro-icona {
-    font-size: 38px;
-    color: #f1dda8;
+&.fisso {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .vjs-cerchio-icona {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    color: rgba(241, 221, 168, 0.9);
     line-height: 1;
     user-select: none;
   }

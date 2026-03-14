@@ -1,13 +1,10 @@
 <div class="video-wrapper">
   <div class="player-video-wrapper">
+<div class="vjs-cerchio-centrale">
+  <span class="vjs-cerchio-icona">{{ playerInPausa ? '▶' : '⏸' }}</span>
+</div>
 
-  <!-- Bottone play/pausa centrale -->
-  <div class="centro-play-pausa"
-       *ngIf="!adInCorso"
-       [class.visibile]="centroControlloVisibile"
-       (click)="togglePlayPausa()">
-    <span class="centro-icona">{{ playerInPausa ? '▶' : '⏸' }}</span>
-  </div>
+
 
   <app-barra-avanzamento
     #barraAd

@@ -87,7 +87,12 @@ if (tipo === 'serie') return base + (base === '/catalog' ? '/series' : '/serie')
 return base + (base === '/catalog' ? '/movies-series' : '/film-serie');
  }
 
-
+ impostaTitoloScheda(titolo: string): void {
+    const base = 'ScienceCode X';
+    if (titolo) {
+      this.title.setTitle(`${titolo} - ${base}`);
+    }
+  }
   /**
    * Calcola e imposta il titolo del browser in base alla rotta  e alla lingua corrente.
    *

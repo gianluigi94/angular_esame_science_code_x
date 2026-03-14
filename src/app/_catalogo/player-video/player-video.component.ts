@@ -4,7 +4,7 @@ import videojs from 'video.js';
 import type Player from 'video.js/dist/types/player';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
-
+import { TranslateService } from '@ngx-translate/core';
 import { SchedaProntaService } from '../scheda/scheda_service/scheda-pronta.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { BarraAvanzamentoService } from 'src/app/_componenti_comuni/barra-avanzamento/barra-avanzamento.service';
@@ -63,36 +63,38 @@ private tempoVisioneAccumulato = 0;
 private ultimoCurrentTime = -1;
 adInCorso = false;
 private tempoRitornoDopoAd = 0;
-centroControlloVisibile = false;
 playerInPausa = true;
 @ViewChild('barraAd', { read: ElementRef }) barraAdRef?: ElementRef;
-private _vedePublicita: boolean | null = null; // cache calcolata una volta sola
+private _vedePublicita: boolean | null = null;
 
 videoLingua: string | null = localStorage.getItem('video_lingua');
 
   private player?: Player;
   currentLang: 'en' | 'it' =
-    localStorage.getItem('lingua_sistema') === 'italiano' ? 'it' : 'en';
+  localStorage.getItem('lingua_utente') === 'italiano' ? 'it' : 'en';
 
 
 
 
 
-  private getLabel(label: string): string {
-    if (this.currentLang === 'it') {
-      return label === 'en' ? 'Inglese' : label === 'it' ? 'Italiano' : label;
-    } else {
-      return label === 'en' ? 'English' : label === 'it' ? 'Italian' : label;
-    }
+private getLabel(label: string): string {
+  const linguaCorrente =
+    localStorage.getItem('lingua_utente') === 'italiano' ? 'it' : 'en';
+
+  if (linguaCorrente === 'it') {
+    return label === 'en' ? 'Inglese' : label === 'it' ? 'Italiano' : label;
+  } else {
+    return label === 'en' ? 'English' : label === 'it' ? 'Italian' : label;
   }
+}
 
-   togglePlayPausa(): void {
-    if (this.player?.paused?.()) {
-      (this.player as any).play?.();
-    } else {
-      (this.player as any).pause?.();
-    }
+togglePlayPausa(): void {
+  if (this.player?.paused?.()) {
+    (this.player as any).play?.();
+  } else {
+    (this.player as any).pause?.();
   }
+}
 
   ngOnChanges(changes: SimpleChanges): void {
     if ('risorse' in changes && this.risorse && this.player) {
@@ -108,6 +110,7 @@ constructor(
   private schedaPronta: SchedaProntaService,
   private api: ApiService,
   public barraAvanzamentoService: BarraAvanzamentoService,
+  private translate: TranslateService,
 ) {}
 
   ngAfterViewInit(): void {
@@ -133,14 +136,61 @@ constructor(
       })
     );
 
-    this.player = videojs('vid1', {
-      controls: true,
-      preload: 'auto',
+videojs.addLanguage('it', {
+  'Play':                this.translate.instant('ui.videojs.play'),
+  'Pause':               this.translate.instant('ui.videojs.pause'),
+  'Mute':                this.translate.instant('ui.videojs.mute'),
+  'Unmute':              this.translate.instant('ui.videojs.unmute'),
+  'Captions':            'Sottotitoli',
+  'Subtitles':           'Sottotitoli',
+  'Captions settings':   'Opzioni sottotitoli',
+  'captions settings':   'Opzioni sottotitoli',
+  'Caption settings':    'Opzioni sottotitoli',
+  'Caption Settings':    'Opzioni sottotitoli',
+  'Subtitle settings':   'Opzioni sottotitoli',
+  'Subtitle Settings':   'Opzioni sottotitoli',
+  'Subtitles settings':  'Opzioni sottotitoli',
+  'Subtitles Settings':  'Opzioni sottotitoli',
+  'Subtitle option':     'Opzioni sottotitoli',
+  'Subtitle options':    'Opzioni sottotitoli',
+  'Off':                 'Sottotitoli Off',
+  'Audio Track':         this.translate.instant('ui.videojs.audio'),
+  'Fullscreen':          this.translate.instant('ui.videojs.fullscreen'),
+  'Non-Fullscreen':      this.translate.instant('ui.videojs.exitfullscreen'),
+  'Exit Fullscreen':     this.translate.instant('ui.videojs.exitfullscreen'),
+});
 
-    });
+videojs.addLanguage('en', {
+  'Play':                this.translate.instant('ui.videojs.play'),
+  'Pause':               this.translate.instant('ui.videojs.pause'),
+  'Mute':                this.translate.instant('ui.videojs.mute'),
+  'Unmute':              this.translate.instant('ui.videojs.unmute'),
+  'Captions':            'Subtitles',
+  'Subtitles':           'Subtitles',
+  'Captions settings':   'Subtitle options',
+  'captions settings':   'Subtitle options',
+  'Caption settings':    'Subtitle options',
+  'Caption Settings':    'Subtitle options',
+  'Subtitle settings':   'Subtitle options',
+  'Subtitle Settings':   'Subtitle options',
+  'Subtitles settings':  'Subtitle options',
+  'Subtitles Settings':  'Subtitle options',
+  'Subtitle option':     'Subtitle options',
+  'Subtitle options':    'Subtitle options',
+  'Off':                 'Subtitles Off',
+  'Audio Track':         this.translate.instant('ui.videojs.audio'),
+  'Fullscreen':          this.translate.instant('ui.videojs.fullscreen'),
+  'Non-Fullscreen':      this.translate.instant('ui.videojs.exitfullscreen'),
+  'Exit Fullscreen':     this.translate.instant('ui.videojs.exitfullscreen'),
+});
 
-      (this.player as any).language?.(this.currentLang);
-  this.updateMenuLabels();
+this.player = videojs('vid1', {
+  controls: true,
+  preload: 'auto',
+});
+
+  (this.player as any).language?.(this.currentLang);
+this.updateMenuLabels();
 
 
 
@@ -213,26 +263,29 @@ constructor(
     });
 
     setTimeout(() => {
-      const currentTimeEl = document.querySelector(
-        '.vjs-current-time'
-      ) as HTMLElement;
-      const remainingTimeEl = document.querySelector(
-        '.vjs-remaining-time'
-      ) as HTMLElement;
+  const playerEl = (this.player as any).el?.() as HTMLElement | null;
+  if (!playerEl) return;
 
-      const toggleDisplay = () => {
-        if (remainingTimeEl.style.display !== 'none') {
-          remainingTimeEl.style.display = 'none';
-          currentTimeEl.style.display = 'block';
-        } else {
-          remainingTimeEl.style.display = 'block';
-          currentTimeEl.style.display = 'none';
-        }
-      };
+  const toggleDisplay = () => {
+    const ct = playerEl.querySelector('.vjs-current-time') as HTMLElement | null;
+    const rt = playerEl.querySelector('.vjs-remaining-time') as HTMLElement | null;
+    if (!ct || !rt) return;
+    if (rt.style.display !== 'none') {
+      rt.style.display = 'none';
+      ct.style.display = 'block';
+    } else {
+      rt.style.display = 'block';
+      ct.style.display = 'none';
+    }
+  };
 
-      currentTimeEl?.addEventListener('click', toggleDisplay);
-      remainingTimeEl?.addEventListener('click', toggleDisplay);
-    }, 200);
+ playerEl.addEventListener('click', (event) => {
+  const target = event.target as HTMLElement;
+  if (target.closest('.vjs-current-time') || target.closest('.vjs-remaining-time')) {
+    toggleDisplay();
+  }
+});
+}, 200);
 
    this.player.ready(() => {
     if (this.risorse) {
@@ -243,22 +296,37 @@ constructor(
     (this.player as any).on?.('ended', () => this.gestisciFineVideo());
 
       let controlBarShown = false;
-      this.player?.on('play', () => {
-        this.playerInPausa = false;
-        if (!controlBarShown) {
-          controlBarShown = true;
-          const controlBar = document.querySelector(
-            '.vjs-control-bar'
-          ) as HTMLElement | null;
-          if (controlBar) {
-            controlBar.classList.add('show-control-bar');
-          }
-        }
-      });
+this.player?.on('play', () => {
+  this.playerInPausa = false;
 
-      this.player?.on('pause', () => {
-        this.playerInPausa = true;
-      });
+  if (!controlBarShown) {
+    controlBarShown = true;
+    const controlBar = document.querySelector(
+      '.vjs-control-bar'
+    ) as HTMLElement | null;
+    if (controlBar) {
+      controlBar.classList.add('show-control-bar');
+    }
+  }
+
+  // In play: rimuovi il cerchio completamente, riapparirà solo col mousemove
+  const cerchio = document.querySelector('.vjs-cerchio-centrale') as HTMLElement | null;
+  if (cerchio) {
+    cerchio.classList.remove('fisso');
+    cerchio.classList.remove('visibile');
+  }
+});
+
+this.player?.on('pause', () => {
+  this.playerInPausa = true;
+
+  // In pausa: il cerchio resta sempre visibile
+  const cerchio = document.querySelector('.vjs-cerchio-centrale') as HTMLElement | null;
+  if (cerchio) {
+    cerchio.classList.add('visibile');
+    cerchio.classList.add('fisso');
+  }
+});
 
       const controlBar: any = (this.player as any)?.getChild?.('ControlBar');
 
@@ -403,10 +471,11 @@ const MenuItem  = videojs.getComponent('MenuItem') as any;
     };
     p.on('loadeddata', rimuoviFreeze);
     p.on('error', rimuoviFreeze);
-    p.ready(() => {
-      p.currentTime(currentTime);
-      if (!isPaused) p.play();
-    });
+   p.ready(() => {
+  p.currentTime(currentTime);
+  if (!isPaused) p.play();
+  (self as any).aggiornaSottotitoli();
+});
 
     const items =
       p.getChild('ControlBar')
@@ -445,9 +514,7 @@ const QualityMenuButton = class extends (MenuButton as any) {
     if (el) {
       el.classList.add('vjs-icon-placeholder');
 
-      const currentLang = (this as any)['player_'].language?.() ?? 'en';
-      const titleText = currentLang === 'it' ? 'Qualità video' : 'Video quality';
-      el.setAttribute('title', titleText);
+      el.setAttribute('title', self.translate.instant('ui.videojs.quality'));
 
       const span = document.createElement('span');
       span.className = 'vjs-quality-label';
@@ -578,51 +645,51 @@ const QualityMenuButton = class extends (MenuButton as any) {
 
     const videoElement = document.getElementById('vid1');
 
-    videoElement?.addEventListener('mousemove', () => {
-      const controlBar = document.querySelector(
-        '.vjs-control-bar.show-control-bar'
-      ) as HTMLElement | null;
-      if (controlBar) {
-        controlBar.classList.remove('vjs-control-bar-transition');
-      }
+  videoElement?.addEventListener('mousemove', () => {
+  const controlBar = document.querySelector(
+    '.vjs-control-bar.show-control-bar'
+  ) as HTMLElement | null;
+  if (controlBar) {
+    controlBar.classList.remove('vjs-control-bar-transition');
+  }
 
-      this.centroControlloVisibile = true;
+  const cerchio = document.querySelector('.vjs-cerchio-centrale') as HTMLElement | null;
+  if (cerchio) cerchio.classList.add('visibile');
 
-      clearTimeout(this.inactivityTimeout);
-      this.inactivityTimeout = setTimeout(() => {
-        const cb = document.querySelector(
-          '.vjs-control-bar.show-control-bar'
-        ) as HTMLElement | null;
-        if (cb) {
-          cb.classList.remove('show-control-bar');
-          cb.classList.add('vjs-control-bar-transition');
-        }
-        this.centroControlloVisibile = false;
-      }, 2000);
-    });
+  clearTimeout(this.inactivityTimeout);
+  this.inactivityTimeout = setTimeout(() => {
+  const cb = document.querySelector(
+    '.vjs-control-bar.show-control-bar'
+  ) as HTMLElement | null;
+  if (cb) {
+    cb.classList.remove('show-control-bar');
+    cb.classList.add('vjs-control-bar-transition');
+  }
+  if (cerchio && !cerchio.classList.contains('fisso')) {
+    cerchio.classList.remove('visibile');
+  }
+}, 2000);
+});
 
     videoElement?.addEventListener('touchstart', () => {
-      const controlBar = document.querySelector(
-        '.vjs-control-bar.show-control-bar'
-      ) as HTMLElement | null;
-      if (controlBar) {
-        controlBar.classList.remove('vjs-control-bar-transition');
-      }
+  const controlBar = document.querySelector(
+    '.vjs-control-bar.show-control-bar'
+  ) as HTMLElement | null;
+  if (controlBar) {
+    controlBar.classList.remove('vjs-control-bar-transition');
+  }
 
-      this.centroControlloVisibile = true;
-
-      clearTimeout(this.inactivityTimeout);
-      this.inactivityTimeout = setTimeout(() => {
-        const cb = document.querySelector(
-          '.vjs-control-bar.show-control-bar'
-        ) as HTMLElement | null;
-        if (cb) {
-          cb.classList.remove('show-control-bar');
-          cb.classList.add('vjs-control-bar-transition');
-        }
-        this.centroControlloVisibile = false;
-      }, 2000);
-    });
+  clearTimeout(this.inactivityTimeout);
+  this.inactivityTimeout = setTimeout(() => {
+    const cb = document.querySelector(
+      '.vjs-control-bar.show-control-bar'
+    ) as HTMLElement | null;
+    if (cb) {
+      cb.classList.remove('show-control-bar');
+      cb.classList.add('vjs-control-bar-transition');
+    }
+  }, 2000);
+});
 
     this.inactivityTimeout = setTimeout(() => {}, 2000);
   }
@@ -760,9 +827,9 @@ private async avviaAdBreak(): Promise<void> {
   this.adVideoEl.style.visibility = 'visible';
 
   const adLabel = document.createElement('div');
-  adLabel.id = 'ad-label';
-  adLabel.textContent = 'Pubblicità';
-  playerEl.appendChild(adLabel);
+adLabel.id = 'ad-label';
+adLabel.textContent = this.translate.instant('ui.videojs.ad_label');
+playerEl.appendChild(adLabel);
 
   if (this.barraAdRef?.nativeElement) {
     playerEl.appendChild(this.barraAdRef.nativeElement);
@@ -868,8 +935,24 @@ private async aggiornaSottotitoli(): Promise<void> {
       this.patchVtt(this.sottotitoli.it),
     ]);
 
-    (this.player as any).addRemoteTextTrack?.({ kind: 'subtitles', src: srcEn, srclang: 'en', label: 'Inglese' }, false);
-    (this.player as any).addRemoteTextTrack?.({ kind: 'subtitles', src: srcIt, srclang: 'it', label: 'Italiano' }, false);
+   const linguaCorrente =
+  localStorage.getItem('lingua_utente') === 'italiano' ? 'it' : 'en';
+
+(this.player as any).addRemoteTextTrack?.({
+  kind: 'subtitles',
+  src: srcEn,
+  srclang: 'en',
+  label: linguaCorrente === 'it' ? 'Inglese' : 'English'
+}, false);
+
+(this.player as any).addRemoteTextTrack?.({
+  kind: 'subtitles',
+  src: srcIt,
+  srclang: 'it',
+  label: linguaCorrente === 'it' ? 'Italiano' : 'Italian'
+}, false);
+
+setTimeout(() => this.updateMenuLabels(), 100);
   } catch {}
 }
 
@@ -915,37 +998,64 @@ private async patchVtt(url: string): Promise<string> {
 
 
 
-  private updateMenuLabels() {
-    setTimeout(() => {
-      const audioItems = document.querySelectorAll(
-        '.vjs-audio-button .vjs-menu-content .vjs-menu-item'
-      );
-      audioItems.forEach((item) => {
-        const text = item.textContent?.trim().toLowerCase();
+private updateMenuLabels() {
+  setTimeout(() => {
+    const linguaCorrente =
+      localStorage.getItem('lingua_utente') === 'italiano' ? 'it' : 'en';
 
-        if (text?.includes('inglese') || text?.includes('english')) {
-          item.textContent = this.getLabel('en');
-        }
-        if (text?.includes('italiano') || text?.includes('italian')) {
-          item.textContent = this.getLabel('it');
-        }
-      });
+    const audioItems = document.querySelectorAll(
+      '.vjs-audio-button .vjs-menu-content .vjs-menu-item'
+    );
+    audioItems.forEach((item) => {
+      const text = item.textContent?.trim().toLowerCase();
 
-      const subtitleItems = document.querySelectorAll(
-        '.vjs-subs-caps-button .vjs-menu-content .vjs-menu-item'
-      );
-      subtitleItems.forEach((item) => {
-        const text = item.textContent?.trim().toLowerCase();
+      if (text?.includes('inglese') || text?.includes('english')) {
+        item.textContent = linguaCorrente === 'it' ? 'Inglese' : 'English';
+      }
+      if (text?.includes('italiano') || text?.includes('italian')) {
+        item.textContent = linguaCorrente === 'it' ? 'Italiano' : 'Italian';
+      }
+    });
 
-        if (text?.includes('english') || text?.includes('inglese')) {
-          item.textContent = this.getLabel('en');
-        }
-        if (text?.includes('italian') || text?.includes('italiano')) {
-          item.textContent = this.getLabel('it');
-        }
-      });
-    }, 100);
-  }
+    const subtitleItems = document.querySelectorAll(
+      '.vjs-subs-caps-button .vjs-menu-content .vjs-menu-item'
+    );
+    subtitleItems.forEach((item) => {
+      const text = item.textContent?.trim().toLowerCase();
+
+   if (
+  text?.includes('caption settings') ||
+  text?.includes('captions settings') ||
+  text?.includes('subtitle setting') ||
+  text?.includes('subtitle settings') ||
+  text?.includes('subtitle option') ||
+  text?.includes('subtitle options') ||
+  text?.includes('subtitles setting') ||
+  text?.includes('subtitles settings') ||
+  text?.includes('opzioni sottotitoli')
+) {
+  item.textContent = linguaCorrente === 'it' ? 'Opzioni sottotitoli' : 'Subtitle options';
+}
+
+      if (
+        text === 'off' ||
+        text?.includes('caption off') ||
+        text?.includes('subtitles off') ||
+        text?.includes('sottotitoli off')
+      ) {
+        item.textContent = linguaCorrente === 'it' ? 'Sottotitoli Off' : 'Subtitles Off';
+      }
+
+      if (text?.includes('english') || text?.includes('inglese')) {
+        item.textContent = linguaCorrente === 'it' ? 'Inglese' : 'English';
+      }
+
+      if (text?.includes('italian') || text?.includes('italiano')) {
+        item.textContent = linguaCorrente === 'it' ? 'Italiano' : 'Italian';
+      }
+    });
+  }, 100);
+}
 mostraFreezeFrame(p: any) {
   try {
     const playerEl = p?.el?.() as HTMLElement | null;
@@ -1094,6 +1204,7 @@ private abilitaAudioByLabel(labelCheck: 'italiano' | 'inglese'): boolean {
     } catch {}
   }
 
+
   private async doppioAvvioSeRichiesto(): Promise<void> {
     console.log('[doppio] INIZIO');
     this.doppioAvvioEseguito = true;
@@ -1196,6 +1307,7 @@ this.avvioConsentito = true;
 await this.fadeGainTo(1, this.FADE_PLAY_MS);
 try { this.setGain(1); } catch {}
 this.doppioAvvioEseguito = true;
+this.mostraMessaggioDisclaimer();
 
 
     } catch {
@@ -1448,8 +1560,24 @@ private async waitMinHeadroom(minHeadroomSec = 2.0, timeoutMs = 4000): Promise<b
 
     // ← FIX: ora il video è avviato, l'utente può togliere il mute
     this.avvioConsentito = true;
+    this.mostraMessaggioDisclaimer();
   } catch {}
 }
+
+private mostraMessaggioDisclaimer(ritardoMs = 4000): void {
+  setTimeout(() => {
+    try {
+      const playerEl = (this.player as any).el?.() as HTMLElement | null;
+      if (!playerEl) return;
+      const msg = document.createElement('div');
+      msg.className = 'vjs-startup-message';
+      msg.textContent = this.translate.instant('ui.videojs.disclaimer');
+      playerEl.appendChild(msg);
+      setTimeout(() => msg.remove(), 9500); // rimuovi dopo l'animazione
+    } catch {}
+  }, ritardoMs);
 }
+}
+
 
 
