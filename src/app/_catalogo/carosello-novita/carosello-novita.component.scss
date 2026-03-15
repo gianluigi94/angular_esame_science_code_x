@@ -244,23 +244,26 @@ video-js {
 
 
 .play {
-        font-size: 35px;
-        margin-left: 10px;
-        display: inline-block;
-        cursor: pointer;
-        border-radius: 50%;
-        padding: 1px 3px 0 9px;
-        text-shadow: none;
-        transition: transform 0.3s ease;
+  font-size: 35px;
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 1px 3px 0 9px;
+  text-shadow: none;
+  transition: transform 0.3s ease, opacity 0.2s ease 150ms;
 
-        background: rgba(59, 59, 59, 0.34);
-        border: 1px solid #ec820a;
-        color: #ec820a !important;
+  background: rgba(59, 59, 59, 0.34);
+  border: 1px solid #ec820a;
+  color: #ec820a !important;
 
-        &:hover {
-          transform: scale(1.2);
-        }
-      }
+  &:hover {
+    transform: translateY(-50%) scale(1.2);
+  }
+}
 :host ::ng-deep #video-carosello-novita.video-js {
   position: absolute;
   inset: 0;
