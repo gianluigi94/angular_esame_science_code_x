@@ -283,11 +283,6 @@ private verificaEAvviaAnimazioni(): void {
 
   if (!tuttoPronto) return;
 
-  if (!this._labelPronte) {
-    this._labelPronte = true;
-    this.commitLabelUISincronizzate();
-  }
-
   const _param = this._paramRiproduzioneInAttesa;
   this._paramRiproduzioneInAttesa = null;
   if (_param && !this.mostraPlayerVideo) {
@@ -297,10 +292,25 @@ private verificaEAvviaAnimazioni(): void {
     return;
   }
 
-  // ← CHIAVE: stesso tick sincrono di reset() → Angular batchizza le due
-  // emissioni su schedaPronta$, il loader non emerge mai nemmeno per un frame
-  this.schedaPronta.segnaPronte();
+  if (!this._labelPronte) {
+    this._labelPronte = true;
+    // aspetta che le label siano davvero pronte PRIMA di togliere il loader.
+    // su F5: translate.get() riprova finché le traduzioni arrivano → loader resta.
+    // su scheda→scheda: traduzioni già in memoria → resolve immediato → nessun loader.
+    this.commitLabelUISincronizzate().then(() => {
+      if (this.distrutto) return;
+      this.schedaPronta.segnaPronte();
+      requestAnimationFrame(() => {
+        this.startAnim = true;
+        this.startAnimTitolo = true;
+        this.startAnimDescrizione = true;
+      });
+    });
+    return;
+  }
 
+  // label già pronte (es. navigazione scheda→scheda dopo il primo caricamento)
+  this.schedaPronta.segnaPronte();
   requestAnimationFrame(() => {
     this.startAnim = true;
     this.startAnimTitolo = true;
@@ -324,13 +334,10 @@ private verificaEAvviaAnimazioni(): void {
   }
 
   ngOnInit(): void {
-  if (this.schedaPronta.loaderGlobalmenteNascosto) {
-    this._loaderNascosto = true; // ← già nascosto: lo sappiamo subito, sincrono
+if (this.schedaPronta.loaderGlobalmenteNascosto) {
+    this._loaderNascosto = true;
   } else {
     window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
-    setTimeout(() => {
-      if (!this._loaderNascosto) this.onLoaderHidden();
-    }, 0);
   }
 
  this.subs.add(
@@ -1450,31 +1457,48 @@ private aggiornaEtichetteUI(): void {
 
 private _retryLabelTimer: any = null;
 
-private async commitLabelUISincronizzate(): Promise<void> {
+private commitLabelUISincronizzate(): Promise<void> {
   if (this._retryLabelTimer) {
     clearTimeout(this._retryLabelTimer);
     this._retryLabelTimer = null;
   }
 
-  try {
-    await new Promise<void>((resolve) => {
+  return new Promise<void>((resolve) => {
+    let retried = false;
+
+    const prova = () => {
+      if (this.distrutto) { resolve(); return; }
+
       this.translate.get('ui.scheda.riprendi.label').pipe(take(1)).subscribe({
-        next: () => resolve(),
-        error: () => resolve(),
+        next: (val: string) => {
+          if (val === 'ui.scheda.riprendi.label') {
+            // traduzioni non ancora in memoria (F5): riprova tra 300ms, loader resta
+            retried = true;
+            this._retryLabelTimer = setTimeout(() => {
+              this._retryLabelTimer = null;
+              prova();
+            }, 300);
+          } else {
+            // traduzioni pronte: popola le label e risolve
+            this.aggiornaEtichetteUI();
+            // extra 100ms solo su F5 (retried=true) per dare tempo al browser
+            // di applicare il paint prima di togliere il loader
+            if (retried) {
+              setTimeout(() => resolve(), 100);
+            } else {
+              resolve();
+            }
+          }
+        },
+        error: () => {
+          this.aggiornaEtichetteUI();
+          resolve();
+        },
       });
-    });
-  } catch {}
+    };
 
-  this.aggiornaEtichetteUI();
-
-  // translate.get() risolve anche con la chiave stessa se le traduzioni
-  // non sono ancora caricate. Se è così, riproviamo ogni 300ms.
-  if (this.labelRiprendi === 'ui.scheda.riprendi.label') {
-    this._retryLabelTimer = setTimeout(() => {
-      this._retryLabelTimer = null;
-      if (!this.distrutto) this.commitLabelUISincronizzate();
-    }, 300);
-  }
+    prova();
+  });
 }
 
 private aggiornaAltSfondo(): void {
