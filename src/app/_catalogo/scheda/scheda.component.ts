@@ -180,9 +180,10 @@ if (this.tipoContenuto === 'film') {
   }
 
   if (this.trailerInRiproduzione) {
-    const btnTrailer = document.querySelector<HTMLElement>('button.riproduci[title="' + this.labelTrailerTitle + '"]');
-    btnTrailer?.click();
-  }
+   this.mostraPlayerSchedaNelDom = false;
+   const btnTrailer = document.querySelector<HTMLElement>('button.riproduci[title="' + this.labelTrailerTitle + '"]');
+   btnTrailer?.click();
+ }
   const valore = episodio ? `ep${episodio}` : 'true';
   const lingua = this.cambioLingua.leggiCodiceLingua();
   const nomeParam = lingua === 'it' ? 'riproduzione' : 'play';
@@ -289,6 +290,13 @@ private verificaEAvviaAnimazioni(): void {
     const ep = _param.startsWith('ep') ? Number(_param.replace('ep', '')) : undefined;
     this.avviaTransizionePlayer(ep);
     this.schedaPronta.segnaPronte();
+    // fire-and-forget: popola le label in background così quando il player
+    // si chiude (popstate / chiudiPlayer / route navigation) la scheda
+    // le trova già pronte senza dover aspettare il loader
+    if (!this._labelPronte) {
+      this._labelPronte = true;
+      this.commitLabelUISincronizzate();
+    }
     return;
   }
 
@@ -528,9 +536,9 @@ this.schedaPronta.impostaLabelTorna(
     const idRaw = pm.get('id');
     const id = idRaw ? Number(idRaw) : NaN;
     if (!idRaw || Number.isNaN(id)) return;
-        this.schedaPronta.reset();
-    this.arrestaTrailerSchedaSubito();
-    this.smontaPlayerSchedaDalDomSubito();
+
+               this.schedaPronta.reset();
+
     // Reset animazioni e flag per ogni cambio di contenuto
     this.startAnim = false;
     this.startAnimTitolo = false;
@@ -1135,33 +1143,36 @@ private proseguiAvvioTrailerScheda(): void {
       return;
     }
 
-     // restart pulito con audio
-    // resume AudioContext + ripristina gain
-     try {
-       if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
-         this.contestoAudio.resume().catch(() => {});
-       }
-     } catch {}
-     try { this.sfumaGuadagnoVerso(1, 0); } catch {}
+  // Nascondi subito il video con fade, poi reset, poi riparti con audio
+     this.mostraVideoScheda = false;
+     this.sfumaGuadagnoVerso(0, this.durataFadeSchedaMs).then(() => {
+       try { this.playerScheda.pause(); } catch {}
+       try { this.playerScheda.currentTime(0); } catch {}
+       try { this.playerScheda.muted(false); } catch {}
 
-     // restart pulito con audio
-     try { this.playerScheda.pause(); } catch {}
-     try { this.playerScheda.currentTime(0); } catch {}
-     try { this.playerScheda.muted(false); } catch {}
+       try {
+         if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+           this.contestoAudio.resume().catch(() => {});
+         }
+       } catch {}
 
-     try {
-       const p = this.playerScheda.play();
-       if (p && typeof p.then === 'function') {
-         p.then(() => {
-           this.soloBrowserBlocca = false;
-           try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
-         }).catch(() => {
-           if (!this.distrutto) this.attivaFallbackSoloBrowserBlocca();
-         });
-       }
-     } catch {
-       if (!this.distrutto) this.attivaFallbackSoloBrowserBlocca();
-     }
+    setTimeout(() => {
+         if (this.distrutto || !this.playerScheda) return;
+         try { this.sfumaGuadagnoVerso(0, 0); } catch {}   // gain a 0 prima di apparire
+         this.mostraVideoScheda = true;                     // CSS transition parte qui
+         try { this.sfumaGuadagnoVerso(1, this.durataFadeSchedaMs); } catch {}  // audio in parallelo
+         const p = this.playerScheda.play();
+         if (p && typeof p.then === 'function') {
+           p.then(() => {
+             this.soloBrowserBlocca = false;
+             try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
+           }).catch(() => {
+             this.mostraVideoScheda = false;
+             if (!this.distrutto) this.attivaFallbackSoloBrowserBlocca();
+           });
+         }
+       }, 500);
+     });
    };
 
    window.addEventListener('click', this.handlerSbloccoAudioScheda, { once: true, passive: true, capture: true });

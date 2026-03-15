@@ -21,6 +21,7 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
 @Input() idCategoria = '';
 @Input() tickResetPagine = 0;
 @Input() ritardoNavigazioneStessaTipologiaMs = 0;
+@Input() ritardoClickLocandinaMs = 0;
 @Input() attendiChiusuraPlayerSchedaPrimaDiNavigare = false;
 @Input() abilitaSalvataggiSessionStorage = true;
   @Input() titolo = '';
@@ -427,6 +428,11 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
   const id = String(loc?.id_media || '').trim();
   if (!id) return;
 
+  const ritardoClick = Math.max(0, this.ritardoClickLocandinaMs || 0);
+  if (ritardoClick > 0) {
+    await new Promise<void>((resolve) => setTimeout(resolve, ritardoClick));
+  }
+
   try {
   if (this.abilitaSalvataggiSessionStorage) {
     sessionStorage.setItem('ultima_categoria_click', String(this.idCategoria || '').trim());
@@ -435,11 +441,10 @@ async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Pr
 
   const tipo = this.tipoDaClick(loc);
   const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
-    const tipoCorrente = this.tipoContenuto.leggiTipo();
+  const tipoCorrente = this.tipoContenuto.leggiTipo();
   const stessaTipologia = tipoCorrente === tipo;
   if (this.timerEntrata) clearTimeout(this.timerEntrata);
   if (this.timerUscita) clearTimeout(this.timerUscita);
-
      const slug = slugDaLocandina(loc.src);
   const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
   const lingua = this.cambioLingua.leggiCodiceLingua();
