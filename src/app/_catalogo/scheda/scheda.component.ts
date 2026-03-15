@@ -283,8 +283,6 @@ private verificaEAvviaAnimazioni(): void {
 
   if (!tuttoPronto) return;
 
-  // ✅ Primo avvio: sincronizzo le label nello stesso “momento” in cui
-  // so che immagine/descrizione/tabella sono pronte.
   if (!this._labelPronte) {
     this._labelPronte = true;
     this.commitLabelUISincronizzate();
@@ -299,24 +297,14 @@ private verificaEAvviaAnimazioni(): void {
     return;
   }
 
+  // ← CHIAVE: stesso tick sincrono di reset() → Angular batchizza le due
+  // emissioni su schedaPronta$, il loader non emerge mai nemmeno per un frame
+  this.schedaPronta.segnaPronte();
+
   requestAnimationFrame(() => {
     this.startAnim = true;
     this.startAnimTitolo = true;
     this.startAnimDescrizione = true;
-
-   const aspetta = () => {
-  const el = document.querySelector('.descrizione');
-  const descPronta = el && el.textContent && el.textContent.trim().length > 3;
-  const labelPronta = this.labelRiprendi !== '' && this.labelRiprendi !== 'ui.scheda.riprendi.label';
-
-  if (descPronta && labelPronta) {
-    this.schedaPronta.segnaPronte();
-  } else {
-    requestAnimationFrame(aspetta);
-  }
-};
-
-    requestAnimationFrame(aspetta);
   });
 }
   private imgTitoloDaSlug(slug: string): string {

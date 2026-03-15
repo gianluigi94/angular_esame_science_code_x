@@ -54,7 +54,7 @@ export class CaroselloNovitaComponent
 
   trailerHoverProvvisorio =
     'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_cavalli_contro_circuiti.mp4';
-  MIN_MS_IMMAGINE_HOVER = 400;
+  MIN_MS_IMMAGINE_HOVER = 200;
   inizioImmagineHoverMs = 0;
   tokenHoverTrailer = 0;
   timerMostraTrailerHover: any = null;
@@ -127,7 +127,7 @@ export class CaroselloNovitaComponent
 
   durataFadeAudioMs = 350; // Imposto la durata del fade audio in millisecondi
   durataFadeVisivoMs = 250; // Imposto la durata del fade visivo in millisecondi
-  RITARDO_MOSTRA_PLAYER_MS = 1250; // Definisco il ritardo prima di mostrare/avviare il player
+  RITARDO_MOSTRA_PLAYER_MS = 350; // Definisco il ritardo prima di mostrare/avviare il player
 
   timerMostra: any = null; // Mi tengo il timer che ritarda la comparsa/avvio del video
   numeroSequenzaAvvio = 0; // Uso un contatore per invalidare avvii vecchi quando cambia lo stato
