@@ -1,9 +1,10 @@
 <div class="video-wrapper">
   <div class="player-video-wrapper">
-<div class="vjs-cerchio-centrale">
-  <span class="vjs-cerchio-icona">{{ playerInPausa ? '▶' : '⏸' }}</span>
+<div class="vjs-cerchio-centrale" (click)="togglePlayPausa()">
+  <div class="vjs-cerchio-icona">
+  <span [class.icona-play]="playerInPausa">{{ playerInPausa ? '▶' : '⏸' }}</span>
 </div>
-
+</div>
 
 
   <app-barra-avanzamento

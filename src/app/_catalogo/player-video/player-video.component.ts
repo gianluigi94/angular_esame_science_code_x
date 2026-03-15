@@ -2,6 +2,7 @@
 import { AfterViewInit, Component, OnDestroy, ViewEncapsulation, Input, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import videojs from 'video.js';
 import type Player from 'video.js/dist/types/player';
+import 'videojs-hotkeys';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
@@ -266,18 +267,33 @@ this.updateMenuLabels();
   const playerEl = (this.player as any).el?.() as HTMLElement | null;
   if (!playerEl) return;
 
-  const toggleDisplay = () => {
-    const ct = playerEl.querySelector('.vjs-current-time') as HTMLElement | null;
-    const rt = playerEl.querySelector('.vjs-remaining-time') as HTMLElement | null;
-    if (!ct || !rt) return;
-    if (rt.style.display !== 'none') {
-      rt.style.display = 'none';
-      ct.style.display = 'block';
-    } else {
-      rt.style.display = 'block';
-      ct.style.display = 'none';
-    }
-  };
+const aggiornaTitle = (mostraTrascorso: boolean) => {
+  const ct = playerEl.querySelector('.vjs-current-time') as HTMLElement | null;
+  const rt = playerEl.querySelector('.vjs-remaining-time') as HTMLElement | null;
+  const title = mostraTrascorso
+    ? this.translate.instant('ui.videojs.mostra_rimanente')
+    : this.translate.instant('ui.videojs.mostra_trascorso');
+  if (ct) ct.title = title;
+  if (rt) rt.title = title;
+};
+
+const toggleDisplay = () => {
+  const ct = playerEl.querySelector('.vjs-current-time') as HTMLElement | null;
+  const rt = playerEl.querySelector('.vjs-remaining-time') as HTMLElement | null;
+  if (!ct || !rt) return;
+  if (rt.style.display !== 'none') {
+    rt.style.display = 'none';
+    ct.style.display = 'block';
+    aggiornaTitle(true); // ora si vede il trascorso → il click mostrerà il rimanente
+  } else {
+    rt.style.display = 'block';
+    ct.style.display = 'none';
+    aggiornaTitle(false); // ora si vede il rimanente → il click mostrerà il trascorso
+  }
+};
+
+// Titolo iniziale: di default è visibile il tempo rimanente
+aggiornaTitle(false);
 
  playerEl.addEventListener('click', (event) => {
   const target = event.target as HTMLElement;
@@ -318,16 +334,27 @@ this.player?.on('play', () => {
 });
 
 this.player?.on('pause', () => {
-  this.playerInPausa = true;
-
-  // In pausa: il cerchio resta sempre visibile
   const cerchio = document.querySelector('.vjs-cerchio-centrale') as HTMLElement | null;
-  if (cerchio) {
+  if (!cerchio) {
+    this.playerInPausa = true;
+    return;
+  }
+
+  if (cerchio.classList.contains('visibile') && !cerchio.classList.contains('fisso')) {
+    // Era visibile per mousemove: chiudi prima, poi cambia icona e riapri
+    cerchio.classList.remove('visibile');
+    setTimeout(() => {
+      this.playerInPausa = true; // icona diventa ▶ solo ora, a cerchio già chiuso
+      cerchio.classList.add('visibile');
+      cerchio.classList.add('fisso');
+    }, 320); // deve corrispondere alla transition 0.3s
+  } else {
+    // Era già nascosto: apri direttamente con il play
+    this.playerInPausa = true;
     cerchio.classList.add('visibile');
     cerchio.classList.add('fisso');
   }
 });
-
       const controlBar: any = (this.player as any)?.getChild?.('ControlBar');
 
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -424,14 +451,20 @@ class MobileSkipBackwardButton extends (Button as any) {
         ?.children?.()
         ?.findIndex((c: any) => c.name && c.name() === 'ProgressControl') ?? 0;
 
-      const maybeHotkeys = (this.player as any).hotkeys;
-      if (typeof maybeHotkeys === 'function') {
-        maybeHotkeys({
-          volumeStep: 0.1,
-          seekStep: 5,
-          enableModifiersForNumbers: false,
-        });
-      }
+ if (typeof (this.player as any).hotkeys === 'function') {
+  (this.player as any).hotkeys({
+    volumeStep: 0.1,
+    seekStep: 5,
+    enableModifiersForNumbers: false,
+    playPauseKey:  (e: KeyboardEvent) => !this.adInCorso && (e.which === 32 || e.which === 75),
+    rewindKey:     (e: KeyboardEvent) => !this.adInCorso && e.which === 37,
+    forwardKey:    (e: KeyboardEvent) => !this.adInCorso && e.which === 39,
+    volumeUpKey:   (e: KeyboardEvent) => !this.adInCorso && e.which === 38,
+    volumeDownKey: (e: KeyboardEvent) => !this.adInCorso && e.which === 40,
+    muteKey:       (e: KeyboardEvent) => !this.adInCorso && e.which === 77,
+    fullscreenKey: (e: KeyboardEvent) => !this.adInCorso && e.which === 70,
+  });
+}
 
 
 const MenuButton = videojs.getComponent('MenuButton') as any;
