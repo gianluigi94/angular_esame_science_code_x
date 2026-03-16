@@ -39,6 +39,7 @@ idContenuto: number | null = null;
 urlSfondoScheda = '';
 imgTitoloScheda = '';
 private _paramRiproduzioneInAttesa: string | null = null;
+private _stagioneRiproduzioneInAttesa: string | null = null;
 
 
 private _labelPronte = false;
@@ -292,11 +293,15 @@ private verificaEAvviaAnimazioni(): void {
 
   if (!tuttoPronto) return;
 
-  const _param = this._paramRiproduzioneInAttesa;
-  this._paramRiproduzioneInAttesa = null;
-  if (_param && !this.mostraPlayerVideo) {
-    const ep = _param.startsWith('ep') ? Number(_param.replace('ep', '')) : undefined;
-    this.avviaTransizionePlayer(ep);
+const _param = this._paramRiproduzioneInAttesa;
+this._paramRiproduzioneInAttesa = null;
+if (_param && !this.mostraPlayerVideo) {
+  const ep = _param.startsWith('ep') ? Number(_param.replace('ep', '')) : undefined;
+  if (this._stagioneRiproduzioneInAttesa) {
+    this.stagioneSelezionata = this._stagioneRiproduzioneInAttesa;
+    this._stagioneRiproduzioneInAttesa = null;
+  }
+  this.avviaTransizionePlayer(ep);
     this.schedaPronta.segnaPronte();
     // fire-and-forget: popola le label in background così quando il player
     // si chiude (popstate / chiudiPlayer / route navigation) la scheda
@@ -556,6 +561,9 @@ this.trailerInRiproduzione = true;
 if (this._primaNavigazione) {
   const _sp = new URLSearchParams(window.location.search);
   this._paramRiproduzioneInAttesa = _sp.get('riproduzione') || _sp.get('play') || null;
+  if (this._paramRiproduzioneInAttesa) {
+    this._stagioneRiproduzioneInAttesa = pm.get('stagione') || null;
+  }
 }
 this._primaNavigazione = false;
 
@@ -731,21 +739,35 @@ if (this.slugCorrente && !this._paramRiproduzioneInAttesa) {
         if (!this.imgTitoloScheda) {
           this.imgTitoloScheda = this.imgTitoloDaSlug(this.slugCorrente);
         }
-        this._titoloPronto  = true;
+     this._titoloPronto  = true;
         this._tabellaPronta = true;
+
+        // ── stagioni popolate PRIMA di verificaEAvviaAnimazioni ──
+        const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
+        this.stagioni = lista.map(s => ({
+          id_stagione:     s.id_stagione,
+          numero_stagione: s.numero_stagione,
+          numero_episodi:  s.numero_episodi
+        }));
+
+        // ── validazione episodio da link diretto ──
+        if (this._paramRiproduzioneInAttesa?.startsWith('ep')) {
+          const epRichiesto = Number(this._paramRiproduzioneInAttesa.replace('ep', ''));
+          const stagNum = Number(this._stagioneRiproduzioneInAttesa ?? '1');
+          const stagInfo = this.stagioni.find(s => s.numero_stagione === stagNum);
+          if (!stagInfo || epRichiesto < 1 || epRichiesto > stagInfo.numero_episodi) {
+            const codice = this.cambioLingua.leggiCodiceLingua();
+            this.router.navigateByUrl(`/${codice}/${codice === 'it' ? 'non-trovato' : 'not-found'}`);
+            return;
+          }
+        }
+
         this.verificaEAvviaAnimazioni();
 this.caricaRigheCorrelate();
 
 if (this.slugCorrente && !this._paramRiproduzioneInAttesa) {
   this.programmaInserimentoPlayerSchedaNelDom();
 }
-
-const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
-        this.stagioni = lista.map(s => ({
-          id_stagione:     s.id_stagione,
-          numero_stagione: s.numero_stagione,
-          numero_episodi:  s.numero_episodi
-        }));
 
         if (this.stagioni.length > 0) {
           const stagioneDaUrlEsplicita = !!pm.get('stagione');
