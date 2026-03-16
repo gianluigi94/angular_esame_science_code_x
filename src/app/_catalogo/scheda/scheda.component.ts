@@ -179,11 +179,19 @@ if (this.tipoContenuto === 'film') {
     this.infoEpisodioPlayer = { stagione: Number(stagione), episodio };
   }
 
-  if (this.trailerInRiproduzione) {
-   this.mostraPlayerSchedaNelDom = false;
-   const btnTrailer = document.querySelector<HTMLElement>('button.riproduci[title="' + this.labelTrailerTitle + '"]');
-   btnTrailer?.click();
- }
+if (this.trailerInRiproduzione) {
+  this.avvioTrailerSchedaRichiesto = false;
+  this.trailerInRiproduzione = false;
+  this.aggiornaTrailerTitle();
+  if (this.mostraVideoScheda) {
+    this.mostraVideoScheda = false;
+    this.sfumaGuadagnoVerso(0, this.durataFadeSchedaMs).finally(() => {
+      this.smontaPlayerSchedaDalDomSubito();  // ← dispose completo: DOM + istanza + nodi audio
+    });
+  } else {
+    this.smontaPlayerSchedaDalDomSubito();    // ← idem, anche se il video non era visibile
+  }
+}
   const valore = episodio ? `ep${episodio}` : 'true';
   const lingua = this.cambioLingua.leggiCodiceLingua();
   const nomeParam = lingua === 'it' ? 'riproduzione' : 'play';

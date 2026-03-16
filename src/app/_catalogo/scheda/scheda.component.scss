@@ -65,7 +65,7 @@ app-footer{
 .titolo-scheda {
   position: relative;
   z-index: 2;
-
+  min-height: 360px;
   &__immagine {
     width: 420px;
     height: auto;
@@ -156,9 +156,9 @@ app-footer{
 .pausa {
   position: relative;
   padding-left: 5px;
-  padding-top: 1px;
-  padding-right: 4px;
+  padding-right: 5px;
   padding-bottom: 1px;
+  padding-top: 2px;
   border: 2px solid rgb(64, 64, 118);
   border-radius: 50px;
   width: 35px;

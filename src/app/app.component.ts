@@ -401,13 +401,13 @@ this.caricamentoDisabilitato$.next(disabilitaLoader);
               this.extraLoaderTimer = null; // E lo azzero
             }
 
-            this.extraLoaderTimer = setTimeout(() => {
-              // Programmo lo spegnimento del loader extra dopo un tempo fisso
-              this.forzaLoaderExtra = false; // Spengo il flag del loader extra
-              this.extraLoaderTimer = null; // Azzero il timer perché è finito
-
-              this.devoCaricareTexturePrimaVolta = false; // Segno che ormai le texture 'prima volta' sono state gestite
-            }, this.EXTRA_LOADER_MS); // Aspetto il numero di millisecondi
+          this.extraLoaderTimer = setTimeout(() => {
+  this.forzaLoaderExtra = false;
+  this.extraLoaderTimer = null;
+  this.devoCaricareTexturePrimaVolta = false;
+  // Forza il combineLatest a rieseguire così loader-hidden viene dispatchato correttamente
+  this.caricamentoDisabilitato$.next(this.caricamentoDisabilitato);
+}, this.EXTRA_LOADER_MS);
           }
         }
 
