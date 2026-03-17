@@ -199,3 +199,29 @@ export function mescolaDeterministicaLocandine<T extends { src: string }>(
     return ka - kb;
   });
 }
+
+export function traduciSegmentiUrl(url: string, langSalvata: 'it' | 'en'): string {
+  let u = url;
+
+  if (langSalvata === 'it') {
+    u = u.replace(/\/(welcome)(\/|$)/,      '/benvenuto$2');
+    u = u.replace(/\/(login)(\/|$)/,        '/accedi$2');
+    u = u.replace(/\/(catalog)(\/|$)/,      '/catalogo$2');
+    u = u.replace(/\/(movies-series)(\/|$)/,'/film-serie$2');
+    u = u.replace(/\/(movies)(\/|$)/,       '/film$2');
+    u = u.replace(/\/(series)(\/|$)/,       '/serie$2');
+    u = u.replace(/\/(season)(\/|$)/,       '/stagione$2');
+    u = u.replace(/([?&])play=/,            '$1riproduzione=');
+  } else {
+    u = u.replace(/\/(benvenuto)(\/|$)/,    '/welcome$2');
+    u = u.replace(/\/(accedi)(\/|$)/,       '/login$2');
+    u = u.replace(/\/(catalogo)(\/|$)/,     '/catalog$2');
+    u = u.replace(/\/(film-serie)(\/|$)/,   '/movies-series$2');
+    u = u.replace(/\/(film)(\/|$)/,         '/movies$2');
+    u = u.replace(/\/(serie)(\/|$)/,        '/series$2');
+    u = u.replace(/\/(stagione)(\/|$)/,     '/season$2');
+    u = u.replace(/([?&])riproduzione=/,    '$1play=');
+  }
+
+  return u;
+}

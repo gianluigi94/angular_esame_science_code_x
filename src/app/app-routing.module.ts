@@ -2,8 +2,8 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes, UrlSegment, UrlMatchResult } from '@angular/router';
 import { AvvioGuard } from './_guard/avvio.guard';
 import { RedirectVuotoComponent } from './redirect-vuoto.component';
-import { NotFoundComponent } from './_componenti_comuni/not-found/not-found.component';
-
+import { RedirectNonTrovatoComponent } from './_helpers_globali/redirect-non-trovato.component';
+import { LinguaGuard } from './_guard/lingua.guard';
 export function linguaMatcher(segmenti: UrlSegment[]): UrlMatchResult | null {
   if (segmenti.length > 0 && (segmenti[0].path === 'it' || segmenti[0].path === 'en')) {
     return {
@@ -23,9 +23,9 @@ const routes: Routes = [
   },
   // slug lingua in radice
   {
-
-    path: 'it',
-    children: [
+  path: 'it',
+  canActivate: [LinguaGuard], // ← AGGIUNTO
+  children: [
       {
         path: '',
         pathMatch: 'full',
@@ -77,15 +77,15 @@ const routes: Routes = [
     import('./_componenti_comuni/contatti/contatti.module').then(m => m.ContattiModule),
 },
 
-      {
-        path: '**',
-        redirectTo: 'non-trovato',
-        pathMatch: 'full',
-      },
+    {
+    path: '**',
+    component: RedirectNonTrovatoComponent,
+  },
     ],
   },
-  {
+    {
     path: 'en',
+    canActivate: [LinguaGuard], // ← AGGIUNTO
     children: [
       {
         path: '',
@@ -140,15 +140,13 @@ const routes: Routes = [
 
       {
         path: '**',
-        redirectTo: 'not-found',
-        pathMatch: 'full',
+        component: RedirectNonTrovatoComponent,
       },
     ],
   },
   {
     path: '**',
-    redirectTo: 'it/non-trovato',
-    pathMatch: 'full',
+    component: RedirectNonTrovatoComponent,
   },
 ];
 // Attivo il router principale dell'app usando queste routes, la prima navigazione parte solo dopo che guard/resolver hanno finito

@@ -13,6 +13,7 @@ import { BehaviorSubject, combineLatest } from 'rxjs';
 import { AnimateService } from './_servizi_globali/animazioni_saturno/animate.service';
 import { DOCUMENT } from '@angular/common';
 import gsap from 'gsap';
+import { traduciSegmentiUrl } from './_helpers_globali/helpers';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
@@ -131,8 +132,10 @@ schedaPronta$ = this.schedaProntaService.schedaPronta$;
       this.documento,
       this.cambioLinguaService.leggiCodiceLingua()
     ); // Imposto subito la lingua sul tag <html> leggendo la lingua salvata
-    this.ultimaUrl = urlIniziale; // Salvo l'URL iniziale come ultima URL conosciuta
-        this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
+    this.ultimaUrl = urlIniziale;
+this.correggiPrefissoLingua(urlIniziale); // ← AGGIUNTO
+
+this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
       impostaLangHtml(this.documento, codice);
       if (this.sonoIn404) {
         this.mostraToast404Persistente();
@@ -153,18 +156,22 @@ schedaPronta$ = this.schedaProntaService.schedaPronta$;
     ); // Chiudo la next
     if (this.deveCaricareImmaginiCarosello) this.caricamentoCaroselloService.resetta();
 
-    this.router.events // Mi aggancio allo stream degli eventi del router (navigazioni)
-      .pipe(filter((ev) => ev instanceof NavigationEnd)) // Considero solo gli eventi di fine navigazione
-      .subscribe((ev: any) => {
+    // Correggo prefisso lingua PRIMA che il componente destinazione venga creato
+this.router.events
+  .pipe(filter((ev) => ev instanceof NavigationEnd)) // Considero solo gli eventi di fine navigazione
+  .subscribe((ev: any) => {
         // Quando una navigazione è finita, aggiorno lo stato interno
 
-        const url = // Ricavo l'URL finale della navigazione (preferisco dopo i redirect)
-          ev && ev.urlAfterRedirects // Controllo se esiste urlAfterRedirects
-            ? ev.urlAfterRedirects // Se c'è, uso quello perché è l'URL 'definitivo'
-            : ev && ev.url // Altrimenti provo con ev.url e se non c'è nulla, metto stringa vuota
-            ? ev.url
-            : '';
-                    if (!this.isContattiUrl(url)) {
+        const url =
+  ev && ev.urlAfterRedirects
+    ? ev.urlAfterRedirects
+    : ev && ev.url
+    ? ev.url
+    : '';
+
+this.correggiPrefissoLingua(url); // ← AGGIUNTO
+
+if (!this.isContattiUrl(url)) {
           window.dispatchEvent(new CustomEvent('chiudi-dati-personali'));
         }
                     if (this.isContattiUrl(url) && this.isLoggato()) {
@@ -470,7 +477,29 @@ console.log('LOADER SPARITO alle ' + now + ' ms');
   }
 
 
-  private isLoggato(): boolean {
+private correggiPrefissoLingua(url: string): void {
+  const match = url.match(/^\/(it|en)(\/|$)/);
+  if (!match) return; // non è it/en → il router gestirà normalmente (404 ecc.)
+
+  const langNelUrl = match[1];
+  const langSalvata = this.cambioLinguaService.leggiCodiceLingua(); // legge da localStorage
+
+  let urlCorretto = url;
+
+  // 1. correggi il prefisso lingua se sbagliato
+  if (langNelUrl !== langSalvata) {
+    urlCorretto = urlCorretto.replace(/^\/(it|en)/, '/' + langSalvata);
+  }
+
+  // 2. correggi benvenuto/welcome e accedi/login in base alla lingua canonica
+urlCorretto = traduciSegmentiUrl(urlCorretto, langSalvata as 'it' | 'en');
+
+  if (urlCorretto === url) return; // niente da correggere, evito navigazioni inutili
+
+  this.router.navigateByUrl(urlCorretto, { replaceUrl: true });
+}
+
+private isLoggato(): boolean {
     return !!this.authService.leggiObsAuth().value?.tk;
   }
 

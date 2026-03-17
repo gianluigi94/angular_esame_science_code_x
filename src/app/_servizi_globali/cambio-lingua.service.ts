@@ -8,6 +8,7 @@ import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.servic
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { traduciSegmentiUrl } from '../_helpers_globali/helpers';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import gsap from 'gsap';
 gsap.registerPlugin(ScrollTrigger);
@@ -321,15 +322,7 @@ if (scroller) {
     // resto dopo /it/catalogo oppure /en/catalog
     let resto = (m[3] || '');
 
-    // mappa foglia lista/scheda: film<->movies, serie<->series, film-serie<->movies-series
-    const mapIt: any = { movies: 'film', series: 'serie', 'movies-series': 'film-serie' };
-    const mapEn: any = { film: 'movies', serie: 'series', 'film-serie': 'movies-series' };
-    const map = c === 'it' ? mapIt : mapEn;
-
-    resto = resto.replace(
-      /^\/(film|serie|film-serie|movies|series|movies-series)(?=\/|$)/i,
-      (_match, leaf) => '/' + (map[String(leaf).toLowerCase()] || String(leaf).toLowerCase()),
-    );
+    resto = traduciSegmentiUrl(resto, c as 'it' | 'en');
 
     const target = (base + resto).replace(/\/+$/, '');
     const current = soloPath.replace(/\/+$/, '');
