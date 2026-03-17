@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import * as THREE from 'three';
 import { AnimateService } from '../animate.service';
 import { SaturnoPosizioniService } from '../saturno_posizioni.service';
-
+import { isMobileOrTablet } from 'src/app/_helpers_globali/helpers';
 gsap.registerPlugin(ScrollTrigger);
 
 @Injectable({
@@ -85,6 +85,8 @@ sessionStorage.removeItem('welcome_scrollTop');
   });
     // DOPO
 this.resizeHandler = () => {
+  if (isMobileOrTablet()) return;
+
   const scrollerElement = document.querySelector('.main-scroll') as HTMLElement | null;
   const triggerElement = document.querySelector('#saturno-scrolle') as HTMLElement | null;
   const eraScrollato =
