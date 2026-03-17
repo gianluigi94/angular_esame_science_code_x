@@ -16,9 +16,10 @@ export class ScrollWelcomeService {
   private loopingTimelines: gsap.core.Timeline[] = [];
   private loopingDelayedCalls: gsap.core.Tween[] = [];
 
-  private resizeHandler: (() => void) | null = null;
-  private orientationHandler: (() => void) | null = null;
-  private visibilityHandler: (() => void) | null = null;
+ private resizeHandler: (() => void) | null = null;
+private orientationHandler: (() => void) | null = null;
+private visibilityHandler: (() => void) | null = null;
+private restoringFromResize = false;
 
   constructor(
   private animateService: AnimateService,
@@ -84,23 +85,21 @@ sessionStorage.removeItem('welcome_scrollTop');
   });
     // DOPO
 this.resizeHandler = () => {
+  const scrollerElement = document.querySelector('.main-scroll') as HTMLElement | null;
+  const triggerElement = document.querySelector('#saturno-scrolle') as HTMLElement | null;
+  const eraScrollato =
+    scrollerElement && triggerElement
+      ? triggerElement.getBoundingClientRect().top <=
+        scrollerElement.getBoundingClientRect().top + 10
+      : false;
+
   this.destroyScrollTriggers();
 
-  this.createScrollTriggers(scene, title, light);  // ✅ passa anche light
-      ScrollTrigger.refresh();
+  this.restoringFromResize = eraScrollato;
+  this.createScrollTriggers(scene, title, light);
+  ScrollTrigger.refresh();
   ScrollTrigger.update();
-
-  const triggerElement = document.querySelector('#saturno-scrolle');
-  const scrollerElement = document.querySelector('.main-scroll');
-  if (triggerElement && scrollerElement) {
-    const triggerTop = triggerElement.getBoundingClientRect().top;
-    const scrollerTop = scrollerElement.getBoundingClientRect().top;
-    if (triggerTop <= scrollerTop + 10) {
-      gsap.set(title, {
-        marginTop: this.checkSpecialTablet() ? -120 : 0,
-      });
-    }
-  }
+  this.restoringFromResize = false;
 };
 
     window.addEventListener('resize', this.resizeHandler);
@@ -146,17 +145,19 @@ const saturnoTrigger = ScrollTrigger.create({
     gsap.killTweensOf(scene.scale);
     gsap.killTweensOf(light.position);
 
+    const dur = this.restoringFromResize ? 0 : 1.33;
+
     gsap.to(scene.scale, {
       x: poseBasso.scale.x,
       y: poseBasso.scale.y,
       z: poseBasso.scale.z,
-      duration: 1.33,
+      duration: dur,
       ease: 'power2.inOut',
     });
 
     gsap.to(light.position, {
       z: 5.1001, // WELCOME_BASSO
-      duration: 1.33,
+      duration: dur,
       ease: 'power2.inOut',
     });
   },
@@ -214,10 +215,10 @@ const saturnoTrigger = ScrollTrigger.create({
   scroller: '.main-scroll',
   start: '10px top',
   toggleActions: 'play reverse play reverse',
-  onEnter: () => {
+ onEnter: () => {
     gsap.to(scene.rotation, {
       z: poseBasso.rotation.z,
-      duration: 0.87,
+      duration: this.restoringFromResize ? 0 : 0.87,
       ease: 'power1.in',
     });
   },
@@ -237,10 +238,10 @@ const saturnoTrigger = ScrollTrigger.create({
   scroller: '.main-scroll',
   start: '10px top',
   toggleActions: 'play reverse play reverse',
-  onEnter: () => {
+ onEnter: () => {
     gsap.to(scene.rotation, {
       y: poseBasso.rotation.y,
-      duration: 0.87,
+      duration: this.restoringFromResize ? 0 : 0.87,
       ease: 'power4.in',
     });
   },
@@ -333,23 +334,22 @@ const saturnoTrigger = ScrollTrigger.create({
   scroller: '.main-scroll',
   start: '10px top',
   onEnter: () => {
-
-    gsap.to(title, {
-      top: topValue,
-      left: leftValue,
-      xPercent: isTablet ? -softOffset : -softOffset * 1.1,
-      yPercent: -softOffset,
-      paddingTop: 0,
-      marginTop: 0,
-      scaleX: scaleX,
-      scaleY: scaleY,
-      minWidth: '60px',
-      minHeight: '200px',
-      duration: 0.85,
-      delay: 0.2,
-      ease: 'power2.inOut',
-    });
-  },
+  gsap.to(title, {
+    top: topValue,
+    left: leftValue,
+    xPercent: isTablet ? -softOffset : -softOffset * 1.1,
+    yPercent: -softOffset,
+    paddingTop: 0,
+    marginTop: 0,
+    scaleX: scaleX,
+    scaleY: scaleY,
+    minWidth: '60px',
+    minHeight: '200px',
+    duration: this.restoringFromResize ? 0 : 0.85,
+    delay: this.restoringFromResize ? 0 : 0.2,
+    ease: 'power2.inOut',
+  });
+},
   onLeaveBack: () => {
 
     gsap.to(title, {
@@ -435,7 +435,7 @@ this.triggers.push(titleTrigger);
 
     // CTA (Call to Action)
     const cta = document.querySelector('#cta') as HTMLElement;
-    gsap.set(cta, { opacity: 0 });
+    if (!this.restoringFromResize) gsap.set(cta, { opacity: 0 });
 
     const ctaTrigger = ScrollTrigger.create({
       trigger: '#saturno-scrolle',
@@ -465,11 +465,13 @@ this.triggers.push(titleTrigger);
     // Form Email
     const emailForm = document.querySelector('#email_form') as HTMLElement;
     if (emailForm) {
-      gsap.set(emailForm, {
-        opacity: 0,
-        scaleX: 0,
-        transformOrigin: 'center center',
-      });
+    if (!this.restoringFromResize) {
+        gsap.set(emailForm, {
+          opacity: 0,
+          scaleX: 0,
+          transformOrigin: 'center center',
+        });
+      }
 
       const emailFormTrigger = ScrollTrigger.create({
         trigger: '#saturno-scrolle',
