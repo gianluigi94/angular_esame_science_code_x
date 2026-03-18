@@ -7,10 +7,12 @@ import { WelcomeComponent } from './welcome/welcome.component';
 import { LoginComponent } from './login/login.component';
 import { ComponentiComuniModule } from '../_componenti_comuni/componenti-comuni.module';
 import { SaturnoModule } from '../_componenti_comuni/saturno/saturno.module';
+import { IscrizioneComponent } from './iscrizione/iscrizione.component';
 @NgModule({
   declarations: [
     WelcomeComponent,
     LoginComponent,
+    IscrizioneComponent,
   ],
   imports: [
     CommonModule,

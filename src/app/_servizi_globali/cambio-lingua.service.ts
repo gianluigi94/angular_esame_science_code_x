@@ -83,10 +83,10 @@ if (scroller) {
   sessionStorage.setItem('welcome_restore', '1'); // 👈 flag: ripristina SOLO dopo cambio lingua
 }
     this.sincBenvenutoPathConLingua(codice);
-
-    this.sincCatalogoPathConLingua(codice);
-    this.sincNotFoundPathConLingua(codice);
-    this.sincContattiPathConLingua(codice);
+this.sincCatalogoPathConLingua(codice);
+this.sincNotFoundPathConLingua(codice);
+this.sincContattiPathConLingua(codice);
+this.sincIscrizionePathConLingua(codice);
     this.toastService.chiudiTutti();
     this.cambioLinguaAvviato$.next(codice); // Notifico che ho iniziato il cambio lingua con quel codice
 
@@ -373,5 +373,25 @@ if (scroller) {
 
     this.location.replaceState(target + tail);
   }
+private sincIscrizionePathConLingua(codice: string): void {
+  const full =
+    this.location.path(true) ||
+    (window.location.pathname + window.location.search + window.location.hash) ||
+    '';
+  const soloPath = full.split('?')[0].split('#')[0];
+  const tail = full.substring(soloPath.length);
 
+  const m = soloPath.match(/^\/(it|en)\/(benvenuto|welcome)\/(registrazione|registration)(\/.*)?$/);
+  if (!m) return;
+
+  const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
+  const base = this.baseBenvenutoDaLingua(c);
+  const sottoPath = c === 'it' ? 'registrazione' : 'registration';
+  const resto = m[4] || '';
+  const target = (base + '/' + sottoPath + resto).replace(/\/+$/, '');
+  const current = soloPath.replace(/\/+$/, '');
+  if (target === current) return;
+
+  this.location.replaceState(target + tail);
+}
 }

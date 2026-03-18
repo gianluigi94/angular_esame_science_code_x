@@ -1162,45 +1162,59 @@ else if (this.eRottaNotFound(url)) {
     window.addEventListener('mousemove', this.gestoreMouseMove);
   }
 
-  // dentro SaturnoService
-  public flashErrorLight(): void {
-    if (!this.scene || !this.directionalLight) {
-      return;
-    }
-
-    const scene = this.scene;
-    const light = this.directionalLight;
-
-    const originalColor = light.color.clone();
-    const originalX = scene.position.x;
-
-    const durata = 400; // ms totali
-    const jitterOffsets = [-0.12, 0.18, -0.25, 0.3, -0.18, 0.12, -0.08, 0.06];
-    const step = durata / jitterOffsets.length;
-
-    // luce rossa per tutta la durata
-    light.color.set(0xb42f14);
-
-    // scatti sull'asse X
-    jitterOffsets.forEach((offset, index) => {
-      setTimeout(() => {
-        if (!this.scene) {
-          return;
-        }
-        this.scene.position.x = originalX + offset;
-      }, step * index);
-    });
-
-    // ripristino posizione e colore dopo i 400 ms
-    setTimeout(() => {
-      if (this.scene) {
-        this.scene.position.x = originalX;
-      }
-      if (this.directionalLight) {
-        this.directionalLight.color.copy(originalColor);
-      }
-    }, durata);
+ public flashErrorLight(): void {
+  if (!this.scene || !this.directionalLight) {
+    return;
   }
+
+  const scene = this.scene;
+  const light = this.directionalLight;
+
+  const originalColor = light.color.clone();
+  const originalX = scene.position.x;
+
+  const durata = 400;
+  const jitterOffsets = [-0.12, 0.18, -0.25, 0.3, -0.18, 0.12, -0.08, 0.06];
+  const step = durata / jitterOffsets.length;
+
+  // luce rossa per tutta la durata
+ light.color.set(0xb42f14);
+
+  // salvo i colori originali degli anelli e li imposto rossi
+  const disks = this.diskService.getDisks();
+  const originalDiskColors = disks.map(({ mesh }) => {
+    const mat = mesh.material as THREE.ShaderMaterial;
+    return (mat.uniforms['uColor'].value as THREE.Color).clone();
+  });
+  disks.forEach(({ mesh }) => {
+    const mat = mesh.material as THREE.ShaderMaterial;
+    (mat.uniforms['uColor'].value as THREE.Color).set(0xb41447);
+  });
+
+  // scatti sull'asse X
+  jitterOffsets.forEach((offset, index) => {
+    setTimeout(() => {
+      if (!this.scene) {
+        return;
+      }
+      this.scene.position.x = originalX + offset;
+    }, step * index);
+  });
+
+  // ripristino posizione, colore luce e colori anelli dopo i 400 ms
+  setTimeout(() => {
+    if (this.scene) {
+      this.scene.position.x = originalX;
+    }
+    if (this.directionalLight) {
+      this.directionalLight.color.copy(originalColor);
+    }
+    this.diskService.getDisks().forEach(({ mesh }, i) => {
+      const mat = mesh.material as THREE.ShaderMaterial;
+      (mat.uniforms['uColor'].value as THREE.Color).copy(originalDiskColors[i]);
+    });
+  }, durata);
+}
 
   private isReloadCatalogo(): boolean {
     try {

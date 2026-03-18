@@ -5,7 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { WelcomeComponent } from './welcome/welcome.component';
 import { LoginComponent } from './login/login.component';
 import { LoginUscitaGuard } from '../_guard/login-uscita.guard';
-
+import { IscrizioneComponent } from './iscrizione/iscrizione.component';
 const routes: Routes = [
   {
     //se il path è vuoto vengo reidirizzato al componente di bevenuto, /benvenuto
@@ -22,6 +22,14 @@ const routes: Routes = [
     path: 'accedi',
     component: LoginComponent,
     canDeactivate: [LoginUscitaGuard],
+  },
+  {
+    path: 'registrazione',
+    component: IscrizioneComponent,
+  },
+  {
+    path: 'registration',
+    component: IscrizioneComponent,
   },
 ];
 

@@ -74,42 +74,95 @@
     }
   }
   form {
-    pointer-events: auto;
+     pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  @media (max-width: 710px) {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .campo-email-wrapper {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+    .campo-email {
+    position: relative;
     display: flex;
-    flex-direction: row;
     align-items: center;
-    @media (max-width: 710px) {
-      flex-direction: column;
-      width: 100%;
+
+    label {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #4f5050;
+  font-family: 'Quantico', serif;
+  font-weight: bolder;
+  pointer-events: none;
+  transition: top 0.15s ease, transform 0.15s ease, font-size 0.15s ease, color 0.15s ease;
+}
+
+    input:focus ~ label,
+    input:not(:placeholder-shown) ~ label {
+      top: 4px;
+      transform: translateY(0);
+      font-size: 12px;
     }
-    input {
+  }
+label.is-invalid {
+  color: rgb(137, 11, 11) !important;
+}
 
-      width: 470px;
-      height: 40px;
-      background: linear-gradient(135deg, #000000c1, #000000c1);
-      border: none;
-      border-radius: 7px;
-      font-size: 20px;
-      padding: 0px 10px;
-      color: aliceblue;
-      box-shadow: 0 0 10px #999da0;
-      @media (max-width: 710px) {
-        width: 80%;
 
-      }
+#email_cta.is-invalid {
+  color: red !important;
+}
+.errore-email {
+  font-size: 16px;
+  padding-top: 5px;
+  color: #b41414;
+  font-family: 'Quantico', serif;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 2px;
+  font-weight: bolder;
+}
+  input {
+    width: 470px;
+    height: 45px;
+    background: linear-gradient(135deg, #000000c1, #000000c1);
+    border: none;
+    font-size: 18px;
+    font-weight: 500;
+
+    border-radius: 7px;
+    padding: 18px 10px 0 10px;
+    color: rgb(223, 223, 223);
+    box-shadow: 0 0 10px #999da0;
+    @media (max-width: 710px) {
+      width: 80%;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 4px orange !important;
+    }
     }
     button {
       width: 120px;
       font-size: 18px;
     cursor: pointer;
 
-      height: 42px;
+      height: 47px;
       border-radius: 7px;
       border: none;
       background: linear-gradient(135deg, #e79c50, #c97a2b);
       color: white;
       box-shadow: 0 0 10px #999da0;
-      font-weight: bold;
       transition: all 0.3s ease;
       margin-left: 5px;
       font-weight: 600;
