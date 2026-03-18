@@ -6,6 +6,7 @@ import { WelcomeComponent } from './welcome/welcome.component';
 import { LoginComponent } from './login/login.component';
 import { LoginUscitaGuard } from '../_guard/login-uscita.guard';
 import { IscrizioneComponent } from './iscrizione/iscrizione.component';
+import { IscrizioneUscitaGuard } from '../_guard/iscrizione-uscita.guard';
 const routes: Routes = [
   {
     //se il path è vuoto vengo reidirizzato al componente di bevenuto, /benvenuto
@@ -25,10 +26,12 @@ const routes: Routes = [
   },
   {
     path: 'registrazione',
+    canDeactivate: [IscrizioneUscitaGuard],
     component: IscrizioneComponent,
   },
   {
     path: 'registration',
+    canDeactivate: [IscrizioneUscitaGuard],
     component: IscrizioneComponent,
   },
 ];
