@@ -45,6 +45,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   distruggi$ = new Subject<void>(); // creo un subject che uso per chiudere le subscribe con takeUntil quando il componente si distrugge
 
 paginaLogin = false;
+paginaIscrizione = false;
 pagina404 = false;
 paginaContatti = false;
 headerPronto = false;
@@ -86,6 +87,8 @@ this.iconaLingua$ = this.cambioLinguaService.iconaLingua$;
 
     this.paginaLogin =
   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(this.router.url || '');
+this.paginaIscrizione =
+  /^\/(it|en)\/(benvenuto|welcome)\/(registrazione|registration)(\/|$)/.test(this.router.url || '');
 this.pagina404 =
   /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(this.router.url || '');
 this.paginaContatti =
@@ -98,8 +101,10 @@ this.paginaContatti =
       )
       .subscribe((ev: NavigationEnd) => {
         const url = ev.urlAfterRedirects || ev.url; // prendo l'url definitivo dopo eventuali reindirizzamenti
-                        this.paginaLogin =
+        this.paginaLogin =
   /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url || '');
+this.paginaIscrizione =
+  /^\/(it|en)\/(benvenuto|welcome)\/(registrazione|registration)(\/|$)/.test(url || '');
 this.pagina404 =
   /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url || '');
 this.paginaContatti =

@@ -730,8 +730,72 @@ if (footerP) {
     this.triggers.push(loopingTrigger);
   }
 
- private readonly SS_WELCOME_TITOLO_STATO = 'welcome_titolo_stato';
+private readonly SS_WELCOME_TITOLO_STATO = 'welcome_titolo_stato';
 
+  // stessa animazione di ritorno usata dallo scroll onLeaveBack,
+  // con la curva sinusoidale sulla posizione (identica al reverse del proxy)
+  public animaRitornoVersoAlto(
+    scene: THREE.Scene,
+    light: THREE.DirectionalLight,
+    durata: number = 0.87
+  ): void {
+    const poseAlto = this.saturnoPosizioniService.getPose('WELCOME_ALTO');
 
+    gsap.killTweensOf(scene.scale);
+    gsap.killTweensOf(scene.position);
+    gsap.killTweensOf(scene.rotation);
+    gsap.killTweensOf(light.position);
 
+    // scala torna a 1
+    gsap.to(scene.scale, {
+      x: poseAlto.scale.x,
+      y: poseAlto.scale.y,
+      z: poseAlto.scale.z,
+      duration: durata,
+      ease: 'power2.inOut',
+    });
+
+    // luce torna dietro (posizione WELCOME_ALTO)
+    gsap.to(light.position, {
+      z: 10.1001,
+      duration: durata,
+      ease: 'power2.inOut',
+    });
+
+    // rotazione Z
+    gsap.to(scene.rotation, {
+      z: poseAlto.rotation.z,
+      duration: durata,
+      ease: 'power1.out',
+    });
+
+    // rotazione Y
+    gsap.to(scene.rotation, {
+      y: poseAlto.rotation.y,
+      duration: durata,
+      ease: 'power4.out',
+    });
+
+    // posizione: stessa curva sinusoidale dello scroll, ma al contrario (t da 1.1 → 0)
+    const curveProxy = { t: 1.1 };
+    gsap.to(curveProxy, {
+      t: 0,
+      duration: durata,
+      ease: 'none',
+      onUpdate: () => {
+        const t = curveProxy.t;
+        const finalX = 3.1 * t;
+        const offsetX = 1.2 * Math.sin(Math.PI * t);
+        const baseY = window.innerWidth <= 868 ? -3.6 : -3.4;
+        const curvedY = baseY * Math.pow(t, 2);
+        scene.position.x = finalX + offsetX;
+        scene.position.y = curvedY;
+      },
+      onComplete: () => {
+        // forzo la posizione finale esatta per evitare micro-offset floating point
+        scene.position.x = poseAlto.position.x;
+        scene.position.y = poseAlto.position.y;
+      },
+    });
+  }
 }

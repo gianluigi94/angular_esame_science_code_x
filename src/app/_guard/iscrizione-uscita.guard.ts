@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { CanDeactivate, Router } from '@angular/router';
 import { IscrizioneComponent } from '../_benvenuto/iscrizione/iscrizione.component';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
-import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
+import { ScrollWelcomeService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scroll-welcome.service';
 
 @Injectable({ providedIn: 'root' })
 export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent> {
@@ -11,8 +11,8 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
   constructor(
     private router: Router,
     private saturnoService: SaturnoService,
-    private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
-    private animateService: AnimateService
+    private animateService: AnimateService,
+    private scrollWelcomeService: ScrollWelcomeService
   ) {}
 
   canDeactivate(
@@ -51,25 +51,19 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
       const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
       if (scroller) scroller.scrollTop = 0;
 
-      const scene = this.saturnoService.getScene();
+    const scene = this.saturnoService.getScene();
       const light = this.saturnoService.getDirectionalLight();
 
       this.animateService.setXGif();
-      this.animateService.animateTitoloVersoCentroGlobal(1.25, 0); // animazione dura 1250ms
+      this.animateService.animateTitoloVersoCentroGlobal(1.25, 0);
 
-      if (scene) {
-        this.saturnoRouteAnimazioniService.animaVerso(
-          scene,
-          'WELCOME_ALTO',
-          1.25,
-          light || undefined
-        );
+      // usa la stessa curva sinusoidale dello scroll (giro largo), non la retta diretta
+      if (scene && light) {
+        this.scrollWelcomeService.animaRitornoVersoAlto(scene, light, 1.05);
       }
 
-      // aspetto che l'animazione del titolo finisca prima di navigare,
-      // altrimenti Angular carica WelcomeComponent e resetta la posizione a metà animazione
       return new Promise<boolean>((resolve) => {
-        setTimeout(() => resolve(true), 1300); // 1250ms di durata + 50ms di buffer
+        setTimeout(() => resolve(true), 1300); // 870ms di durata + 80ms di buffer
       });
     }
 

@@ -311,7 +311,7 @@
         "
         [routerLink]="pathLoginDaLingua()"
         [class.preparazione]="!headerPronto"
-        [class.nascosto]="paginaLogin || pagina404"
+        [class.nascosto]="paginaLogin || paginaIscrizione || pagina404"
 [attr.aria-disabled]="paginaLogin || pagina404 || !headerPronto ? 'true' : null"
         [innerHTML]="'ui.menu_utente.collegati.label' | translate"
       ></button>
