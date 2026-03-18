@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 
 export type SaturnoStatoChiave =
-  | 'WELCOME_ALTO'   // posizione centrale, pagina benvenuto in alto
-  | 'WELCOME_BASSO'  // posizione bassa, pagina benvenuto dopo lo scroll
+  | 'WELCOME_ALTO'
+  | 'WELCOME_BASSO'
+  | 'REGISTRAZIONE_BASSO'
   | 'CATALOGO_NASCOSTO'
-  | 'LOGIN_LATERALE'; // nuova posizione laterale per /login
+  | 'LOGIN_LATERALE';
 
 
 export interface SaturnoPoseConfig {
@@ -29,17 +30,24 @@ export class SaturnoPosizioniService {
       },
     },
 
-    WELCOME_BASSO: {
-
-      position: { x: 3.1, y: -3.4, z: 0 },
-      scale: { x: 3.8, y: 3.8, z: 3.8 },
-      rotation: {
-        x: THREE.MathUtils.degToRad(1),
-        y: THREE.MathUtils.degToRad(41),
-        z: THREE.MathUtils.degToRad(-28),
-      },
-    },
-
+   WELCOME_BASSO: {
+  position: { x: 3.1, y: -3.4, z: 0 },
+  scale: { x: 3.8, y: 3.8, z: 3.8 },
+  rotation: {
+    x: THREE.MathUtils.degToRad(1),
+    y: THREE.MathUtils.degToRad(41),
+    z: THREE.MathUtils.degToRad(-28),
+  },
+},
+REGISTRAZIONE_BASSO: {
+  position: { x: 3.04, y: -4.11, z: 0 },
+  scale: { x: 3.8, y: 3.8, z: 3.8 },
+  rotation: {
+    x: THREE.MathUtils.degToRad(1),
+    y: THREE.MathUtils.degToRad(41),
+    z: THREE.MathUtils.degToRad(-28),
+  },
+},
   LOGIN_LATERALE: {
       position: { x: -1.5, y: -0.3, z: 0.25 },
       scale: { x: 1.4 , y: 1.2, z: 1.2 },

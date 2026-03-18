@@ -108,6 +108,7 @@ export class SaturnoService {
   // Luce direzionale
   private directionalLight: THREE.DirectionalLight | null = null;
 private skipLoginIntroOnce: boolean = false;
+private skipRegistrazioneIntroOnce: boolean = false;
   // Strumenti di calcolo per il mouse
   private raycaster = new THREE.Raycaster(); //oggetto threejs che concentra l'attenzione sul mouse
   private mouse = new THREE.Vector2(9999, 9999); //mouse non attivo in partenza
@@ -162,6 +163,7 @@ private skipLoginIntroOnce: boolean = false;
     this.transizioneDa404ACatalogo = this.leggiFlagTransizione404Catalogo();
 
 this.skipLoginIntroOnce = this.isPageReload() && this.eRottaLogin(window.location.pathname);
+this.skipRegistrazioneIntroOnce = this.isPageReload() && this.eRottaRegistrazione(window.location.pathname);
 this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
   }
 
@@ -564,39 +566,26 @@ else if (this.eRottaNotFound(url)) {
               );
             });
           }
-      } else if (this.eRottaContatti(url)) {
-          const saturno = document.querySelector('app-saturno') as HTMLElement | null;
-          const sfondo = document.querySelector('app-sfondo') as HTMLElement | null;
-          if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
-          if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
-          if (this.directionalLight && this.directionalLight.intensity < 0.1) {
-            this.directionalLight.intensity = 2.8;
-          }
-          this.animateService.setXNormale();
+      } else if (this.eRottaRegistrazione(url)) {
+  const giaInBasso = this.scene.scale.x > 3;
+  const titoloGiaAlto = this.animateService.isTitoloInPosizioneAlta();
 
-          // Se Saturn è già in LOGIN_LATERALE (il footer ha già animato), snap silenzioso
-          const scl = this.scene!.scale;
-          const pos = this.scene!.position;
-          const giaInLoginLaterale = Math.abs(scl.x - 1.4) < 0.2 && pos.x < -1;
+  if (!titoloGiaAlto) {
+    this.animateService.setXNormale();
+    this.animateService.animateTitoloVersoAltoGlobal();
+  } else {
+    this.animateService.setXNormale();
+  }
 
-          if (giaInLoginLaterale) {
-            // footer ha già animato tutto: snap silenzioso anche per il titolo
-            this.animateService.setTitoloAltoGlobal();
-            this.saturnoPosizioniService.applicaPoseAScena(this.scene!, 'LOGIN_LATERALE');
-            if (this.directionalLight) {
-              this.directionalLight.position.z = 0.1001;
-            }
-          } else {
-            // tasto avanti da welcome (ALTO o BASSO): anima sia Saturn che il titolo
-            this.animateService.animateTitoloVersoAltoGlobal(durata, 0);
-            this.saturnoRouteAnimazioniService.animaVerso(
-              this.scene!,
-              'LOGIN_LATERALE',
-              durata,
-              this.directionalLight || undefined,
-            );
-          }
-        }
+  if (!giaInBasso) {
+    this.saturnoRouteAnimazioniService.animaVerso(
+      this.scene,
+      'REGISTRAZIONE_BASSO',
+      durata,
+      this.directionalLight || undefined
+    );
+  }
+}
 
         this.attivaHoverMouse();
         this.startFixedFPSLoop();
@@ -750,7 +739,25 @@ else if (this.eRottaNotFound(url)) {
 }
 
 
-     if (isNotFoundRoute) {
+      if (this.eRottaRegistrazione(url)) {
+  if (this.skipRegistrazioneIntroOnce) {
+    this.animateService.setXNormale();
+    this.animateService.setTitoloAltoGlobal();
+    this.skipRegistrazioneIntroOnce = false;
+  } else {
+    this.animateService.setXNormale();
+    this.animateService.animateTitoloVersoAltoGlobal();
+  }
+  // Saturn anima sempre — come login che chiama sempre animaVerso anche su F5
+ this.saturnoRouteAnimazioniService.animaVerso(
+    scene,
+    'REGISTRAZIONE_BASSO',
+    0.9,
+    this.directionalLight || undefined
+  );
+}
+
+        if (isNotFoundRoute) {
   this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
   this.animateService.setXNormale();
   this.animateService.setTitoloAltoGlobal();
@@ -1262,19 +1269,21 @@ else if (this.eRottaNotFound(url)) {
     return /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(u);
   }
 
-  private eRottaWelcome(url: string): boolean {
-    const u = String(url || '');
-    return (
-      u === '/it/benvenuto' ||
-      u.startsWith('/it/benvenuto/') ||
-      u === '/en/benvenuto' ||
-      u.startsWith('/en/benvenuto/') ||
-      u === '/it/welcome' ||
-      u.startsWith('/it/welcome/') ||
-      u === '/en/welcome' ||
-      u.startsWith('/en/welcome/')
-    );
-  }
+ private eRottaWelcome(url: string): boolean {
+  const u = String(url || '').split('?')[0].split('#')[0];
+  // registrazione e login sono sotto /benvenuto/ ma hanno comportamento proprio
+  if (this.eRottaLogin(u) || this.eRottaRegistrazione(u)) return false;
+  return (
+    u === '/it/benvenuto' ||
+    u.startsWith('/it/benvenuto/') ||
+    u === '/en/benvenuto' ||
+    u.startsWith('/en/benvenuto/') ||
+    u === '/it/welcome' ||
+    u.startsWith('/it/welcome/') ||
+    u === '/en/welcome' ||
+    u.startsWith('/en/welcome/')
+  );
+}
 
   private eRottaLogin(url: string): boolean {
     const path = String(url || '')
@@ -1307,6 +1316,14 @@ else if (this.eRottaNotFound(url)) {
   private eRottaContatti(url: string): boolean {
     const path = String(url || '').split('?')[0].split('#')[0];
     return /^\/(it|en)\/(contatti|contact)(\/|$)/.test(path);
+  }
+
+  private eRottaRegistrazione(url: string): boolean {
+    const path = String(url || '').split('?')[0].split('#')[0];
+    return (
+      /^\/(it|en)\/benvenuto\/registrazione(\/|$)/.test(path) ||
+      /^\/(it|en)\/welcome\/registration(\/|$)/.test(path)
+    );
   }
 
 

@@ -144,8 +144,8 @@ this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
 
     // Qui decido se mostrare il loader e se caricare il carosello in base all'URL, e mi aggancio ai cambi rotta per aggiornare tutto durante la navigazione
                this.caricamentoDisabilitato =
-  /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(urlIniziale) ||
-  /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(urlIniziale) ||
+  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(urlIniziale) ||
+  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(urlIniziale) ||
   /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale);
     this.caricamentoDisabilitato$.next(this.caricamentoDisabilitato); // Propago subito lo stato del loader disabilitato nello stream
 
@@ -183,17 +183,18 @@ if (!this.isContattiUrl(url)) {
         salvaPathInSessionStorage(url);
         this.aggiornaVisibilitaSfondo404();
         this.gestisciFadeInSfondo404();
-           if (
-  /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(url) ||
-  /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(url)
+
+if (
+  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(url) ||
+  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(url)
 ) {
   this.toastService.chiudi('toast_benvenuto');
 }
 
         // Qui aggiorno le regole del loader e del carosello ad ogni navigazione, poi gestisco un toast di 'bentornato' e mi metto in ascolto degli errori fatali
-                const sonoNelLogin =
-  /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(url) ||
-  /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(url);
+             const sonoNelLogin =
+  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(url) ||
+  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(url);
 
   const sonoInNonTrovato =
   /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
@@ -206,8 +207,8 @@ if (!sonoInNonTrovato) {
   this.toastService.chiudi(this.chiaveToast404);
 }
 const eroNelLogin =
-  /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(precedente) ||
-  /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(precedente);
+  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(precedente) ||
+  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(precedente);
 
   const eroInNonTrovato =
   /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(precedente);
