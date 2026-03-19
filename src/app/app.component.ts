@@ -419,10 +419,13 @@ this.caricamentoDisabilitato$.next(disabilitaLoader);
           }
         }
 
-        if (caricamentoDisabilitato) {
-          // Se il caricamento è disabilitato
-          this.loaderVisibile = false; // Nascondo direttamente il loader
-        }
+       if (caricamentoDisabilitato) {
+  if (!this.schedaProntaService.loaderGlobalmenteNascosto) {
+    this.schedaProntaService.loaderGlobalmenteNascosto = true;
+    window.dispatchEvent(new CustomEvent('loader-hidden'));
+  }
+  this.loaderVisibile = false;
+}
 
         if (
           // Controllo se posso far sparire definitivamente il loader
