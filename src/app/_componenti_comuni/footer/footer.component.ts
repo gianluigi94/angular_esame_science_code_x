@@ -25,14 +25,16 @@ export class FooterComponent {
     return !!this.authService.leggiObsAuth().value?.tk;
   }
 
- tornaIndietro(event: Event): void {
-  event.preventDefault();
-  if (this.is404Route) {
-    this.router.navigate(['/']).then(() => window.location.reload());
-  } else {
-    window.history.back();
+  tornaIndietro(event: Event): void {
+    event.preventDefault();
+    if (this.is404Route) {
+      this.router.navigate(['/']).then(() => window.location.reload());
+    } else if (sessionStorage.getItem('vengo_da_registrazione')) {
+      this.router.navigate(['/']);
+    } else {
+      window.history.back();
+    }
   }
-}
   onContattiClick(event: Event): void {
     event.preventDefault();
     this.contattiNav.vai();

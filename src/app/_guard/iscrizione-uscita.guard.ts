@@ -4,7 +4,7 @@ import { IscrizioneComponent } from '../_benvenuto/iscrizione/iscrizione.compone
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
 import { ScrollWelcomeService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scroll-welcome.service';
-
+import gsap from 'gsap';
 @Injectable({ providedIn: 'root' })
 export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent> {
 
@@ -45,27 +45,36 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
       /^\/(it|en)?\/?(benvenuto|welcome)(\/|$)/.test(pathPulito);
 
     if (vaInBenvenuto) {
-      sessionStorage.removeItem('welcome_restore');
-      sessionStorage.removeItem('welcome_scrollTop');
+  sessionStorage.removeItem('welcome_restore');
+  sessionStorage.removeItem('welcome_scrollTop');
 
-      const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
-      if (scroller) scroller.scrollTop = 0;
+  const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
+  if (scroller) scroller.scrollTop = 0;
 
-    const scene = this.saturnoService.getScene();
-      const light = this.saturnoService.getDirectionalLight();
+  const scene = this.saturnoService.getScene();
+  const light = this.saturnoService.getDirectionalLight();
 
-      this.animateService.setXGif();
-      this.animateService.animateTitoloVersoCentroGlobal(1.25, 0);
+  this.animateService.setXGif();
+  this.animateService.animateTitoloVersoCentroGlobal(1.25, 0);
 
-      // usa la stessa curva sinusoidale dello scroll (giro largo), non la retta diretta
-      if (scene && light) {
-        this.scrollWelcomeService.animaRitornoVersoAlto(scene, light, 1.05);
-      }
+  if (scene && light) {
+    this.scrollWelcomeService.animaRitornoVersoAlto(scene, light, 1.05);
+  }
 
-      return new Promise<boolean>((resolve) => {
-        setTimeout(() => resolve(true), 1300); // 870ms di durata + 80ms di buffer
-      });
-    }
+  const footer = document.querySelector('footer') as HTMLElement | null;
+  if (footer) {
+    gsap.to(footer, { scaleY: 0, opacity: 0, duration: 0.25, delay: 0.25, ease: 'power2.in' });
+  }
+
+  const footerP = document.querySelector('#footer-p') as HTMLElement | null;
+  if (footerP) {
+    gsap.to(footerP, { opacity: 0, duration: 0.2, ease: 'power1.in' });
+  }
+
+  return new Promise<boolean>((resolve) => {
+    setTimeout(() => resolve(true), 1300);
+  });
+}
 
     return component.animaUscita().then(() => true);
   }

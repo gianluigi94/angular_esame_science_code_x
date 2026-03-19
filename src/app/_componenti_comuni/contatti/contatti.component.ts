@@ -7,6 +7,7 @@ import { Subscription, take } from 'rxjs';
 import gsap from 'gsap';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-contatti',
   templateUrl: './contatti.component.html',
@@ -27,6 +28,7 @@ public sonoLoggato = false;
     private contattiAnimazioni: ContattiAnimazioniService,
     private apiService: ApiService,
     private cambioLingua: CambioLinguaService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -52,8 +54,11 @@ public sonoLoggato = false;
     );
   }
 
-  ngAfterViewInit(): void {
+    ngAfterViewInit(): void {
     sessionStorage.setItem('vengo_da_contatti', 'true');
+    if (sessionStorage.getItem('pagina_registrazione')) {
+      sessionStorage.setItem('vengo_da_registrazione', 'true');
+    }
     UtilityService.nascondiSottotitoloEScrol();
         if (this.contattiContenuto?.nativeElement) {
            this.contattiAnimazioni.preparaStatoIniziale(
@@ -108,9 +113,13 @@ if (this.sonoLoggato) return;
       this.contattiAnimazioni.animaIngresso(this.contattiContenuto.nativeElement);
     });
   }
-    tornaIndietro(): void {
-  window.history.back();
-}
+   tornaIndietro(): void {
+    if (sessionStorage.getItem('vengo_da_registrazione')) {
+      this.router.navigate(['/']);
+      return;
+    }
+    window.history.back();
+  }
 
 animaUscita(): Promise<void> {
   if (!this.contattiContenuto?.nativeElement) return Promise.resolve();

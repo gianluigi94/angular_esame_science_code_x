@@ -118,6 +118,22 @@ export function salvaPathInSessionStorage(url: string): void {
       }, 500);
     }
 
+    const eraRegistrazione = /^\/(it\/benvenuto\/registrazione|en\/welcome\/registration)(\/|$)/.test(last);
+    const oraRegistrazione = /^\/(it\/benvenuto\/registrazione|en\/welcome\/registration)(\/|$)/.test(pathPulito);
+    if (eraRegistrazione && !oraRegistrazione) {
+      setTimeout(() => {
+        sessionStorage.removeItem('pagina_registrazione');
+      }, 500);
+    }
+
+    const eraContatti2 = /^\/(it\/contatti|en\/contact)(\/|$)/.test(last);
+    const oraContatti2 = /^\/(it\/contatti|en\/contact)(\/|$)/.test(pathPulito);
+    if (eraContatti2 && !oraContatti2) {
+      setTimeout(() => {
+        sessionStorage.removeItem('vengo_da_registrazione');
+      }, 500);
+    }
+
     sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito);
   } catch {}
 }

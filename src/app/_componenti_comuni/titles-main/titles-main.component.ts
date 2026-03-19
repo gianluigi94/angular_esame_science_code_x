@@ -87,7 +87,11 @@ async onLogoClick(ev: MouseEvent): Promise<void> {
   ev.stopPropagation();
 
   if (this.isContactRoute) {
-    window.history.back();
+    if (sessionStorage.getItem('vengo_da_registrazione')) {
+      this.router.navigate(['/']);
+    } else {
+      window.history.back();
+    }
     return;
   }
 
