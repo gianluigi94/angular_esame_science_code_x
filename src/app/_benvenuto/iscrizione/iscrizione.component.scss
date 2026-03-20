@@ -32,7 +32,17 @@ h2 {
   .riga-doppia {
     display: flex;
     flex-direction: row;
-    gap: 16px;
+    gap: 36px;
+    position: relative;
+    z-index: 1;
+
+    &:nth-child(2) {
+      z-index: 3;
+    }
+
+    &:nth-child(3) {
+      z-index: 2;
+    }
   }
 
   .campo-wrapper {
@@ -62,9 +72,8 @@ h2 {
     width: fit-content;
   }
 
-  // Input testo
-  input[type="text"],
-  input[type="date"] {
+// Input testo
+  input[type="text"] {
     width: 400px;
     height: 47px;
     background: #000000df;
@@ -82,6 +91,184 @@ h2 {
     }
   }
 
+  // Data custom
+  .data-custom {
+    display: flex;
+    align-items: center;
+    width: 400px;
+    height: 47px;
+    background: #000000df;
+    border-radius: 7px;
+    box-shadow: 0 0 8px #999da0;
+    padding: 0 10px;
+    gap: 4px;
+
+    &:focus-within {
+      box-shadow: 0 0 4px orange;
+    }
+
+    .data-label-piccola {
+      display: none;
+      position: absolute;
+      left: 10px;
+      top: 43px;
+      font-size: 12px;
+      color: #4f5050;
+      font-family: "Quantico", serif;
+      font-weight: bolder;
+      pointer-events: none;
+    }
+
+    &.data-compilata .data-label-piccola {
+      display: block;
+    }
+
+    .data-sep {
+      color: #6b6e6e;
+      font-family: "Quantico", serif;
+      font-size: 18px;
+      font-weight: bold;
+      user-select: none;
+    }
+
+   .data-parte {
+      background: transparent;
+      border: none;
+      outline: none;
+      box-shadow: none !important;
+      font-family: "Quantico", serif;
+      font-size: 18px;
+      color: #4f5050;
+      width: 28px;
+      padding: 0;
+      text-align: center;
+      caret-color: aliceblue;
+      transition: margin-top 0.15s ease;
+
+      &::placeholder {
+        color: #4f5050;
+      }
+
+      &:focus,
+      &:not(:placeholder-shown) {
+        color: rgb(205, 205, 205);
+        box-shadow: none !important;
+        outline: none !important;
+      }
+    }
+   .data-anno {
+      width: 48px;
+    }
+
+    &.data-compilata .data-parte,
+    &.data-compilata .data-sep {
+      margin-top: 16px;
+    }
+  }
+
+  .btn-calendario {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 32px;
+
+    &:hover svg {
+      fill: orange;
+      transition: fill 0.2s ease;
+    }
+  }
+.sesso-custom {
+    position: relative;
+    width: 400px;
+
+    .sesso-selected {
+      z-index: 100;
+
+      width: 100%;
+      height: 47px;
+      background: #000000df;
+      border-radius: 7px;
+      box-shadow: 0 0 8px #999da0;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-family: "Quantico", serif;
+      font-size: 18px;
+      color: rgb(205, 205, 205);
+
+      &.aperto {
+        box-shadow: 0 0 4px orange;
+      }
+
+      .placeholder {
+        color: #4f5050;
+      }
+
+      .sesso-label-piccola {
+        display: none;
+        position: absolute;
+        left: 12px;
+        top: 6px;
+        font-size: 12px;
+        color: #4f5050;
+        font-family: "Quantico", serif;
+        font-weight: bolder;
+        pointer-events: none;
+      }
+
+      &.compilato .sesso-label-piccola {
+        display: block;
+      }
+
+      &.compilato span:not(.sesso-label-piccola) {
+        margin-top: 16px;
+        transition: margin-top 0.15s ease;
+      }
+
+      svg {
+        flex-shrink: 0;
+      }
+    }
+
+  .sesso-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      background: #1a1a1a;
+      border-radius: 7px;
+      box-shadow: 0 0 8px #999da0;
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #e79c50 transparent;
+    }
+
+    .sesso-opzione {
+      padding: 12px 16px;
+      font-family: "Quantico", serif;
+      font-size: 18px;
+      color: rgb(205, 205, 205);
+      cursor: pointer;
+      transition: background 0.15s ease;
+
+      &:hover {
+        background: #2a2a3a;
+        color: orange;
+      }
+    }
+  }
   // Select
   select {
     width: 400px;
@@ -166,4 +353,7 @@ h2 {
   justify-content: center;
   height: 100vh;
   width: 100vw;
+}
+#data_mm{
+  margin-right: 2px!important;
 }

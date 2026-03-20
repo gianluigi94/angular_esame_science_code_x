@@ -1,4 +1,7 @@
-import { NgModule } from '@angular/core';
+import { NgModule, LOCALE_ID } from '@angular/core';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { registerLocaleData } from '@angular/common';
+import localeIt from '@angular/common/locales/it';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -10,6 +13,8 @@ import { AuthInterceptor } from './_interceptor/auth.interceptor';
 import { TranslateModule } from '@ngx-translate/core';
 import { ComponentiComuniModule } from './_componenti_comuni/componenti-comuni.module';
 import { ErroreHttpInterceptor } from './_interceptor/errore-http.interceptor';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+registerLocaleData(localeIt);
 @NgModule({
   declarations: [
     AppComponent,
@@ -20,15 +25,17 @@ import { ErroreHttpInterceptor } from './_interceptor/errore-http.interceptor';
     ReactiveFormsModule,
     HttpClientModule, //per ngx-translate
     TranslateModule.forRoot(), //istanza principale di TranslateModule
-    ComponentiComuniModule,//importo il modulo con elementi riutilizzabili
+    ComponentiComuniModule, BrowserAnimationsModule,//importo il modulo con elementi riutilizzabili
   ],
    // L'ho usato per registrare i miei HTTP Interceptors: così ogni chiamata fatta con HttpClient passa da qui, e posso aggiungere automaticamente il token di autenticazione e gestire gli errori in modo centralizzato.
 providers: [
+  { provide: MAT_DATE_LOCALE, useValue: 'it-IT' },
   {
-    provide: HTTP_INTERCEPTORS, // Dico ad Angular che sto aggiungendo un interceptor alla "lista" degli HTTP interceptors
+    provide: HTTP_INTERCEPTORS,
     useClass: AuthInterceptor,  // Uso questa classe: qui inserisco la logica per aggiungere il token / header di auth alle richieste
     multi: true,                // Lo aggiungo insieme agli altri interceptor (non voglio sostituire quelli già registrati)
   },
+  { provide: LOCALE_ID, useValue: 'it-IT' },
   {
     provide: HTTP_INTERCEPTORS,      // Aggiungo un altro interceptor nella stessa lista di HTTP interceptors
     useClass: ErroreHttpInterceptor, // Uso questa classe: qui intercetto e gestisco gli errori HTTP (es. 401, 403, 500)
