@@ -5,3 +5,165 @@ app-footer {
   left: 0;
   bottom: 0px;
 }
+
+.form-registrazione {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  margin-top: -50px;
+  gap: 20px;
+
+h2 {
+    color: aliceblue;
+                text-shadow: 1px 1px 3px #14110a;
+
+
+    font-size: 42px;
+    font-family: "Quantico", serif;
+    align-self: center;
+    margin-bottom: 40px;
+
+    span {
+      font-size: 32px;
+    }
+  }
+
+  // Due campi affiancati
+  .riga-doppia {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .campo-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .label-sopra {
+    font-size: 24px;
+    width: fit-content;
+    font-family: "Quantico", serif;
+    color: aliceblue;
+    font-weight: bolder;
+        text-shadow: 1px 1px 3px #14110a;
+
+    .label-opzionale {
+      font-size: 14px;
+      color: #999;
+      font-weight: normal;
+      margin-left: 6px;
+    }
+  }
+
+  .campo-form {
+    position: relative;
+    width: fit-content;
+  }
+
+  // Input testo
+  input[type="text"],
+  input[type="date"] {
+    width: 400px;
+    height: 47px;
+    background: #000000df;
+    border: none;
+    border-radius: 7px;
+    font-size: 18px;
+    padding: 18px 10px 0 10px;
+    color: rgb(205, 205, 205);
+    box-shadow: 0 0 8px #999da0;
+    font-family: "Quantico", serif;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 4px orange !important;
+    }
+  }
+
+  // Select
+  select {
+    width: 400px;
+    height: 47px;
+    background: #000000df;
+    border: none;
+    border-radius: 7px;
+    font-size: 18px;
+    padding: 0 10px;
+    color: rgb(205, 205, 205);
+    box-shadow: 0 0 8px #999da0;
+    font-family: "Quantico", serif;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c4c4c4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 4px orange !important;
+    }
+
+    option {
+      background: #1a1a1a;
+      color: rgb(205, 205, 205);
+    }
+  }
+
+  // Floating label
+  .campo-form label {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    pointer-events: none;
+    transition: top 0.15s ease, transform 0.15s ease, font-size 0.15s ease, color 0.15s ease;
+    font-family: "Quantico", serif;
+    color: #4f5050;
+    font-weight: bolder;
+  }
+
+  .campo-form input:focus ~ label,
+  .campo-form input:not(:placeholder-shown) ~ label {
+    top: 4px;
+    transform: translateY(0);
+    font-size: 12px;
+  }
+
+  .campo-centrato {
+    align-self: center;
+  }
+  .avanti_btn {
+    width: 155px;
+    height: 47px;
+    font-size: 18px;
+    border: none;
+    background: linear-gradient(135deg, #e79c50, #c97a2b);
+    color: white;
+    box-shadow: 0 0 8px #999da0;
+    font-weight: 600;
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 7px;
+    cursor: pointer;
+    align-self: flex-end;
+    font-family: "Quantico", serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.registrazione-contenuto {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+}
