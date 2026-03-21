@@ -28,6 +28,7 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   nazioni: any[] = [];
   comuni: any[] = [];
   private datepicker: any;
+  private datepickerAperto = false;
 
   constructor(
     public cambioLinguaService: CambioLinguaService,
@@ -35,13 +36,11 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     private eRef: ElementRef
   ) {}
 
-  @HostListener('document:click', ['$event'])
-  chiudiDropdown(event: Event): void {
-    if (!this.eRef.nativeElement.contains(event.target)) {
-      this.sessoAperto = false;
-      this.paeseAperto = false;
-      this.comuneAperto = false;
-    }
+ @HostListener('document:click')
+  chiudiDropdown(): void {
+    this.sessoAperto = false;
+    this.paeseAperto = false;
+    this.comuneAperto = false;
   }
 
   ngOnInit(): void {
@@ -82,6 +81,9 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
       weekStart: 1,
     });
 
+    input.addEventListener('show', () => { console.log('📅 datepicker SHOW'); this.datepickerAperto = true; });
+    input.addEventListener('hide', () => { console.log('📅 datepicker HIDE'); this.datepickerAperto = false; });
+
     input.addEventListener('changeDate', (e: any) => {
       const data: Date = e.detail.date;
       if (!data) return;
@@ -94,10 +96,12 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  apriDatepicker(): void {
-    this.datepicker?.show();
+ apriDatepicker(event: Event): void {
+    if (!this.datepicker) return;
+    event.stopPropagation();
+    console.log('🖱️ click bottone — datepickerAperto:', this.datepickerAperto, '| .active:', this.datepicker.active);
+    this.datepickerAperto ? this.datepicker.hide() : this.datepicker.show();
   }
-
   private animaEntrata(): void {
     const titolo = document.querySelector('.titolo-animato') as HTMLElement;
     const labels = document.querySelectorAll('.label-sopra');
@@ -142,6 +146,24 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   selezionaComune(valore: string): void {
     this.comuneValore = valore;
     this.comuneAperto = false;
+  }
+
+toggleSesso(event: Event): void {
+    event.stopPropagation();
+    this.sessoAperto = !this.sessoAperto;
+    if (this.sessoAperto) { this.paeseAperto = false; this.comuneAperto = false; }
+  }
+
+  togglePaese(event: Event): void {
+    event.stopPropagation();
+    this.paeseAperto = !this.paeseAperto;
+    if (this.paeseAperto) { this.sessoAperto = false; this.comuneAperto = false; }
+  }
+
+  toggleComune(event: Event): void {
+    event.stopPropagation();
+    this.comuneAperto = !this.comuneAperto;
+    if (this.comuneAperto) { this.sessoAperto = false; this.paeseAperto = false; }
   }
 
   soloNumeri(event: KeyboardEvent): void {

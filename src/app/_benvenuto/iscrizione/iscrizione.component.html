@@ -44,7 +44,7 @@
 
           <input id="datepicker-input" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
 
-          <button type="button" class="btn-calendario" (click)="apriDatepicker()">
+          <button type="button" class="btn-calendario" (mousedown)="$event.stopPropagation()" (click)="apriDatepicker($event)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#c4c4c4">
               <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11ZM5 7V6h14v1H5Z"/>
             </svg>
@@ -54,19 +54,19 @@
 
       <div class="campo-wrapper">
         <p class="label-sopra">Sesso</p>
-        <div class="sesso-custom">
-          <div class="sesso-selected" (click)="sessoAperto = !sessoAperto"
+        <div class="select-custom">
+          <div class="select-header" (click)="toggleSesso($event)"
             [class.aperto]="sessoAperto" [class.compilato]="sessoValore">
-            <span class="sesso-label-piccola">Sesso</span>
+            <span class="select-label-piccola">Sesso</span>
             <span [class.placeholder]="!sessoValore">{{ sessoLabel() }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
               <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
             </svg>
           </div>
-          <div class="sesso-dropdown" *ngIf="sessoAperto">
-            <div class="sesso-opzione" (click)="selezionaSesso('M')">Maschio</div>
-            <div class="sesso-opzione" (click)="selezionaSesso('F')">Femmina</div>
-            <div class="sesso-opzione" (click)="selezionaSesso('NS')">Non specificato</div>
+          <div class="select-dropdown" *ngIf="sessoAperto">
+            <div class="select-opzione" (click)="selezionaSesso('M')">Maschio</div>
+            <div class="select-opzione" (click)="selezionaSesso('F')">Femmina</div>
+            <div class="select-opzione" (click)="selezionaSesso('NS')">Non specificato</div>
           </div>
         </div>
       </div>
@@ -78,17 +78,19 @@
 
       <div class="campo-wrapper">
         <p class="label-sopra">Paese di nascita</p>
-        <div class="sesso-custom">
-          <div class="sesso-selected" (click)="paeseAperto = !paeseAperto"
-            [class.aperto]="paeseAperto" [class.compilato]="paeseValore">
-            <span class="sesso-label-piccola">Paese</span>
-            <span [class.placeholder]="!paeseValore">{{ paeseLabel() }}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
-            </svg>
-          </div>
-          <div class="sesso-dropdown" *ngIf="paeseAperto">
-            <div class="sesso-opzione" *ngFor="let n of nazioni"
+        <div class="select-custom">
+          <div class="select-header" (click)="togglePaese($event)"
+  [class.aperto]="paeseAperto" [class.compilato]="paeseValore">
+  <span class="select-label-piccola">Paese</span>
+  <input class="select-input-testo" type="text" placeholder="Seleziona paese"
+    [value]="paeseValore ? paeseLabel() : ''"
+    (click)="togglePaese($event)" />
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+    <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+  </svg>
+</div>
+          <div class="select-dropdown" *ngIf="paeseAperto">
+            <div class="select-opzione" *ngFor="let n of nazioni"
               (click)="selezionaPaese(n.iso)">
               {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
             </div>
@@ -98,17 +100,19 @@
 
       <div class="campo-wrapper">
         <p class="label-sopra">Comune di nascita</p>
-        <div class="sesso-custom">
-          <div class="sesso-selected" (click)="comuneAperto = !comuneAperto"
+        <div class="select-custom">
+          <div class="select-header" (click)="toggleComune($event)"
             [class.aperto]="comuneAperto" [class.compilato]="comuneValore">
-            <span class="sesso-label-piccola">Comune</span>
-            <span [class.placeholder]="!comuneValore">{{ comuneLabel() }}</span>
+            <span class="select-label-piccola">Comune</span>
+<input class="select-input-testo" type="text" placeholder="Seleziona comune"
+  [value]="comuneValore ? comuneLabel() : ''"
+  (click)="toggleComune($event)" />
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
               <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
             </svg>
           </div>
-          <div class="sesso-dropdown" *ngIf="comuneAperto">
-            <div class="sesso-opzione" *ngFor="let c of comuni"
+          <div class="select-dropdown" *ngIf="comuneAperto">
+            <div class="select-opzione" *ngFor="let c of comuni"
               (click)="selezionaComune(c.comune)">
               {{ c.comune }}
             </div>
