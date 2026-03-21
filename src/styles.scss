@@ -77,3 +77,52 @@ app-main {
 strong {
   color: rgb(199, 174, 128);
 }
+
+
+
+.datepicker-picker{
+  border-radius: 10px!important;
+  padding: 10px;
+  background-color: transparent!important;
+  font-family: "Quantico", serif !important;
+    box-shadow: 0 0 8px #999da0!important;
+    background: #000000ec!important;
+
+}
+.datepicker-header{
+    background-color: #000000ec!important;
+    padding-bottom: 10px!important;
+    button{
+      background-color: transparent!important;
+    color: aliceblue !important;
+&:hover{
+    color: rgb(225, 104, 23) !important;
+
+}
+    }
+    .view-switch{
+  background-color: #151515!important;
+  color: white!important;
+}
+}
+.datepicker-cell {
+  color: white !important;
+
+  &:hover {
+    color: rgb(225, 104, 23) !important;
+    background: #1a1a1a !important;
+  }
+
+  &.focused {
+    color: rgb(225, 104, 23) !important;
+    background: #373737 !important;
+  }
+}
+.datepicker-cell.prev,
+.datepicker-cell.next {
+  color: #4f5050 !important;
+}
+.days-of-week{
+    color: #2a4f67 !important;
+
+}

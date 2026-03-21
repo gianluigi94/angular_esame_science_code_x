@@ -4,7 +4,9 @@ import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.serv
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { Subscription } from 'rxjs';
 import gsap from 'gsap';
-
+import { Datepicker } from 'vanillajs-datepicker';
+import it from 'vanillajs-datepicker/locales/it';
+(Datepicker as any).locales.it = (it as any).it;
 const CHIAVE_PAGINA_REGISTRAZIONE = 'pagina_registrazione';
 
 @Component({
@@ -25,6 +27,7 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   comuneValore = '';
   nazioni: any[] = [];
   comuni: any[] = [];
+  private datepicker: any;
 
   constructor(
     public cambioLinguaService: CambioLinguaService,
@@ -51,11 +54,48 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     this.apiService.getComuni().subscribe(rit => {
       this.comuni = rit.data ?? [];
     });
+
+    this.subLingua = this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
+      if (this.datepicker) {
+        this.datepicker.setOptions({
+          language: codice === 'it' ? 'it' : 'en',
+        });
+      }
+    });
   }
 
   ngAfterViewInit(): void {
     UtilityService.nascondiSottotitoloEScrol();
     this.animaEntrata();
+    this.inizializzaDatepicker();
+  }
+
+  private inizializzaDatepicker(): void {
+    const input = document.getElementById('datepicker-input') as HTMLInputElement;
+    if (!input) return;
+
+  const lingua = this.cambioLinguaService.leggiCodiceLingua();
+    this.datepicker = new Datepicker(input, {
+      format: 'dd/mm/yyyy',
+      autohide: true,
+      language: lingua === 'it' ? 'it' : 'en',
+      weekStart: 1,
+    });
+
+    input.addEventListener('changeDate', (e: any) => {
+      const data: Date = e.detail.date;
+      if (!data) return;
+      const gg = String(data.getDate()).padStart(2, '0');
+      const mm = String(data.getMonth() + 1).padStart(2, '0');
+      const aaaa = String(data.getFullYear());
+      (document.getElementById('data_gg') as HTMLInputElement).value = gg;
+      (document.getElementById('data_mm') as HTMLInputElement).value = mm;
+      (document.getElementById('data_aaaa') as HTMLInputElement).value = aaaa;
+    });
+  }
+
+  apriDatepicker(): void {
+    this.datepicker?.show();
   }
 
   private animaEntrata(): void {

@@ -41,6 +41,14 @@
           <span class="data-sep">/</span>
           <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
             maxlength="4" inputmode="numeric" (keydown)="soloNumeri($event)" />
+
+          <input id="datepicker-input" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
+
+          <button type="button" class="btn-calendario" (click)="apriDatepicker()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11ZM5 7V6h14v1H5Z"/>
+            </svg>
+          </button>
         </div>
       </div>
 

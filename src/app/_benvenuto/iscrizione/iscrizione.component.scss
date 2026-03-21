@@ -91,7 +91,7 @@ app-footer {
       display: none;
       position: absolute;
       left: 10px;
-      top: 6px;
+      top: 3px;
       font-size: 12px;
       color: #4f5050;
       font-family: "Quantico", serif;
@@ -118,7 +118,7 @@ app-footer {
       outline: none;
       box-shadow: none !important;
       font-family: "Quantico", serif;
-      font-size: 18px;
+      font-size: 17px;
       color: #4f5050;
       width: 28px;
       padding: 0;
@@ -137,6 +137,26 @@ app-footer {
     }
 
     .data-anno { width: 48px; }
+  }
+
+  .btn-calendario {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 32px;
+
+    &:hover svg {
+      fill: orange;
+      transition: fill 0.2s ease;
+    }
   }
 
   .sesso-custom {
@@ -167,7 +187,7 @@ app-footer {
         display: none;
         position: absolute;
         left: 12px;
-        top: 6px;
+        top: 3px;
         font-size: 12px;
         color: #4f5050;
         font-family: "Quantico", serif;
@@ -271,3 +291,5 @@ app-footer {
 }
 
 #data_mm { margin-right: 2px !important; }
+
+
