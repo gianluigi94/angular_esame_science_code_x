@@ -27,6 +27,27 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   comuneValore = '';
   nazioni: any[] = [];
   comuni: any[] = [];
+  filtroNazioni = '';
+  filtroComuni = '';
+  indiceNazione = -1;
+  indiceComune = -1;
+
+get nazioniFiltrate(): any[] {
+    if (!this.filtroNazioni.trim()) return this.nazioni;
+    const f = this.filtroNazioni.toLowerCase();
+    return this.nazioni.filter(n =>
+      (n.nazione_it ?? '').toLowerCase().startsWith(f) ||
+      (n.nazione_en ?? '').toLowerCase().startsWith(f)
+    );
+  }
+
+  get comuniFiltrati(): any[] {
+    if (!this.filtroComuni.trim()) return [];
+    const f = this.filtroComuni.toLowerCase();
+    return this.comuni
+      .filter(c => (c.comune ?? '').toLowerCase().startsWith(f))
+      .slice(0, 50);
+  }
   private datepicker: any;
   private datepickerAperto = false;
 
@@ -134,11 +155,12 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? nazione.nazione_it : nazione.nazione_en;
   }
 
-  selezionaPaese(valore: string): void {
+ selezionaPaese(valore: string): void {
     this.paeseValore = valore;
     this.paeseAperto = false;
+    this.filtroNazioni = '';
+    this.indiceNazione = -1;
   }
-
   comuneLabel(): string {
     return this.comuneValore || 'Seleziona comune';
   }
@@ -146,6 +168,8 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   selezionaComune(valore: string): void {
     this.comuneValore = valore;
     this.comuneAperto = false;
+    this.filtroComuni = '';
+    this.indiceComune = -1;
   }
 
 toggleSesso(event: Event): void {
@@ -154,16 +178,28 @@ toggleSesso(event: Event): void {
     if (this.sessoAperto) { this.paeseAperto = false; this.comuneAperto = false; }
   }
 
-  togglePaese(event: Event): void {
+togglePaese(event: Event): void {
     event.stopPropagation();
     this.paeseAperto = !this.paeseAperto;
-    if (this.paeseAperto) { this.sessoAperto = false; this.comuneAperto = false; }
+    if (this.paeseAperto) {
+      this.sessoAperto = false;
+      this.comuneAperto = false;
+      this.indiceNazione = -1;
+      setTimeout(() => (document.querySelector('.paese-input') as HTMLInputElement)?.focus(), 0);
+    }
+    if (!this.paeseAperto) { this.filtroNazioni = ''; this.indiceNazione = -1; }
   }
 
   toggleComune(event: Event): void {
     event.stopPropagation();
     this.comuneAperto = !this.comuneAperto;
-    if (this.comuneAperto) { this.sessoAperto = false; this.paeseAperto = false; }
+    if (this.comuneAperto) {
+      this.sessoAperto = false;
+      this.paeseAperto = false;
+      this.indiceComune = -1;
+      setTimeout(() => (document.querySelector('.comune-input') as HTMLInputElement)?.focus(), 0);
+    }
+    if (!this.comuneAperto) { this.filtroComuni = ''; this.indiceComune = -1; }
   }
 
   soloNumeri(event: KeyboardEvent): void {
@@ -195,5 +231,43 @@ toggleSesso(event: Event): void {
 
   animaUscita(): Promise<void> {
     return Promise.resolve();
+  }
+
+  navigaPaese(event: KeyboardEvent): void {
+    if (!this.paeseAperto) return;
+    const lista = this.nazioniFiltrate;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.indiceNazione = Math.min(this.indiceNazione + 1, lista.length - 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.indiceNazione = Math.max(this.indiceNazione - 1, -1);
+    } else if (event.key === 'Enter' && this.indiceNazione >= 0) {
+      event.preventDefault();
+      this.selezionaPaese(lista[this.indiceNazione].iso);
+    } else if (event.key === 'Escape') {
+      this.paeseAperto = false;
+      this.filtroNazioni = '';
+      this.indiceNazione = -1;
+    }
+  }
+
+  navigaComune(event: KeyboardEvent): void {
+    if (!this.comuneAperto) return;
+    const lista = this.comuniFiltrati;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.indiceComune = Math.min(this.indiceComune + 1, lista.length - 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.indiceComune = Math.max(this.indiceComune - 1, -1);
+    } else if (event.key === 'Enter' && this.indiceComune >= 0) {
+      event.preventDefault();
+      this.selezionaComune(lista[this.indiceComune].comune);
+    } else if (event.key === 'Escape') {
+      this.comuneAperto = false;
+      this.filtroComuni = '';
+      this.indiceComune = -1;
+    }
   }
 }

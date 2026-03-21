@@ -82,16 +82,19 @@
           <div class="select-header" (click)="togglePaese($event)"
   [class.aperto]="paeseAperto" [class.compilato]="paeseValore">
   <span class="select-label-piccola">Paese</span>
-  <input class="select-input-testo" type="text" placeholder="Seleziona paese"
-    [value]="paeseValore ? paeseLabel() : ''"
-    (click)="togglePaese($event)" />
+ <input class="select-input-testo paese-input" type="text" placeholder="Seleziona paese"
+  [value]="paeseAperto ? filtroNazioni : (paeseValore ? paeseLabel() : '')"
+  (click)="togglePaese($event)"
+  (input)="filtroNazioni = $any($event.target).value; indiceNazione = -1"
+  (keydown)="navigaPaese($event)" />
   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
     <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
   </svg>
 </div>
           <div class="select-dropdown" *ngIf="paeseAperto">
-            <div class="select-opzione" *ngFor="let n of nazioni"
-              (click)="selezionaPaese(n.iso)">
+           <div class="select-opzione" *ngFor="let n of nazioniFiltrate; let i = index"
+  [class.attivo]="i === indiceNazione"
+  (click)="selezionaPaese(n.iso)">
               {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
             </div>
           </div>
@@ -104,16 +107,16 @@
           <div class="select-header" (click)="toggleComune($event)"
             [class.aperto]="comuneAperto" [class.compilato]="comuneValore">
             <span class="select-label-piccola">Comune</span>
-<input class="select-input-testo" type="text" placeholder="Seleziona comune"
-  [value]="comuneValore ? comuneLabel() : ''"
-  (click)="toggleComune($event)" />
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
-            </svg>
+<input class="select-input-testo comune-input" type="text" placeholder="Cerca comune..."
+  [value]="comuneAperto ? filtroComuni : (comuneValore ? comuneLabel() : '')"
+  (click)="toggleComune($event)"
+  (input)="filtroComuni = $any($event.target).value; indiceComune = -1"
+  (keydown)="navigaComune($event)" />
           </div>
           <div class="select-dropdown" *ngIf="comuneAperto">
-            <div class="select-opzione" *ngFor="let c of comuni"
-              (click)="selezionaComune(c.comune)">
+           <div class="select-opzione" *ngFor="let c of comuniFiltrati; let i = index"
+  [class.attivo]="i === indiceComune"
+  (click)="selezionaComune(c.comune)">
               {{ c.comune }}
             </div>
           </div>
