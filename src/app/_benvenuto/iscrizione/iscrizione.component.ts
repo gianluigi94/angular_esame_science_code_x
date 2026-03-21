@@ -22,7 +22,7 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   sessoAperto = false;
   sessoValore = '';
   paeseAperto = false;
-  paeseValore = '';
+  paeseValore = 'IT';
   comuneAperto = false;
   comuneValore = '';
   nazioni: any[] = [];
@@ -39,6 +39,10 @@ get nazioniFiltrate(): any[] {
       (n.nazione_it ?? '').toLowerCase().startsWith(f) ||
       (n.nazione_en ?? '').toLowerCase().startsWith(f)
     );
+  }
+
+  get isItalia(): boolean {
+    return this.paeseValore === 'IT';
   }
 
   get comuniFiltrati(): any[] {
@@ -67,12 +71,18 @@ get nazioniFiltrate(): any[] {
   ngOnInit(): void {
     try { sessionStorage.setItem(CHIAVE_PAGINA_REGISTRAZIONE, '1'); } catch {}
 
-    this.apiService.getNazioni().subscribe(rit => {
-      this.nazioni = rit.data ?? [];
+   this.apiService.getNazioni().subscribe(rit => {
+      const lingua = this.cambioLinguaService.leggiCodiceLingua();
+      this.nazioni = (rit.data ?? []).sort((a: any, b: any) =>
+        (lingua === 'it' ? a.nazione_it : a.nazione_en ?? '')
+          .localeCompare(lingua === 'it' ? b.nazione_it : b.nazione_en ?? '', lingua)
+      );
     });
 
     this.apiService.getComuni().subscribe(rit => {
-      this.comuni = rit.data ?? [];
+      this.comuni = (rit.data ?? []).sort((a: any, b: any) =>
+        (a.comune ?? '').localeCompare(b.comune ?? '', 'it')
+      );
     });
 
     this.subLingua = this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
@@ -148,18 +158,23 @@ get nazioniFiltrate(): any[] {
     this.sessoAperto = false;
   }
 
-  paeseLabel(): string {
+ paeseLabel(): string {
     if (!this.paeseValore) return 'Seleziona paese';
     const nazione = this.nazioni.find(n => n.iso === this.paeseValore);
-    if (!nazione) return this.paeseValore;
+    if (!nazione) return '';
     return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? nazione.nazione_it : nazione.nazione_en;
   }
 
- selezionaPaese(valore: string): void {
+selezionaPaese(valore: string): void {
+    const cambiaTipo = (valore === 'IT') !== (this.paeseValore === 'IT');
     this.paeseValore = valore;
     this.paeseAperto = false;
     this.filtroNazioni = '';
     this.indiceNazione = -1;
+    if (cambiaTipo) {
+      this.comuneValore = '';
+      this.filtroComuni = '';
+    }
   }
   comuneLabel(): string {
     return this.comuneValore || 'Seleziona comune';
@@ -235,12 +250,15 @@ togglePaese(event: Event): void {
 
   navigaPaese(event: KeyboardEvent): void {
     if (!this.paeseAperto) return;
+    const input = event.target as HTMLInputElement;
     const lista = this.nazioniFiltrate;
     if (event.key === 'ArrowDown') {
       event.preventDefault();
+      this.filtroNazioni = input.value;
       this.indiceNazione = Math.min(this.indiceNazione + 1, lista.length - 1);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
+      this.filtroNazioni = input.value;
       this.indiceNazione = Math.max(this.indiceNazione - 1, -1);
     } else if (event.key === 'Enter' && this.indiceNazione >= 0) {
       event.preventDefault();
@@ -251,15 +269,28 @@ togglePaese(event: Event): void {
       this.indiceNazione = -1;
     }
   }
+onInputPaese(event: Event): void {
+    this.filtroNazioni = (event.target as HTMLInputElement).value;
+    this.indiceNazione = -1;
+    if (!this.paeseAperto) this.paeseAperto = true;
+  }
 
+  onInputComune(event: Event): void {
+    this.filtroComuni = (event.target as HTMLInputElement).value;
+    this.indiceComune = -1;
+    if (!this.comuneAperto) this.comuneAperto = true;
+  }
   navigaComune(event: KeyboardEvent): void {
     if (!this.comuneAperto) return;
+    const input = event.target as HTMLInputElement;
     const lista = this.comuniFiltrati;
     if (event.key === 'ArrowDown') {
       event.preventDefault();
+      this.filtroComuni = input.value;
       this.indiceComune = Math.min(this.indiceComune + 1, lista.length - 1);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
+      this.filtroComuni = input.value;
       this.indiceComune = Math.max(this.indiceComune - 1, -1);
     } else if (event.key === 'Enter' && this.indiceComune >= 0) {
       event.preventDefault();
