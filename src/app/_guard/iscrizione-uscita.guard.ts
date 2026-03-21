@@ -61,6 +61,14 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
     this.scrollWelcomeService.animaRitornoVersoAlto(scene, light, 1.05);
   }
 
+  const titolo = document.querySelector('.titolo-animato') as HTMLElement | null;
+  const labels = document.querySelectorAll('.label-sopra');
+  const righe = document.querySelectorAll('.campo-animato');
+
+  if (titolo) gsap.to(titolo, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+  gsap.to(labels, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+  gsap.to(righe, { opacity: 0, scaleX: 0, duration: 0.3, ease: 'power2.in', stagger: 0.05 });
+
   const footer = document.querySelector('footer') as HTMLElement | null;
   if (footer) {
     gsap.to(footer, { scaleY: 0, opacity: 0, duration: 0.25, delay: 0.25, ease: 'power2.in' });

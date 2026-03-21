@@ -328,4 +328,12 @@ public getIntervalloPublicita(): Observable<IRispostaServer> {
 public getProssimaPublicita(): Observable<IRispostaServer> {
   return this.richiestaGenerica(['pubblicita', 'prossima'], 'GET');
 }
+
+ public getNazioni(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['nazioni'], 'GET');
+  }
+
+  public getComuni(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['comuni'], 'GET');
+  }
 }

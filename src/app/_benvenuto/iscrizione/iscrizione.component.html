@@ -1,6 +1,127 @@
 <app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false">
 </app-saturno>
 
-<p>iscrizione works!</p>
+<section class="registrazione-contenuto">
+<form class="form-registrazione">
+
+    <h2 class="titolo-animato">Dati <span>anagrafici</span></h2>
+
+    <!-- RIGA 1: Nome + Cognome -->
+    <div class="riga-doppia campo-animato">
+      <div class="campo-wrapper">
+        <p class="label-sopra">Nome</p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="nome" />
+          <label for="nome">Nome</label>
+        </div>
+      </div>
+      <div class="campo-wrapper">
+        <p class="label-sopra">Cognome</p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="cognome" />
+          <label for="cognome">Cognome</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGA 2: Data di nascita + Sesso -->
+    <div class="riga-doppia campo-animato">
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">Data di nascita</p>
+        <div class="data-custom" [class.data-compilata]="dataCompilata()">
+          <span class="data-label-piccola">gg/mm/aaaa</span>
+          <input type="text" class="data-parte" id="data_gg" placeholder="gg"
+            maxlength="2" inputmode="numeric"
+            (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event)" />
+          <span class="data-sep">/</span>
+          <input type="text" class="data-parte" id="data_mm" placeholder="mm"
+            maxlength="2" inputmode="numeric"
+            (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event)" />
+          <span class="data-sep">/</span>
+          <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
+            maxlength="4" inputmode="numeric" (keydown)="soloNumeri($event)" />
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">Sesso</p>
+        <div class="sesso-custom">
+          <div class="sesso-selected" (click)="sessoAperto = !sessoAperto"
+            [class.aperto]="sessoAperto" [class.compilato]="sessoValore">
+            <span class="sesso-label-piccola">Sesso</span>
+            <span [class.placeholder]="!sessoValore">{{ sessoLabel() }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+          <div class="sesso-dropdown" *ngIf="sessoAperto">
+            <div class="sesso-opzione" (click)="selezionaSesso('M')">Maschio</div>
+            <div class="sesso-opzione" (click)="selezionaSesso('F')">Femmina</div>
+            <div class="sesso-opzione" (click)="selezionaSesso('NS')">Non specificato</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGA 3: Paese + Comune di nascita -->
+    <div class="riga-doppia campo-animato">
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">Paese di nascita</p>
+        <div class="sesso-custom">
+          <div class="sesso-selected" (click)="paeseAperto = !paeseAperto"
+            [class.aperto]="paeseAperto" [class.compilato]="paeseValore">
+            <span class="sesso-label-piccola">Paese</span>
+            <span [class.placeholder]="!paeseValore">{{ paeseLabel() }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+          <div class="sesso-dropdown" *ngIf="paeseAperto">
+            <div class="sesso-opzione" *ngFor="let n of nazioni"
+              (click)="selezionaPaese(n.iso)">
+              {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">Comune di nascita</p>
+        <div class="sesso-custom">
+          <div class="sesso-selected" (click)="comuneAperto = !comuneAperto"
+            [class.aperto]="comuneAperto" [class.compilato]="comuneValore">
+            <span class="sesso-label-piccola">Comune</span>
+            <span [class.placeholder]="!comuneValore">{{ comuneLabel() }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+          <div class="sesso-dropdown" *ngIf="comuneAperto">
+            <div class="sesso-opzione" *ngFor="let c of comuni"
+              (click)="selezionaComune(c.comune)">
+              {{ c.comune }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Codice Fiscale -->
+    <div class="campo-wrapper campo-centrato campo-animato">
+      <p class="label-sopra">Codice Fiscale</p>
+      <div class="campo-form">
+        <input type="text" placeholder=" " id="codice_fiscale" maxlength="16" />
+        <label for="codice_fiscale">Codice Fiscale</label>
+      </div>
+    </div>
+
+    <button class="avanti_btn campo-animato" type="submit">Avanti</button>
+
+  </form>
+</section>
 
 <app-footer></app-footer>
