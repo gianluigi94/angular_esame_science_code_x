@@ -258,21 +258,77 @@ togglePaese(event: Event): void {
     if (!this.comuneAperto) { this.filtroComuni = ''; this.indiceComune = -1; }
   }
 
-  soloNumeri(event: KeyboardEvent, campo?: 'mm' | 'aaaa'): void {
-  const tasti_permessi = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-  if (tasti_permessi.includes(event.key)) {
-    if (event.key === 'Backspace' && campo) {
-      const input = event.target as HTMLInputElement;
-      if (input.value.length === 0) {
-        event.preventDefault();
-        const precedente = campo === 'mm'
-          ? document.getElementById('data_gg')
-          : document.getElementById('data_mm');
-        precedente?.focus();
+soloNumeri(event: KeyboardEvent, campo?: 'gg' | 'mm' | 'aaaa'): void {
+  const input = event.target as HTMLInputElement;
+
+if (event.key === 'Backspace') {
+  if (campo && campo !== 'gg' && input.selectionStart === 0 && input.selectionEnd === 0) {
+    event.preventDefault();
+    const precedente = campo === 'mm'
+      ? document.getElementById('data_gg') as HTMLInputElement
+      : document.getElementById('data_mm') as HTMLInputElement;
+    if (precedente) {
+      precedente.focus();
+      precedente.value = precedente.value.slice(0, -1);
+      const len = precedente.value.length;
+      precedente.setSelectionRange(len, len);
+    }
+  }
+  return;
+}
+
+if (event.key === 'Delete') {
+  if (input.selectionStart === input.value.length && input.selectionEnd === input.value.length) {
+    const successivo = campo === 'gg'
+      ? document.getElementById('data_mm') as HTMLInputElement
+      : campo === 'mm'
+        ? document.getElementById('data_aaaa') as HTMLInputElement
+        : null;
+    if (successivo) {
+      event.preventDefault();
+      successivo.focus();
+      successivo.value = successivo.value.slice(1);
+      successivo.setSelectionRange(0, 0);
+    }
+  }
+  return;
+}
+
+  if (event.key === 'ArrowLeft') {
+    if (input.selectionStart === 0) {
+      event.preventDefault();
+      const precedente = campo === 'mm'
+        ? document.getElementById('data_gg')
+        : campo === 'aaaa'
+          ? document.getElementById('data_mm')
+          : null;
+      if (precedente) {
+        (precedente as HTMLInputElement).focus();
+        const len = (precedente as HTMLInputElement).value.length;
+        (precedente as HTMLInputElement).setSelectionRange(len, len);
       }
     }
     return;
   }
+
+  if (event.key === 'ArrowRight') {
+    if (input.selectionStart === input.value.length) {
+      event.preventDefault();
+      const successivo = campo === 'gg'
+        ? document.getElementById('data_mm')
+        : campo === 'mm'
+          ? document.getElementById('data_aaaa')
+          : null;
+      if (successivo) {
+        (successivo as HTMLInputElement).focus();
+        (successivo as HTMLInputElement).setSelectionRange(0, 0);
+      }
+    }
+    return;
+  }
+
+  if (['Tab'].includes(event.key)) return;
+
   if (!/^\d$/.test(event.key)) event.preventDefault();
 }
 
@@ -405,11 +461,13 @@ onInputPaese(event: Event): void {
   const parziale = (parteCognome + parteNome + parteAnno + parteMese + parteGiorno + codiceCatastale).toUpperCase();
   if (parziale.length !== 15) return;
 
-  const cf = parziale + this.cfControllo(parziale);
-this.cfValore = cf;
-this.cfFlash = false;
-setTimeout(() => { this.cfFlash = true; }, 10);
-setTimeout(() => { this.cfFlash = false; }, 1510);
+ const cf = parziale + this.cfControllo(parziale);
+if (cf !== this.cfValore) {
+  this.cfValore = cf;
+  this.cfFlash = false;
+  setTimeout(() => { this.cfFlash = true; }, 10);
+  setTimeout(() => { this.cfFlash = false; }, 1510);
+}
 }
 svuotaCF(): void {
   this.cfValore = '';

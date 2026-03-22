@@ -31,9 +31,9 @@
         <p class="label-sopra">Data di nascita</p>
         <div class="data-custom" [class.data-compilata]="dataCompilata()" (click)="focusData($event)">
           <span class="data-label-piccola">gg/mm/aaaa</span>
-          <input type="text" class="data-parte" id="data_gg" placeholder="gg"
+         <input type="text" class="data-parte" id="data_gg" placeholder="gg"
   maxlength="2" inputmode="numeric" autocomplete="off"
-  (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event)" />
+  (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event, 'gg')" />
           <span class="data-sep">/</span>
          <input type="text" class="data-parte" id="data_mm" placeholder="mm"
   maxlength="2" inputmode="numeric" autocomplete="off"
