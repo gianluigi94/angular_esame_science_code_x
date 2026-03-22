@@ -2,7 +2,7 @@
 </app-saturno>
 
 <section class="registrazione-contenuto">
-<form class="form-registrazione">
+<form class="form-registrazione" (keydown.enter)="$event.preventDefault()" (keydown.tab)="onTabForm($any($event))">
 
     <h2 class="titolo-animato">Dati <span>anagrafici</span></h2>
 
@@ -11,14 +11,14 @@
       <div class="campo-wrapper">
         <p class="label-sopra">Nome</p>
         <div class="campo-form">
-          <input type="text" placeholder=" " id="nome" (blur)="calcolaCodiceFiscale()" />
+          <input type="text" placeholder=" " id="nome" autocomplete="new-password" (blur)="calcolaCodiceFiscale()" />
           <label for="nome">Nome</label>
         </div>
       </div>
       <div class="campo-wrapper">
         <p class="label-sopra">Cognome</p>
         <div class="campo-form">
-          <input type="text" placeholder=" " id="cognome" (blur)="calcolaCodiceFiscale()" />
+          <input type="text" placeholder=" " id="cognome" autocomplete="new-password" (blur)="calcolaCodiceFiscale()" />
           <label for="cognome">Cognome</label>
         </div>
       </div>
@@ -29,23 +29,23 @@
 
       <div class="campo-wrapper">
         <p class="label-sopra">Data di nascita</p>
-        <div class="data-custom" [class.data-compilata]="dataCompilata()">
+        <div class="data-custom" [class.data-compilata]="dataCompilata()" (click)="focusData($event)">
           <span class="data-label-piccola">gg/mm/aaaa</span>
           <input type="text" class="data-parte" id="data_gg" placeholder="gg"
-            maxlength="2" inputmode="numeric"
-            (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event)" />
+  maxlength="2" inputmode="numeric" autocomplete="off"
+  (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event)" />
           <span class="data-sep">/</span>
-          <input type="text" class="data-parte" id="data_mm" placeholder="mm"
-            maxlength="2" inputmode="numeric"
-            (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event)" />
+         <input type="text" class="data-parte" id="data_mm" placeholder="mm"
+  maxlength="2" inputmode="numeric" autocomplete="off"
+  (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event, 'mm')" />
           <span class="data-sep">/</span>
-          <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
-  maxlength="4" inputmode="numeric"
-  (keydown)="soloNumeri($event)" (blur)="calcolaCodiceFiscale()" />
+         <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
+  maxlength="4" inputmode="numeric" autocomplete="off"
+  (keydown)="soloNumeri($event, 'aaaa')" (blur)="calcolaCodiceFiscale()" />
 
-          <input id="datepicker-input" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
+          <input id="datepicker-input" tabindex="-1" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
 
-          <button type="button" class="btn-calendario" (mousedown)="$event.stopPropagation()" (click)="apriDatepicker($event)">
+          <button type="button" class="btn-calendario" tabindex="-1" (mousedown)="$event.stopPropagation()" (click)="apriDatepicker($event)">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#c4c4c4">
               <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11ZM5 7V6h14v1H5Z"/>
             </svg>
@@ -56,19 +56,22 @@
       <div class="campo-wrapper">
         <p class="label-sopra">Sesso</p>
         <div class="select-custom">
-          <div class="select-header" (click)="toggleSesso($event)"
-            [class.aperto]="sessoAperto" [class.compilato]="sessoValore">
-            <span class="select-label-piccola">Sesso</span>
-            <span [class.placeholder]="!sessoValore">{{ sessoLabel() }}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
-            </svg>
-          </div>
-          <div class="select-dropdown" *ngIf="sessoAperto">
-            <div class="select-opzione" (click)="selezionaSesso('M')">Maschio</div>
-            <div class="select-opzione" (click)="selezionaSesso('F')">Femmina</div>
-            <div class="select-opzione" (click)="selezionaSesso('NS')">Non specificato</div>
-          </div>
+         <div class="select-header" (click)="toggleSesso($event)"
+  (focus)="apriSessoSoloTastiera($event)"
+  (keydown)="navigaSesso($event)"
+  tabindex="0"
+  [class.aperto]="sessoAperto" [class.compilato]="sessoValore">
+  <span class="select-label-piccola">Sesso</span>
+  <span [class.placeholder]="!sessoValore">{{ sessoLabel() }}</span>
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+    <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+  </svg>
+</div>
+<div class="select-dropdown" *ngIf="sessoAperto">
+  <div class="select-opzione" [class.attivo]="indiceSesso === 0" (click)="selezionaSesso('M')">Maschio</div>
+  <div class="select-opzione" [class.attivo]="indiceSesso === 1" (click)="selezionaSesso('F')">Femmina</div>
+  <div class="select-opzione" [class.attivo]="indiceSesso === 2" (click)="selezionaSesso('NS')">Non specificato</div>
+</div>
         </div>
       </div>
 
@@ -83,7 +86,8 @@
           <div class="select-header" (click)="togglePaese($event)"
   [class.aperto]="paeseAperto" [class.compilato]="paeseValore">
   <span class="select-label-piccola">Paese</span>
- <input class="select-input-testo paese-input" type="text" placeholder="Seleziona paese"
+<input class="select-input-testo paese-input" type="text" placeholder="Seleziona paese"
+  autocomplete="off"
   [value]="paeseAperto ? filtroNazioni : (paeseValore ? paeseLabel() : '')"
   (click)="togglePaese($event)"
   (input)="onInputPaese($event)"
@@ -139,13 +143,23 @@
     </div>
 
     <!-- Codice Fiscale -->
-    <div class="campo-wrapper campo-centrato campo-animato">
-      <p class="label-sopra">Codice Fiscale</p>
-      <div class="campo-form">
-        <input type="text" placeholder=" " id="codice_fiscale" maxlength="16" />
-        <label for="codice_fiscale">Codice Fiscale</label>
-      </div>
-    </div>
+    <!-- Codice Fiscale -->
+<div class="campo-wrapper campo-centrato campo-animato">
+  <p class="label-sopra">Codice Fiscale</p>
+  <div class="campo-form">
+   <input type="text" placeholder=" " id="codice_fiscale" maxlength="16"
+  autocomplete="off"
+  [value]="cfValore"
+  [class.cf-flash]="cfFlash"
+  (input)="cfValore = $any($event.target).value; cfFlash = false" />
+    <label for="codice_fiscale">Codice Fiscale</label>
+    <button *ngIf="cfValore" type="button" class="btn-clear-cf" tabindex="-1" (click)="svuotaCF()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#e79c50">
+        <path d="M18 6L6 18M6 6l12 12" stroke="#e79c50" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
 
     <button class="avanti_btn campo-animato" type="submit">Avanti</button>
 

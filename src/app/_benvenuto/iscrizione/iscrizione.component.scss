@@ -308,3 +308,31 @@ svg { flex-shrink: 0; }
 #data_mm { margin-right: 2px !important; }
 
 
+.btn-clear-cf {
+  position: absolute;
+  right: 5px;
+  top: 30%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+
+  &:hover { opacity: 1; }
+}
+
+@keyframes cf-colore-auto {
+  0%   { color: #e79c50; }
+  60%  { color: #e79c50; }
+  100% { color: rgb(205, 205, 205); }
+}
+
+.cf-flash {
+  animation: cf-colore-auto 1.5s ease forwards;
+}

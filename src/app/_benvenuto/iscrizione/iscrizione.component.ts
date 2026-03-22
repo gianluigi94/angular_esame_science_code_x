@@ -19,8 +19,11 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   saltaAnimazioneUscita: boolean = false;
   private subLingua?: Subscription;
 
-  sessoAperto = false;
-  sessoValore = '';
+sessoAperto = false;
+sessoValore = '';
+indiceSesso = -1;
+cfValore = '';
+cfFlash = false;
   paeseAperto = false;
   paeseValore = 'IT';
   comuneAperto = false;
@@ -53,7 +56,8 @@ get nazioniFiltrate(): any[] {
       .slice(0, 50);
   }
   private datepicker: any;
-  private datepickerAperto = false;
+private datepickerAperto = false;
+private _sessoFocusDaTab = false;
 
   constructor(
     public cambioLinguaService: CambioLinguaService,
@@ -153,9 +157,10 @@ get nazioniFiltrate(): any[] {
     return map[this.sessoValore] ?? '';
   }
 
- selezionaSesso(valore: string): void {
+selezionaSesso(valore: string): void {
   this.sessoValore = valore;
   this.sessoAperto = false;
+  this.indiceSesso = -1;
   this.calcolaCodiceFiscale();
 }
  paeseLabel(): string {
@@ -164,7 +169,23 @@ get nazioniFiltrate(): any[] {
     if (!nazione) return '';
     return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? nazione.nazione_it : nazione.nazione_en;
   }
-
+navigaSesso(event: KeyboardEvent): void {
+  const opzioni = ['M', 'F', 'NS'];
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    if (!this.sessoAperto) { this.sessoAperto = true; this.paeseAperto = false; this.comuneAperto = false; }
+    this.indiceSesso = Math.min(this.indiceSesso + 1, opzioni.length - 1);
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    this.indiceSesso = Math.max(this.indiceSesso - 1, 0);
+  } else if (event.key === 'Enter' && this.sessoAperto && this.indiceSesso >= 0) {
+    event.preventDefault();
+    this.selezionaSesso(opzioni[this.indiceSesso]);
+  } else if (event.key === 'Escape') {
+    this.sessoAperto = false;
+    this.indiceSesso = -1;
+  }
+}
 selezionaPaese(valore: string): void {
   const cambiaTipo = (valore === 'IT') !== (this.paeseValore === 'IT');
   this.paeseValore = valore;
@@ -180,7 +201,13 @@ selezionaPaese(valore: string): void {
   comuneLabel(): string {
     return this.comuneValore || 'Seleziona comune';
   }
-
+onTabForm(event: KeyboardEvent): void {
+  const target = event.target as HTMLElement;
+  const precedente = document.getElementById('data_aaaa');
+  if (target === precedente) {
+    this._sessoFocusDaTab = true;
+  }
+}
  selezionaComune(valore: string): void {
   this.comuneValore = valore;
   this.comuneAperto = false;
@@ -190,11 +217,23 @@ selezionaPaese(valore: string): void {
 }
 
 toggleSesso(event: Event): void {
-    event.stopPropagation();
-    this.sessoAperto = !this.sessoAperto;
-    if (this.sessoAperto) { this.paeseAperto = false; this.comuneAperto = false; }
-  }
+  event.stopPropagation();
+  console.log('🔴 toggleSesso — sessoAperto prima:', this.sessoAperto, '→ dopo:', !this.sessoAperto);
+  this.sessoAperto = !this.sessoAperto;
+  if (this.sessoAperto) { this.paeseAperto = false; this.comuneAperto = false; }
+  if (!this.sessoAperto) { this.indiceSesso = -1; }
+}
 
+apriSessoSoloTastiera(_event: FocusEvent): void {
+  console.log('🟡 apriSessoSoloTastiera — _sessoFocusDaTab:', this._sessoFocusDaTab);
+  if (this._sessoFocusDaTab) {
+    this._sessoFocusDaTab = false;
+    this.sessoAperto = true;
+    this.paeseAperto = false;
+    this.comuneAperto = false;
+    console.log('✅ sessoAperto = true via tastiera');
+  }
+}
 togglePaese(event: Event): void {
     event.stopPropagation();
     this.paeseAperto = !this.paeseAperto;
@@ -219,21 +258,48 @@ togglePaese(event: Event): void {
     if (!this.comuneAperto) { this.filtroComuni = ''; this.indiceComune = -1; }
   }
 
-  soloNumeri(event: KeyboardEvent): void {
-    const tasti_permessi = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-    if (tasti_permessi.includes(event.key)) return;
-    if (!/^\d$/.test(event.key)) event.preventDefault();
-  }
-
-  avanzaData(event: Event, campo: 'gg' | 'mm'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.value.length >= 2) {
-      const prossimo = campo === 'gg'
-        ? document.getElementById('data_mm')
-        : document.getElementById('data_aaaa');
-      prossimo?.focus();
+  soloNumeri(event: KeyboardEvent, campo?: 'mm' | 'aaaa'): void {
+  const tasti_permessi = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+  if (tasti_permessi.includes(event.key)) {
+    if (event.key === 'Backspace' && campo) {
+      const input = event.target as HTMLInputElement;
+      if (input.value.length === 0) {
+        event.preventDefault();
+        const precedente = campo === 'mm'
+          ? document.getElementById('data_gg')
+          : document.getElementById('data_mm');
+        precedente?.focus();
+      }
     }
+    return;
   }
+  if (!/^\d$/.test(event.key)) event.preventDefault();
+}
+
+ avanzaData(event: Event, campo: 'gg' | 'mm'): void {
+  const input = event.target as HTMLInputElement;
+  if (input.value.length >= 2) {
+    const prossimo = campo === 'gg'
+      ? document.getElementById('data_mm')
+      : document.getElementById('data_aaaa');
+    prossimo?.focus();
+  }
+}
+
+focusData(event: Event): void {
+  const target = event.target as HTMLElement;
+  // Se ha cliccato su un input o sul bottone calendario, lascia fare normalmente
+  if (target.tagName === 'INPUT' || target.closest('button')) return;
+
+  const gg   = document.getElementById('data_gg')   as HTMLInputElement;
+  const mm   = document.getElementById('data_mm')   as HTMLInputElement;
+  const aaaa = document.getElementById('data_aaaa') as HTMLInputElement;
+
+  if (!gg.value)                          { gg.focus();   return; }
+  if (!mm.value)                          { mm.focus();   return; }
+  if (!aaaa.value || aaaa.value.length < 4) { aaaa.focus(); return; }
+  gg.focus(); // tutto già compilato → torna al primo per correggere
+}
 
   dataCompilata(): boolean {
     const gg = (document.getElementById('data_gg') as HTMLInputElement)?.value;
@@ -340,10 +406,15 @@ onInputPaese(event: Event): void {
   if (parziale.length !== 15) return;
 
   const cf = parziale + this.cfControllo(parziale);
-  const input = document.getElementById('codice_fiscale') as HTMLInputElement;
-  if (input) input.value = cf;
+this.cfValore = cf;
+this.cfFlash = false;
+setTimeout(() => { this.cfFlash = true; }, 10);
+setTimeout(() => { this.cfFlash = false; }, 1510);
 }
-
+svuotaCF(): void {
+  this.cfValore = '';
+  this.cfFlash = false;
+}
 private cfLettere(str: string, isNome: boolean): string {
   // Normalizza: rimuove accenti e caratteri non alfabetici
   const pulita = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
