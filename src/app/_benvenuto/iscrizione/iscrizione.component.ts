@@ -153,11 +153,11 @@ get nazioniFiltrate(): any[] {
     return map[this.sessoValore] ?? '';
   }
 
-  selezionaSesso(valore: string): void {
-    this.sessoValore = valore;
-    this.sessoAperto = false;
-  }
-
+ selezionaSesso(valore: string): void {
+  this.sessoValore = valore;
+  this.sessoAperto = false;
+  this.calcolaCodiceFiscale();
+}
  paeseLabel(): string {
     if (!this.paeseValore) return 'Seleziona paese';
     const nazione = this.nazioni.find(n => n.iso === this.paeseValore);
@@ -166,26 +166,28 @@ get nazioniFiltrate(): any[] {
   }
 
 selezionaPaese(valore: string): void {
-    const cambiaTipo = (valore === 'IT') !== (this.paeseValore === 'IT');
-    this.paeseValore = valore;
-    this.paeseAperto = false;
-    this.filtroNazioni = '';
-    this.indiceNazione = -1;
-    if (cambiaTipo) {
-      this.comuneValore = '';
-      this.filtroComuni = '';
-    }
+  const cambiaTipo = (valore === 'IT') !== (this.paeseValore === 'IT');
+  this.paeseValore = valore;
+  this.paeseAperto = false;
+  this.filtroNazioni = '';
+  this.indiceNazione = -1;
+  if (cambiaTipo) {
+    this.comuneValore = '';
+    this.filtroComuni = '';
   }
+  this.calcolaCodiceFiscale();
+}
   comuneLabel(): string {
     return this.comuneValore || 'Seleziona comune';
   }
 
-  selezionaComune(valore: string): void {
-    this.comuneValore = valore;
-    this.comuneAperto = false;
-    this.filtroComuni = '';
-    this.indiceComune = -1;
-  }
+ selezionaComune(valore: string): void {
+  this.comuneValore = valore;
+  this.comuneAperto = false;
+  this.filtroComuni = '';
+  this.indiceComune = -1;
+  this.calcolaCodiceFiscale();
+}
 
 toggleSesso(event: Event): void {
     event.stopPropagation();
@@ -301,4 +303,78 @@ onInputPaese(event: Event): void {
       this.indiceComune = -1;
     }
   }
+
+  calcolaCodiceFiscale(): void {
+  const nome    = (document.getElementById('nome')     as HTMLInputElement)?.value?.trim() ?? '';
+  const cognome = (document.getElementById('cognome')  as HTMLInputElement)?.value?.trim() ?? '';
+  const gg      = (document.getElementById('data_gg')  as HTMLInputElement)?.value ?? '';
+  const mm      = (document.getElementById('data_mm')  as HTMLInputElement)?.value ?? '';
+  const aaaa    = (document.getElementById('data_aaaa')as HTMLInputElement)?.value ?? '';
+  const sesso   = this.sessoValore;
+
+  // Controllo campi minimi
+  if (!nome || !cognome || gg.length < 2 || mm.length < 2 || aaaa.length < 4 || !sesso) return;
+  if (!this.paeseValore) return;
+  if (this.isItalia && !this.comuneValore) return;
+
+  // Codice catastale
+  let codiceCatastale = '';
+  if (this.isItalia) {
+    const comune = this.comuni.find(c => c.comune === this.comuneValore);
+    codiceCatastale = comune?.codice_belfiore ?? '';
+  } else {
+    const nazione = this.nazioni.find(n => n.iso === this.paeseValore);
+    codiceCatastale = nazione?.codice_belfiore ?? '';
+  }
+  if (!codiceCatastale) return;
+
+  const parteCognome   = this.cfLettere(cognome, false);
+  const parteNome      = this.cfLettere(nome, true);
+  const parteAnno      = aaaa.slice(-2);
+  const meseCodici     = ['A','B','C','D','E','H','L','M','P','R','S','T'];
+  const parteMese      = meseCodici[parseInt(mm, 10) - 1] ?? '';
+  const giornoNum      = parseInt(gg, 10) + (sesso === 'F' ? 40 : 0);
+  const parteGiorno    = String(giornoNum).padStart(2, '0');
+
+  const parziale = (parteCognome + parteNome + parteAnno + parteMese + parteGiorno + codiceCatastale).toUpperCase();
+  if (parziale.length !== 15) return;
+
+  const cf = parziale + this.cfControllo(parziale);
+  const input = document.getElementById('codice_fiscale') as HTMLInputElement;
+  if (input) input.value = cf;
+}
+
+private cfLettere(str: string, isNome: boolean): string {
+  // Normalizza: rimuove accenti e caratteri non alfabetici
+  const pulita = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+  const consonanti = pulita.replace(/[AEIOU]/g, '');
+  const vocali     = pulita.replace(/[^AEIOU]/g, '');
+
+  // Regola speciale per il nome: se ha 4+ consonanti si usano la 1ª, 3ª e 4ª
+  if (isNome && consonanti.length >= 4) {
+    return consonanti[0] + consonanti[2] + consonanti[3];
+  }
+  return (consonanti + vocali + 'XXX').slice(0, 3);
+}
+
+private cfControllo(codice15: string): string {
+  const valoriDispari: Record<string, number> = {
+    '0':1,'1':0,'2':5,'3':7,'4':9,'5':13,'6':15,'7':17,'8':19,'9':21,
+    'A':1,'B':0,'C':5,'D':7,'E':9,'F':13,'G':15,'H':17,'I':19,'J':21,
+    'K':2,'L':4,'M':18,'N':20,'O':11,'P':3,'Q':6,'R':8,'S':12,'T':14,
+    'U':16,'V':10,'W':22,'X':25,'Y':24,'Z':23
+  };
+  let somma = 0;
+  for (let i = 0; i < 15; i++) {
+    const c = codice15[i];
+    if (i % 2 === 0) {
+      // Posizione dispari (1,3,5… in base 1 = indice 0,2,4… in base 0)
+      somma += valoriDispari[c] ?? 0;
+    } else {
+      // Posizione pari
+      somma += /\d/.test(c) ? parseInt(c, 10) : c.charCodeAt(0) - 65;
+    }
+  }
+  return String.fromCharCode((somma % 26) + 65);
+}
 }

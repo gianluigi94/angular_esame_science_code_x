@@ -11,14 +11,14 @@
       <div class="campo-wrapper">
         <p class="label-sopra">Nome</p>
         <div class="campo-form">
-          <input type="text" placeholder=" " id="nome" />
+          <input type="text" placeholder=" " id="nome" (blur)="calcolaCodiceFiscale()" />
           <label for="nome">Nome</label>
         </div>
       </div>
       <div class="campo-wrapper">
         <p class="label-sopra">Cognome</p>
         <div class="campo-form">
-          <input type="text" placeholder=" " id="cognome" />
+          <input type="text" placeholder=" " id="cognome" (blur)="calcolaCodiceFiscale()" />
           <label for="cognome">Cognome</label>
         </div>
       </div>
@@ -40,7 +40,8 @@
             (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event)" />
           <span class="data-sep">/</span>
           <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
-            maxlength="4" inputmode="numeric" (keydown)="soloNumeri($event)" />
+  maxlength="4" inputmode="numeric"
+  (keydown)="soloNumeri($event)" (blur)="calcolaCodiceFiscale()" />
 
           <input id="datepicker-input" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
 
@@ -127,8 +128,9 @@
         <!-- ESTERO: testo libero -->
         <div class="campo-form" *ngIf="!isItalia">
           <input type="text" placeholder=" " id="citta_nascita"
-            [value]="comuneValore"
-            (input)="comuneValore = $any($event.target).value" />
+  [value]="comuneValore"
+  (input)="comuneValore = $any($event.target).value"
+  (blur)="calcolaCodiceFiscale()" />
           <label for="citta_nascita">Inserisci città</label>
         </div>
 
