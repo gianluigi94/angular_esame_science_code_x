@@ -15,12 +15,12 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
     private scrollWelcomeService: ScrollWelcomeService
   ) {}
 
-  canDeactivate(
+async canDeactivate(
     component: IscrizioneComponent,
     _currentRoute: any,
     _currentState: any,
     nextState?: any
-  ): boolean | Promise<boolean> {
+  ): Promise<boolean> {
 
     // cambio lingua: salto tutto, navigo subito
     const nav = this.router.getCurrentNavigation();
@@ -29,7 +29,7 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
       !!nav?.extras?.state?.['saltaAnimazioniLogin'];
 
     if (saltaPerCambioLingua) {
-      return true;
+      return Promise.resolve(true);
     }
 
     const targetUrl =
@@ -47,6 +47,9 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
     if (vaInBenvenuto) {
   sessionStorage.removeItem('welcome_restore');
   sessionStorage.removeItem('welcome_scrollTop');
+
+  component.animaSfocatura(false);
+
 
   const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
   if (scroller) scroller.scrollTop = 0;

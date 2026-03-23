@@ -20,7 +20,7 @@ export class MainIntroComponent {
     private cambioLinguaService: CambioLinguaService
   ) {
     this.reactiveForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]]
+      email: ['', [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.minLength(5), Validators.maxLength(40)]]
     });
   }
 

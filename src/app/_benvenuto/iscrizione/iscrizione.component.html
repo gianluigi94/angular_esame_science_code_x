@@ -1,26 +1,39 @@
 <app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false">
 </app-saturno>
-
+<span class="sfocatura"></span>
 <section class="registrazione-contenuto">
-<form class="form-registrazione" (keydown.enter)="$event.preventDefault()" (keydown.tab)="onTabForm($any($event))">
+<form class="form-registrazione" [formGroup]="reactiveForm" (ngSubmit)="avanti()" (keydown.enter)="$event.preventDefault()" (keydown.tab)="onTabForm($any($event))">
 
     <h2 class="titolo-animato">Dati <span>anagrafici</span></h2>
 
     <!-- RIGA 1: Nome + Cognome -->
     <div class="riga-doppia campo-animato">
       <div class="campo-wrapper">
-        <p class="label-sopra">Nome</p>
+       <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">Nome <span class="asterisco">*</span></p>
         <div class="campo-form">
-          <input type="text" placeholder=" " id="nome" autocomplete="new-password" (blur)="calcolaCodiceFiscale()" />
-          <label for="nome">Nome</label>
+          <input type="text" placeholder=" " id="nome" autocomplete="new-password"
+            formControlName="nome"
+            [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }"
+            (blur)="calcolaCodiceFiscale()" />
+          <label for="nome" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">Nome</label>
         </div>
+        <p class="errore-campo" *ngIf="reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato)">
+          Inserisci un nome valido
+        </p>
       </div>
+
       <div class="campo-wrapper">
-        <p class="label-sopra">Cognome</p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">Cognome <span class="asterisco">*</span></p>
         <div class="campo-form">
-          <input type="text" placeholder=" " id="cognome" autocomplete="new-password" (blur)="calcolaCodiceFiscale()" />
-          <label for="cognome">Cognome</label>
+          <input type="text" placeholder=" " id="cognome" autocomplete="new-password"
+            formControlName="cognome"
+            [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }"
+            (blur)="calcolaCodiceFiscale()" />
+          <label for="cognome" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">Cognome</label>
         </div>
+        <p class="errore-campo" *ngIf="reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato)">
+          Inserisci un cognome valido
+        </p>
       </div>
     </div>
 
@@ -28,20 +41,23 @@
     <div class="riga-doppia campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra">Data di nascita</p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': (reactiveForm.controls['dataGg'].invalid || reactiveForm.controls['dataMm'].invalid || reactiveForm.controls['dataAaaa'].invalid) && (reactiveForm.controls['dataAaaa'].touched || formInviato) }">Data di nascita <span class="asterisco">*</span></p>
         <div class="data-custom" [class.data-compilata]="dataCompilata()" (click)="focusData($event)">
           <span class="data-label-piccola">gg/mm/aaaa</span>
-         <input type="text" class="data-parte" id="data_gg" placeholder="gg"
-  maxlength="2" inputmode="numeric" autocomplete="off"
-  (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event, 'gg')" />
+          <input type="text" class="data-parte" id="data_gg" placeholder="gg"
+            maxlength="2" inputmode="numeric" autocomplete="off"
+            formControlName="dataGg"
+            (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event, 'gg')" />
           <span class="data-sep">/</span>
-         <input type="text" class="data-parte" id="data_mm" placeholder="mm"
-  maxlength="2" inputmode="numeric" autocomplete="off"
-  (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event, 'mm')" />
+          <input type="text" class="data-parte" id="data_mm" placeholder="mm"
+            maxlength="2" inputmode="numeric" autocomplete="off"
+            formControlName="dataMm"
+            (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event, 'mm')" />
           <span class="data-sep">/</span>
-         <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
-  maxlength="4" inputmode="numeric" autocomplete="off"
-  (keydown)="soloNumeri($event, 'aaaa')" (blur)="calcolaCodiceFiscale()" />
+          <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
+            maxlength="4" inputmode="numeric" autocomplete="off"
+            formControlName="dataAaaa"
+            (keydown)="soloNumeri($event, 'aaaa')" (blur)="calcolaCodiceFiscale()" />
 
           <input id="datepicker-input" tabindex="-1" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
 
@@ -51,28 +67,36 @@
             </svg>
           </button>
         </div>
+        <p class="errore-campo" *ngIf="(reactiveForm.controls['dataGg'].invalid || reactiveForm.controls['dataMm'].invalid || reactiveForm.controls['dataAaaa'].invalid) && (reactiveForm.controls['dataAaaa'].touched || formInviato)">
+          Inserisci una data di nascita valida
+        </p>
       </div>
 
       <div class="campo-wrapper">
-        <p class="label-sopra">Sesso</p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato) }">Sesso <span class="asterisco">*</span></p>
         <div class="select-custom">
-         <div class="select-header" (click)="toggleSesso($event)"
-  (focus)="apriSessoSoloTastiera($event)"
-  (keydown)="navigaSesso($event)"
-  tabindex="0"
-  [class.aperto]="sessoAperto" [class.compilato]="sessoValore">
-  <span class="select-label-piccola">Sesso</span>
-  <span [class.placeholder]="!sessoValore">{{ sessoLabel() }}</span>
-  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-    <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
-  </svg>
-</div>
-<div class="select-dropdown" *ngIf="sessoAperto">
-  <div class="select-opzione" [class.attivo]="indiceSesso === 0" (click)="selezionaSesso('M')">Maschio</div>
-  <div class="select-opzione" [class.attivo]="indiceSesso === 1" (click)="selezionaSesso('F')">Femmina</div>
-  <div class="select-opzione" [class.attivo]="indiceSesso === 2" (click)="selezionaSesso('NS')">Non specificato</div>
-</div>
+          <div class="select-header" (click)="toggleSesso($event)"
+            (focus)="apriSessoSoloTastiera($event)"
+            (keydown)="navigaSesso($event)"
+            tabindex="0"
+            [class.aperto]="sessoAperto"
+            [class.compilato]="sessoValore"
+            [ngClass]="{ 'is-invalid': reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato) }">
+            <span class="select-label-piccola">Sesso</span>
+            <span [class.placeholder]="!sessoValore">{{ sessoLabel() }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+          <div class="select-dropdown" *ngIf="sessoAperto">
+            <div class="select-opzione" [class.attivo]="indiceSesso === 0" (click)="selezionaSesso('M')">Maschio</div>
+            <div class="select-opzione" [class.attivo]="indiceSesso === 1" (click)="selezionaSesso('F')">Femmina</div>
+            <div class="select-opzione" [class.attivo]="indiceSesso === 2" (click)="selezionaSesso('NS')">Non specificato</div>
+          </div>
         </div>
+        <p class="errore-campo" *ngIf="reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato)">
+          Seleziona il sesso
+        </p>
       </div>
 
     </div>
@@ -81,38 +105,47 @@
     <div class="riga-doppia campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra">Paese di nascita</p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato) }">Paese di nascita <span class="asterisco">*</span></p>
         <div class="select-custom">
           <div class="select-header" (click)="togglePaese($event)"
-  [class.aperto]="paeseAperto" [class.compilato]="paeseValore">
-  <span class="select-label-piccola">Paese</span>
-<input class="select-input-testo paese-input" type="text" placeholder="Seleziona paese"
-  autocomplete="off"
-  [value]="paeseAperto ? filtroNazioni : (paeseValore ? paeseLabel() : '')"
-  (click)="togglePaese($event)"
-  (input)="onInputPaese($event)"
-  (keydown)="navigaPaese($event)" />
-  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-    <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
-  </svg>
-</div>
+            [class.aperto]="paeseAperto"
+            [class.compilato]="paeseValore"
+            [ngClass]="{ 'is-invalid': reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato) }">
+            <span class="select-label-piccola">Paese</span>
+            <input class="select-input-testo paese-input" type="text" placeholder="Seleziona paese"
+              autocomplete="off"
+              [value]="paeseAperto ? filtroNazioni : (paeseValore ? paeseLabel() : '')"
+              (click)="togglePaese($event)"
+              (input)="onInputPaese($event)"
+              (keydown)="navigaPaese($event)" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
           <div class="select-dropdown" *ngIf="paeseAperto">
-           <div class="select-opzione" *ngFor="let n of nazioniFiltrate; let i = index"
-  [class.attivo]="i === indiceNazione"
-  (click)="selezionaPaese(n.iso)">
+            <div class="select-opzione" *ngFor="let n of nazioniFiltrate; let i = index"
+              [class.attivo]="i === indiceNazione"
+              (click)="selezionaPaese(n.iso)">
               {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
             </div>
           </div>
         </div>
+        <p class="errore-campo" *ngIf="reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato)">
+          Seleziona il paese di nascita
+        </p>
       </div>
 
-     <div class="campo-wrapper">
-        <p class="label-sopra">{{ isItalia ? 'Comune di nascita' : 'Città di nascita' }}</p>
+      <div class="campo-wrapper">
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': (isItalia ? reactiveForm.controls['comune'].invalid : reactiveForm.controls['citta'].invalid) && ((isItalia ? reactiveForm.controls['comune'].touched : reactiveForm.controls['citta'].touched) || formInviato) }">
+  {{ isItalia ? 'Comune di nascita' : 'Città di nascita' }} <span class="asterisco">*</span>
+</p>
 
         <!-- ITALIA: select con ricerca -->
         <div class="select-custom" *ngIf="isItalia">
           <div class="select-header" (click)="toggleComune($event)"
-            [class.aperto]="comuneAperto" [class.compilato]="comuneValore">
+            [class.aperto]="comuneAperto"
+            [class.compilato]="comuneValore"
+            [ngClass]="{ 'is-invalid': reactiveForm.controls['comune'].invalid && (reactiveForm.controls['comune'].touched || formInviato) }">
             <span class="select-label-piccola">Comune</span>
             <input class="select-input-testo comune-input" type="text" placeholder="Cerca comune italiano..."
               [value]="comuneAperto ? filtroComuni : (comuneValore ? comuneLabel() : '')"
@@ -128,40 +161,58 @@
             </div>
           </div>
         </div>
+        <p class="errore-campo" *ngIf="isItalia && reactiveForm.controls['comune'].invalid && (reactiveForm.controls['comune'].touched || formInviato)">
+          Seleziona il comune di nascita
+        </p>
 
         <!-- ESTERO: testo libero -->
         <div class="campo-form" *ngIf="!isItalia">
           <input type="text" placeholder=" " id="citta_nascita"
-  [value]="comuneValore"
-  (input)="comuneValore = $any($event.target).value"
-  (blur)="calcolaCodiceFiscale()" />
-          <label for="citta_nascita">Inserisci città</label>
+  autocomplete="new-password"
+  formControlName="citta"
+            [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }"
+            (input)="comuneValore = $any($event.target).value"
+            (blur)="calcolaCodiceFiscale()" />
+          <label for="citta_nascita" [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }">Inserisci città</label>
         </div>
+        <p class="errore-campo" *ngIf="!isItalia && reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato)">
+          Inserisci una città valida
+        </p>
 
       </div>
 
     </div>
 
     <!-- Codice Fiscale -->
-    <!-- Codice Fiscale -->
-<div class="campo-wrapper campo-centrato campo-animato">
-  <p class="label-sopra">Codice Fiscale</p>
-  <div class="campo-form">
-   <input type="text" placeholder=" " id="codice_fiscale" maxlength="16"
-  autocomplete="off"
-  [value]="cfValore"
-  [class.cf-flash]="cfFlash"
-  (input)="cfValore = $any($event.target).value; cfFlash = false" />
-    <label for="codice_fiscale">Codice Fiscale</label>
-    <button *ngIf="cfValore" type="button" class="btn-clear-cf" tabindex="-1" (click)="svuotaCF()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#e79c50">
-        <path d="M18 6L6 18M6 6l12 12" stroke="#e79c50" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-    </button>
-  </div>
-</div>
+    <div class="campo-wrapper campo-centrato campo-animato">
+     <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }">
+  Codice Fiscale
+  <span class="asterisco" *ngIf="isItalia">*</span>
+  <span class="opzionale" *ngIf="!isItalia">(opzionale)</span>
+</p>
+      <div class="campo-form">
+        <input type="text" placeholder=" " id="codice_fiscale" maxlength="16"
+          autocomplete="off"
+          formControlName="codiceFiscale"
+          [class.cf-flash]="cfFlash"
+          [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }"
+          (input)="cfValore = $any($event.target).value; cfFlash = false" />
+        <label for="codice_fiscale" [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }">Codice Fiscale</label>
+        <button *ngIf="cfValore" type="button" class="btn-clear-cf" tabindex="-1" (click)="svuotaCF()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#e79c50">
+            <path d="M18 6L6 18M6 6l12 12" stroke="#e79c50" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <p class="errore-campo" *ngIf="reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato)">
+        Codice fiscale non valido (16 caratteri nel formato corretto)
+      </p>
+    </div>
 
-    <button class="avanti_btn campo-animato" type="submit">Avanti</button>
+   <button class="avanti_btn campo-animato" type="submit" [disabled]="!reactiveForm.valid">
+  Avanti
+  <span class="step-btn">1 di 3</span>
+</button>
 
   </form>
 </section>

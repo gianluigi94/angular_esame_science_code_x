@@ -56,10 +56,11 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
         '', // imposto il valore iniziale del campo utente come stringa vuota
         [
           // elenco le validazioni da applicare al campo utente
-          Validators.required, // richiedo che il campo utente sia obbligatorio
-          Validators.email, // richiedo che il campo utente rispetti il formato email
-          Validators.minLength(5), // richiedo una lunghezza minima
-          Validators.maxLength(40), // impongo una lunghezza massima
+          Validators.required,
+  Validators.email,
+  Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/),
+  Validators.minLength(5),
+  Validators.maxLength(40),
         ],
       ],
       password: [

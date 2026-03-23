@@ -1,4 +1,5 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UtilityService } from '../login/_login_service/login_utility.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
@@ -16,8 +17,10 @@ const CHIAVE_PAGINA_REGISTRAZIONE = 'pagina_registrazione';
 })
 export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  saltaAnimazioneUscita: boolean = false;
-  private subLingua?: Subscription;
+ saltaAnimazioneUscita: boolean = false;
+private subLingua?: Subscription;
+reactiveForm: FormGroup;
+formInviato = false;
 
 sessoAperto = false;
 sessoValore = '';
@@ -59,11 +62,28 @@ get nazioniFiltrate(): any[] {
 private datepickerAperto = false;
 private _sessoFocusDaTab = false;
 
-  constructor(
+ constructor(
     public cambioLinguaService: CambioLinguaService,
     private apiService: ApiService,
-    private eRef: ElementRef
-  ) {}
+    private eRef: ElementRef,
+    private fb: FormBuilder
+  ) {
+    this.reactiveForm = this.fb.group({
+      nome:          ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
+                           Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+      cognome:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
+                           Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+      dataGg:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|[12]\d|3[01])$/)]],
+      dataMm:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])$/)]],
+      dataAaaa: ['', [Validators.required, Validators.pattern(/^\d{4}$/), this.validaAnnoNascita()]],
+      sesso:         ['', Validators.required],
+      paese:         ['IT', Validators.required],
+      comune:        ['', Validators.required],   // required di default: parte con IT
+      citta:         [''],                         // non required finché non si sceglie estero
+      codiceFiscale: ['', [Validators.required,
+                           Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]],
+    });
+  }
 
  @HostListener('document:click')
   chiudiDropdown(): void {
@@ -98,12 +118,34 @@ private _sessoFocusDaTab = false;
     });
   }
 
-  ngAfterViewInit(): void {
+ ngAfterViewInit(): void {
     UtilityService.nascondiSottotitoloEScrol();
     this.animaEntrata();
     this.inizializzaDatepicker();
+    this.animaSfocatura(true);
   }
-
+private validaAnnoNascita() {
+  return (control: import('@angular/forms').AbstractControl) => {
+    const anno = parseInt(control.value, 10);
+    if (isNaN(anno)) return null; // lascia fare a pattern
+    const oggi = new Date().getFullYear();
+    if (anno < oggi - 200) return { annoTroppoVecchio: true };
+    if (anno > oggi - 5)   return { annoTroppoGiovane: true };
+    return null;
+  };
+}
+animaSfocatura(entra: boolean): Promise<void> {
+    const sfocatura = document.querySelector('.sfocatura') as HTMLElement | null;
+    if (!sfocatura) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      gsap.to(sfocatura, {
+        opacity: entra ? 0.95 : 0,
+        duration: 1.1,
+        ease: 'power2.inOut',
+        onComplete: resolve,
+      });
+    });
+  }
   private inizializzaDatepicker(): void {
     const input = document.getElementById('datepicker-input') as HTMLInputElement;
     if (!input) return;
@@ -120,15 +162,22 @@ private _sessoFocusDaTab = false;
     input.addEventListener('hide', () => { console.log('📅 datepicker HIDE'); this.datepickerAperto = false; });
 
     input.addEventListener('changeDate', (e: any) => {
-      const data: Date = e.detail.date;
-      if (!data) return;
-      const gg = String(data.getDate()).padStart(2, '0');
-      const mm = String(data.getMonth() + 1).padStart(2, '0');
-      const aaaa = String(data.getFullYear());
-      (document.getElementById('data_gg') as HTMLInputElement).value = gg;
-      (document.getElementById('data_mm') as HTMLInputElement).value = mm;
-      (document.getElementById('data_aaaa') as HTMLInputElement).value = aaaa;
-    });
+  const data: Date = e.detail.date;
+  if (!data) return;
+  const gg = String(data.getDate()).padStart(2, '0');
+  const mm = String(data.getMonth() + 1).padStart(2, '0');
+  const aaaa = String(data.getFullYear());
+  (document.getElementById('data_gg') as HTMLInputElement).value = gg;
+  (document.getElementById('data_mm') as HTMLInputElement).value = mm;
+  (document.getElementById('data_aaaa') as HTMLInputElement).value = aaaa;
+  this.reactiveForm.get('dataGg')!.setValue(gg);
+  this.reactiveForm.get('dataMm')!.setValue(mm);
+  this.reactiveForm.get('dataAaaa')!.setValue(aaaa);
+  this.reactiveForm.get('dataGg')!.markAsTouched();
+  this.reactiveForm.get('dataMm')!.markAsTouched();
+  this.reactiveForm.get('dataAaaa')!.markAsTouched();
+  this.calcolaCodiceFiscale();
+});
   }
 
  apriDatepicker(event: Event): void {
@@ -161,6 +210,8 @@ selezionaSesso(valore: string): void {
   this.sessoValore = valore;
   this.sessoAperto = false;
   this.indiceSesso = -1;
+  this.reactiveForm.get('sesso')!.setValue(valore);
+  this.reactiveForm.get('sesso')!.markAsTouched();
   this.calcolaCodiceFiscale();
 }
  paeseLabel(): string {
@@ -192,9 +243,22 @@ selezionaPaese(valore: string): void {
   this.paeseAperto = false;
   this.filtroNazioni = '';
   this.indiceNazione = -1;
+  this.reactiveForm.get('paese')!.setValue(valore);
+  this.reactiveForm.get('paese')!.markAsTouched();
   if (cambiaTipo) {
     this.comuneValore = '';
     this.filtroComuni = '';
+    this.reactiveForm.get('comune')!.setValue('');
+    this.reactiveForm.get('citta')!.setValue('');
+    if (valore === 'IT') {
+      this.reactiveForm.get('comune')!.setValidators(Validators.required);
+      this.reactiveForm.get('citta')!.clearValidators();
+    } else {
+      this.reactiveForm.get('citta')!.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(80)]);
+      this.reactiveForm.get('comune')!.clearValidators();
+    }
+    this.reactiveForm.get('comune')!.updateValueAndValidity();
+    this.reactiveForm.get('citta')!.updateValueAndValidity();
   }
   this.calcolaCodiceFiscale();
 }
@@ -213,6 +277,8 @@ onTabForm(event: KeyboardEvent): void {
   this.comuneAperto = false;
   this.filtroComuni = '';
   this.indiceComune = -1;
+  this.reactiveForm.get('comune')!.setValue(valore);
+  this.reactiveForm.get('comune')!.markAsTouched();
   this.calcolaCodiceFiscale();
 }
 
@@ -464,6 +530,8 @@ onInputPaese(event: Event): void {
  const cf = parziale + this.cfControllo(parziale);
 if (cf !== this.cfValore) {
   this.cfValore = cf;
+  this.reactiveForm.get('codiceFiscale')!.setValue(cf);
+  this.reactiveForm.get('codiceFiscale')!.markAsTouched();
   this.cfFlash = false;
   setTimeout(() => { this.cfFlash = true; }, 10);
   setTimeout(() => { this.cfFlash = false; }, 1510);
@@ -472,6 +540,8 @@ if (cf !== this.cfValore) {
 svuotaCF(): void {
   this.cfValore = '';
   this.cfFlash = false;
+  this.reactiveForm.get('codiceFiscale')!.setValue('');
+  this.reactiveForm.get('codiceFiscale')!.markAsTouched();
 }
 private cfLettere(str: string, isNome: boolean): string {
   // Normalizza: rimuove accenti e caratteri non alfabetici
@@ -505,5 +575,14 @@ private cfControllo(codice15: string): string {
     }
   }
   return String.fromCharCode((somma % 26) + 65);
+}
+
+avanti(): void {
+  this.formInviato = true;
+  if (this.reactiveForm.invalid) {
+    this.reactiveForm.markAllAsTouched();
+    return;
+  }
+  // qui metti la navigazione al passo successivo
 }
 }

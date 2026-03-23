@@ -272,7 +272,7 @@ svg { flex-shrink: 0; }
 
   .campo-centrato { align-self: center; }
 
-  .avanti_btn {
+.avanti_btn {
     width: 155px;
     height: 47px;
     font-size: 18px;
@@ -288,8 +288,29 @@ svg { flex-shrink: 0; }
     align-self: flex-end;
     font-family: "Quantico", serif;
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 6px;
+
+    .step-btn {
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.75;
+      line-height: 1;
+      margin-top: 6px;
+
+    }
+
+    &:disabled {
+      opacity: 0.6!important;
+      cursor: not-allowed;
+      pointer-events: auto;
+    }
+
+    &:disabled:hover {
+      cursor: not-allowed;
+    }
   }
 }
 
@@ -335,4 +356,49 @@ svg { flex-shrink: 0; }
 
 .cf-flash {
   animation: cf-colore-auto 1.5s ease forwards;
+}
+.label-sopra.is-invalid {
+  color: red !important;
+}
+
+.errore-campo {
+  font-size: 16px;
+  color: #b41414;
+      text-shadow: 1px 1px 3px #14110a;
+
+  font-family: "Quantico", serif;
+  margin-top: 4px;
+  margin-bottom: 2px;
+  font-weight: bolder;
+}
+
+input[type="text"].is-invalid {
+  color: red !important;
+}
+.asterisco {
+  color: #e79c50;
+  font-size: 10px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.opzionale {
+  font-size: 14px;
+    color: #e79c50;
+
+  font-family: "Quantico", serif;
+  font-weight: normal;
+  margin-left: 4px;
+}
+.sfocatura {
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(2, 5, 27, 0.178);
+  z-index: 8;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
 }
