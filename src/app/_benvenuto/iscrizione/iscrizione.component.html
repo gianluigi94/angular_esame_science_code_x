@@ -2,7 +2,7 @@
 </app-saturno>
 <span class="sfocatura"></span>
 <section class="registrazione-contenuto">
-<form class="form-registrazione" [formGroup]="reactiveForm" (ngSubmit)="avanti()" (keydown.enter)="$event.preventDefault()" (keydown.tab)="onTabForm($any($event))">
+<form class="form-registrazione" *ngIf="stepAttuale === 1" [formGroup]="reactiveForm" (ngSubmit)="avanti()" (keydown.enter)="$event.preventDefault()" (keydown.tab)="onTabForm($any($event))">
 
     <h2 class="titolo-animato">Dati <span>anagrafici</span></h2>
 
@@ -214,7 +214,234 @@
   <span class="step-btn">1 di 3</span>
 </button>
 
+</form>
+
+  <!-- ═══════════════════════════════════════════════════════
+       STEP 2 — Indirizzo di domicilio
+  ══════════════════════════════════════════════════════════ -->
+  <form class="form-registrazione" *ngIf="stepAttuale === 2"
+    [formGroup]="reactiveFormStep2"
+    (ngSubmit)="avanti2()"
+    (keydown.enter)="$event.preventDefault()">
+
+    <h2 class="titolo-animato">Indirizzo di <span>domicilio</span></h2>
+
+    <!-- RIGA 1: Paese + Comune/Città -->
+    <div class="riga-doppia campo-animato">
+
+      <div class="campo-wrapper">
+        <p class="label-sopra"
+          [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }">
+          Paese di domicilio <span class="asterisco">*</span>
+        </p>
+        <div class="select-custom">
+          <div class="select-header"
+            (click)="togglePaeseDom($event)"
+            [class.aperto]="paeseDomAperto"
+            [class.compilato]="paeseDomValore"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }">
+            <span class="select-label-piccola">Paese</span>
+            <input class="select-input-testo paese-dom-input" type="text"
+              placeholder="Seleziona paese"
+              autocomplete="off"
+              [value]="paeseDomAperto ? filtroNazioniDom : (paeseDomValore ? paeseDomLabel() : '')"
+              (click)="togglePaeseDom($event)"
+              (input)="onInputPaeseDom($event)"
+              (keydown)="navigaPaeseDom($event)" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+          <div class="select-dropdown" *ngIf="paeseDomAperto">
+            <div class="select-opzione"
+              *ngFor="let n of nazioniFiltrateDom; let i = index"
+              [class.attivo]="i === indiceNazioneDom"
+              (click)="selezionaPaeseDom(n.iso)">
+              {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
+            </div>
+          </div>
+        </div>
+        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2)">
+          Seleziona il paese di domicilio
+        </p>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra"
+          [ngClass]="{ 'is-invalid': (isItaliaDom ? reactiveFormStep2.controls['comuneD'].invalid : reactiveFormStep2.controls['cittaD'].invalid) && ((isItaliaDom ? reactiveFormStep2.controls['comuneD'].touched : reactiveFormStep2.controls['cittaD'].touched) || formInviatoStep2) }">
+          {{ isItaliaDom ? 'Comune di domicilio' : 'Città di domicilio' }} <span class="asterisco">*</span>
+        </p>
+
+        <!-- ITALIA: select con ricerca -->
+        <div class="select-custom" *ngIf="isItaliaDom">
+          <div class="select-header"
+            (click)="toggleComuneDom($event)"
+            [class.aperto]="comuneDomAperto"
+            [class.compilato]="comuneDomValore"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['comuneD'].invalid && (reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2) }">
+            <span class="select-label-piccola">Comune</span>
+            <input class="select-input-testo comune-dom-input" type="text"
+              placeholder="Cerca comune italiano..."
+              [value]="comuneDomAperto ? filtroComuniDom : (comuneDomValore ? comuneDomValore : '')"
+              (click)="toggleComuneDom($event)"
+              (input)="onInputComuneDom($event)"
+              (keydown)="navigaComuneDom($event)" />
+          </div>
+          <div class="select-dropdown" *ngIf="comuneDomAperto">
+            <div class="select-opzione"
+              *ngFor="let c of comuniFiltreatiDom; let i = index"
+              [class.attivo]="i === indiceComuneDom"
+              (click)="selezionaComuneDom(c.comune)">
+              {{ c.comune }}
+            </div>
+          </div>
+        </div>
+        <p class="errore-campo" *ngIf="isItaliaDom && reactiveFormStep2.controls['comuneD'].invalid && (reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2)">
+          Seleziona il comune di domicilio
+        </p>
+
+        <!-- ESTERO: testo libero -->
+        <div class="campo-form" *ngIf="!isItaliaDom">
+          <input type="text" placeholder=" " id="citta_dom"
+            autocomplete="new-password"
+            formControlName="cittaD"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }" />
+          <label for="citta_dom"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }">
+            Inserisci città
+          </label>
+        </div>
+        <p class="errore-campo" *ngIf="!isItaliaDom && reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2)">
+          Inserisci una città valida
+        </p>
+      </div>
+
+    </div>
+<!-- RIGA 2: Via + Civico + Provincia + CAP -->
+    <div class="riga-quadrupla campo-animato">
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">Via / Piazza <span class="opzionale">(opzionale)</span></p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="via_dom"
+            autocomplete="new-password"
+            formControlName="via" />
+          <label for="via_dom">Via, Piazza, Corso...</label>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">N° Civico <span class="opzionale">(opzionale)</span></p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="civico_dom"
+            autocomplete="new-password"
+            formControlName="civico" />
+          <label for="civico_dom">Numero</label>
+        </div>
+      </div>
+
+      <ng-container *ngIf="isItaliaDom">
+
+        <div class="campo-wrapper">
+          <p class="label-sopra"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }">
+            Provincia <span class="asterisco">*</span>
+          </p>
+          <div class="campo-form">
+            <input type="text" placeholder=" " id="provincia_dom"
+              maxlength="2"
+              autocomplete="off"
+              formControlName="provinciaD"
+              [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }"
+              (input)="onInputProvincia($event)" />
+            <label for="provincia_dom"
+              [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }">
+              Sigla
+            </label>
+          </div>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2)">
+            Inserisci la sigla (2 lettere)
+          </p>
+        </div>
+
+        <div class="campo-wrapper">
+          <p class="label-sopra"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
+            CAP <span class="asterisco">*</span>
+          </p>
+
+          <!-- CAP singolo: input testo (auto-compilato) -->
+          <div class="campo-form" *ngIf="!capIsMulti">
+            <input type="text" placeholder=" " id="cap_dom"
+              maxlength="5"
+              inputmode="numeric"
+              autocomplete="off"
+              formControlName="cap"
+              [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
+              (input)="capValore = $any($event.target).value" />
+            <label for="cap_dom"
+              [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
+              CAP
+            </label>
+          </div>
+
+          <!-- CAP multiplo: select custom con ricerca -->
+          <div class="select-custom select-cap-dom" *ngIf="capIsMulti">
+            <div class="select-header"
+              (click)="toggleCapDom($event)"
+              [class.aperto]="capDomAperto"
+              [class.compilato]="capValore"
+              [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
+              <span class="select-label-piccola">CAP</span>
+              <input class="select-input-testo cap-dom-input" type="text"
+                placeholder="Seleziona CAP"
+                autocomplete="off"
+                inputmode="numeric"
+                [value]="capDomAperto ? filtroCapDom : (capValore ? capValore : '')"
+                (click)="toggleCapDom($event)"
+                (input)="onInputCapDom($event)"
+                (keydown)="navigaCapDom($event)" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+              </svg>
+            </div>
+            <div class="select-dropdown" *ngIf="capDomAperto">
+              <div class="select-opzione"
+                *ngFor="let c of capFiltrate; let i = index"
+                [class.attivo]="i === indiceCapDom"
+                (click)="selezionaCapDom(c)">
+                {{ c }}
+              </div>
+            </div>
+          </div>
+
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2)">
+            CAP non valido (5 cifre)
+          </p>
+        </div>
+
+      </ng-container>
+
+    </div>
+
+    <!-- RIGA 3: Dettagli aggiuntivi (centrato) -->
+    <div class="campo-wrapper campo-centrato campo-animato">
+      <p class="label-sopra">Dettagli aggiuntivi <span class="opzionale">(opzionale)</span></p>
+      <div class="campo-form">
+        <input type="text" placeholder=" " id="dettagli_dom"
+          autocomplete="new-password"
+          formControlName="dettagli" />
+        <label for="dettagli_dom">Scala, interno, indicazioni...</label>
+      </div>
+    </div>
+
+    <button class="avanti_btn campo-animato" type="submit" [disabled]="!reactiveFormStep2.valid">
+      Avanti
+      <span class="step-btn">2 di 3</span>
+    </button>
+
   </form>
+
 </section>
 
 <app-footer></app-footer>

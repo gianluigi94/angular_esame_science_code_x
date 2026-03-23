@@ -9,6 +9,7 @@ app-footer {
 .form-registrazione {
   display: flex;
   flex-direction: column;
+  align-items: center;
   width: fit-content;
   margin-top: -50px;
   gap: 20px;
@@ -401,4 +402,51 @@ input[type="text"].is-invalid {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   opacity: 0;
+}
+
+// ─── Step 2: z-index dropdown per nazione/comune ──────────
+// Il form step 2 riusa .form-registrazione: i suoi .riga-doppia
+// si contano come nth-child dopo l'h2, quindi nth-child(2)=z3
+// e nth-child(3)=z2 già coperti dalla regola esistente.
+// La riga provincia+CAP è la 4ª riga (nth-child(5) del form),
+// il dropdown CAP ha già z-index:100 da .select-dropdown, va bene.
+
+// Input di testo provincia: evidenziamo il fatto che accetta
+// solo la sigla 2 lettere con un testo centrato
+.riga-quadrupla {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 36px;
+  position: relative;
+  z-index: 2;
+}
+
+#via_dom {
+  width: 380px !important;
+}
+
+#civico_dom {
+  width: 170px !important;
+}
+
+#provincia_dom {
+  width: 90px !important;
+  text-align: center;
+  letter-spacing: 4px;
+  font-size: 20px;
+  text-transform: uppercase;
+}
+
+#cap_dom {
+  width: 180px !important;
+}
+
+.select-cap-dom {
+  width: 180px !important;
+
+  .select-input-testo {
+    min-width: 0 !important;
+    width: auto !important;
+  }
 }

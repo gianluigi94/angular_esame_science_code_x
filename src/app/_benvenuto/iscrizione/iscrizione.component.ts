@@ -1,4 +1,5 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
+// DOPO
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UtilityService } from '../login/_login_service/login_utility.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
@@ -17,80 +18,142 @@ const CHIAVE_PAGINA_REGISTRAZIONE = 'pagina_registrazione';
 })
 export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
 
- saltaAnimazioneUscita: boolean = false;
+saltaAnimazioneUscita: boolean = false;
 private subLingua?: Subscription;
 reactiveForm: FormGroup;
+reactiveFormStep2: FormGroup;
 formInviato = false;
+formInviatoStep2 = false;
+stepAttuale = 1;
 
+// ─── Step 1 ───────────────────────────────────────────────
 sessoAperto = false;
 sessoValore = '';
 indiceSesso = -1;
 cfValore = '';
 cfFlash = false;
-  paeseAperto = false;
-  paeseValore = 'IT';
-  comuneAperto = false;
-  comuneValore = '';
-  nazioni: any[] = [];
-  comuni: any[] = [];
-  filtroNazioni = '';
-  filtroComuni = '';
-  indiceNazione = -1;
-  indiceComune = -1;
+paeseAperto = false;
+paeseValore = 'IT';
+comuneAperto = false;
+comuneValore = '';
+nazioni: any[] = [];
+comuni: any[] = [];
+filtroNazioni = '';
+filtroComuni = '';
+indiceNazione = -1;
+indiceComune = -1;
+
+// ─── Step 2 ───────────────────────────────────────────────
+paeseDomAperto = false;
+paeseDomValore = 'IT';
+comuneDomAperto = false;
+comuneDomValore = '';
+filtroNazioniDom = '';
+filtroComuniDom = '';
+indiceNazioneDom = -1;
+indiceComuneDom = -1;
+capDomAperto = false;
+capValore = '';
+filtroCapDom = '';
+indiceCapDom = -1;
+capIsMulti = false;
+capMultiOpzioni: string[] = [];
 
 get nazioniFiltrate(): any[] {
-    if (!this.filtroNazioni.trim()) return this.nazioni;
-    const f = this.filtroNazioni.toLowerCase();
-    return this.nazioni.filter(n =>
-      (n.nazione_it ?? '').toLowerCase().startsWith(f) ||
-      (n.nazione_en ?? '').toLowerCase().startsWith(f)
-    );
-  }
+  if (!this.filtroNazioni.trim()) return this.nazioni;
+  const f = this.filtroNazioni.toLowerCase();
+  return this.nazioni.filter(n =>
+    (n.nazione_it ?? '').toLowerCase().startsWith(f) ||
+    (n.nazione_en ?? '').toLowerCase().startsWith(f)
+  );
+}
 
-  get isItalia(): boolean {
-    return this.paeseValore === 'IT';
-  }
+get isItalia(): boolean {
+  return this.paeseValore === 'IT';
+}
 
-  get comuniFiltrati(): any[] {
-    if (!this.filtroComuni.trim()) return [];
-    const f = this.filtroComuni.toLowerCase();
-    return this.comuni
-      .filter(c => (c.comune ?? '').toLowerCase().startsWith(f))
-      .slice(0, 50);
-  }
+get comuniFiltrati(): any[] {
+  if (!this.filtroComuni.trim()) return [];
+  const f = this.filtroComuni.toLowerCase();
+  return this.comuni
+    .filter(c => (c.comune ?? '').toLowerCase().startsWith(f))
+    .slice(0, 50);
+}
+
+// ─── Step 2 getter ────────────────────────────────────────
+get isItaliaDom(): boolean {
+  return this.paeseDomValore === 'IT';
+}
+
+get nazioniFiltrateDom(): any[] {
+  if (!this.filtroNazioniDom.trim()) return this.nazioni;
+  const f = this.filtroNazioniDom.toLowerCase();
+  return this.nazioni.filter(n =>
+    (n.nazione_it ?? '').toLowerCase().startsWith(f) ||
+    (n.nazione_en ?? '').toLowerCase().startsWith(f)
+  );
+}
+
+get comuniFiltreatiDom(): any[] {
+  if (!this.filtroComuniDom.trim()) return [];
+  const f = this.filtroComuniDom.toLowerCase();
+  return this.comuni
+    .filter(c => (c.comune ?? '').toLowerCase().startsWith(f))
+    .slice(0, 50);
+}
+
+get capFiltrate(): string[] {
+  if (!this.filtroCapDom.trim()) return this.capMultiOpzioni;
+  return this.capMultiOpzioni.filter(c => c.startsWith(this.filtroCapDom));
+}
   private datepicker: any;
 private datepickerAperto = false;
 private _sessoFocusDaTab = false;
 
- constructor(
-    public cambioLinguaService: CambioLinguaService,
-    private apiService: ApiService,
-    private eRef: ElementRef,
-    private fb: FormBuilder
-  ) {
-    this.reactiveForm = this.fb.group({
-      nome:          ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
-                           Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
-      cognome:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
-                           Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
-      dataGg:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|[12]\d|3[01])$/)]],
-      dataMm:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])$/)]],
-      dataAaaa: ['', [Validators.required, Validators.pattern(/^\d{4}$/), this.validaAnnoNascita()]],
-      sesso:         ['', Validators.required],
-      paese:         ['IT', Validators.required],
-      comune:        ['', Validators.required],   // required di default: parte con IT
-      citta:         [''],                         // non required finché non si sceglie estero
-      codiceFiscale: ['', [Validators.required,
-                           Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]],
-    });
-  }
+constructor(
+  public cambioLinguaService: CambioLinguaService,
+  private apiService: ApiService,
+  private eRef: ElementRef,
+  private fb: FormBuilder,
+  private cdr: ChangeDetectorRef
+) {
+  this.reactiveForm = this.fb.group({
+    nome:          ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
+                         Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+    cognome:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
+                         Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+    dataGg:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|[12]\d|3[01])$/)]],
+    dataMm:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])$/)]],
+    dataAaaa:      ['', [Validators.required, Validators.pattern(/^\d{4}$/), this.validaAnnoNascita()]],
+    sesso:         ['', Validators.required],
+    paese:         ['IT', Validators.required],
+    comune:        ['', Validators.required],
+    citta:         [''],
+    codiceFiscale: ['', [Validators.required,
+                         Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]],
+  });
+
+  this.reactiveFormStep2 = this.fb.group({
+    nazioneD:   ['IT', Validators.required],
+    comuneD:    ['', Validators.required],   // required di default: parte con IT
+    cittaD:     [''],                         // required solo se estero
+    via:        ['', [Validators.maxLength(100)]],
+    civico:     ['', [Validators.maxLength(20)]],
+    dettagli:   ['', [Validators.maxLength(200)]],
+    provinciaD: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
+    cap:        ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+  });
+}
 
  @HostListener('document:click')
-  chiudiDropdown(): void {
-    this.sessoAperto = false;
-    this.paeseAperto = false;
-    this.comuneAperto = false;
-  }
+chiudiDropdown(): void {
+  this.sessoAperto = false;
+  this.paeseAperto = false;
+  this.comuneAperto = false;
+  this.paeseDomAperto = false;
+  this.comuneDomAperto = false;
+  this.capDomAperto = false;
+}
 
   ngOnInit(): void {
     try { sessionStorage.setItem(CHIAVE_PAGINA_REGISTRAZIONE, '1'); } catch {}
@@ -583,6 +646,288 @@ avanti(): void {
     this.reactiveForm.markAllAsTouched();
     return;
   }
-  // qui metti la navigazione al passo successivo
+  this.animaUscitaStep1().then(() => {
+    this.stepAttuale = 2;
+    this.cdr.detectChanges();
+
+    const titolo = document.querySelector('.titolo-animato') as HTMLElement;
+    const labels = document.querySelectorAll('.label-sopra');
+    const righe  = document.querySelectorAll('.campo-animato');
+    gsap.set(titolo, { opacity: 0 });
+    gsap.set(labels, { opacity: 0 });
+    gsap.set(righe,  { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+
+    setTimeout(() => this.animaEntrataStep2(), 16);
+  });
+}
+
+avanti2(): void {
+  this.formInviatoStep2 = true;
+  if (this.reactiveFormStep2.invalid) {
+    this.reactiveFormStep2.markAllAsTouched();
+    return;
+  }
+  // qui metti la navigazione al passo 3
+}
+
+private animaUscitaStep1(): Promise<void> {
+  const titolo = document.querySelector('.titolo-animato') as HTMLElement | null;
+  const labels = document.querySelectorAll('.label-sopra');
+  const righe  = document.querySelectorAll('.campo-animato');
+  return new Promise<void>((resolve) => {
+    if (titolo) gsap.to(titolo, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+    gsap.to(labels, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+    gsap.to(righe,  { opacity: 0, scaleX: 0, duration: 0.35, ease: 'power2.in', stagger: 0.05 });
+    setTimeout(() => resolve(), 550);
+  });
+}
+
+private animaEntrataStep2(): void {
+  const titolo = document.querySelector('.titolo-animato') as HTMLElement;
+  const labels = document.querySelectorAll('.label-sopra');
+  const righe  = document.querySelectorAll('.campo-animato');
+  gsap.to(titolo, { opacity: 1, delay: 0.1, duration: 2.0, ease: 'power2.out' });
+  gsap.to(labels, { opacity: 1, duration: 1.8, ease: 'power2.out', stagger: 0.12 });
+  gsap.to(righe,  { opacity: 1, scaleX: 1, duration: 0.9, ease: 'power2.out', stagger: 0.12 });
+}
+
+// ════════════════════════════════════════════════════════════
+//  STEP 2 — metodi paese domicilio
+// ════════════════════════════════════════════════════════════
+
+paeseDomLabel(): string {
+  if (!this.paeseDomValore) return 'Seleziona paese';
+  const nazione = this.nazioni.find(n => n.iso === this.paeseDomValore);
+  if (!nazione) return '';
+  return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? nazione.nazione_it : nazione.nazione_en;
+}
+
+togglePaeseDom(event: Event): void {
+  event.stopPropagation();
+  this.paeseDomAperto = !this.paeseDomAperto;
+  if (this.paeseDomAperto) {
+    this.comuneDomAperto = false;
+    this.capDomAperto = false;
+    this.indiceNazioneDom = -1;
+    setTimeout(() => (document.querySelector('.paese-dom-input') as HTMLInputElement)?.focus(), 0);
+  }
+  if (!this.paeseDomAperto) { this.filtroNazioniDom = ''; this.indiceNazioneDom = -1; }
+}
+
+onInputPaeseDom(event: Event): void {
+  this.filtroNazioniDom = (event.target as HTMLInputElement).value;
+  this.indiceNazioneDom = -1;
+  if (!this.paeseDomAperto) this.paeseDomAperto = true;
+}
+
+navigaPaeseDom(event: KeyboardEvent): void {
+  if (!this.paeseDomAperto) return;
+  const input = event.target as HTMLInputElement;
+  const lista = this.nazioniFiltrateDom;
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    this.filtroNazioniDom = input.value;
+    this.indiceNazioneDom = Math.min(this.indiceNazioneDom + 1, lista.length - 1);
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    this.filtroNazioniDom = input.value;
+    this.indiceNazioneDom = Math.max(this.indiceNazioneDom - 1, -1);
+  } else if (event.key === 'Enter' && this.indiceNazioneDom >= 0) {
+    event.preventDefault();
+    this.selezionaPaeseDom(lista[this.indiceNazioneDom].iso);
+  } else if (event.key === 'Escape') {
+    this.paeseDomAperto = false;
+    this.filtroNazioniDom = '';
+    this.indiceNazioneDom = -1;
+  }
+}
+
+selezionaPaeseDom(valore: string): void {
+  const cambiaTipo = (valore === 'IT') !== (this.paeseDomValore === 'IT');
+  this.paeseDomValore = valore;
+  this.paeseDomAperto = false;
+  this.filtroNazioniDom = '';
+  this.indiceNazioneDom = -1;
+  this.reactiveFormStep2.get('nazioneD')!.setValue(valore);
+  this.reactiveFormStep2.get('nazioneD')!.markAsTouched();
+
+  if (cambiaTipo) {
+    this.comuneDomValore = '';
+    this.filtroComuniDom = '';
+    this.capValore = '';
+    this.capIsMulti = false;
+    this.capMultiOpzioni = [];
+    this.reactiveFormStep2.get('comuneD')!.setValue('');
+    this.reactiveFormStep2.get('cittaD')!.setValue('');
+    this.reactiveFormStep2.get('provinciaD')!.setValue('');
+    this.reactiveFormStep2.get('cap')!.setValue('');
+
+    if (valore === 'IT') {
+      this.reactiveFormStep2.get('comuneD')!.setValidators(Validators.required);
+      this.reactiveFormStep2.get('cittaD')!.clearValidators();
+      this.reactiveFormStep2.get('provinciaD')!.setValidators([Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]);
+      this.reactiveFormStep2.get('cap')!.setValidators([Validators.required, Validators.pattern(/^\d{5}$/)]);
+    } else {
+      this.reactiveFormStep2.get('cittaD')!.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(80)]);
+      this.reactiveFormStep2.get('comuneD')!.clearValidators();
+      this.reactiveFormStep2.get('provinciaD')!.clearValidators();
+      this.reactiveFormStep2.get('cap')!.clearValidators();
+    }
+    this.reactiveFormStep2.get('comuneD')!.updateValueAndValidity();
+    this.reactiveFormStep2.get('cittaD')!.updateValueAndValidity();
+    this.reactiveFormStep2.get('provinciaD')!.updateValueAndValidity();
+    this.reactiveFormStep2.get('cap')!.updateValueAndValidity();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  STEP 2 — metodi comune domicilio
+// ════════════════════════════════════════════════════════════
+
+toggleComuneDom(event: Event): void {
+  event.stopPropagation();
+  this.comuneDomAperto = !this.comuneDomAperto;
+  if (this.comuneDomAperto) {
+    this.paeseDomAperto = false;
+    this.capDomAperto = false;
+    this.indiceComuneDom = -1;
+    setTimeout(() => (document.querySelector('.comune-dom-input') as HTMLInputElement)?.focus(), 0);
+  }
+  if (!this.comuneDomAperto) { this.filtroComuniDom = ''; this.indiceComuneDom = -1; }
+}
+
+onInputComuneDom(event: Event): void {
+  this.filtroComuniDom = (event.target as HTMLInputElement).value;
+  this.indiceComuneDom = -1;
+  if (!this.comuneDomAperto) this.comuneDomAperto = true;
+}
+
+navigaComuneDom(event: KeyboardEvent): void {
+  if (!this.comuneDomAperto) return;
+  const input = event.target as HTMLInputElement;
+  const lista = this.comuniFiltreatiDom;
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    this.filtroComuniDom = input.value;
+    this.indiceComuneDom = Math.min(this.indiceComuneDom + 1, lista.length - 1);
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    this.filtroComuniDom = input.value;
+    this.indiceComuneDom = Math.max(this.indiceComuneDom - 1, -1);
+  } else if (event.key === 'Enter' && this.indiceComuneDom >= 0) {
+    event.preventDefault();
+    this.selezionaComuneDom(lista[this.indiceComuneDom].comune);
+  } else if (event.key === 'Escape') {
+    this.comuneDomAperto = false;
+    this.filtroComuniDom = '';
+    this.indiceComuneDom = -1;
+  }
+}
+
+selezionaComuneDom(valore: string): void {
+  this.comuneDomValore = valore;
+  this.comuneDomAperto = false;
+  this.filtroComuniDom = '';
+  this.indiceComuneDom = -1;
+  this.reactiveFormStep2.get('comuneD')!.setValue(valore);
+  this.reactiveFormStep2.get('comuneD')!.markAsTouched();
+
+  // Auto-fill provincia e CAP dal modello comune
+  const comune = this.comuni.find(c => c.comune === valore);
+  if (!comune) return;
+  console.log('🏙️ comune trovato:', JSON.stringify(comune));
+
+  // Provincia: sigla automobilistica
+  const sigla = (comune.sigla_automobilistica ?? '').toUpperCase();
+  this.reactiveFormStep2.get('provinciaD')!.setValue(sigla);
+  this.reactiveFormStep2.get('provinciaD')!.markAsTouched();
+
+  // CAP: singolo o multi
+  this.capValore = '';
+  this.capIsMulti = false;
+  this.capMultiOpzioni = [];
+  this.reactiveFormStep2.get('cap')!.setValue('');
+
+  if (comune.cap_inizio && comune.cap_fine && String(comune.cap_inizio) !== String(comune.cap_fine)) {
+    const inizio = parseInt(String(comune.cap_inizio), 10);
+    const fine   = parseInt(String(comune.cap_fine), 10);
+    if (!isNaN(inizio) && !isNaN(fine) && fine > inizio) {
+      const opzioni: string[] = [];
+      for (let n = inizio; n <= fine; n++) {
+        opzioni.push(String(n).padStart(5, '0'));
+      }
+      this.capIsMulti = true;
+      this.capMultiOpzioni = opzioni;
+      return; // attende che l'utente scelga dal select
+    }
+  }
+
+  // CAP singolo: auto-compila
+  if (comune.cap) {
+    this.capValore = String(comune.cap).padStart(5, '0');
+    this.reactiveFormStep2.get('cap')!.setValue(this.capValore);
+    this.reactiveFormStep2.get('cap')!.markAsTouched();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  STEP 2 — metodi CAP domicilio (multi-cap)
+// ════════════════════════════════════════════════════════════
+
+toggleCapDom(event: Event): void {
+  event.stopPropagation();
+  this.capDomAperto = !this.capDomAperto;
+  if (this.capDomAperto) {
+    this.paeseDomAperto = false;
+    this.comuneDomAperto = false;
+    this.indiceCapDom = -1;
+    setTimeout(() => (document.querySelector('.cap-dom-input') as HTMLInputElement)?.focus(), 0);
+  }
+  if (!this.capDomAperto) { this.filtroCapDom = ''; this.indiceCapDom = -1; }
+}
+
+onInputCapDom(event: Event): void {
+  this.filtroCapDom = (event.target as HTMLInputElement).value;
+  this.indiceCapDom = -1;
+  if (!this.capDomAperto) this.capDomAperto = true;
+}
+
+navigaCapDom(event: KeyboardEvent): void {
+  if (!this.capDomAperto) return;
+  const lista = this.capFiltrate;
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    this.indiceCapDom = Math.min(this.indiceCapDom + 1, lista.length - 1);
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    this.indiceCapDom = Math.max(this.indiceCapDom - 1, -1);
+  } else if (event.key === 'Enter' && this.indiceCapDom >= 0) {
+    event.preventDefault();
+    this.selezionaCapDom(lista[this.indiceCapDom]);
+  } else if (event.key === 'Escape') {
+    this.capDomAperto = false;
+    this.filtroCapDom = '';
+    this.indiceCapDom = -1;
+  }
+}
+
+selezionaCapDom(valore: string): void {
+  this.capValore = valore;
+  this.capDomAperto = false;
+  this.filtroCapDom = '';
+  this.indiceCapDom = -1;
+  this.reactiveFormStep2.get('cap')!.setValue(valore);
+  this.reactiveFormStep2.get('cap')!.markAsTouched();
+}
+
+// ════════════════════════════════════════════════════════════
+//  STEP 2 — provincia: forza maiuscolo e solo lettere
+// ════════════════════════════════════════════════════════════
+
+onInputProvincia(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const val = input.value.toUpperCase().replace(/[^A-Z]/g, '');
+  input.value = val;
+  this.reactiveFormStep2.get('provinciaD')!.setValue(val);
 }
 }
