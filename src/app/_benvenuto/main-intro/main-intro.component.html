@@ -17,9 +17,9 @@
         [ngClass]="{ 'is-invalid': reactiveForm.controls['email'].invalid && (reactiveForm.controls['email'].touched || formInviato) }"
       >Email</label>
     </div>
-    <p class="errore-email" *ngIf="reactiveForm.controls['email'].invalid && (reactiveForm.controls['email'].touched || formInviato)">
-      Inserisci un'email corretta
-    </p>
+     <p class="errore-email" *ngIf="reactiveForm.controls['email'].invalid && (reactiveForm.controls['email'].touched || formInviato)">
+   {{ 'ui.main.email.error' | translate }}
+ </p>
   </div>
   <button type="submit" [innerHTML]="'ui.main.email_button' | translate"></button>
 </form>

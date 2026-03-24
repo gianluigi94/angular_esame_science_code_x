@@ -18,10 +18,10 @@
           <label for="nome" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">Nome</label>
         </div>
       <div class="errori-stack">
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['required']">Inserisci il nome</p>
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['minlength']">Nome troppo corto (minimo 3 caratteri)</p>
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['maxlength']">Nome troppo lungo (massimo 50 caratteri)</p>
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['pattern']">Solo lettere, spazi e apostrofi</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['required']">{{ 'ui.registrazione.nome.error.required' | translate }}</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['minlength']">{{ 'ui.registrazione.nome.error.minlength' | translate }}</p>
+         <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['maxlength']">{{ 'ui.registrazione.nome.error.maxlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['pattern']">{{ 'ui.registrazione.nome.error.pattern' | translate }}</p>
         </div>
       </div>
 
@@ -35,10 +35,10 @@
           <label for="cognome" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">Cognome</label>
         </div>
       <div class="errori-stack">
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['required']">Inserisci il cognome</p>
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['minlength']">Cognome troppo corto (minimo 3 caratteri)</p>
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['maxlength']">Cognome troppo lungo (massimo 50 caratteri)</p>
-          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['pattern']">Solo lettere, spazi e apostrofi</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['required']">{{ 'ui.registrazione.cognome.error.required' | translate }}</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['minlength']">{{ 'ui.registrazione.cognome.error.minlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['maxlength']">{{ 'ui.registrazione.cognome.error.maxlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['pattern']">{{ 'ui.registrazione.cognome.error.pattern' | translate }}</p>
         </div>
       </div>
     </div>
@@ -73,9 +73,7 @@
             </svg>
           </button>
         </div>
-        <p class="errore-campo" *ngIf="(reactiveForm.controls['dataGg'].invalid || reactiveForm.controls['dataMm'].invalid || reactiveForm.controls['dataAaaa'].invalid) && (reactiveForm.controls['dataAaaa'].touched || formInviato)">
-          Inserisci una data di nascita valida
-        </p>
+       <p class="errore-campo" *ngIf="(reactiveForm.controls['dataGg'].invalid || reactiveForm.controls['dataMm'].invalid || reactiveForm.controls['dataAaaa'].invalid) && (reactiveForm.controls['dataAaaa'].touched || formInviato)">{{ 'ui.registrazione.data_nascita.error.invalid' | translate }}</p>
       </div>
 
       <div class="campo-wrapper">
@@ -100,9 +98,7 @@
             <div class="select-opzione" [class.attivo]="indiceSesso === 2" (click)="selezionaSesso('NS')">Non specificato</div>
           </div>
         </div>
-        <p class="errore-campo" *ngIf="reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato)">
-          Seleziona il sesso
-        </p>
+        <p class="errore-campo" *ngIf="reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato)">{{ 'ui.registrazione.sesso.error.required' | translate }}</p>
       </div>
 
     </div>
@@ -137,9 +133,7 @@
             </div>
           </div>
         </div>
-        <p class="errore-campo" *ngIf="reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato)">
-          Seleziona il paese di nascita
-        </p>
+        <p class="errore-campo" *ngIf="reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato)">{{ 'ui.registrazione.paese_nascita.error.required' | translate }}</p>
       </div>
 
       <div class="campo-wrapper">
@@ -170,9 +164,7 @@
             </div>
           </div>
         </div>
-        <p class="errore-campo" *ngIf="isItalia && reactiveForm.controls['comune'].invalid && (reactiveForm.controls['comune'].touched || formInviato)">
-          Seleziona il comune di nascita
-        </p>
+        <p class="errore-campo" *ngIf="isItalia && reactiveForm.controls['comune'].invalid && (reactiveForm.controls['comune'].touched || formInviato)">{{ 'ui.registrazione.comune_nascita.error.required' | translate }}</p>
 
         <!-- ESTERO: testo libero -->
         <div class="campo-form" *ngIf="!isItalia">
@@ -183,9 +175,7 @@
             (input)="comuneValore = $any($event.target).value" />
           <label for="citta_nascita" [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }">Inserisci città</label>
         </div>
-        <p class="errore-campo" *ngIf="!isItalia && reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato)">
-          Inserisci una città valida
-        </p>
+        <p class="errore-campo" *ngIf="!isItalia && reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato)">{{ 'ui.registrazione.citta_nascita.error.invalid' | translate }}</p>
 
       </div>
 
@@ -212,9 +202,7 @@
           </svg>
         </button>
       </div>
-      <p class="errore-campo" *ngIf="reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato)">
-        Codice fiscale non valido (16 caratteri nel formato corretto)
-      </p>
+      <p class="errore-campo" *ngIf="reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato)">{{ 'ui.registrazione.codice_fiscale.error.invalid' | translate }}</p>
     </div>
 
    <button class="avanti_btn campo-animato" type="submit" [disabled]="!reactiveForm.valid">
@@ -270,9 +258,7 @@
             </div>
           </div>
         </div>
-        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2)">
-          Seleziona il paese di domicilio
-        </p>
+        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2)">{{ 'ui.registrazione.paese_domicilio.error.required' | translate }}</p>
       </div>
 
       <div class="campo-wrapper">
@@ -307,9 +293,7 @@
             </div>
           </div>
         </div>
-        <p class="errore-campo" *ngIf="isItaliaDom && reactiveFormStep2.controls['comuneD'].invalid && (reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2)">
-          Seleziona il comune di domicilio
-        </p>
+        <p class="errore-campo" *ngIf="isItaliaDom && reactiveFormStep2.controls['comuneD'].invalid && (reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2)">{{ 'ui.registrazione.comune_domicilio.error.required' | translate }}</p>
 
         <!-- ESTERO: testo libero -->
         <div class="campo-form" *ngIf="!isItaliaDom">
@@ -322,9 +306,7 @@
             Inserisci città
           </label>
         </div>
-        <p class="errore-campo" *ngIf="!isItaliaDom && reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2)">
-          Inserisci una città valida
-        </p>
+        <p class="errore-campo" *ngIf="!isItaliaDom && reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2)">{{ 'ui.registrazione.citta_domicilio.error.invalid' | translate }}</p>
       </div>
 
     </div>
@@ -344,9 +326,9 @@
           </label>
         </div>
         <div class="errori-stack">
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['minlength']">Minimo 3 caratteri</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['maxlength']">Massimo 100 caratteri</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['pattern']">Solo lettere, numeri e punteggiatura comune</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['minlength']">{{ 'ui.registrazione.via.error.minlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['maxlength']">{{ 'ui.registrazione.via.error.maxlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['pattern']">{{ 'ui.registrazione.via.error.pattern' | translate }}</p>
         </div>
       </div>
 
@@ -363,8 +345,8 @@
           </label>
         </div>
        <div class="errori-stack">
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].touched && reactiveFormStep2.controls['civico'].errors?.['maxlength']">Massimo 10 caratteri</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].touched && reactiveFormStep2.controls['civico'].errors?.['pattern']">Deve iniziare con un numero</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].touched && reactiveFormStep2.controls['civico'].errors?.['maxlength']">{{ 'ui.registrazione.civico.error.maxlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].touched && reactiveFormStep2.controls['civico'].errors?.['pattern']">{{ 'ui.registrazione.civico.error.pattern' | translate }}</p>
         </div>
       </div>
 
@@ -388,8 +370,8 @@
             </label>
           </div>
          <div class="errori-stack">
-            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && reactiveFormStep2.controls['provinciaD'].errors?.['required']">Inserisci la sigla</p>
-            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && reactiveFormStep2.controls['provinciaD'].errors?.['pattern']">Esattamente 2 lettere</p>
+            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && reactiveFormStep2.controls['provinciaD'].errors?.['required']">{{ 'ui.registrazione.provincia.error.required' | translate }}</p>
+           <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && reactiveFormStep2.controls['provinciaD'].errors?.['pattern']">{{ 'ui.registrazione.provincia.error.pattern' | translate }}</p>
           </div>
         </div>
 
@@ -446,8 +428,8 @@
           </div>
 
           <div class="errori-stack">
-            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && reactiveFormStep2.controls['cap'].errors?.['required']">Inserisci il CAP</p>
-            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && reactiveFormStep2.controls['cap'].errors?.['pattern']">Esattamente 5 cifre</p>
+            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && reactiveFormStep2.controls['cap'].errors?.['required']">{{ 'ui.registrazione.cap.error.required' | translate }}</p>
+            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && reactiveFormStep2.controls['cap'].errors?.['pattern']">{{ 'ui.registrazione.cap.error.pattern' | translate }}</p>
           </div>
         </div>
 
@@ -469,14 +451,13 @@
           </label>
         </div>
         <div class="errori-stack">
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].touched && reactiveFormStep2.controls['dettagli'].errors?.['minlength']">Minimo 3 caratteri</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].touched && reactiveFormStep2.controls['dettagli'].errors?.['maxlength']">Massimo 200 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].touched && reactiveFormStep2.controls['dettagli'].errors?.['minlength']">{{ 'ui.registrazione.dettagli.error.minlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].touched && reactiveFormStep2.controls['dettagli'].errors?.['maxlength']">{{ 'ui.registrazione.dettagli.error.maxlength' | translate }}</p>
+
         </div>
       </div>
 
-   <p class="errore-campo" *ngIf="erroreCoerenzaIndirizzo" style="align-self: center; margin-bottom: -10px;">
-     CAP e provincia devono corrispondere al comune selezionato
-   </p>
+  <p class="errore-campo" *ngIf="erroreCoerenzaIndirizzo" style="align-self: center; margin-bottom: -10px;">{{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}</p>
    <div class="bottoni-nav campo-animato">
       <button class="indietro_btn" type="button" (click)="indietro()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
@@ -518,9 +499,9 @@
           </label>
         </div>
         <div class="errori-stack">
-          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['minlength']">Minimo 6 caratteri</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['maxlength']">Massimo 20 caratteri</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['pattern']">Formato non valido</p>
+         <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['minlength']">{{ 'ui.registrazione.telefono.error.minlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['maxlength']">{{ 'ui.registrazione.telefono.error.maxlength' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['pattern']">{{ 'ui.registrazione.telefono.error.pattern' | translate }}</p>
         </div>
       </div>
 
@@ -537,9 +518,9 @@
           </label>
         </div>
         <div class="errori-stack">
-          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['email']">Formato email non valido</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['pattern']">Formato email non valido</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['maxlength']">Massimo 40 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['email']">{{ 'ui.registrazione.email_secondaria.error.email' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['pattern']">{{ 'ui.registrazione.email_secondaria.error.pattern' | translate }}</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['maxlength']">{{ 'ui.registrazione.email_secondaria.error.maxlength' | translate }}</p>
         </div>
       </div>
 
@@ -586,13 +567,14 @@
           </span>
         </div>
         <div class="errori-stack">
-          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['required']">Inserisci la password</p>
-          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['minlength']">Minimo 8 caratteri</p>
-          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['maxlength']">Massimo 30 caratteri</p>
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['required']">{{ 'ui.registrazione.password.error.required' | translate }}</p>
+         <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['minlength']">{{ 'ui.registrazione.password.error.minlength' | translate }}</p>
+
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['maxlength']">{{ 'ui.registrazione.password.error.maxlength' | translate }}</p>
           <ng-container *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['pattern']">
-            <p class="errore-campo" *ngIf="pwdMancaMaiuscola">Almeno una lettera maiuscola</p>
-            <p class="errore-campo" *ngIf="pwdMancaNumero">Almeno un numero</p>
-            <p class="errore-campo" *ngIf="pwdMancaSimbolo">Almeno un simbolo</p>
+            <p class="errore-campo" *ngIf="pwdMancaMaiuscola">{{ 'ui.registrazione.password.error.maiuscola' | translate }}</p>
+            <p class="errore-campo" *ngIf="pwdMancaNumero">{{ 'ui.registrazione.password.error.numero' | translate }}</p>
+            <p class="errore-campo" *ngIf="pwdMancaSimbolo">{{ 'ui.registrazione.password.error.simbolo' | translate }}</p>
           </ng-container>
         </div>
       </div>
@@ -624,8 +606,8 @@
           </button>
         </div>
         <div class="errori-stack">
-          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) && reactiveFormStep3.controls['confermaPassword'].errors?.['required']">Conferma la password</p>
-          <p class="errore-campo" *ngIf="errorePasswordNonCombacia && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3)">Le password non coincidono</p>
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) && reactiveFormStep3.controls['confermaPassword'].errors?.['required']">{{ 'ui.registrazione.conferma_password.error.required' | translate }}</p>
+          <p class="errore-campo" *ngIf="errorePasswordNonCombacia && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3)">{{ 'ui.registrazione.conferma_password.error.mismatch' | translate }}</p>
         </div>
       </div>
 
