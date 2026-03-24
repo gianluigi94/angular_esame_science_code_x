@@ -32,6 +32,7 @@ sessoValore = '';
 indiceSesso = -1;
 cfValore = '';
 cfFlash = false;
+cfModificatoManualmente = false;
 paeseAperto = false;
 paeseValore = 'IT';
 comuneAperto = false;
@@ -137,9 +138,11 @@ constructor(
     nazioneD:   ['IT', Validators.required],
     comuneD:    ['', Validators.required],   // required di default: parte con IT
     cittaD:     [''],                         // required solo se estero
-    via:        ['', [Validators.maxLength(100)]],
-    civico:     ['', [Validators.maxLength(20)]],
-    dettagli:   ['', [Validators.maxLength(200)]],
+    via:        ['', [Validators.minLength(3), Validators.maxLength(100),
+                      Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s'.,°\/\-]+$/)]],
+    civico:     ['', [Validators.maxLength(10),
+                      Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/)]],
+    dettagli:   ['', [Validators.minLength(3), Validators.maxLength(200)]],
     provinciaD: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
     cap:        ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
   });
@@ -308,20 +311,29 @@ selezionaPaese(valore: string): void {
   this.indiceNazione = -1;
   this.reactiveForm.get('paese')!.setValue(valore);
   this.reactiveForm.get('paese')!.markAsTouched();
-  if (cambiaTipo) {
+if (cambiaTipo) {
     this.comuneValore = '';
     this.filtroComuni = '';
     this.reactiveForm.get('comune')!.setValue('');
     this.reactiveForm.get('citta')!.setValue('');
+    this.cfValore = '';
+    this.cfFlash = false;
+    this.cfModificatoManualmente = false; // cambio paese = reset manuale
+    this.reactiveForm.get('codiceFiscale')!.setValue('');
     if (valore === 'IT') {
       this.reactiveForm.get('comune')!.setValidators(Validators.required);
       this.reactiveForm.get('citta')!.clearValidators();
+      this.reactiveForm.get('codiceFiscale')!.setValidators([Validators.required,
+        Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]);
     } else {
       this.reactiveForm.get('citta')!.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(80)]);
       this.reactiveForm.get('comune')!.clearValidators();
+      this.reactiveForm.get('codiceFiscale')!.setValidators([
+        Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]);
     }
     this.reactiveForm.get('comune')!.updateValueAndValidity();
     this.reactiveForm.get('citta')!.updateValueAndValidity();
+    this.reactiveForm.get('codiceFiscale')!.updateValueAndValidity();
   }
   this.calcolaCodiceFiscale();
 }
@@ -334,6 +346,21 @@ onTabForm(event: KeyboardEvent): void {
   if (target === precedente) {
     this._sessoFocusDaTab = true;
   }
+}
+
+onBlurAnag(event: FocusEvent): void {
+  const destinazione = event.relatedTarget as HTMLElement | null;
+  const vasuAvanti = destinazione?.classList.contains('avanti_btn') ?? false;
+  if (vasuAvanti && !this.isItalia) return; // CF opzionale + click su Avanti: non ricalcolare
+  this.calcolaCodiceFiscale();
+}
+
+onEnterForm(event: KeyboardEvent): void {
+  const target = event.target as HTMLElement;
+  if (target.tagName === 'BUTTON' && target.getAttribute('type') === 'submit') {
+    return; // lascia passare Enter sul bottone submit
+  }
+  event.preventDefault();
 }
  selezionaComune(valore: string): void {
   this.comuneValore = valore;
@@ -591,7 +618,7 @@ onInputPaese(event: Event): void {
   if (parziale.length !== 15) return;
 
  const cf = parziale + this.cfControllo(parziale);
-if (cf !== this.cfValore) {
+if (cf !== this.cfValore && !this.cfModificatoManualmente) {
   this.cfValore = cf;
   this.reactiveForm.get('codiceFiscale')!.setValue(cf);
   this.reactiveForm.get('codiceFiscale')!.markAsTouched();
@@ -603,6 +630,7 @@ if (cf !== this.cfValore) {
 svuotaCF(): void {
   this.cfValore = '';
   this.cfFlash = false;
+  this.cfModificatoManualmente = false; // reset: torna ad auto-calcolare
   this.reactiveForm.get('codiceFiscale')!.setValue('');
   this.reactiveForm.get('codiceFiscale')!.markAsTouched();
 }

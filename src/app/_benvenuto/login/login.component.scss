@@ -78,7 +78,7 @@
   #utente {
     width: 350px;
     height: 50px;
-    background: #000000d7;
+    background: #00000081;
     border: none;
     border-radius: 7px;
     font-size: 18px;
@@ -88,11 +88,14 @@
   }
 
   .campo-form input:focus ~ label,
-  .campo-form input:not(:placeholder-shown) ~ label {
-    top: 4px;
-    transform: translateY(0);
-    font-size: 12px;
-  }
+.campo-form input:not(:placeholder-shown) ~ label,
+.campo-form input:-webkit-autofill ~ label,
+.campo-form input:-webkit-autofill:hover ~ label,
+.campo-form input:-webkit-autofill:focus ~ label {
+  top: 4px;
+  transform: translateY(0);
+  font-size: 12px;
+}
 
   .campo-form label.is-invalid {
     color: rgb(137, 11, 11) !important;
@@ -157,7 +160,7 @@
     width: 25px;
     height: 25px;
     border-radius: 4px;
-    background: linear-gradient(135deg, #000000c1, #000000c1);
+    background: linear-gradient(135deg, #00000075, #00000075);
     box-shadow: 0 0 7px #999da094;
   }
 
@@ -262,4 +265,22 @@ app-footer {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#utente:-webkit-autofill,
+#utente:-webkit-autofill:hover,
+#utente:-webkit-autofill:focus,
+#password:-webkit-autofill,
+#password:-webkit-autofill:hover,
+#password:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(205, 205, 205) !important;
+  caret-color: rgb(205, 205, 205);
+  padding: 18px 10px 0 10px !important;
+  border-radius: 7px;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+#utente:-webkit-autofill::first-line,
+#password:-webkit-autofill::first-line {
+  font-size: 18px !important;
 }

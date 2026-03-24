@@ -251,3 +251,17 @@ label.is-invalid {
     font-size: 25px !important;
   }
 }
+#email_cta:-webkit-autofill,
+#email_cta:-webkit-autofill:hover,
+#email_cta:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(223, 223, 223) !important;
+  caret-color: rgb(223, 223, 223);
+  padding: 18px 10px 0 10px !important;
+  border-radius: 7px;
+  box-shadow: 0 0 0 1000px #000000c1 inset, 0 0 10px #999da0 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+#email_cta:-webkit-autofill::first-line {
+  font-size: 18px !important;
+}

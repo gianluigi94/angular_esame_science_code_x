@@ -20,6 +20,7 @@ import { LoginUscitaService } from './_login_service/login_uscita.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
+/* DOPO */
 export class LoginComponent implements OnDestroy, AfterViewInit {
   @ViewChild('loginContenuto', { static: true }) // prendo il riferimento all'elemento del template con #loginContenuto già in fase di inizializzazione
   loginContenuto!: ElementRef<HTMLElement>; // mi conservo l'elemento HTML per usarlo nelle animazioni
@@ -79,6 +80,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     this.auth = this.authService.leggiObsAuth(); // mi aggancio allo stato di autenticazione esposto dal servizio per avere sempre il valore aggiornato
   }
 
+/* DOPO */
 /**
  * Metodo chiamato automaticamente da Angular dopo che il template è stato renderizzato
  * e gli elementi della pagina sono disponibili nel DOM.
@@ -88,9 +90,9 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
  *
  * @returns void
  */
-  ngAfterViewInit(): void {
+ ngAfterViewInit(): void {
     sessionStorage.setItem('vengo_da_login', 'true');
-        if (this.saltaAnimazioniIngresso) {
+    if (this.saltaAnimazioniIngresso) {
       UtilityService.nascondiSottotitoloEScrol();
       return;
     }
@@ -324,6 +326,8 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     };
     return osservatore; // restituisco l'osservatore pronto da passare alla subscribe
   }
+
+
 
   /**
  * Metodo chiamato automaticamente da Angular quando il componente viene distrutto.

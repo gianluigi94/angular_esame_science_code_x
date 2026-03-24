@@ -26,14 +26,15 @@
         [innerHTML]="'ui.accesso.utente.label' | translate">
       </p>
 
+    <!-- DOPO -->
       <div class="campo-form">
         <!-- definisco l'input di testo per l'utente collegandolo al controllo del reactive form e applico la classe di errore se è invalido ed è stato toccato oppure ho già inviato il form -->
 
-        <input type="text" placeholder=" " name="utente" id="utente" formControlName="utente" [ngClass]="{
-            'is-invalid':
-              reactiveForm.controls['utente'].invalid &&
-              (reactiveForm.controls['utente'].touched || formInviato)
-          }" />
+        <input type="text" placeholder=" " name="utente" id="utente" formControlName="utente" autocomplete="username" [ngClass]="{
+    'is-invalid':
+      reactiveForm.controls['utente'].invalid &&
+      (reactiveForm.controls['utente'].touched || formInviato)
+  }" />
   <!-- mostro la label collegata all'input utente, la traduco come testo del placeholder e la marco come non valida quando il controllo è invalido ed è stato toccato oppure ho già inviato il form -->
 
         <label for="utente" [ngClass]="{
@@ -61,16 +62,17 @@
         Password
       </p>
 
-      <div class="campo-form password-wrapper">
+      <!-- DOPO -->
+       <div class="campo-form password-wrapper">
 
         <!-- definisco l'input password collegato al reactive form, cambio il tipo tra testo e password in base a mostraPassword e applico la classe di errore se il controllo è invalido ed è stato toccato -->
 
         <input [type]="mostraPassword ? 'text' : 'password'" placeholder=" " name="password" id="password"
-          formControlName="password" [ngClass]="{
-            'is-invalid': reactiveForm.controls['password'].invalid &&
-                          (reactiveForm.controls['password'].touched ||
-                           formInviato)
-          }">
+  formControlName="password" autocomplete="current-password" [ngClass]="{
+    'is-invalid': reactiveForm.controls['password'].invalid &&
+                  (reactiveForm.controls['password'].touched ||
+                   formInviato)
+  }">
 <!-- creo un pulsante che alterna la visibilità della password invertendo mostraPassword e aggiorno l'etichetta accessibile in base allo stato -->
 
         <button type="button" class="toggle-password" (click)="mostraPassword = !mostraPassword"

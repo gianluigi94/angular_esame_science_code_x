@@ -2,7 +2,7 @@
 </app-saturno>
 <span class="sfocatura"></span>
 <section class="registrazione-contenuto">
-<form class="form-registrazione" *ngIf="stepAttuale === 1" [formGroup]="reactiveForm" (ngSubmit)="avanti()" (keydown.enter)="$event.preventDefault()" (keydown.tab)="onTabForm($any($event))">
+<form class="form-registrazione" *ngIf="stepAttuale === 1" [formGroup]="reactiveForm" autocomplete="off" (ngSubmit)="avanti()" (keydown.enter)="onEnterForm($any($event))" (keydown.tab)="onTabForm($any($event))">
 
     <h2 class="titolo-animato">Dati <span>anagrafici</span></h2>
 
@@ -14,7 +14,7 @@
           <input type="text" placeholder=" " id="nome" autocomplete="new-password"
             formControlName="nome"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }"
-            (blur)="calcolaCodiceFiscale()" />
+            (blur)="onBlurAnag($event)" />
           <label for="nome" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">Nome</label>
         </div>
         <p class="errore-campo" *ngIf="reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato)">
@@ -28,7 +28,7 @@
           <input type="text" placeholder=" " id="cognome" autocomplete="new-password"
             formControlName="cognome"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }"
-            (blur)="calcolaCodiceFiscale()" />
+            (blur)="onBlurAnag($event)" />
           <label for="cognome" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">Cognome</label>
         </div>
         <p class="errore-campo" *ngIf="reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato)">
@@ -45,19 +45,19 @@
         <div class="data-custom" [class.data-compilata]="dataCompilata()" (click)="focusData($event)">
           <span class="data-label-piccola">gg/mm/aaaa</span>
           <input type="text" class="data-parte" id="data_gg" placeholder="gg"
-            maxlength="2" inputmode="numeric" autocomplete="off"
+            maxlength="2" inputmode="numeric" autocomplete="new-password"
             formControlName="dataGg"
             (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event, 'gg')" />
           <span class="data-sep">/</span>
           <input type="text" class="data-parte" id="data_mm" placeholder="mm"
-            maxlength="2" inputmode="numeric" autocomplete="off"
+            maxlength="2" inputmode="numeric" autocomplete="new-password"
             formControlName="dataMm"
             (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event, 'mm')" />
           <span class="data-sep">/</span>
           <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
-            maxlength="4" inputmode="numeric" autocomplete="off"
+            maxlength="4" inputmode="numeric" autocomplete="new-password"
             formControlName="dataAaaa"
-            (keydown)="soloNumeri($event, 'aaaa')" (blur)="calcolaCodiceFiscale()" />
+            (keydown)="soloNumeri($event, 'aaaa')" (blur)="onBlurAnag($event)" />
 
           <input id="datepicker-input" tabindex="-1" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
 
@@ -113,7 +113,7 @@
             [ngClass]="{ 'is-invalid': reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato) }">
             <span class="select-label-piccola">Paese</span>
             <input class="select-input-testo paese-input" type="text" placeholder="Seleziona paese"
-              autocomplete="off"
+  autocomplete="new-password"
               [value]="paeseAperto ? filtroNazioni : (paeseValore ? paeseLabel() : '')"
               (click)="togglePaese($event)"
               (input)="onInputPaese($event)"
@@ -148,6 +148,7 @@
             [ngClass]="{ 'is-invalid': reactiveForm.controls['comune'].invalid && (reactiveForm.controls['comune'].touched || formInviato) }">
             <span class="select-label-piccola">Comune</span>
             <input class="select-input-testo comune-input" type="text" placeholder="Cerca comune italiano..."
+  autocomplete="new-password"
               [value]="comuneAperto ? filtroComuni : (comuneValore ? comuneLabel() : '')"
               (click)="toggleComune($event)"
               (input)="onInputComune($event)"
@@ -167,12 +168,11 @@
 
         <!-- ESTERO: testo libero -->
         <div class="campo-form" *ngIf="!isItalia">
-          <input type="text" placeholder=" " id="citta_nascita"
+         <input type="text" placeholder=" " id="citta_nascita"
   autocomplete="new-password"
   formControlName="citta"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }"
-            (input)="comuneValore = $any($event.target).value"
-            (blur)="calcolaCodiceFiscale()" />
+            (input)="comuneValore = $any($event.target).value" />
           <label for="citta_nascita" [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }">Inserisci città</label>
         </div>
         <p class="errore-campo" *ngIf="!isItalia && reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato)">
@@ -192,11 +192,11 @@
 </p>
       <div class="campo-form">
         <input type="text" placeholder=" " id="codice_fiscale" maxlength="16"
-          autocomplete="off"
+          autocomplete="new-password"
           formControlName="codiceFiscale"
           [class.cf-flash]="cfFlash"
           [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }"
-          (input)="cfValore = $any($event.target).value; cfFlash = false" />
+          (input)="cfValore = $any($event.target).value; cfFlash = false; cfModificatoManualmente = true" />
         <label for="codice_fiscale" [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }">Codice Fiscale</label>
         <button *ngIf="cfValore" type="button" class="btn-clear-cf" tabindex="-1" (click)="svuotaCF()">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#e79c50">
@@ -221,6 +221,7 @@
   ══════════════════════════════════════════════════════════ -->
   <form class="form-registrazione" *ngIf="stepAttuale === 2"
     [formGroup]="reactiveFormStep2"
+    autocomplete="off"
     (ngSubmit)="avanti2()"
     (keydown.enter)="$event.preventDefault()">
 
@@ -242,8 +243,8 @@
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }">
             <span class="select-label-piccola">Paese</span>
             <input class="select-input-testo paese-dom-input" type="text"
-              placeholder="Seleziona paese"
-              autocomplete="off"
+  placeholder="Seleziona paese"
+  autocomplete="new-password"
               [value]="paeseDomAperto ? filtroNazioniDom : (paeseDomValore ? paeseDomLabel() : '')"
               (click)="togglePaeseDom($event)"
               (input)="onInputPaeseDom($event)"
@@ -280,8 +281,9 @@
             [class.compilato]="comuneDomValore"
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['comuneD'].invalid && (reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2) }">
             <span class="select-label-piccola">Comune</span>
-            <input class="select-input-testo comune-dom-input" type="text"
-              placeholder="Cerca comune italiano..."
+           <input class="select-input-testo comune-dom-input" type="text"
+  placeholder="Cerca comune italiano..."
+  autocomplete="new-password"
               [value]="comuneDomAperto ? filtroComuniDom : (comuneDomValore ? comuneDomValore : '')"
               (click)="toggleComuneDom($event)"
               (input)="onInputComuneDom($event)"
@@ -323,11 +325,18 @@
       <div class="campo-wrapper">
         <p class="label-sopra">Via / Piazza <span class="opzionale">(opzionale)</span></p>
         <div class="campo-form">
-          <input type="text" placeholder=" " id="via_dom"
+         <input type="text" placeholder=" " id="via_dom"
             autocomplete="new-password"
-            formControlName="via" />
-          <label for="via_dom">Via, Piazza, Corso...</label>
+            formControlName="via"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched }" />
+          <label for="via_dom"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched }">
+            Via, Piazza, Corso...
+          </label>
         </div>
+        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched">
+          Minimo 3 caratteri, solo lettere, numeri e punteggiatura comune
+        </p>
       </div>
 
       <div class="campo-wrapper">
@@ -335,9 +344,16 @@
         <div class="campo-form">
           <input type="text" placeholder=" " id="civico_dom"
             autocomplete="new-password"
-            formControlName="civico" />
-          <label for="civico_dom">Numero</label>
+            formControlName="civico"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched }" />
+          <label for="civico_dom"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched }">
+            Numero
+          </label>
         </div>
+        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched">
+          Deve iniziare con un numero (es. 5, 12A, 3/B)
+        </p>
       </div>
 
       <ng-container *ngIf="isItaliaDom">
@@ -350,7 +366,7 @@
           <div class="campo-form">
             <input type="text" placeholder=" " id="provincia_dom"
               maxlength="2"
-              autocomplete="off"
+              autocomplete="new-password"
               formControlName="provinciaD"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }"
               (input)="onInputProvincia($event)" />
@@ -375,7 +391,7 @@
             <input type="text" placeholder=" " id="cap_dom"
               maxlength="5"
               inputmode="numeric"
-              autocomplete="off"
+              autocomplete="new-password"
               formControlName="cap"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
               (input)="capValore = $any($event.target).value" />
@@ -395,7 +411,7 @@
               <span class="select-label-piccola">CAP</span>
               <input class="select-input-testo cap-dom-input" type="text"
                 placeholder="Seleziona CAP"
-                autocomplete="off"
+                autocomplete="new-password"
                 inputmode="numeric"
                 [value]="capDomAperto ? filtroCapDom : (capValore ? capValore : '')"
                 (click)="toggleCapDom($event)"
@@ -428,12 +444,19 @@
     <div class="campo-wrapper campo-centrato campo-animato">
       <p class="label-sopra">Dettagli aggiuntivi <span class="opzionale">(opzionale)</span></p>
       <div class="campo-form">
-        <input type="text" placeholder=" " id="dettagli_dom"
-          autocomplete="new-password"
-          formControlName="dettagli" />
-        <label for="dettagli_dom">Scala, interno, indicazioni...</label>
+       <input type="text" placeholder=" " id="dettagli_dom"
+            autocomplete="new-password"
+            formControlName="dettagli"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['dettagli'].invalid && reactiveFormStep2.controls['dettagli'].touched }" />
+          <label for="dettagli_dom"
+            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['dettagli'].invalid && reactiveFormStep2.controls['dettagli'].touched }">
+            Scala, interno, indicazioni...
+          </label>
+        </div>
+        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].invalid && reactiveFormStep2.controls['dettagli'].touched">
+          Minimo 3 caratteri
+        </p>
       </div>
-    </div>
 
     <button class="avanti_btn campo-animato" type="submit" [disabled]="!reactiveFormStep2.valid">
       Avanti
