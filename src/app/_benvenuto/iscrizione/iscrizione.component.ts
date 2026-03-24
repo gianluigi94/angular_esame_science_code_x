@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UtilityService } from '../login/_login_service/login_utility.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { Subscription } from 'rxjs';
 import gsap from 'gsap';
 import { Datepicker } from 'vanillajs-datepicker';
@@ -61,6 +62,7 @@ capIsMulti = false;
 capMultiOpzioni: string[] = [];
 capFlash = false;
 provinciaFlash = false;
+erroreCoerenzaIndirizzo = false;
 
 get nazioniFiltrate(): any[] {
   if (!this.filtroNazioni.trim()) return this.nazioni;
@@ -118,7 +120,8 @@ constructor(
   private apiService: ApiService,
   private eRef: ElementRef,
   private fb: FormBuilder,
-  private cdr: ChangeDetectorRef
+  private cdr: ChangeDetectorRef,
+  private saturnoService: SaturnoService
 ) {
   this.reactiveForm = this.fb.group({
     nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50),
@@ -732,9 +735,39 @@ avanti2(): void {
     this.reactiveFormStep2.markAllAsTouched();
     return;
   }
+  if (this.isItaliaDom) {
+    const comune = this.comuni.find(c => c.comune === this.comuneDomValore);
+    if (comune) {
+      const provinciaInserita = (this.reactiveFormStep2.get('provinciaD')!.value ?? '').toUpperCase();
+      const provinciaAttesa   = (comune.sigla_automobilistica ?? '').toUpperCase();
+      let capOk = false;
+      if (comune.cap_inizio && comune.cap_fine && String(comune.cap_inizio) !== String(comune.cap_fine)) {
+        const inizio = parseInt(String(comune.cap_inizio), 10);
+        const fine   = parseInt(String(comune.cap_fine), 10);
+        const capNum = parseInt(this.capValore, 10);
+        capOk = !isNaN(capNum) && capNum >= inizio && capNum <= fine;
+      } else {
+        capOk = this.capValore === String(comune.cap).padStart(5, '0');
+      }
+      if (provinciaInserita !== provinciaAttesa || !capOk) {
+        this.erroreCoerenzaIndirizzo = true;
+        this.saturnoService.flashErrorLight();
+        return;
+      }
+    }
+  }
+  this.erroreCoerenzaIndirizzo = false;
   // qui metti la navigazione al passo 3
 }
-
+onBlurCapDom(event: FocusEvent): void {
+  const destinazione = event.relatedTarget as HTMLElement | null;
+  if (destinazione?.closest('.select-dropdown')) return;
+  const val = (event.target as HTMLInputElement).value.trim();
+  if (!val) return;
+  if (this.capValore && this.capValore === val) return;
+  const trovato = this.capMultiOpzioni.find(c => c === val);
+  if (trovato) this.selezionaCapDom(trovato);
+}
 private animaUscitaStep1(): Promise<void> {
   const titolo = document.querySelector('.titolo-animato') as HTMLElement | null;
   const labels = document.querySelectorAll('.label-sopra');
@@ -1039,5 +1072,33 @@ onInputProvincia(event: Event): void {
   const val = input.value.toUpperCase().replace(/[^A-Z]/g, '');
   input.value = val;
   this.reactiveFormStep2.get('provinciaD')!.setValue(val);
+}
+
+indietro(): void {
+  this.animaUscitaStep2().then(() => {
+    this.stepAttuale = 1;
+    this.cdr.detectChanges();
+
+    const titolo = document.querySelector('.titolo-animato') as HTMLElement;
+    const labels = document.querySelectorAll('.label-sopra');
+    const righe  = document.querySelectorAll('.campo-animato');
+    gsap.set(titolo, { opacity: 0 });
+    gsap.set(labels, { opacity: 0 });
+    gsap.set(righe,  { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+
+    setTimeout(() => this.animaEntrata(), 16);
+  });
+}
+
+private animaUscitaStep2(): Promise<void> {
+  const titolo = document.querySelector('.titolo-animato') as HTMLElement | null;
+  const labels = document.querySelectorAll('.label-sopra');
+  const righe  = document.querySelectorAll('.campo-animato');
+  return new Promise<void>((resolve) => {
+    if (titolo) gsap.to(titolo, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+    gsap.to(labels, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+    gsap.to(righe,  { opacity: 0, scaleX: 0, duration: 0.35, ease: 'power2.in', stagger: 0.05 });
+    setTimeout(() => resolve(), 550);
+  });
 }
 }
