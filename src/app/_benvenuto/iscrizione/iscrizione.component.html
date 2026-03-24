@@ -17,9 +17,12 @@
             (blur)="onBlurAnag($event)" />
           <label for="nome" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">Nome</label>
         </div>
-        <p class="errore-campo" *ngIf="reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato)">
-          Inserisci un nome valido
-        </p>
+      <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['required']">Inserisci il nome</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['minlength']">Nome troppo corto (minimo 3 caratteri)</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['maxlength']">Nome troppo lungo (massimo 50 caratteri)</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['pattern']">Solo lettere, spazi e apostrofi</p>
+        </div>
       </div>
 
       <div class="campo-wrapper">
@@ -31,9 +34,12 @@
             (blur)="onBlurAnag($event)" />
           <label for="cognome" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">Cognome</label>
         </div>
-        <p class="errore-campo" *ngIf="reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato)">
-          Inserisci un cognome valido
-        </p>
+      <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['required']">Inserisci il cognome</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['minlength']">Cognome troppo corto (minimo 3 caratteri)</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['maxlength']">Cognome troppo lungo (massimo 50 caratteri)</p>
+          <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['pattern']">Solo lettere, spazi e apostrofi</p>
+        </div>
       </div>
     </div>
 
@@ -117,7 +123,8 @@
               [value]="paeseAperto ? filtroNazioni : (paeseValore ? paeseLabel() : '')"
               (click)="togglePaese($event)"
               (input)="onInputPaese($event)"
-              (keydown)="navigaPaese($event)" />
+              (keydown)="navigaPaese($event)"
+(blur)="onBlurPaese($event)" />
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
               <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
             </svg>
@@ -152,7 +159,8 @@
               [value]="comuneAperto ? filtroComuni : (comuneValore ? comuneLabel() : '')"
               (click)="toggleComune($event)"
               (input)="onInputComune($event)"
-              (keydown)="navigaComune($event)" />
+              (keydown)="navigaComune($event)"
+(blur)="onBlurComune($event)" />
           </div>
           <div class="select-dropdown" *ngIf="comuneAperto">
             <div class="select-opzione" *ngFor="let c of comuniFiltrati; let i = index"
@@ -247,7 +255,8 @@
               [value]="paeseDomAperto ? filtroNazioniDom : (paeseDomValore ? paeseDomLabel() : '')"
               (click)="togglePaeseDom($event)"
               (input)="onInputPaeseDom($event)"
-              (keydown)="navigaPaeseDom($event)" />
+              (keydown)="navigaPaeseDom($event)"
+(blur)="onBlurPaeseDom($event)" />
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
               <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
             </svg>
@@ -286,7 +295,8 @@
               [value]="comuneDomAperto ? filtroComuniDom : (comuneDomValore ? comuneDomValore : '')"
               (click)="toggleComuneDom($event)"
               (input)="onInputComuneDom($event)"
-              (keydown)="navigaComuneDom($event)" />
+              (keydown)="navigaComuneDom($event)"
+(blur)="onBlurComuneDom($event)" />
           </div>
           <div class="select-dropdown" *ngIf="comuneDomAperto">
             <div class="select-opzione"
@@ -334,7 +344,7 @@
           </label>
         </div>
         <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched">
-          Minimo 3 caratteri, solo lettere, numeri e punteggiatura comune
+          Minimo 3 caratteri, solo lettere,<br>numeri e punteggiatura comune
         </p>
       </div>
 
@@ -351,7 +361,7 @@
           </label>
         </div>
         <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched">
-          Deve iniziare con un numero (es. 5, 12A, 3/B)
+          Deve iniziare con un numero
         </p>
       </div>
 
@@ -365,7 +375,7 @@
           <div class="campo-form">
             <input type="text" placeholder=" " id="provincia_dom"
               maxlength="2"
-
+              [class.cf-flash]="provinciaFlash"
               formControlName="provinciaD"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }"
               (input)="onInputProvincia($event)" />
@@ -375,7 +385,7 @@
             </label>
           </div>
           <p class="errore-campo" *ngIf="reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2)">
-            Inserisci la sigla (2 lettere)
+            Sigla non valida
           </p>
         </div>
 
@@ -387,10 +397,10 @@
 
           <!-- CAP singolo: input testo (auto-compilato) -->
           <div class="campo-form" *ngIf="!capIsMulti">
-            <input type="text" placeholder=" " id="cap_dom"
+           <input type="text" placeholder=" " id="cap_dom"
               maxlength="5"
               inputmode="numeric"
-
+              [class.cf-flash]="capFlash"
               formControlName="cap"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
               (input)="capValore = $any($event.target).value" />
@@ -408,9 +418,9 @@
               [class.compilato]="capValore"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
               <span class="select-label-piccola">CAP</span>
+              <span class="cap-placeholder-fake" *ngIf="!capValore && !filtroCapDom" [class.cf-flash]="capFlash">Seleziona CAP</span>
               <input class="select-input-testo cap-dom-input" type="text"
-                placeholder="Seleziona CAP"
-
+                placeholder=""
                 inputmode="numeric"
                 [value]="capDomAperto ? filtroCapDom : (capValore ? capValore : '')"
                 (click)="toggleCapDom($event)"

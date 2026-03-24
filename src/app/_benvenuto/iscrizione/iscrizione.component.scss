@@ -33,7 +33,7 @@ app-footer {
     z-index: 1;
 
     &:nth-child(2) { z-index: 3; }
-    &:nth-child(3) { z-index: 2; }
+    &:nth-child(3) { z-index: 2; margin-bottom: 10px; }
   }
 
   .campo-wrapper {
@@ -204,8 +204,7 @@ app-footer {
   margin-top: 16px;
   transition: margin-top 0.15s ease;
 }
-
-      .select-input-testo {
+.select-input-testo {
   flex: 1;
   background: transparent !important;
   border: none !important;
@@ -220,6 +219,8 @@ app-footer {
 
   &::placeholder { color: #4f5050; }
 }
+
+
 
 svg { flex-shrink: 0; }
     }
@@ -358,6 +359,11 @@ svg { flex-shrink: 0; }
   100% { color: rgb(205, 205, 205); }
 }
 
+@keyframes cf-colore-placeholder {
+  0%   { color: #e79c50; }
+  60%  { color: #e79c50; }
+  100% { color: #4f5050; }
+}
 .cf-flash {
   animation: cf-colore-auto 1.5s ease forwards;
 }
@@ -366,7 +372,7 @@ svg { flex-shrink: 0; }
 }
 
 .errore-campo {
-  font-size: 16px;
+  font-size: 18px;
   color: #b41414;
       text-shadow: 1px 1px 3px #14110a;
 
@@ -400,10 +406,10 @@ input[type="text"].is-invalid {
   position: absolute;
   top: 0;
   left: 0;
-  background-color: rgba(2, 5, 27, 0.178);
+  background-color: rgba(2, 5, 27, 0.259);
   z-index: 8;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
   opacity: 0;
 }
 
@@ -444,6 +450,18 @@ input[type="text"].is-invalid {
     min-width: 0 !important;
     width: auto !important;
   }
+
+   .cap-placeholder-fake {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-family: "Quantico", serif;
+    font-size: 18px;
+    color: #e79c50;
+    animation: cf-colore-placeholder 1.5s ease forwards;
+  }
 }
 
 // ─── Fix autofill browser: mantiene lo stile dei campi ───
@@ -479,4 +497,11 @@ input[type="text"].is-invalid {
 .form-registrazione input:-webkit-autofill::first-line {
   font-size: 18px !important;
   font-family: "Quantico", serif !important;
+}
+.errori-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .errore-campo { margin: 0; }
 }

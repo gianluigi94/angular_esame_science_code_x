@@ -59,6 +59,8 @@ filtroCapDom = '';
 indiceCapDom = -1;
 capIsMulti = false;
 capMultiOpzioni: string[] = [];
+capFlash = false;
+provinciaFlash = false;
 
 get nazioniFiltrate(): any[] {
   if (!this.filtroNazioni.trim()) return this.nazioni;
@@ -119,9 +121,9 @@ constructor(
   private cdr: ChangeDetectorRef
 ) {
   this.reactiveForm = this.fb.group({
-    nome:          ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
+    nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50),
                          Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
-    cognome:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50),
+    cognome:       ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50),
                          Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
     dataGg:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|[12]\d|3[01])$/)]],
     dataMm:        ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])$/)]],
@@ -555,10 +557,35 @@ onInputPaese(event: Event): void {
     if (!this.paeseAperto) this.paeseAperto = true;
   }
 
-  onInputComune(event: Event): void {
+ onInputComune(event: Event): void {
     this.filtroComuni = (event.target as HTMLInputElement).value;
     this.indiceComune = -1;
     if (!this.comuneAperto) this.comuneAperto = true;
+  }
+
+  onBlurPaese(event: FocusEvent): void {
+    const destinazione = event.relatedTarget as HTMLElement | null;
+    if (destinazione?.closest('.select-dropdown')) return; // sta cliccando un'opzione
+    const val = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    if (!val) return;
+    if (this.paeseValore && this.paeseLabel().toLowerCase() === val) return; // già ok
+    const trovata = this.nazioni.find(n =>
+      (n.nazione_it ?? '').toLowerCase() === val ||
+      (n.nazione_en ?? '').toLowerCase() === val
+    );
+    if (trovata) this.selezionaPaese(trovata.iso);
+  }
+
+  onBlurComune(event: FocusEvent): void {
+    const destinazione = event.relatedTarget as HTMLElement | null;
+    if (destinazione?.closest('.select-dropdown')) return;
+    const val = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    if (!val) return;
+    if (this.comuneValore && this.comuneValore.toLowerCase() === val) return;
+    const trovato = this.comuni.find(c =>
+      (c.comune ?? '').toLowerCase() === val
+    );
+    if (trovato) this.selezionaComune(trovato.comune);
   }
   navigaComune(event: KeyboardEvent): void {
     if (!this.comuneAperto) return;
@@ -830,6 +857,31 @@ onInputComuneDom(event: Event): void {
   if (!this.comuneDomAperto) this.comuneDomAperto = true;
 }
 
+onBlurPaeseDom(event: FocusEvent): void {
+  const destinazione = event.relatedTarget as HTMLElement | null;
+  if (destinazione?.closest('.select-dropdown')) return;
+  const val = (event.target as HTMLInputElement).value.trim().toLowerCase();
+  if (!val) return;
+  if (this.paeseDomValore && this.paeseDomLabel().toLowerCase() === val) return;
+  const trovata = this.nazioni.find(n =>
+    (n.nazione_it ?? '').toLowerCase() === val ||
+    (n.nazione_en ?? '').toLowerCase() === val
+  );
+  if (trovata) this.selezionaPaeseDom(trovata.iso);
+}
+
+onBlurComuneDom(event: FocusEvent): void {
+  const destinazione = event.relatedTarget as HTMLElement | null;
+  if (destinazione?.closest('.select-dropdown')) return;
+  const val = (event.target as HTMLInputElement).value.trim().toLowerCase();
+  if (!val) return;
+  if (this.comuneDomValore && this.comuneDomValore.toLowerCase() === val) return;
+  const trovato = this.comuni.find(c =>
+    (c.comune ?? '').toLowerCase() === val
+  );
+  if (trovato) this.selezionaComuneDom(trovato.comune);
+}
+
 navigaComuneDom(event: KeyboardEvent): void {
   if (!this.comuneDomAperto) return;
   const input = event.target as HTMLInputElement;
@@ -866,16 +918,19 @@ selezionaComuneDom(valore: string): void {
   console.log('🏙️ comune trovato:', JSON.stringify(comune));
 
   // Provincia: sigla automobilistica
-  const sigla = (comune.sigla_automobilistica ?? '').toUpperCase();
+ const sigla = (comune.sigla_automobilistica ?? '').toUpperCase();
   this.reactiveFormStep2.get('provinciaD')!.setValue(sigla);
   this.reactiveFormStep2.get('provinciaD')!.markAsTouched();
+  this.provinciaFlash = false;
+  setTimeout(() => { this.provinciaFlash = true; }, 10);
+  setTimeout(() => { this.provinciaFlash = false; }, 1510);
 
   // CAP: singolo o multi
   this.capValore = '';
   this.capIsMulti = false;
   this.capMultiOpzioni = [];
+  this.capFlash = false;
   this.reactiveFormStep2.get('cap')!.setValue('');
-
   if (comune.cap_inizio && comune.cap_fine && String(comune.cap_inizio) !== String(comune.cap_fine)) {
     const inizio = parseInt(String(comune.cap_inizio), 10);
     const fine   = parseInt(String(comune.cap_fine), 10);
@@ -886,7 +941,13 @@ selezionaComuneDom(valore: string): void {
       }
       this.capIsMulti = true;
       this.capMultiOpzioni = opzioni;
-      return; // attende che l'utente scelga dal select
+      this.reactiveFormStep2.get('cap')!.clearValidators();
+      this.reactiveFormStep2.get('cap')!.updateValueAndValidity();
+      setTimeout(() => {
+        this.capFlash = true;
+        setTimeout(() => { this.capFlash = false; }, 1510);
+      }, 30); // aspetta che Angular renderizzi il select
+      return;
     }
   }
 
@@ -895,6 +956,9 @@ selezionaComuneDom(valore: string): void {
     this.capValore = String(comune.cap).padStart(5, '0');
     this.reactiveFormStep2.get('cap')!.setValue(this.capValore);
     this.reactiveFormStep2.get('cap')!.markAsTouched();
+    this.capFlash = false;
+    setTimeout(() => { this.capFlash = true; }, 10);
+    setTimeout(() => { this.capFlash = false; }, 1510);
   }
 }
 
@@ -944,8 +1008,13 @@ selezionaCapDom(valore: string): void {
   this.capDomAperto = false;
   this.filtroCapDom = '';
   this.indiceCapDom = -1;
+  this.reactiveFormStep2.get('cap')!.setValidators([Validators.required, Validators.pattern(/^\d{5}$/)]);
   this.reactiveFormStep2.get('cap')!.setValue(valore);
   this.reactiveFormStep2.get('cap')!.markAsTouched();
+  this.reactiveFormStep2.get('cap')!.updateValueAndValidity();
+  this.capFlash = false;
+  setTimeout(() => { this.capFlash = true; }, 10);
+  setTimeout(() => { this.capFlash = false; }, 1510);
 }
 
 // ════════════════════════════════════════════════════════════
