@@ -100,10 +100,13 @@ app-footer {
       pointer-events: none;
     }
 
-    &.data-compilata .data-label-piccola { display: block; }
+    &.data-compilata .data-label-piccola,
+    &:has(.data-parte:-webkit-autofill) .data-label-piccola { display: block; }
 
     &.data-compilata .data-parte,
-    &.data-compilata .data-sep { margin-top: 16px; }
+    &.data-compilata .data-sep,
+    &:has(.data-parte:-webkit-autofill) .data-parte,
+    &:has(.data-parte:-webkit-autofill) .data-sep { margin-top: 16px; }
 
     .data-sep {
       color: #6b6e6e;
@@ -441,4 +444,39 @@ input[type="text"].is-invalid {
     min-width: 0 !important;
     width: auto !important;
   }
+}
+
+// ─── Fix autofill browser: mantiene lo stile dei campi ───
+.form-registrazione input:-webkit-autofill,
+.form-registrazione input:-webkit-autofill:hover,
+.form-registrazione input:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(205, 205, 205) !important;
+  caret-color: rgb(205, 205, 205);
+  box-shadow: 0 0 0 1000px #000000df inset, 0 0 8px #999da0 !important;
+  border-radius: 7px;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.form-registrazione .data-custom .data-parte:-webkit-autofill,
+.form-registrazione .data-custom .data-parte:-webkit-autofill:hover,
+.form-registrazione .data-custom .data-parte:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(205, 205, 205) !important;
+  caret-color: rgb(205, 205, 205);
+  box-shadow: none !important;
+  background-color: transparent !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.form-registrazione .select-custom .select-header .select-input-testo:-webkit-autofill,
+.form-registrazione .select-custom .select-header .select-input-testo:-webkit-autofill:hover,
+.form-registrazione .select-custom .select-header .select-input-testo:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(205, 205, 205) !important;
+  caret-color: rgb(205, 205, 205);
+  box-shadow: 0 0 0 1000px #000000df inset !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.form-registrazione input:-webkit-autofill::first-line {
+  font-size: 18px !important;
+  font-family: "Quantico", serif !important;
 }
