@@ -343,9 +343,11 @@
             Via, Piazza, Corso...
           </label>
         </div>
-        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched">
-          Minimo 3 caratteri, solo lettere,<br>numeri e punteggiatura comune
-        </p>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['minlength']">Minimo 3 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['maxlength']">Massimo 100 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['pattern']">Solo lettere, numeri e punteggiatura comune</p>
+        </div>
       </div>
 
       <div class="campo-wrapper">
@@ -360,9 +362,10 @@
             Numero
           </label>
         </div>
-        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched">
-          Deve iniziare con un numero
-        </p>
+       <div class="errori-stack">
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].touched && reactiveFormStep2.controls['civico'].errors?.['maxlength']">Massimo 10 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].touched && reactiveFormStep2.controls['civico'].errors?.['pattern']">Deve iniziare con un numero</p>
+        </div>
       </div>
 
       <ng-container *ngIf="isItaliaDom">
@@ -384,9 +387,10 @@
               Sigla
             </label>
           </div>
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2)">
-            Sigla non valida
-          </p>
+         <div class="errori-stack">
+            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && reactiveFormStep2.controls['provinciaD'].errors?.['required']">Inserisci la sigla</p>
+            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && reactiveFormStep2.controls['provinciaD'].errors?.['pattern']">Esattamente 2 lettere</p>
+          </div>
         </div>
 
         <div class="campo-wrapper">
@@ -403,7 +407,7 @@
               [class.cf-flash]="capFlash"
               formControlName="cap"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
-              (input)="capValore = $any($event.target).value" />
+             (input)="onInputCap($event)" />
             <label for="cap_dom"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
               CAP
@@ -440,9 +444,10 @@
             </div>
           </div>
 
-          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2)">
-            CAP non valido (5 cifre)
-          </p>
+          <div class="errori-stack">
+            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && reactiveFormStep2.controls['cap'].errors?.['required']">Inserisci il CAP</p>
+            <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && reactiveFormStep2.controls['cap'].errors?.['pattern']">Esattamente 5 cifre</p>
+          </div>
         </div>
 
       </ng-container>
@@ -462,9 +467,10 @@
             Scala, interno, indicazioni...
           </label>
         </div>
-        <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].invalid && reactiveFormStep2.controls['dettagli'].touched">
-          Minimo 3 caratteri
-        </p>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].touched && reactiveFormStep2.controls['dettagli'].errors?.['minlength']">Minimo 3 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].touched && reactiveFormStep2.controls['dettagli'].errors?.['maxlength']">Massimo 200 caratteri</p>
+        </div>
       </div>
 
     <button class="avanti_btn campo-animato" type="submit" [disabled]="!reactiveFormStep2.valid">

@@ -202,6 +202,14 @@ private validaAnnoNascita() {
     return null;
   };
 }
+
+onInputCap(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const val = input.value.replace(/[^0-9]/g, '');
+  input.value = val;
+  this.capValore = val;
+  this.reactiveFormStep2.get('cap')!.setValue(val);
+}
 animaSfocatura(entra: boolean): Promise<void> {
     const sfocatura = document.querySelector('.sfocatura') as HTMLElement | null;
     if (!sfocatura) return Promise.resolve();
@@ -399,7 +407,8 @@ togglePaese(event: Event): void {
       this.sessoAperto = false;
       this.comuneAperto = false;
       this.indiceNazione = -1;
-      setTimeout(() => (document.querySelector('.paese-input') as HTMLInputElement)?.focus(), 0);
+      this.filtroNazioni = this.paeseValore ? this.paeseLabel() : '';
+      setTimeout(() => { const i = document.querySelector('.paese-input') as HTMLInputElement; if (i) { i.focus(); i.select(); } }, 0);
     }
     if (!this.paeseAperto) { this.filtroNazioni = ''; this.indiceNazione = -1; }
   }
@@ -411,7 +420,8 @@ togglePaese(event: Event): void {
       this.sessoAperto = false;
       this.paeseAperto = false;
       this.indiceComune = -1;
-      setTimeout(() => (document.querySelector('.comune-input') as HTMLInputElement)?.focus(), 0);
+      this.filtroComuni = this.comuneValore ?? '';
+      setTimeout(() => { const i = document.querySelector('.comune-input') as HTMLInputElement; if (i) { i.focus(); i.select(); } }, 0);
     }
     if (!this.comuneAperto) { this.filtroComuni = ''; this.indiceComune = -1; }
   }
@@ -761,12 +771,13 @@ togglePaeseDom(event: Event): void {
   event.stopPropagation();
   this.paeseDomAperto = !this.paeseDomAperto;
   if (this.paeseDomAperto) {
-    this.comuneDomAperto = false;
-    this.capDomAperto = false;
-    this.indiceNazioneDom = -1;
-    setTimeout(() => (document.querySelector('.paese-dom-input') as HTMLInputElement)?.focus(), 0);
-  }
-  if (!this.paeseDomAperto) { this.filtroNazioniDom = ''; this.indiceNazioneDom = -1; }
+      this.comuneDomAperto = false;
+      this.capDomAperto = false;
+      this.indiceNazioneDom = -1;
+      this.filtroNazioniDom = this.paeseDomValore ? this.paeseDomLabel() : '';
+      setTimeout(() => { const i = document.querySelector('.paese-dom-input') as HTMLInputElement; if (i) { i.focus(); i.select(); } }, 0);
+    }
+    if (!this.paeseDomAperto) { this.filtroNazioniDom = ''; this.indiceNazioneDom = -1; }
 }
 
 onInputPaeseDom(event: Event): void {
@@ -843,12 +854,13 @@ toggleComuneDom(event: Event): void {
   event.stopPropagation();
   this.comuneDomAperto = !this.comuneDomAperto;
   if (this.comuneDomAperto) {
-    this.paeseDomAperto = false;
-    this.capDomAperto = false;
-    this.indiceComuneDom = -1;
-    setTimeout(() => (document.querySelector('.comune-dom-input') as HTMLInputElement)?.focus(), 0);
-  }
-  if (!this.comuneDomAperto) { this.filtroComuniDom = ''; this.indiceComuneDom = -1; }
+      this.paeseDomAperto = false;
+      this.capDomAperto = false;
+      this.indiceComuneDom = -1;
+      this.filtroComuniDom = this.comuneDomValore ?? '';
+      setTimeout(() => { const i = document.querySelector('.comune-dom-input') as HTMLInputElement; if (i) { i.focus(); i.select(); } }, 0);
+    }
+    if (!this.comuneDomAperto) { this.filtroComuniDom = ''; this.indiceComuneDom = -1; }
 }
 
 onInputComuneDom(event: Event): void {
@@ -969,13 +981,14 @@ selezionaComuneDom(valore: string): void {
 toggleCapDom(event: Event): void {
   event.stopPropagation();
   this.capDomAperto = !this.capDomAperto;
-  if (this.capDomAperto) {
-    this.paeseDomAperto = false;
-    this.comuneDomAperto = false;
-    this.indiceCapDom = -1;
-    setTimeout(() => (document.querySelector('.cap-dom-input') as HTMLInputElement)?.focus(), 0);
-  }
-  if (!this.capDomAperto) { this.filtroCapDom = ''; this.indiceCapDom = -1; }
+if (this.capDomAperto) {
+      this.paeseDomAperto = false;
+      this.comuneDomAperto = false;
+      this.indiceCapDom = -1;
+      this.filtroCapDom = this.capValore ?? '';
+      setTimeout(() => { const i = document.querySelector('.cap-dom-input') as HTMLInputElement; if (i) { i.focus(); i.select(); } }, 0);
+    }
+    if (!this.capDomAperto) { this.filtroCapDom = ''; this.indiceCapDom = -1; }
 }
 
 onInputCapDom(event: Event): void {
