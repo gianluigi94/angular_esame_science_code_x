@@ -56,7 +56,8 @@ app-footer {
     width: fit-content;
   }
 
-  input[type="text"] {
+ input[type="text"],
+  input[type="password"] {
     width: 400px;
     height: 47px;
     background: #000000df;
@@ -505,6 +506,32 @@ input[type="text"].is-invalid {
 
   .errore-campo { margin: 0; }
 }
+.password-wrapper-reg {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    input { padding-right: 42px; }
+  }
+
+  .toggle-password-reg {
+    position: absolute;
+    right: 8px;
+    bottom: 0;
+    height: 100%;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    &:focus { outline: none; }
+    &:hover svg { fill: orange; transition: fill 0.2s ease; }
+  }
+
 .bottoni-nav {
     display: flex;
     flex-direction: row;

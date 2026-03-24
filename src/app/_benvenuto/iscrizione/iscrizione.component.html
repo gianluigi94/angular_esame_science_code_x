@@ -232,7 +232,7 @@
     (ngSubmit)="avanti2()"
     (keydown.enter)="$event.preventDefault()">
 
-    <h2 class="titolo-animato">Indirizzo di <span>domicilio</span></h2>
+    <h2 class="titolo-animato">Indirizzo <span>di domicilio</span></h2>
 
     <!-- RIGA 1: Paese + Comune/Città -->
     <div class="riga-doppia campo-animato">
@@ -487,6 +487,146 @@
       <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep2.valid">
         Avanti
         <span class="step-btn">2 di 3</span>
+      </button>
+    </div>
+
+  </form>
+
+<!-- ═══════════════════════════════════════════════════════
+       STEP 3 — Recapiti e password
+  ══════════════════════════════════════════════════════════ -->
+  <form class="form-registrazione" *ngIf="stepAttuale === 3"
+    [formGroup]="reactiveFormStep3"
+    (ngSubmit)="avanti3()"
+    (keydown.enter)="$event.preventDefault()">
+
+    <h2 class="titolo-animato">Recapiti e <span>password</span></h2>
+
+    <!-- RIGA 1: Telefono + Email secondaria -->
+    <div class="riga-doppia campo-animato">
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">Telefono <span class="opzionale">(opzionale)</span></p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="telefono"
+            formControlName="telefono"
+            inputmode="tel"
+            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['telefono'].invalid && reactiveFormStep3.controls['telefono'].touched }" />
+          <label for="telefono"
+            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['telefono'].invalid && reactiveFormStep3.controls['telefono'].touched }">
+            Es. +39 333 1234567
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['minlength']">Minimo 6 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['maxlength']">Massimo 20 caratteri</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['pattern']">Formato non valido (es. +39 333 1234567)</p>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">Email secondaria <span class="opzionale">(opzionale)</span></p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="email_secondaria"
+            formControlName="emailSecondaria"
+            autocomplete="off"
+            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['emailSecondaria'].invalid && reactiveFormStep3.controls['emailSecondaria'].touched }" />
+          <label for="email_secondaria"
+            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['emailSecondaria'].invalid && reactiveFormStep3.controls['emailSecondaria'].touched }">
+            Email secondaria
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['email']">Formato email non valido</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['pattern']">Formato email non valido</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['maxlength']">Massimo 40 caratteri</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGA 2: Password + Conferma password -->
+    <div class="riga-doppia campo-animato">
+
+      <div class="campo-wrapper">
+        <p class="label-sopra"
+          [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }">
+          Password <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form password-wrapper-reg">
+         <input [type]="mostraPassword ? 'text' : 'password'" placeholder=" " id="password_reg"
+            formControlName="password"
+            autocomplete="new-password"
+            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }" />
+          <label for="password_reg"
+            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }">
+            Password
+          </label>
+          <button type="button" class="toggle-password-reg" tabindex="-1" (click)="mostraPassword = !mostraPassword"
+            [attr.aria-label]="mostraPassword ? 'Nascondi password' : 'Mostra password'">
+            <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+            </svg>
+            <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+              <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['required']">Inserisci la password</p>
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['minlength']">Minimo 8 caratteri</p>
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['maxlength']">Massimo 30 caratteri</p>
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['pattern']">Almeno una lettera maiuscola e un numero</p>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra"
+          [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }">
+          Conferma password <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form password-wrapper-reg">
+          <input [type]="mostraConfermaPassword ? 'text' : 'password'" placeholder=" " id="conferma_password_reg"
+            formControlName="confermaPassword"
+            [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }" />
+          <label for="conferma_password_reg"
+            [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }">
+            Ripeti la password
+          </label>
+          <button type="button" class="toggle-password-reg" tabindex="-1" (click)="mostraConfermaPassword = !mostraConfermaPassword"
+            [attr.aria-label]="mostraConfermaPassword ? 'Nascondi password' : 'Mostra password'">
+            <svg *ngIf="mostraConfermaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+            </svg>
+            <svg *ngIf="!mostraConfermaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+              <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) && reactiveFormStep3.controls['confermaPassword'].errors?.['required']">Conferma la password</p>
+          <p class="errore-campo" *ngIf="errorePasswordNonCombacia && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3)">Le password non coincidono</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="bottoni-nav campo-animato">
+      <button class="indietro_btn" type="button" (click)="indietro2()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        Indietro
+      </button>
+      <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep3.valid">
+        Registrati
+        <span class="step-btn">3 di 3</span>
       </button>
     </div>
 

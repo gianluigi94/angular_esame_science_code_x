@@ -23,6 +23,7 @@ saltaAnimazioneUscita: boolean = false;
 private subLingua?: Subscription;
 reactiveForm: FormGroup;
 reactiveFormStep2: FormGroup;
+reactiveFormStep3: FormGroup;
 formInviato = false;
 formInviatoStep2 = false;
 stepAttuale = 1;
@@ -63,6 +64,12 @@ capMultiOpzioni: string[] = [];
 capFlash = false;
 provinciaFlash = false;
 erroreCoerenzaIndirizzo = false;
+
+// ─── Step 3 ───────────────────────────────────────────────
+formInviatoStep3 = false;
+mostraPassword = false;
+mostraConfermaPassword = false;
+errorePasswordNonCombacia = false;
 
 get nazioniFiltrate(): any[] {
   if (!this.filtroNazioni.trim()) return this.nazioni;
@@ -149,7 +156,18 @@ constructor(
                       Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/)]],
     dettagli:   ['', [Validators.minLength(3), Validators.maxLength(200)]],
     provinciaD: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
-    cap:        ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+   cap:        ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+  });
+
+  this.reactiveFormStep3 = this.fb.group({
+    telefono:        ['', [Validators.minLength(6), Validators.maxLength(20),
+                           Validators.pattern(/^\+?[\d\s\-().]{6,20}$/)]],
+    emailSecondaria: ['', [Validators.email,
+                           Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/),
+                           Validators.maxLength(40)]],
+    password:        ['', [Validators.required, Validators.minLength(8), Validators.maxLength(30),
+                           Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)]],
+    confermaPassword:['', Validators.required],
   });
 }
 
@@ -756,8 +774,19 @@ avanti2(): void {
       }
     }
   }
-  this.erroreCoerenzaIndirizzo = false;
-  // qui metti la navigazione al passo 3
+ this.erroreCoerenzaIndirizzo = false;
+  this.animaUscitaStep2().then(() => {
+    this.stepAttuale = 3;
+    this.cdr.detectChanges();
+
+    const titolo = document.querySelector('.titolo-animato') as HTMLElement;
+    const labels = document.querySelectorAll('.label-sopra');
+    const righe  = document.querySelectorAll('.campo-animato');
+    gsap.set(titolo, { opacity: 0 });
+    gsap.set(labels, { opacity: 0 });
+    gsap.set(righe,  { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+    setTimeout(() => this.animaEntrataStep2(), 16);
+  });
 }
 onBlurCapDom(event: FocusEvent): void {
   const destinazione = event.relatedTarget as HTMLElement | null;
@@ -1072,6 +1101,38 @@ onInputProvincia(event: Event): void {
   const val = input.value.toUpperCase().replace(/[^A-Z]/g, '');
   input.value = val;
   this.reactiveFormStep2.get('provinciaD')!.setValue(val);
+}
+
+avanti3(): void {
+  this.formInviatoStep3 = true;
+  this.errorePasswordNonCombacia = false;
+  if (this.reactiveFormStep3.invalid) {
+    this.reactiveFormStep3.markAllAsTouched();
+    return;
+  }
+  const pwd  = this.reactiveFormStep3.get('password')!.value;
+  const conf = this.reactiveFormStep3.get('confermaPassword')!.value;
+  if (pwd !== conf) {
+    this.errorePasswordNonCombacia = true;
+    this.saturnoService.flashErrorLight();
+    return;
+  }
+  // qui invii i dati al backend
+}
+
+indietro2(): void {
+  this.animaUscitaStep2().then(() => {
+    this.stepAttuale = 2;
+    this.cdr.detectChanges();
+
+    const titolo = document.querySelector('.titolo-animato') as HTMLElement;
+    const labels = document.querySelectorAll('.label-sopra');
+    const righe  = document.querySelectorAll('.campo-animato');
+    gsap.set(titolo, { opacity: 0 });
+    gsap.set(labels, { opacity: 0 });
+    gsap.set(righe,  { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+    setTimeout(() => this.animaEntrataStep2(), 16);
+  });
 }
 
 indietro(): void {
