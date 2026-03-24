@@ -70,7 +70,28 @@ formInviatoStep3 = false;
 mostraPassword = false;
 mostraConfermaPassword = false;
 errorePasswordNonCombacia = false;
-
+passwordRobustezza: 0 | 1 | 2 | 3 = 0;
+passwordEntropyPerc = 0;
+get pwdColore(): string {
+  const p = this.passwordEntropyPerc;
+  if (p < 50) {
+    const green = Math.round((p / 50) * 255);
+    return `rgb(255,${green},0)`;
+  } else {
+    const red = Math.round((1 - (p - 50) / 50) * 255);
+    return `rgb(${red},180,0)`;
+  }
+}
+private paroleComuni: string[] = [];
+get pwdMancaMaiuscola(): boolean {
+  return !/[A-Z]/.test(this.reactiveFormStep3?.get('password')?.value ?? '');
+}
+get pwdMancaNumero(): boolean {
+  return !/\d/.test(this.reactiveFormStep3?.get('password')?.value ?? '');
+}
+get pwdMancaSimbolo(): boolean {
+  return !/[^A-Za-z0-9]/.test(this.reactiveFormStep3?.get('password')?.value ?? '');
+}
 get nazioniFiltrate(): any[] {
   if (!this.filtroNazioni.trim()) return this.nazioni;
   const f = this.filtroNazioni.toLowerCase();
@@ -166,7 +187,7 @@ constructor(
                            Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/),
                            Validators.maxLength(40)]],
     password:        ['', [Validators.required, Validators.minLength(8), Validators.maxLength(30),
-                           Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)]],
+                           Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/)]],
     confermaPassword:['', Validators.required],
   });
 }
@@ -184,7 +205,14 @@ chiudiDropdown(): void {
   ngOnInit(): void {
     try { sessionStorage.setItem(CHIAVE_PAGINA_REGISTRAZIONE, '1'); } catch {}
 
-   this.apiService.getNazioni().subscribe(rit => {
+    fetch('assets/common_words.json')
+      .then(r => r.json())
+      .then((data: { commonWords: string[] }) => {
+        this.paroleComuni = data.commonWords.map(w => w.toLowerCase());
+      })
+      .catch(() => { this.paroleComuni = []; });
+
+    this.apiService.getNazioni().subscribe(rit => {
       const lingua = this.cambioLinguaService.leggiCodiceLingua();
       this.nazioni = (rit.data ?? []).sort((a: any, b: any) =>
         (lingua === 'it' ? a.nazione_it : a.nazione_en ?? '')
@@ -1101,6 +1129,32 @@ onInputProvincia(event: Event): void {
   const val = input.value.toUpperCase().replace(/[^A-Z]/g, '');
   input.value = val;
   this.reactiveFormStep2.get('provinciaD')!.setValue(val);
+}
+
+calcolaRobustezzaPassword(pwd: string): void {
+  if (!pwd) { this.passwordRobustezza = 0; this.passwordEntropyPerc = 0; return; }
+
+  let symbolsCount = 0;
+  if (/[a-z]/.test(pwd))        symbolsCount += 19;
+  if (/[A-Z]/.test(pwd))        symbolsCount += 21;
+  if (/\d/.test(pwd))           symbolsCount += 22;
+  if (/[^A-Za-z\d\s]/.test(pwd)) symbolsCount += 32;
+
+  let entropy = pwd.length * Math.log2(symbolsCount || 1);
+
+  if (/(.)\1{2,}/.test(pwd)) entropy -= 15;
+
+  const pwdLow = pwd.toLowerCase();
+  for (const word of this.paroleComuni) {
+    if (pwdLow.includes(word)) entropy -= 20;
+  }
+
+  this.passwordEntropyPerc = Math.min((entropy / 80) * 100, 100);
+
+  if (this.passwordEntropyPerc >= 75)      this.passwordRobustezza = 3;
+  else if (this.passwordEntropyPerc >= 50) this.passwordRobustezza = 3;
+  else if (this.passwordEntropyPerc >= 25) this.passwordRobustezza = 2;
+  else                                     this.passwordRobustezza = 1;
 }
 
 avanti3(): void {

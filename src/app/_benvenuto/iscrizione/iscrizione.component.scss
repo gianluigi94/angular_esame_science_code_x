@@ -558,3 +558,27 @@ input[type="text"].is-invalid {
       color: #e79c50;
      }
   }
+.pwd-robustezza-bar {
+  width: 400px;
+  height: 4px;
+  background: #2a2a2a;
+  border-radius: 4px;
+  margin-top: 2px;
+  position: relative;
+
+  .pwd-robustezza-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  .pwd-robustezza-label {
+    position: absolute;
+    right: 0;
+    top: 6px;
+    font-size: 12px;
+    font-family: "Quantico", serif;
+    font-weight: bold;
+    color: #c4c4c4;
+  }
+}

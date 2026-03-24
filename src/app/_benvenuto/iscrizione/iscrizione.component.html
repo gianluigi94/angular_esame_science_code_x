@@ -230,7 +230,7 @@
  <form class="form-registrazione" *ngIf="stepAttuale === 2"
     [formGroup]="reactiveFormStep2"
     (ngSubmit)="avanti2()"
-    (keydown.enter)="$event.preventDefault()">
+    (keydown.enter)="onEnterForm($any($event))">
 
     <h2 class="titolo-animato">Indirizzo <span>di domicilio</span></h2>
 
@@ -514,13 +514,13 @@
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['telefono'].invalid && reactiveFormStep3.controls['telefono'].touched }" />
           <label for="telefono"
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['telefono'].invalid && reactiveFormStep3.controls['telefono'].touched }">
-            Es. +39 333 1234567
+            Telefono, cellulare
           </label>
         </div>
         <div class="errori-stack">
           <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['minlength']">Minimo 6 caratteri</p>
           <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['maxlength']">Massimo 20 caratteri</p>
-          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['pattern']">Formato non valido (es. +39 333 1234567)</p>
+          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['pattern']">Formato non valido</p>
         </div>
       </div>
 
@@ -533,7 +533,7 @@
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['emailSecondaria'].invalid && reactiveFormStep3.controls['emailSecondaria'].touched }" />
           <label for="email_secondaria"
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['emailSecondaria'].invalid && reactiveFormStep3.controls['emailSecondaria'].touched }">
-            Email secondaria
+            Email
           </label>
         </div>
         <div class="errori-stack">
@@ -554,10 +554,11 @@
           Password <span class="asterisco">*</span>
         </p>
         <div class="campo-form password-wrapper-reg">
-         <input [type]="mostraPassword ? 'text' : 'password'" placeholder=" " id="password_reg"
+        <input [type]="mostraPassword ? 'text' : 'password'" placeholder=" " id="password_reg"
             formControlName="password"
             autocomplete="new-password"
-            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }" />
+            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }"
+            (input)="calcolaRobustezzaPassword($any($event.target).value)" />
           <label for="password_reg"
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }">
             Password
@@ -575,11 +576,24 @@
             </svg>
           </button>
         </div>
+        <div class="pwd-robustezza-bar" *ngIf="passwordRobustezza > 0">
+          <div class="pwd-robustezza-fill"
+            [style.width.%]="passwordEntropyPerc"
+            [style.background-color]="pwdColore">
+          </div>
+          <span class="pwd-robustezza-label">
+            {{ passwordEntropyPerc >= 75 ? 'Forte' : passwordEntropyPerc >= 50 ? 'Discreta' : passwordEntropyPerc >= 25 ? 'Moderata' : 'Debole' }}
+          </span>
+        </div>
         <div class="errori-stack">
           <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['required']">Inserisci la password</p>
           <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['minlength']">Minimo 8 caratteri</p>
           <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['maxlength']">Massimo 30 caratteri</p>
-          <p class="errore-campo" *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['pattern']">Almeno una lettera maiuscola e un numero</p>
+          <ng-container *ngIf="(reactiveFormStep3.controls['password'].touched || formInviatoStep3) && reactiveFormStep3.controls['password'].errors?.['pattern']">
+            <p class="errore-campo" *ngIf="pwdMancaMaiuscola">Almeno una lettera maiuscola</p>
+            <p class="errore-campo" *ngIf="pwdMancaNumero">Almeno un numero</p>
+            <p class="errore-campo" *ngIf="pwdMancaSimbolo">Almeno un simbolo</p>
+          </ng-container>
         </div>
       </div>
 
