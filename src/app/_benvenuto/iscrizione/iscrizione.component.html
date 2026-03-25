@@ -4,18 +4,18 @@
 <section class="registrazione-contenuto">
 <form class="form-registrazione" *ngIf="stepAttuale === 1" [formGroup]="reactiveForm" (ngSubmit)="avanti()" (keydown.enter)="onEnterForm($any($event))" (keydown.tab)="onTabForm($any($event))">
 
-    <h2 class="titolo-animato">Dati <span>anagrafici</span></h2>
+    <h2 class="titolo-animato" [innerHTML]="'ui.registrazione.step1.titolo' | translate"></h2>
 
     <!-- RIGA 1: Nome + Cognome -->
     <div class="riga-doppia campo-animato">
       <div class="campo-wrapper">
-       <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">Nome <span class="asterisco">*</span></p>
+       <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">{{ 'ui.registrazione.nome.label' | translate }} <span class="asterisco">*</span></p>
         <div class="campo-form">
           <input type="text" placeholder=" " id="nome"
             formControlName="nome"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }"
             (blur)="onBlurAnag($event)" />
-          <label for="nome" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">Nome</label>
+         <label for="nome" [ngClass]="{ 'is-invalid': reactiveForm.controls['nome'].invalid && (reactiveForm.controls['nome'].touched || formInviato) }">{{ 'ui.registrazione.nome.input_label' | translate }}</label>
         </div>
       <div class="errori-stack">
           <p class="errore-campo" *ngIf="(reactiveForm.controls['nome'].touched || formInviato) && reactiveForm.controls['nome'].errors?.['required']">{{ 'ui.registrazione.nome.error.required' | translate }}</p>
@@ -26,13 +26,13 @@
       </div>
 
       <div class="campo-wrapper">
-        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">Cognome <span class="asterisco">*</span></p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">{{ 'ui.registrazione.cognome.label' | translate }} <span class="asterisco">*</span></p>
         <div class="campo-form">
           <input type="text" placeholder=" " id="cognome"
             formControlName="cognome"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }"
             (blur)="onBlurAnag($event)" />
-          <label for="cognome" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">Cognome</label>
+          <label for="cognome" [ngClass]="{ 'is-invalid': reactiveForm.controls['cognome'].invalid && (reactiveForm.controls['cognome'].touched || formInviato) }">{{ 'ui.registrazione.cognome.input_label' | translate }}</label>
         </div>
       <div class="errori-stack">
           <p class="errore-campo" *ngIf="(reactiveForm.controls['cognome'].touched || formInviato) && reactiveForm.controls['cognome'].errors?.['required']">{{ 'ui.registrazione.cognome.error.required' | translate }}</p>
@@ -47,23 +47,23 @@
     <div class="riga-doppia campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra" [ngClass]="{ 'is-invalid': (reactiveForm.controls['dataGg'].invalid || reactiveForm.controls['dataMm'].invalid || reactiveForm.controls['dataAaaa'].invalid) && (reactiveForm.controls['dataAaaa'].touched || formInviato) }">Data di nascita <span class="asterisco">*</span></p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': (reactiveForm.controls['dataGg'].invalid || reactiveForm.controls['dataMm'].invalid || reactiveForm.controls['dataAaaa'].invalid) && (reactiveForm.controls['dataAaaa'].touched || formInviato) }">{{ 'ui.registrazione.data_nascita.label' | translate }} <span class="asterisco">*</span></p>
         <div class="data-custom" [class.data-compilata]="dataCompilata()" (click)="focusData($event)">
-          <span class="data-label-piccola">gg/mm/aaaa</span>
-          <input type="text" class="data-parte" id="data_gg" placeholder="gg"
-            maxlength="2" inputmode="numeric"
-            formControlName="dataGg"
-            (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event, 'gg')" />
-          <span class="data-sep">/</span>
-          <input type="text" class="data-parte" id="data_mm" placeholder="mm"
-            maxlength="2" inputmode="numeric"
-            formControlName="dataMm"
-            (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event, 'mm')" />
-          <span class="data-sep">/</span>
-          <input type="text" class="data-parte data-anno" id="data_aaaa" placeholder="aaaa"
-            maxlength="4" inputmode="numeric"
-            formControlName="dataAaaa"
-            (keydown)="soloNumeri($event, 'aaaa')" (blur)="onBlurAnag($event)" />
+          <span class="data-label-piccola">{{ 'ui.registrazione.data_nascita.piccola' | translate }}</span>
+         <input type="text" class="data-parte" id="data_gg" [placeholder]="'ui.registrazione.data_nascita.placeholder_gg' | translate"
+  maxlength="2" inputmode="numeric"
+  formControlName="dataGg"
+  (input)="avanzaData($event, 'gg')" (keydown)="soloNumeri($event, 'gg')" />
+<span class="data-sep">/</span>
+<input type="text" class="data-parte" id="data_mm" [placeholder]="'ui.registrazione.data_nascita.placeholder_mm' | translate"
+  maxlength="2" inputmode="numeric"
+  formControlName="dataMm"
+  (input)="avanzaData($event, 'mm')" (keydown)="soloNumeri($event, 'mm')" />
+<span class="data-sep">/</span>
+<input type="text" class="data-parte data-anno" id="data_aaaa" [placeholder]="'ui.registrazione.data_nascita.placeholder_aaaa' | translate"
+  maxlength="4" inputmode="numeric"
+  formControlName="dataAaaa"
+  (keydown)="soloNumeri($event, 'aaaa')" (blur)="onBlurAnag($event)" />
 
           <input id="datepicker-input" tabindex="-1" style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;" />
 
@@ -77,7 +77,7 @@
       </div>
 
       <div class="campo-wrapper">
-        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato) }">Sesso <span class="asterisco">*</span></p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato) }">{{ 'ui.registrazione.sesso.label' | translate }} <span class="asterisco">*</span></p>
         <div class="select-custom">
           <div class="select-header" (click)="toggleSesso($event)"
             (focus)="apriSessoSoloTastiera($event)"
@@ -86,16 +86,16 @@
             [class.aperto]="sessoAperto"
             [class.compilato]="sessoValore"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato) }">
-            <span class="select-label-piccola">Sesso</span>
+           <span class="select-label-piccola">{{ 'ui.registrazione.sesso.piccola' | translate }}</span>
             <span [class.placeholder]="!sessoValore">{{ sessoLabel() }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
               <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
             </svg>
           </div>
           <div class="select-dropdown" *ngIf="sessoAperto">
-            <div class="select-opzione" [class.attivo]="indiceSesso === 0" (click)="selezionaSesso('M')">Maschio</div>
-            <div class="select-opzione" [class.attivo]="indiceSesso === 1" (click)="selezionaSesso('F')">Femmina</div>
-            <div class="select-opzione" [class.attivo]="indiceSesso === 2" (click)="selezionaSesso('NS')">Non specificato</div>
+            <div class="select-opzione" [class.attivo]="indiceSesso === 0" (click)="selezionaSesso('M')">{{ 'ui.registrazione.sesso.maschio' | translate }}</div>
+<div class="select-opzione" [class.attivo]="indiceSesso === 1" (click)="selezionaSesso('F')">{{ 'ui.registrazione.sesso.femmina' | translate }}</div>
+<div class="select-opzione" [class.attivo]="indiceSesso === 2" (click)="selezionaSesso('NS')">{{ 'ui.registrazione.sesso.non_specificato' | translate }}</div>
           </div>
         </div>
         <p class="errore-campo" *ngIf="reactiveForm.controls['sesso'].invalid && (reactiveForm.controls['sesso'].touched || formInviato)">{{ 'ui.registrazione.sesso.error.required' | translate }}</p>
@@ -107,14 +107,14 @@
     <div class="riga-doppia campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato) }">Paese di nascita <span class="asterisco">*</span></p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato) }">{{ 'ui.registrazione.paese_nascita.label' | translate }} <span class="asterisco">*</span></p>
         <div class="select-custom">
           <div class="select-header" (click)="togglePaese($event)"
             [class.aperto]="paeseAperto"
             [class.compilato]="paeseValore"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['paese'].invalid && (reactiveForm.controls['paese'].touched || formInviato) }">
-            <span class="select-label-piccola">Paese</span>
-            <input class="select-input-testo paese-input" type="text" placeholder="Seleziona paese"
+            <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
+            <input class="select-input-testo paese-input" type="text" placeholder="{{ 'ui.registrazione.placeholder.seleziona_paese' | translate }}"
 
               [value]="paeseAperto ? filtroNazioni : (paeseValore ? paeseLabel() : '')"
               (click)="togglePaese($event)"
@@ -138,7 +138,7 @@
 
       <div class="campo-wrapper">
         <p class="label-sopra" [ngClass]="{ 'is-invalid': (isItalia ? reactiveForm.controls['comune'].invalid : reactiveForm.controls['citta'].invalid) && ((isItalia ? reactiveForm.controls['comune'].touched : reactiveForm.controls['citta'].touched) || formInviato) }">
-  {{ isItalia ? 'Comune di nascita' : 'Città di nascita' }} <span class="asterisco">*</span>
+  {{ isItalia ? ('ui.registrazione.comune_nascita.label' | translate) : ('ui.registrazione.citta_nascita.label' | translate) }} <span class="asterisco">*</span>
 </p>
 
         <!-- ITALIA: select con ricerca -->
@@ -147,8 +147,8 @@
             [class.aperto]="comuneAperto"
             [class.compilato]="comuneValore"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['comune'].invalid && (reactiveForm.controls['comune'].touched || formInviato) }">
-            <span class="select-label-piccola">Comune</span>
-            <input class="select-input-testo comune-input" type="text" placeholder="Cerca comune italiano..."
+            <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
+            <input class="select-input-testo comune-input" type="text" placeholder="{{ 'ui.registrazione.placeholder.cerca_comune' | translate }}"
 
               [value]="comuneAperto ? filtroComuni : (comuneValore ? comuneLabel() : '')"
               (click)="toggleComune($event)"
@@ -173,7 +173,7 @@
   formControlName="citta"
             [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }"
             (input)="comuneValore = $any($event.target).value" />
-          <label for="citta_nascita" [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }">Inserisci città</label>
+          <label for="citta_nascita" [ngClass]="{ 'is-invalid': reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato) }">{{ 'ui.registrazione.citta_nascita.input_label' | translate }}</label>
         </div>
         <p class="errore-campo" *ngIf="!isItalia && reactiveForm.controls['citta'].invalid && (reactiveForm.controls['citta'].touched || formInviato)">{{ 'ui.registrazione.citta_nascita.error.invalid' | translate }}</p>
 
@@ -183,11 +183,7 @@
 
     <!-- Codice Fiscale -->
     <div class="campo-wrapper campo-centrato campo-animato">
-     <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }">
-  Codice Fiscale
-  <span class="asterisco" *ngIf="isItalia">*</span>
-  <span class="opzionale" *ngIf="!isItalia">(opzionale)</span>
-</p>
+    <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }">{{ 'ui.registrazione.codice_fiscale.label' | translate }} <span class="asterisco" *ngIf="isItalia">*</span><span class="opzionale" *ngIf="!isItalia">{{ 'ui.registrazione.opzionale' | translate }}</span></p>
       <div class="campo-form">
         <input type="text" placeholder=" " id="codice_fiscale" maxlength="16"
 
@@ -195,7 +191,7 @@
           [class.cf-flash]="cfFlash"
           [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }"
           (input)="cfValore = $any($event.target).value; cfFlash = false; cfModificatoManualmente = true" />
-        <label for="codice_fiscale" [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }">Codice Fiscale</label>
+        <label for="codice_fiscale" [ngClass]="{ 'is-invalid': reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato) }">{{ 'ui.registrazione.codice_fiscale.input_label' | translate }}</label>
         <button *ngIf="cfValore" type="button" class="btn-clear-cf" tabindex="-1" (click)="svuotaCF()">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#e79c50">
             <path d="M18 6L6 18M6 6l12 12" stroke="#e79c50" stroke-width="2.5" stroke-linecap="round"/>
@@ -206,8 +202,8 @@
     </div>
 
    <button class="avanti_btn campo-animato" type="submit" [disabled]="!reactiveForm.valid">
-  Avanti
-  <span class="step-btn">1 di 3</span>
+  {{ 'ui.registrazione.bottone.avanti' | translate }}
+  <span class="step-btn">{{ 'ui.registrazione.step1.indicatore' | translate }}</span>
 </button>
 
 </form>
@@ -220,25 +216,24 @@
     (ngSubmit)="avanti2()"
     (keydown.enter)="onEnterForm($any($event))">
 
-    <h2 class="titolo-animato">Indirizzo <span>di domicilio</span></h2>
+    <h2 class="titolo-animato" [innerHTML]="'ui.registrazione.step2.titolo' | translate"></h2>
 
     <!-- RIGA 1: Paese + Comune/Città -->
     <div class="riga-doppia campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra"
-          [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }">
-          Paese di domicilio <span class="asterisco">*</span>
-        </p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }">
+  {{ 'ui.registrazione.step2.paese_domicilio.label' | translate }} <span class="asterisco">*</span>
+</p>
         <div class="select-custom">
           <div class="select-header"
             (click)="togglePaeseDom($event)"
             [class.aperto]="paeseDomAperto"
             [class.compilato]="paeseDomValore"
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['nazioneD'].invalid && (reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }">
-            <span class="select-label-piccola">Paese</span>
+            <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
             <input class="select-input-testo paese-dom-input" type="text"
-  placeholder="Seleziona paese"
+  placeholder="{{ 'ui.registrazione.placeholder.seleziona_paese' | translate }}"
 
               [value]="paeseDomAperto ? filtroNazioniDom : (paeseDomValore ? paeseDomLabel() : '')"
               (click)="togglePaeseDom($event)"
@@ -264,7 +259,7 @@
       <div class="campo-wrapper">
         <p class="label-sopra"
           [ngClass]="{ 'is-invalid': (isItaliaDom ? reactiveFormStep2.controls['comuneD'].invalid : reactiveFormStep2.controls['cittaD'].invalid) && ((isItaliaDom ? reactiveFormStep2.controls['comuneD'].touched : reactiveFormStep2.controls['cittaD'].touched) || formInviatoStep2) }">
-          {{ isItaliaDom ? 'Comune di domicilio' : 'Città di domicilio' }} <span class="asterisco">*</span>
+          {{ isItaliaDom ? ('ui.registrazione.step2.comune_domicilio.label' | translate) : ('ui.registrazione.step2.citta_domicilio.label' | translate) }} <span class="asterisco">*</span>
         </p>
 
         <!-- ITALIA: select con ricerca -->
@@ -274,9 +269,9 @@
             [class.aperto]="comuneDomAperto"
             [class.compilato]="comuneDomValore"
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['comuneD'].invalid && (reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2) }">
-            <span class="select-label-piccola">Comune</span>
+            <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
            <input class="select-input-testo comune-dom-input" type="text"
-  placeholder="Cerca comune italiano..."
+  placeholder="{{ 'ui.registrazione.placeholder.cerca_comune' | translate }}"
 
               [value]="comuneDomAperto ? filtroComuniDom : (comuneDomValore ? comuneDomValore : '')"
               (click)="toggleComuneDom($event)"
@@ -301,10 +296,10 @@
 
             formControlName="cittaD"
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }" />
-          <label for="citta_dom"
-            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }">
-            Inserisci città
-          </label>
+       <label for="citta_dom"
+  [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }">
+  {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
+</label>
         </div>
         <p class="errore-campo" *ngIf="!isItaliaDom && reactiveFormStep2.controls['cittaD'].invalid && (reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2)">{{ 'ui.registrazione.citta_domicilio.error.invalid' | translate }}</p>
       </div>
@@ -314,16 +309,17 @@
     <div class="riga-quadrupla campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra">Via / Piazza <span class="opzionale">(opzionale)</span></p>
+        <p class="label-sopra">{{ 'ui.registrazione.step2.via.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span></p>
         <div class="campo-form">
          <input type="text" placeholder=" " id="via_dom"
 
             formControlName="via"
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched }" />
-          <label for="via_dom"
-            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched }">
-            Via, Piazza, Corso...
-          </label>
+
+<label for="via_dom" [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['via'].invalid && reactiveFormStep2.controls['via'].touched }">
+  {{ 'ui.registrazione.step2.via.input_label' | translate }}
+</label>
+
         </div>
         <div class="errori-stack">
           <p class="errore-campo" *ngIf="reactiveFormStep2.controls['via'].touched && reactiveFormStep2.controls['via'].errors?.['minlength']">{{ 'ui.registrazione.via.error.minlength' | translate }}</p>
@@ -333,16 +329,15 @@
       </div>
 
       <div class="campo-wrapper">
-        <p class="label-sopra">N° Civico <span class="opzionale">(opzionale)</span></p>
+        <p class="label-sopra">{{ 'ui.registrazione.step2.civico.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span></p>
         <div class="campo-form">
           <input type="text" placeholder=" " id="civico_dom"
 
             formControlName="civico"
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched }" />
-          <label for="civico_dom"
-            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched }">
-            Numero
-          </label>
+         <label for="civico_dom" [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['civico'].invalid && reactiveFormStep2.controls['civico'].touched }">
+  {{ 'ui.registrazione.step2.civico.input_label' | translate }}
+</label>
         </div>
        <div class="errori-stack">
           <p class="errore-campo" *ngIf="reactiveFormStep2.controls['civico'].touched && reactiveFormStep2.controls['civico'].errors?.['maxlength']">{{ 'ui.registrazione.civico.error.maxlength' | translate }}</p>
@@ -353,10 +348,9 @@
       <ng-container *ngIf="isItaliaDom">
 
         <div class="campo-wrapper">
-          <p class="label-sopra"
-            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }">
-            Provincia <span class="asterisco">*</span>
-          </p>
+         <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }">
+  {{ 'ui.registrazione.step2.provincia.label' | translate }} <span class="asterisco">*</span>
+</p>
           <div class="campo-form">
             <input type="text" placeholder=" " id="provincia_dom"
               maxlength="2"
@@ -364,10 +358,9 @@
               formControlName="provinciaD"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }"
               (input)="onInputProvincia($event)" />
-            <label for="provincia_dom"
-              [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }">
-              Sigla
-            </label>
+            <label for="provincia_dom" [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['provinciaD'].invalid && (reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }">
+  {{ 'ui.registrazione.step2.provincia.input_label' | translate }}
+</label>
           </div>
          <div class="errori-stack">
             <p class="errore-campo" *ngIf="(reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && reactiveFormStep2.controls['provinciaD'].errors?.['required']">{{ 'ui.registrazione.provincia.error.required' | translate }}</p>
@@ -376,10 +369,9 @@
         </div>
 
         <div class="campo-wrapper">
-          <p class="label-sopra"
-            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
-            CAP <span class="asterisco">*</span>
-          </p>
+          <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
+  {{ 'ui.registrazione.step2.cap.label' | translate }} <span class="asterisco">*</span>
+</p>
 
           <!-- CAP singolo: input testo (auto-compilato) -->
           <div class="campo-form" *ngIf="!capIsMulti">
@@ -391,9 +383,9 @@
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
              (input)="onInputCap($event)" />
             <label for="cap_dom"
-              [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
-              CAP
-            </label>
+  [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
+  {{ 'ui.registrazione.step2.cap.label' | translate }}
+</label>
           </div>
 
           <!-- CAP multiplo: select custom con ricerca -->
@@ -403,8 +395,8 @@
               [class.aperto]="capDomAperto"
               [class.compilato]="capValore"
               [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['cap'].invalid && (reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }">
-              <span class="select-label-piccola">CAP</span>
-              <span class="cap-placeholder-fake" *ngIf="!capValore && !filtroCapDom" [class.cf-flash]="capFlash">Seleziona CAP</span>
+              <span class="select-label-piccola">{{ 'ui.registrazione.step2.cap.label' | translate }}</span>
+              <span class="cap-placeholder-fake" *ngIf="!capValore && !filtroCapDom" [class.cf-flash]="capFlash">{{ 'ui.registrazione.placeholder.seleziona_cap' | translate }}</span>
               <input class="select-input-testo cap-dom-input" type="text"
                 placeholder=""
                 inputmode="numeric"
@@ -439,16 +431,15 @@
 
     <!-- RIGA 3: Dettagli aggiuntivi (centrato) -->
     <div class="campo-wrapper campo-centrato campo-animato">
-      <p class="label-sopra">Dettagli aggiuntivi <span class="opzionale">(opzionale)</span></p>
+      <p class="label-sopra">{{ 'ui.registrazione.step2.dettagli.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span></p>
       <div class="campo-form">
        <input type="text" placeholder=" " id="dettagli_dom"
 
             formControlName="dettagli"
             [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['dettagli'].invalid && reactiveFormStep2.controls['dettagli'].touched }" />
-          <label for="dettagli_dom"
-            [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['dettagli'].invalid && reactiveFormStep2.controls['dettagli'].touched }">
-            Scala, interno, indicazioni...
-          </label>
+          <label for="dettagli_dom" [ngClass]="{ 'is-invalid': reactiveFormStep2.controls['dettagli'].invalid && reactiveFormStep2.controls['dettagli'].touched }">
+  {{ 'ui.registrazione.step2.dettagli.input_label' | translate }}
+</label>
         </div>
         <div class="errori-stack">
           <p class="errore-campo" *ngIf="reactiveFormStep2.controls['dettagli'].touched && reactiveFormStep2.controls['dettagli'].errors?.['minlength']">{{ 'ui.registrazione.dettagli.error.minlength' | translate }}</p>
@@ -459,16 +450,16 @@
 
   <p class="errore-campo" *ngIf="erroreCoerenzaIndirizzo" style="align-self: center; margin-bottom: -10px;">{{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}</p>
    <div class="bottoni-nav campo-animato">
-      <button class="indietro_btn" type="button" (click)="indietro()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-        Indietro
-      </button>
-      <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep2.valid">
-        Avanti
-        <span class="step-btn">2 di 3</span>
-      </button>
+    <button class="indietro_btn" type="button" (click)="indietro2()">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+  {{ 'ui.registrazione.bottone.indietro' | translate }}
+</button>
+     <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep2.valid">
+  {{ 'ui.registrazione.bottone.avanti' | translate }}
+  <span class="step-btn">{{ 'ui.registrazione.step2.indicatore' | translate }}</span>
+</button>
     </div>
 
   </form>
@@ -481,22 +472,21 @@
     (ngSubmit)="avanti3()"
     (keydown.enter)="$event.preventDefault()">
 
-    <h2 class="titolo-animato">Recapiti e <span>password</span></h2>
+    <h2 class="titolo-animato" [innerHTML]="'ui.registrazione.step3.titolo' | translate"></h2>
 
     <!-- RIGA 1: Telefono + Email secondaria -->
     <div class="riga-doppia campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra">Telefono <span class="opzionale">(opzionale)</span></p>
+        <p class="label-sopra">{{ 'ui.registrazione.step3.telefono.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span></p>
         <div class="campo-form">
           <input type="text" placeholder=" " id="telefono"
             formControlName="telefono"
             inputmode="tel"
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['telefono'].invalid && reactiveFormStep3.controls['telefono'].touched }" />
-          <label for="telefono"
-            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['telefono'].invalid && reactiveFormStep3.controls['telefono'].touched }">
-            Telefono, cellulare
-          </label>
+         <label for="telefono" [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['telefono'].invalid && reactiveFormStep3.controls['telefono'].touched }">
+  {{ 'ui.registrazione.step3.telefono.input_label' | translate }}
+</label>
         </div>
         <div class="errori-stack">
          <p class="errore-campo" *ngIf="reactiveFormStep3.controls['telefono'].touched && reactiveFormStep3.controls['telefono'].errors?.['minlength']">{{ 'ui.registrazione.telefono.error.minlength' | translate }}</p>
@@ -506,16 +496,15 @@
       </div>
 
       <div class="campo-wrapper">
-        <p class="label-sopra">Email secondaria <span class="opzionale">(opzionale)</span></p>
+        <p class="label-sopra">{{ 'ui.registrazione.step3.email_secondaria.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span></p>
         <div class="campo-form">
           <input type="text" placeholder=" " id="email_secondaria"
             formControlName="emailSecondaria"
             autocomplete="off"
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['emailSecondaria'].invalid && reactiveFormStep3.controls['emailSecondaria'].touched }" />
-          <label for="email_secondaria"
-            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['emailSecondaria'].invalid && reactiveFormStep3.controls['emailSecondaria'].touched }">
-            Email
-          </label>
+          <label for="email_secondaria" [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['emailSecondaria'].invalid && reactiveFormStep3.controls['emailSecondaria'].touched }">
+  {{ 'ui.registrazione.step3.email_secondaria.input_label' | translate }}
+</label>
         </div>
         <div class="errori-stack">
           <p class="errore-campo" *ngIf="reactiveFormStep3.controls['emailSecondaria'].touched && reactiveFormStep3.controls['emailSecondaria'].errors?.['email']">{{ 'ui.registrazione.email_secondaria.error.email' | translate }}</p>
@@ -530,22 +519,21 @@
     <div class="riga-doppia campo-animato">
 
       <div class="campo-wrapper">
-        <p class="label-sopra"
-          [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }">
-          Password <span class="asterisco">*</span>
-        </p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }">
+  {{ 'ui.registrazione.step3.password.label' | translate }} <span class="asterisco">*</span>
+</p>
         <div class="campo-form password-wrapper-reg">
         <input [type]="mostraPassword ? 'text' : 'password'" placeholder=" " id="password_reg"
             formControlName="password"
             autocomplete="new-password"
             [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }"
             (input)="calcolaRobustezzaPassword($any($event.target).value)" />
-          <label for="password_reg"
-            [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }">
-            Password
-          </label>
+          <label for="password_reg" [ngClass]="{ 'is-invalid': reactiveFormStep3.controls['password'].invalid && (reactiveFormStep3.controls['password'].touched || formInviatoStep3) }">
+  {{ 'ui.registrazione.step3.password.input_label' | translate }}
+</label>
+
           <button type="button" class="toggle-password-reg" tabindex="-1" (click)="mostraPassword = !mostraPassword"
-            [attr.aria-label]="mostraPassword ? 'Nascondi password' : 'Mostra password'">
+            [attr.aria-label]="mostraPassword ? ('ui.registrazione.password.aria.nascondi' | translate) : ('ui.registrazione.password.aria.mostra' | translate)">
             <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
               <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
               <circle cx="12" cy="12" r="2.5"/>
@@ -563,7 +551,13 @@
             [style.background-color]="pwdColore">
           </div>
           <span class="pwd-robustezza-label">
-            {{ passwordEntropyPerc >= 75 ? 'Forte' : passwordEntropyPerc >= 50 ? 'Discreta' : passwordEntropyPerc >= 25 ? 'Moderata' : 'Debole' }}
+            {{ passwordEntropyPerc >= 75
+  ? ('ui.registrazione.password.robustezza.forte' | translate)
+  : passwordEntropyPerc >= 50
+    ? ('ui.registrazione.password.robustezza.discreta' | translate)
+    : passwordEntropyPerc >= 25
+      ? ('ui.registrazione.password.robustezza.moderata' | translate)
+      : ('ui.registrazione.password.robustezza.debole' | translate) }}
           </span>
         </div>
         <div class="errori-stack">
@@ -580,20 +574,18 @@
       </div>
 
       <div class="campo-wrapper">
-        <p class="label-sopra"
-          [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }">
-          Conferma password <span class="asterisco">*</span>
-        </p>
+        <p class="label-sopra" [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }">
+  {{ 'ui.registrazione.step3.conferma_password.label' | translate }} <span class="asterisco">*</span>
+</p>
         <div class="campo-form password-wrapper-reg">
           <input [type]="mostraConfermaPassword ? 'text' : 'password'" placeholder=" " id="conferma_password_reg"
             formControlName="confermaPassword"
             [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }" />
-          <label for="conferma_password_reg"
-            [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }">
-            Ripeti la password
-          </label>
+          <label for="conferma_password_reg" [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }">
+  {{ 'ui.registrazione.step3.conferma_password.input_label' | translate }}
+</label>
           <button type="button" class="toggle-password-reg" tabindex="-1" (click)="mostraConfermaPassword = !mostraConfermaPassword"
-            [attr.aria-label]="mostraConfermaPassword ? 'Nascondi password' : 'Mostra password'">
+            [attr.aria-label]="mostraConfermaPassword ? ('ui.registrazione.password.aria.nascondi' | translate) : ('ui.registrazione.password.aria.mostra' | translate)">
             <svg *ngIf="mostraConfermaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
               <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
               <circle cx="12" cy="12" r="2.5"/>
@@ -615,15 +607,15 @@
 
     <div class="bottoni-nav campo-animato">
       <button class="indietro_btn" type="button" (click)="indietro2()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-        Indietro
-      </button>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+  {{ 'ui.registrazione.bottone.indietro' | translate }}
+</button>
       <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep3.valid">
-        Registrati
-        <span class="step-btn">3 di 3</span>
-      </button>
+  {{ 'ui.registrazione.bottone.registrati' | translate }}
+  <span class="step-btn">{{ 'ui.registrazione.step3.indicatore' | translate }}</span>
+</button>
     </div>
 
   </form>

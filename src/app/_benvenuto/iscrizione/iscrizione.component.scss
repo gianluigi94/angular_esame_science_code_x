@@ -14,16 +14,23 @@ app-footer {
   margin-top: -50px;
   gap: 20px;
 
-  h2 {
+  .titolo-animato {
     color: aliceblue;
     text-shadow: 1px 1px 3px #14110a;
     font-size: 42px;
     font-family: "Quantico", serif;
     align-self: center;
     margin-bottom: 40px;
-
-    span { font-size: 32px; }
+    line-height: 0.95;
   }
+
+ .titolo-animato ::ng-deep span,
+:host ::ng-deep .titolo-animato span {
+  display: inline;
+  font-size: 32px;
+  line-height: 1.15;
+  margin-top: 0;
+}
 
   .riga-doppia {
     display: flex;

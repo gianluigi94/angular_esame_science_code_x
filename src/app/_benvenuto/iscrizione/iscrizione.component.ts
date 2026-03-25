@@ -8,6 +8,7 @@ import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/thre
 import { Subscription } from 'rxjs';
 import gsap from 'gsap';
 import { Datepicker } from 'vanillajs-datepicker';
+import { TranslateService } from '@ngx-translate/core';
 import it from 'vanillajs-datepicker/locales/it';
 (Datepicker as any).locales.it = (it as any).it;
 const CHIAVE_PAGINA_REGISTRAZIONE = 'pagina_registrazione';
@@ -149,7 +150,8 @@ constructor(
   private eRef: ElementRef,
   private fb: FormBuilder,
   private cdr: ChangeDetectorRef,
-  private saturnoService: SaturnoService
+  private saturnoService: SaturnoService,
+  private translateService: TranslateService
 ) {
   this.reactiveForm = this.fb.group({
     nome:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50),
@@ -326,10 +328,16 @@ animaSfocatura(entra: boolean): Promise<void> {
   }
 
   sessoLabel(): string {
-    if (!this.sessoValore) return 'Seleziona sesso';
-    const map: Record<string, string> = { M: 'Maschio', F: 'Femmina', NS: 'Non specificato' };
-    return map[this.sessoValore] ?? '';
-  }
+  if (!this.sessoValore) return this.translateService.instant('ui.registrazione.sesso.placeholder');
+
+  const map: Record<string, string> = {
+    M: this.translateService.instant('ui.registrazione.sesso.maschio'),
+    F: this.translateService.instant('ui.registrazione.sesso.femmina'),
+    NS: this.translateService.instant('ui.registrazione.sesso.non_specificato')
+  };
+
+  return map[this.sessoValore] ?? '';
+}
 
 selezionaSesso(valore: string): void {
   this.sessoValore = valore;
@@ -340,11 +348,11 @@ selezionaSesso(valore: string): void {
   this.calcolaCodiceFiscale();
 }
  paeseLabel(): string {
-    if (!this.paeseValore) return 'Seleziona paese';
-    const nazione = this.nazioni.find(n => n.iso === this.paeseValore);
-    if (!nazione) return '';
-    return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? nazione.nazione_it : nazione.nazione_en;
-  }
+  if (!this.paeseValore) return this.translateService.instant('ui.registrazione.placeholder.seleziona_paese');
+  const nazione = this.nazioni.find(n => n.iso === this.paeseValore);
+  if (!nazione) return '';
+  return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? nazione.nazione_it : nazione.nazione_en;
+}
 navigaSesso(event: KeyboardEvent): void {
   const opzioni = ['M', 'F', 'NS'];
   if (event.key === 'ArrowDown') {
@@ -397,8 +405,8 @@ if (cambiaTipo) {
   this.calcolaCodiceFiscale();
 }
   comuneLabel(): string {
-    return this.comuneValore || 'Seleziona comune';
-  }
+  return this.comuneValore || this.translateService.instant('ui.registrazione.comune.piccola');
+}
 onTabForm(event: KeyboardEvent): void {
   const target = event.target as HTMLElement;
   const precedente = document.getElementById('data_aaaa');
@@ -851,7 +859,7 @@ private animaEntrataStep2(): void {
 // ════════════════════════════════════════════════════════════
 
 paeseDomLabel(): string {
-  if (!this.paeseDomValore) return 'Seleziona paese';
+  if (!this.paeseDomValore) return this.translateService.instant('ui.registrazione.placeholder.seleziona_paese');
   const nazione = this.nazioni.find(n => n.iso === this.paeseDomValore);
   if (!nazione) return '';
   return this.cambioLinguaService.leggiCodiceLingua() === 'it' ? nazione.nazione_it : nazione.nazione_en;
