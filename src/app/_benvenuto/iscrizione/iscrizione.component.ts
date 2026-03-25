@@ -66,9 +66,12 @@ capMultiOpzioni: string[] = [];
 capFlash = false;
 provinciaFlash = false;
 erroreCoerenzaIndirizzo = false;
+prezzoBase    = '5€';
+prezzoPremium = '10€';
 
 // ─── Step 3 ───────────────────────────────────────────────
 formInviatoStep3 = false;
+pianoSelezionato: 'base' | 'pro' | null = null;
 mostraPassword = false;
 mostraConfermaPassword = false;
 errorePasswordNonCombacia = false;
@@ -209,6 +212,7 @@ chiudiDropdown(): void {
 
   ngOnInit(): void {
     try { sessionStorage.setItem(CHIAVE_PAGINA_REGISTRAZIONE, '1'); } catch {}
+    this.aggiornaPrezzi(this.paeseDomValore);
 
     fetch('assets/common_words.json')
       .then(r => r.json())
@@ -441,7 +445,36 @@ onEnterForm(event: KeyboardEvent): void {
   this.reactiveForm.get('comune')!.markAsTouched();
   this.calcolaCodiceFiscale();
 }
+private aggiornaPrezzi(iso: string): void {
+  this.apiService.getPrezziNazione(iso).subscribe({
+    next: (rit) => {
+      const d = rit.data;
+      if (!d || !d.tasso || parseFloat(d.tasso) <= 0) {
+        this.prezzoBase    = '5€';
+        this.prezzoPremium = '10€';
+        return;
+      }
 
+      const tasso:    number = parseFloat(d.tasso);
+      const aliquota: number = d.aliquota ? parseFloat(d.aliquota) / 100 : 0;
+      const simbolo:  string = d.valuta_simbolo ?? '€';
+
+      // Partiamo sempre da euro, convertiamo, applichiamo aliquota locale
+      const calcola = (baseEur: number): string => {
+        const convertito = baseEur * tasso;           // es. 5€ * 1.08 = 5.4 USD
+        const conAliquota = convertito * (1 + aliquota); // es. IVA 22% → 6.59 USD
+        return `${conAliquota.toFixed(2)}${simbolo}`;
+      };
+
+      this.prezzoBase    = calcola(5);
+      this.prezzoPremium = calcola(10);
+    },
+    error: () => {
+      this.prezzoBase    = '5€';
+      this.prezzoPremium = '10€';
+    }
+  });
+}
 toggleSesso(event: Event): void {
   event.stopPropagation();
   console.log('🔴 toggleSesso — sessoAperto prima:', this.sessoAperto, '→ dopo:', !this.sessoAperto);
@@ -912,6 +945,7 @@ navigaPaeseDom(event: KeyboardEvent): void {
 selezionaPaeseDom(valore: string): void {
   const cambiaTipo = (valore === 'IT') !== (this.paeseDomValore === 'IT');
   this.paeseDomValore = valore;
+  this.aggiornaPrezzi(valore);
   this.paeseDomAperto = false;
   this.filtroNazioniDom = '';
   this.indiceNazioneDom = -1;
@@ -1173,7 +1207,7 @@ calcolaRobustezzaPassword(pwd: string): void {
     if (pwdLow.includes(word)) entropy -= 20;
   }
 
-  this.passwordEntropyPerc = Math.min((entropy / 80) * 100, 100);
+  this.passwordEntropyPerc = Math.min(Math.max((entropy / 80) * 100, 0), 100);
 
   if (this.passwordEntropyPerc >= 75)      this.passwordRobustezza = 3;
   else if (this.passwordEntropyPerc >= 50) this.passwordRobustezza = 3;

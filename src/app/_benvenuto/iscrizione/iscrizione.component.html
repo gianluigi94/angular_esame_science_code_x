@@ -201,10 +201,12 @@
       <p class="errore-campo" *ngIf="reactiveForm.controls['codiceFiscale'].invalid && (reactiveForm.controls['codiceFiscale'].touched || formInviato)">{{ 'ui.registrazione.codice_fiscale.error.invalid' | translate }}</p>
     </div>
 
-   <button class="avanti_btn campo-animato" type="submit" [disabled]="!reactiveForm.valid">
-  {{ 'ui.registrazione.bottone.avanti' | translate }}
-  <span class="step-btn">{{ 'ui.registrazione.step1.indicatore' | translate }}</span>
-</button>
+   <div class="campo-animato" style="align-self: flex-end;">
+  <button class="avanti_btn" type="submit" [disabled]="!reactiveForm.valid">
+    {{ 'ui.registrazione.bottone.avanti' | translate }}
+    <span class="step-btn">{{ 'ui.registrazione.step1.indicatore' | translate }}</span>
+  </button>
+</div>
 
 </form>
 
@@ -450,7 +452,7 @@
 
   <p class="errore-campo" *ngIf="erroreCoerenzaIndirizzo" style="align-self: center; margin-bottom: -10px;">{{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}</p>
    <div class="bottoni-nav campo-animato">
-    <button class="indietro_btn" type="button" (click)="indietro2()">
+    <button class="indietro_btn" type="button" (click)="indietro()">
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
@@ -625,6 +627,71 @@
   </form>
 
 <div class="form-registrazione" *ngIf="stepAttuale === 4">
+
+  <div class="piani-wrapper campo-animato">
+
+    <div class="piano-card"
+      [class.piano-selezionato]="pianoSelezionato === 'base'"
+      (click)="pianoSelezionato = 'base'">
+      <div class="piano-badge">Base</div>
+      <div class="piano-prezzo-wrapper">
+       <span class="piano-prezzo-barrato">{{ prezzoBase }}/mese</span>
+        <span class="piano-gratis"><span class="piano-gratis-parola">Gratis</span> per sempre</span>
+      </div>
+      <ul class="piano-features">
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+          Accesso a tutto il catalogo
+        </li>
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+          Aggiornamenti continui
+        </li>
+        <li class="feature-no">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#555"><path d="M18 6L6 18M6 6l12 12" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
+          Annunci pubblicitari presenti
+        </li>
+      </ul>
+      <div class="piano-check" *ngIf="pianoSelezionato === 'base'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#e79c50"/>
+          <path d="M7 12l4 4 6-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="piano-card piano-pro"
+      [class.piano-selezionato]="pianoSelezionato === 'pro'"
+      (click)="pianoSelezionato = 'pro'">
+      <div class="piano-badge piano-badge-pro">Premium</div>
+      <div class="piano-prezzo-wrapper">
+        <span class="piano-prezzo-barrato">{{ prezzoPremium }}/mese</span>
+        <span class="piano-gratis"><span class="piano-gratis-parola">Gratis</span> per sempre</span>
+      </div>
+      <ul class="piano-features">
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+          Accesso a tutto il catalogo
+        </li>
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+          Aggiornamenti continui
+        </li>
+        <li>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+          Zero interruzioni pubblicitarie
+        </li>
+      </ul>
+      <div class="piano-check" *ngIf="pianoSelezionato === 'pro'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#e79c50"/>
+          <path d="M7 12l4 4 6-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
   <div class="bottoni-nav campo-animato">
     <button class="indietro_btn" type="button" (click)="indietro3()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
@@ -632,10 +699,13 @@
       </svg>
       {{ 'ui.registrazione.bottone.indietro' | translate }}
     </button>
-    <button class="avanti_btn" type="button" (click)="avanti4()">
+    <button class="avanti_btn" type="button"
+      [disabled]="!pianoSelezionato"
+      (click)="avanti4()">
       {{ 'ui.registrazione.bottone.registrati' | translate }}
     </button>
   </div>
+
 </div>
 
 </section>

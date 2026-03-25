@@ -336,4 +336,8 @@ public getProssimaPublicita(): Observable<IRispostaServer> {
   public getComuni(): Observable<IRispostaServer> {
     return this.richiestaGenerica(['comuni'], 'GET');
   }
+
+  public getPrezziNazione(iso: string): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['prezzi-nazione', iso], 'GET');
+  }
 }
