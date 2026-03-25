@@ -114,12 +114,38 @@ this.resizeHandler = () => {
     window.addEventListener('orientationchange', this.orientationHandler);
 
     this.visibilityHandler = () => {
-  if (document.visibilityState === 'visible') {
+  if (document.visibilityState === 'hidden') {
+    // Ferma le animazioni cicliche e nascondi i contenitori dal DOM visivo
+    this.loopingTimelines.forEach((tl) => tl.kill());
+    this.loopingTimelines = [];
+    this.loopingDelayedCalls.forEach((dc) => dc.kill());
+    this.loopingDelayedCalls = [];
+
+    ['#container_one', '#container_two', '#container_three'].forEach((sel) => {
+      const el = document.querySelector(sel) as HTMLElement | null;
+      if (el) gsap.set(el, { opacity: 0, scale: 1, display: 'none' });
+    });
+
+  } else if (document.visibilityState === 'visible') {
     setTimeout(() => {
       ScrollTrigger.refresh();
     }, 300);
-    // ✅ forza il browser a ricaricare la GIF della X
     this.animateService.refreshXGif();
+
+    setTimeout(() => {
+      ['#container_one', '#container_two', '#container_three'].forEach((sel) => {
+        const el = document.querySelector(sel) as HTMLElement | null;
+        if (el) gsap.set(el, { opacity: 0, scale: 1, display: '' });
+      });
+      // rilancio le looping animation solo se lo scroll è già nella sezione bassa
+      const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
+      const trigger = document.querySelector('#saturno-scrolle') as HTMLElement | null;
+      if (scroller && trigger && trigger.getBoundingClientRect().top <= scroller.getBoundingClientRect().top + 10) {
+      this.setupLoopingAnimation({ selector: '#container_one',  delayStart: 3,  fadeInDuration: 1, scaleDuration: 4, scaleTo: 1.4, fadeOutDuration: 1, loopDelay: 11.55 });
+      this.setupLoopingAnimation({ selector: '#container_two',  delayStart: 8,  fadeInDuration: 1, scaleDuration: 4, scaleTo: 1.4, fadeOutDuration: 1, loopDelay: 11.55 });
+      this.setupLoopingAnimation({ selector: '#container_three',delayStart: 13, fadeInDuration: 1, scaleDuration: 4, scaleTo: 1.4, fadeOutDuration: 1, loopDelay: 11.55 });
+      }
+    }, 100);
   }
 };
 document.addEventListener('visibilitychange', this.visibilityHandler);
