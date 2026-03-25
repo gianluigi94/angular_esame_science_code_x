@@ -1,10 +1,10 @@
-// DOPO
 import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UtilityService } from '../login/_login_service/login_utility.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
+import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import { Subscription } from 'rxjs';
 import gsap from 'gsap';
 import { Datepicker } from 'vanillajs-datepicker';
@@ -151,6 +151,7 @@ constructor(
   private fb: FormBuilder,
   private cdr: ChangeDetectorRef,
   private saturnoService: SaturnoService,
+  private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
   private translateService: TranslateService
 ) {
   this.reactiveForm = this.fb.group({
@@ -1192,7 +1193,16 @@ avanti3(): void {
     this.saturnoService.flashErrorLight();
     return;
   }
-  // qui invii i dati al backend
+  // Animazione parallela: chiusura form + piroetta Saturno verso login
+  const scene = this.saturnoService.getScene();
+  const light = this.saturnoService.getDirectionalLight();
+  if (scene) {
+    this.saturnoRouteAnimazioniService.animaVerso(
+      scene, 'LOGIN_LATERALE', 0.9, light ?? undefined
+    );
+  }
+  this.animaUscitaStep2();
+
 }
 
 indietro2(): void {
