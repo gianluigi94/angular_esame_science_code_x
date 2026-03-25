@@ -532,7 +532,9 @@
   {{ 'ui.registrazione.step3.password.input_label' | translate }}
 </label>
 
-          <button type="button" class="toggle-password-reg" tabindex="-1" (click)="mostraPassword = !mostraPassword"
+          <button type="button" class="toggle-password-reg" tabindex="-1"
+  (mousedown)="$event.preventDefault()"
+(click)="toggleVisibilitaPassword('password')"
             [attr.aria-label]="mostraPassword ? ('ui.registrazione.password.aria.nascondi' | translate) : ('ui.registrazione.password.aria.mostra' | translate)">
             <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
               <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
@@ -584,7 +586,9 @@
           <label for="conferma_password_reg" [ngClass]="{ 'is-invalid': (reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }">
   {{ 'ui.registrazione.step3.conferma_password.input_label' | translate }}
 </label>
-          <button type="button" class="toggle-password-reg" tabindex="-1" (click)="mostraConfermaPassword = !mostraConfermaPassword"
+          <button type="button" class="toggle-password-reg" tabindex="-1"
+  (mousedown)="$event.preventDefault()"
+(click)="toggleVisibilitaPassword('conferma')"
             [attr.aria-label]="mostraConfermaPassword ? ('ui.registrazione.password.aria.nascondi' | translate) : ('ui.registrazione.password.aria.mostra' | translate)">
             <svg *ngIf="mostraConfermaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
               <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
@@ -613,7 +617,7 @@
   {{ 'ui.registrazione.bottone.indietro' | translate }}
 </button>
       <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep3.valid">
-  {{ 'ui.registrazione.bottone.registrati' | translate }}
+  {{ 'ui.registrazione.bottone.avanti' | translate }}
   <span class="step-btn">{{ 'ui.registrazione.step3.indicatore' | translate }}</span>
 </button>
     </div>

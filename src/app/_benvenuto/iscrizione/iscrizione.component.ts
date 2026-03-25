@@ -1013,7 +1013,20 @@ navigaComuneDom(event: KeyboardEvent): void {
     this.indiceComuneDom = -1;
   }
 }
+toggleVisibilitaPassword(campo: 'password' | 'conferma'): void {
+  const id = campo === 'password' ? 'password_reg' : 'conferma_password_reg';
+  const input = document.getElementById(id) as HTMLInputElement;
+  const start = input?.selectionStart ?? null;
+  const end   = input?.selectionEnd   ?? null;
 
+  if (campo === 'password') this.mostraPassword = !this.mostraPassword;
+  else                      this.mostraConfermaPassword = !this.mostraConfermaPassword;
+
+  setTimeout(() => {
+    input?.focus();
+    if (start !== null && end !== null) input?.setSelectionRange(start, end);
+  }, 0);
+}
 selezionaComuneDom(valore: string): void {
   this.comuneDomValore = valore;
   this.comuneDomAperto = false;
