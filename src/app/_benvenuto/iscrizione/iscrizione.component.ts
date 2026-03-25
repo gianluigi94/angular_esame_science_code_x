@@ -6,6 +6,7 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import { Subscription } from 'rxjs';
+import { SaturnoPosizioniService } from 'src/app/_servizi_globali/animazioni_saturno/saturno_posizioni.service';
 import gsap from 'gsap';
 import { Datepicker } from 'vanillajs-datepicker';
 import { TranslateService } from '@ngx-translate/core';
@@ -152,6 +153,7 @@ constructor(
   private cdr: ChangeDetectorRef,
   private saturnoService: SaturnoService,
   private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
+  private saturnoPosizioniService: SaturnoPosizioniService,
   private translateService: TranslateService
 ) {
   this.reactiveForm = this.fb.group({
@@ -1193,7 +1195,7 @@ avanti3(): void {
     this.saturnoService.flashErrorLight();
     return;
   }
-  // Animazione parallela: chiusura form + piroetta Saturno verso login
+// Animazione parallela: chiusura form + piroetta Saturno + sfocatura sparisce
   const scene = this.saturnoService.getScene();
   const light = this.saturnoService.getDirectionalLight();
   if (scene) {
@@ -1201,8 +1203,58 @@ avanti3(): void {
       scene, 'LOGIN_LATERALE', 0.9, light ?? undefined
     );
   }
-  this.animaUscitaStep2();
+  this.animaSfocatura(false);
 
+  this.animaUscitaStep2().then(() => {
+    this.stepAttuale = 4;
+    this.cdr.detectChanges();
+    const righe = document.querySelectorAll('.campo-animato');
+    gsap.set(righe, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+    setTimeout(() => {
+      gsap.to(righe, { opacity: 1, scaleX: 1, duration: 0.9, ease: 'power2.out', stagger: 0.12 });
+    }, 16);
+  });
+}
+
+avanti4(): void {
+  // qui invii i dati al backend
+}
+
+indietro3(): void {
+  const scene = this.saturnoService.getScene();
+  const light = this.saturnoService.getDirectionalLight();
+
+  if (scene) {
+    const pose = this.saturnoPosizioniService.getPose('REGISTRAZIONE_BASSO');
+    const dur = 1.3;
+
+    gsap.to(scene.position, { x: pose.position.x, y: pose.position.y, z: pose.position.z, duration: dur, ease: 'power2.inOut' });
+    gsap.to(scene.scale,    { x: pose.scale.x,    y: pose.scale.y,    z: pose.scale.z,    duration: dur, ease: 'power2.inOut' });
+    gsap.to(scene.rotation, {
+      x: pose.rotation.x,
+      y: pose.rotation.y + Math.PI * 2,  // piroetta!
+      z: pose.rotation.z,
+      duration: dur,
+      ease: 'power1.inOut',
+      overwrite: true,
+      onComplete: () => { scene.rotation.y = pose.rotation.y; },
+    });
+    if (light) gsap.to(light.position, { z: 10.1001, duration: dur, ease: 'power2.inOut' });
+  }
+
+  this.animaSfocatura(true);
+
+  this.animaUscitaStep2().then(() => {
+    this.stepAttuale = 3;
+    this.cdr.detectChanges();
+    const titolo = document.querySelector('.titolo-animato') as HTMLElement;
+    const labels = document.querySelectorAll('.label-sopra');
+    const righe  = document.querySelectorAll('.campo-animato');
+    gsap.set(titolo, { opacity: 0 });
+    gsap.set(labels, { opacity: 0 });
+    gsap.set(righe,  { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+    setTimeout(() => this.animaEntrataStep2(), 16);
+  });
 }
 
 indietro2(): void {

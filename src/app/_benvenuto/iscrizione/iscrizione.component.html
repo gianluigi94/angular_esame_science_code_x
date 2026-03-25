@@ -470,7 +470,7 @@
   <form class="form-registrazione" *ngIf="stepAttuale === 3"
     [formGroup]="reactiveFormStep3"
     (ngSubmit)="avanti3()"
-    (keydown.enter)="$event.preventDefault()">
+    (keydown.enter)="onEnterForm($any($event))">
 
     <h2 class="titolo-animato" [innerHTML]="'ui.registrazione.step3.titolo' | translate"></h2>
 
@@ -623,6 +623,20 @@
     </div>
 
   </form>
+
+<div class="form-registrazione" *ngIf="stepAttuale === 4">
+  <div class="bottoni-nav campo-animato">
+    <button class="indietro_btn" type="button" (click)="indietro3()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      {{ 'ui.registrazione.bottone.indietro' | translate }}
+    </button>
+    <button class="avanti_btn" type="button" (click)="avanti4()">
+      {{ 'ui.registrazione.bottone.registrati' | translate }}
+    </button>
+  </div>
+</div>
 
 </section>
 

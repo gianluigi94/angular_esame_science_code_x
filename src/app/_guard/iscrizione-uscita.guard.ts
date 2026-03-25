@@ -4,6 +4,7 @@ import { IscrizioneComponent } from '../_benvenuto/iscrizione/iscrizione.compone
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
 import { ScrollWelcomeService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scroll-welcome.service';
+import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import gsap from 'gsap';
 @Injectable({ providedIn: 'root' })
 export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent> {
@@ -12,7 +13,8 @@ export class IscrizioneUscitaGuard implements CanDeactivate<IscrizioneComponent>
     private router: Router,
     private saturnoService: SaturnoService,
     private animateService: AnimateService,
-    private scrollWelcomeService: ScrollWelcomeService
+    private scrollWelcomeService: ScrollWelcomeService,
+    private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService
   ) {}
 
 async canDeactivate(
@@ -61,7 +63,13 @@ async canDeactivate(
   this.animateService.animateTitoloVersoCentroGlobal(1.25, 0);
 
   if (scene && light) {
-    this.scrollWelcomeService.animaRitornoVersoAlto(scene, light, 1.05);
+    if (component.stepAttuale === 4) {
+      // Saturno è in LOGIN_LATERALE → ritorno diretto a WELCOME_ALTO, no curva sinusoidale
+      this.saturnoRouteAnimazioniService.animaVerso(scene, 'WELCOME_ALTO', 1.05, light);
+    } else {
+      // Saturno è in REGISTRAZIONE_BASSO → ritorno con curva sinusoidale
+      this.scrollWelcomeService.animaRitornoVersoAlto(scene, light, 1.05);
+    }
   }
 
   const titolo = document.querySelector('.titolo-animato') as HTMLElement | null;
