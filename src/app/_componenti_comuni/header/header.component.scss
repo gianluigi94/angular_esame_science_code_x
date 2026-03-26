@@ -397,7 +397,7 @@ header {
 
   background: linear-gradient(135deg, #e79c50, #c97a2b);
   height: 30px;
-  width: 85px; /* larghezza fissa: non sposta piu l'header */
+  width: 85px;
   margin-right: 15px;
   margin-left: 5px;
   color: #ffffff;
@@ -405,11 +405,11 @@ header {
   border: none;
   border-radius: 7px;
   font-size: 16px;
-  padding: 0 10px; /* puoi anche mettere 0 8px se ti sembra troppo */
+  padding: 0 10px;
   box-shadow: 0 0 10px #999da0c5;
   cursor: pointer;
 
-  display: inline-flex; /* testo perfettamente centrato */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 

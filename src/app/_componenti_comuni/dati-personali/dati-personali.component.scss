@@ -4,8 +4,8 @@
   width: 100vw;
   height: 100vh;
   display: block;
-  z-index: 20; // sopra contenuti e footer
-  pointer-events: none; // si attiva solo quando overlay è visibile (vedi .overlay)
+  z-index: 20;
+  pointer-events: none;
 }
 
 .overlay {
@@ -85,7 +85,6 @@ a {
   font-size: 18px;
 }
 
-// ─── Form messaggio ───────────────────────────────────────
 .dati-form-contenuto {
   position: absolute;
   width: fit-content;

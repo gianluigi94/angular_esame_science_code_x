@@ -80,7 +80,6 @@ a {
 
  cursor: pointer;
 }
-// ─── Form messaggio ───────────────────────────────────────
 .contatti-form-contenuto {
   position: absolute;
   width: fit-content;
@@ -168,7 +167,6 @@ a {
     font-size: 12px;
   }
 }
-// ─── Tipologia pills ──────────────────────────────────────
 .tipologia-wrapper {
   display: flex;
   flex-direction: row;
@@ -204,7 +202,6 @@ a {
   }
 }
 
-// ─── Textarea ─────────────────────────────────────────────
 textarea {
   width: 548px;
   height: 120px;
@@ -241,7 +238,6 @@ textarea {
   font-weight: bolder;
 }
 
-// ─── Bottoni form ─────────────────────────────────────────
 .form-bottoni {
   display: flex;
   flex-direction: row;
