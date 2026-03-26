@@ -3,6 +3,7 @@ import { ContattiAnimazioniService } from 'src/app/_servizi_globali/animazioni_s
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
 import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription, take } from 'rxjs';
 import gsap from 'gsap';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
@@ -17,19 +18,32 @@ export class ContattiComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('contattiContenuto', { static: true })
   contattiContenuto!: ElementRef<HTMLElement>;
 private subs = new Subscription();
-  mail: string = '';           // Campo mail ricevuto dal server
-  indirizzo: string = '';      // Campo indirizzo ricevuto dal server
-
-    private viewReady = false;
+  mail: string = '';
+  indirizzo: string = '';
+  private viewReady = false;
   private datiReady = false;
-public sonoLoggato = false;
+  public sonoLoggato = false;
+  mostraForm = false;
+  messaggioForm: FormGroup;
+  formInviatoMsg = false;
+  @ViewChild('formContenuto', { static: true })
+  formContenuto!: ElementRef<HTMLElement>;
+
   constructor(
     private authService: Authservice,
     private contattiAnimazioni: ContattiAnimazioniService,
     private apiService: ApiService,
     private cambioLingua: CambioLinguaService,
     private router: Router,
-  ) {}
+    private fb: FormBuilder,
+  ) {
+    this.messaggioForm = this.fb.group({
+      nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      cognome:   ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      tipologia: ['', Validators.required],
+      messaggio: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
+    });
+  }
 
   ngOnInit(): void {
     this.sonoLoggato = !!this.authService.leggiObsAuth().value?.tk;
@@ -113,7 +127,49 @@ if (this.sonoLoggato) return;
       this.contattiAnimazioni.animaIngresso(this.contattiContenuto.nativeElement);
     });
   }
-   tornaIndietro(): void {
+   apriForm(): void {
+    this.contattiAnimazioni.uscita(this.contattiContenuto.nativeElement).then(() => {
+      gsap.set(this.contattiContenuto.nativeElement, { display: 'none' });
+      this.mostraForm = true;
+      gsap.set(this.formContenuto.nativeElement, { opacity: 1, x: 0, pointerEvents: 'auto' });
+      this.contattiAnimazioni.prepara(this.formContenuto.nativeElement, {
+        titleSelector: 'h2',
+        rowSelector: '.campo-wrapper, .form-riga-doppia, .form-bottoni',
+      });
+      requestAnimationFrame(() => {
+        this.contattiAnimazioni.ingresso(this.formContenuto.nativeElement, {
+          titleSelector: 'h2',
+          rowSelector: '.campo-wrapper, .form-riga-doppia, .form-bottoni',
+        });
+      });
+    });
+  }
+
+chiudiForm(): void {
+    this.contattiAnimazioni.uscita(this.formContenuto.nativeElement, {
+      titleSelector: 'h2',
+      rowSelector: '.campo-wrapper, .form-riga-doppia, .form-bottoni',
+    }).then(() => {
+      this.formInviatoMsg = false;
+      this.messaggioForm.reset();
+      gsap.set(this.formContenuto.nativeElement, { pointerEvents: 'none' });
+      this.mostraForm = false;
+      gsap.set(this.contattiContenuto.nativeElement, { display: 'block', opacity: 1 });
+      this.contattiAnimazioni.prepara(this.contattiContenuto.nativeElement);
+      requestAnimationFrame(() => {
+        this.contattiAnimazioni.ingresso(this.contattiContenuto.nativeElement);
+      });
+    });
+  }
+
+  inviaMessaggio(): void {
+    this.formInviatoMsg = true;
+    if (this.messaggioForm.invalid) return;
+    console.log('Messaggio da inviare:', this.messaggioForm.value);
+    // qui in futuro chiamerai il backend
+  }
+
+  tornaIndietro(): void {
     if (sessionStorage.getItem('vengo_da_registrazione')) {
       this.router.navigate(['/']);
       return;
@@ -122,6 +178,12 @@ if (this.sonoLoggato) return;
   }
 
 animaUscita(): Promise<void> {
+  if (this.mostraForm && this.formContenuto?.nativeElement) {
+    return this.contattiAnimazioni.uscita(this.formContenuto.nativeElement, {
+      titleSelector: 'h2',
+      rowSelector: '.campo-wrapper, .form-riga-doppia, .form-bottoni',
+    });
+  }
   if (!this.contattiContenuto?.nativeElement) return Promise.resolve();
   return this.contattiAnimazioni.animaUscita(this.contattiContenuto.nativeElement);
 }

@@ -202,7 +202,8 @@
     </div>
 
    <div class="campo-animato" style="align-self: flex-end;">
-  <button class="avanti_btn" type="submit" [disabled]="!reactiveForm.valid">
+  <button class="avanti_btn" type="submit" [disabled]="!reactiveForm.valid"
+  [title]="'ui.registrazione.bottone.avanti.title' | translate">
     {{ 'ui.registrazione.bottone.avanti' | translate }}
     <span class="step-btn">{{ 'ui.registrazione.step1.indicatore' | translate }}</span>
   </button>
@@ -452,13 +453,15 @@
 
   <p class="errore-campo" *ngIf="erroreCoerenzaIndirizzo" style="align-self: center; margin-bottom: -10px;">{{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}</p>
    <div class="bottoni-nav campo-animato">
-    <button class="indietro_btn" type="button" (click)="indietro()">
+    <button class="indietro_btn" type="button" (click)="indietro()"
+  [title]="'ui.registrazione.bottone.indietro.title' | translate">
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
   {{ 'ui.registrazione.bottone.indietro' | translate }}
 </button>
-     <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep2.valid">
+     <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep2.valid"
+  [title]="'ui.registrazione.bottone.avanti.title' | translate">
   {{ 'ui.registrazione.bottone.avanti' | translate }}
   <span class="step-btn">{{ 'ui.registrazione.step2.indicatore' | translate }}</span>
 </button>
@@ -612,13 +615,15 @@
     </div>
 
     <div class="bottoni-nav campo-animato">
-      <button class="indietro_btn" type="button" (click)="indietro2()">
+      <button class="indietro_btn" type="button" (click)="indietro2()"
+  [title]="'ui.registrazione.bottone.indietro.title' | translate">
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
   {{ 'ui.registrazione.bottone.indietro' | translate }}
 </button>
-      <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep3.valid">
+      <button class="avanti_btn" type="submit" [disabled]="!reactiveFormStep3.valid"
+  [title]="'ui.registrazione.bottone.avanti.title' | translate">
   {{ 'ui.registrazione.bottone.avanti' | translate }}
   <span class="step-btn">{{ 'ui.registrazione.step3.indicatore' | translate }}</span>
 </button>
@@ -633,25 +638,25 @@
     <div class="piano-card"
       [class.piano-selezionato]="pianoSelezionato === 'base'"
       (click)="pianoSelezionato = 'base'">
-      <div class="piano-badge">Base</div>
-      <div class="piano-prezzo-wrapper">
-       <span class="piano-prezzo-barrato">{{ prezzoBase }}/mese</span>
-        <span class="piano-gratis"><span class="piano-gratis-parola">Gratis</span> per sempre</span>
-      </div>
-      <ul class="piano-features">
-        <li>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-          Accesso a tutto il catalogo
-        </li>
-        <li>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-          Aggiornamenti continui
-        </li>
-        <li class="feature-no">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#555"><path d="M18 6L6 18M6 6l12 12" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
-          Annunci pubblicitari presenti
-        </li>
-      </ul>
+    <div class="piano-badge">{{ 'ui.registrazione.piano.base.badge' | translate }}</div>
+<div class="piano-prezzo-wrapper">
+ <span class="piano-prezzo-barrato">{{ prezzoBase }}/{{ 'ui.registrazione.piano.mese' | translate }}</span>
+  <span class="piano-gratis"><span class="piano-gratis-parola">{{ 'ui.registrazione.piano.gratis' | translate }}</span> {{ 'ui.registrazione.piano.per_sempre' | translate }}</span>
+</div>
+<ul class="piano-features">
+  <li>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+    {{ 'ui.registrazione.piano.feature.catalogo' | translate }}
+  </li>
+  <li>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+    {{ 'ui.registrazione.piano.feature.aggiornamenti' | translate }}
+  </li>
+  <li class="feature-no">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#555"><path d="M18 6L6 18M6 6l12 12" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
+    {{ 'ui.registrazione.piano.feature.pubblicita' | translate }}
+  </li>
+</ul>
       <div class="piano-check" *ngIf="pianoSelezionato === 'base'">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="10" fill="#e79c50"/>
@@ -663,25 +668,25 @@
     <div class="piano-card piano-pro"
       [class.piano-selezionato]="pianoSelezionato === 'pro'"
       (click)="pianoSelezionato = 'pro'">
-      <div class="piano-badge piano-badge-pro">Premium</div>
-      <div class="piano-prezzo-wrapper">
-        <span class="piano-prezzo-barrato">{{ prezzoPremium }}/mese</span>
-        <span class="piano-gratis"><span class="piano-gratis-parola">Gratis</span> per sempre</span>
-      </div>
-      <ul class="piano-features">
-        <li>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-          Accesso a tutto il catalogo
-        </li>
-        <li>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-          Aggiornamenti continui
-        </li>
-        <li>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-          Zero interruzioni pubblicitarie
-        </li>
-      </ul>
+      <div class="piano-badge piano-badge-pro">{{ 'ui.registrazione.piano.premium.badge' | translate }}</div>
+<div class="piano-prezzo-wrapper">
+  <span class="piano-prezzo-barrato">{{ prezzoPremium }}/{{ 'ui.registrazione.piano.mese' | translate }}</span>
+  <span class="piano-gratis"><span class="piano-gratis-parola">{{ 'ui.registrazione.piano.gratis' | translate }}</span> {{ 'ui.registrazione.piano.per_sempre' | translate }}</span>
+</div>
+<ul class="piano-features">
+  <li>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+    {{ 'ui.registrazione.piano.feature.catalogo' | translate }}
+  </li>
+  <li>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+    {{ 'ui.registrazione.piano.feature.aggiornamenti' | translate }}
+  </li>
+  <li>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+    {{ 'ui.registrazione.piano.feature.no_pubblicita' | translate }}
+  </li>
+</ul>
       <div class="piano-check" *ngIf="pianoSelezionato === 'pro'">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="10" fill="#e79c50"/>
@@ -692,16 +697,20 @@
 
   </div>
 
+  <p class="piano-disclaimer campo-animato">{{ 'ui.registrazione.piano.disclaimer' | translate }}</p>
+
   <div class="bottoni-nav campo-animato">
-    <button class="indietro_btn" type="button" (click)="indietro3()">
+    <button class="indietro_btn" type="button" (click)="indietro3()"
+  [title]="'ui.registrazione.bottone.indietro.title' | translate">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
         <path d="M15 18l-6-6 6-6"/>
       </svg>
       {{ 'ui.registrazione.bottone.indietro' | translate }}
     </button>
     <button class="avanti_btn" type="button"
-      [disabled]="!pianoSelezionato"
-      (click)="avanti4()">
+  [disabled]="!pianoSelezionato"
+  (click)="avanti4()"
+  [title]="'ui.registrazione.bottone.registrati.title' | translate">
       {{ 'ui.registrazione.bottone.registrati' | translate }}
     </button>
   </div>

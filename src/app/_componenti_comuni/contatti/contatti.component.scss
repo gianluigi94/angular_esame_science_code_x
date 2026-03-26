@@ -80,3 +80,229 @@ a {
 
  cursor: pointer;
 }
+// ─── Form messaggio ───────────────────────────────────────
+.contatti-form-contenuto {
+  position: absolute;
+  width: fit-content;
+  height: fit-content;
+  left: 53%;
+  top: 15%;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  opacity: 0;
+  pointer-events: none;
+  h2 {
+    text-shadow: 1px 1px 2px #c7ae80;
+    color: rgb(199, 174, 128);
+    font-size: 36px;
+    margin-bottom: 10px;
+    font-family: "Quantico", serif;
+    font-weight: bolder;
+  }
+}
+
+.form-riga-doppia {
+  display: flex;
+  flex-direction: row;
+  gap: 28px;
+}
+
+.campo-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 24px;
+  font-family: "Quantico", serif;
+  color: aliceblue;
+  font-weight: bolder;
+  text-shadow: 1px 1px 3px #14110a;
+
+  &.is-invalid { color: red !important; }
+}
+
+.campo-form {
+  position: relative;
+  width: fit-content;
+
+  input[type="text"] {
+    width: 260px;
+    height: 47px;
+    background: #000000df;
+    border: none;
+    border-radius: 7px;
+    font-size: 18px;
+    padding: 18px 10px 0 10px;
+    color: rgb(205, 205, 205);
+    box-shadow: 0 0 8px #999da0;
+    font-family: "Quantico", serif;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 4px orange !important;
+    }
+
+    &.is-invalid { color: red !important; }
+  }
+
+  label {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    pointer-events: none;
+    transition: top 0.15s ease, transform 0.15s ease, font-size 0.15s ease, color 0.15s ease;
+    font-family: "Quantico", serif;
+    color: #4f5050;
+    font-weight: bolder;
+  }
+
+  input:focus ~ label,
+  input:not(:placeholder-shown) ~ label {
+    top: 4px;
+    transform: translateY(0);
+    font-size: 12px;
+  }
+}
+// ─── Tipologia pills ──────────────────────────────────────
+.tipologia-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tipologia-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: 2px solid #4f5050;
+  background: #000000df;
+  color: #4f5050;
+  font-family: "Quantico", serif;
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+
+  input[type="radio"] { display: none; }
+
+  &.attiva {
+    border-color: #c7ae80;
+    color: #c7ae80;
+    box-shadow: 0 0 8px #c7ae8055;
+  }
+
+  &:hover:not(.attiva) {
+    border-color: #6b6e6e;
+    color: #6b6e6e;
+  }
+}
+
+// ─── Textarea ─────────────────────────────────────────────
+textarea {
+  width: 548px;
+  height: 120px;
+  background: #000000df;
+  border: none;
+  border-radius: 7px;
+  font-size: 15px;
+  padding: 12px;
+  color: rgb(205, 205, 205);
+  box-shadow: 0 0 8px #999da0;
+  font-family: "Quantico", serif;
+  resize: none;
+  line-height: 1.5;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 4px #c7ae80 !important;
+  }
+
+
+  &::placeholder { color: #4f5050; }
+}
+
+.asterisco {
+  color: #c7ae80;
+  font-size: 10px;
+  vertical-align: middle;
+}
+
+.form-errore {
+  font-size: 14px;
+  color: #b41414;
+  font-family: "Quantico", serif;
+  font-weight: bolder;
+}
+
+// ─── Bottoni form ─────────────────────────────────────────
+.form-bottoni {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.indietro-form-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #c4c4c4;
+  font-family: "Quantico", serif;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 4px;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+
+  &:hover { color: #c7ae80; }
+}
+
+.invia-btn {
+  height: 42px;
+  padding: 0 28px;
+  font-size: 16px;
+  border: none;
+  background: linear-gradient(135deg, #e79c50, #c97a2b);
+  color: white;
+  box-shadow: 0 0 8px #999da0;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: "Quantico", serif;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform: translateZ(0);
+
+  &:not(:disabled):hover {
+    transform: scale(1.06) translateZ(0);
+    box-shadow: 0 0 14px #e79c5088;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+.contatti-form-contenuto input:-webkit-autofill,
+.contatti-form-contenuto input:-webkit-autofill:hover,
+.contatti-form-contenuto input:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(205, 205, 205) !important;
+  caret-color: rgb(205, 205, 205);
+  box-shadow: 0 0 0 1000px #000000df inset, 0 0 8px #999da0 !important;
+  border-radius: 7px;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.contatti-form-contenuto input:-webkit-autofill::first-line {
+  font-size: 18px !important;
+  font-family: "Quantico", serif !important;
+}

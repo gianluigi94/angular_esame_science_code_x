@@ -1,6 +1,8 @@
 <app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false"></app-saturno>
 
 <section class="login-contenuto">
+
+  <!-- ═══ LISTA CONTATTI ═══ -->
   <div class="contatti-contenuto" #contattiContenuto>
     <h2>{{ 'ui.h2.contatti' | translate }}</h2>
     <dl class="contact-list">
@@ -16,14 +18,125 @@
         <dt [innerHTML]="'ui.indirizzo.contatti' | translate"></dt>
         <dd>{{ indirizzo }}</dd>
       </div>
-
       <div class="row">
-  <dt> </dt>
-  <dd class="special_dd" (click)="tornaIndietro()">
-    {{ (sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti') | translate }}
-  </dd>
-</div>
+        <dt> </dt>
+        <dd class="special_dd" (click)="apriForm()">
+          {{ 'ui.contatti.invia_messaggio' | translate }}
+        </dd>
+      </div>
+      <div class="row">
+        <dt> </dt>
+        <dd class="special_dd special_dd--secondario" (click)="tornaIndietro()">
+          {{ (sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti') | translate }}
+        </dd>
+      </div>
     </dl>
   </div>
+
+  <!-- ═══ FORM MESSAGGIO ═══ -->
+  <form class="contatti-form-contenuto" #formContenuto [formGroup]="messaggioForm" (ngSubmit)="inviaMessaggio()">
+    <h2>{{ 'ui.contatti.form.titolo' | translate }}</h2>
+
+    <!-- Nome + Cognome -->
+    <div class="form-riga-doppia">
+      <div class="campo-wrapper">
+        <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['nome'].invalid && (messaggioForm.controls['nome'].touched || formInviatoMsg) }">
+          {{ 'ui.contatti.form.nome.label' | translate }} <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="msg_nome" formControlName="nome"
+            [ngClass]="{ 'is-invalid': messaggioForm.controls['nome'].invalid && (messaggioForm.controls['nome'].touched || formInviatoMsg) }" />
+          <label for="msg_nome">{{ 'ui.contatti.form.nome.label' | translate }}</label>
+        </div>
+        <p class="form-errore" *ngIf="messaggioForm.controls['nome'].errors?.['required'] && (messaggioForm.controls['nome'].touched || formInviatoMsg)">
+          {{ 'ui.contatti.form.nome.error.required' | translate }}
+        </p>
+        <p class="form-errore" *ngIf="messaggioForm.controls['nome'].errors?.['minlength'] && (messaggioForm.controls['nome'].touched || formInviatoMsg)">
+          {{ 'ui.registrazione.nome.error.minlength' | translate }}
+        </p>
+        <p class="form-errore" *ngIf="messaggioForm.controls['nome'].errors?.['pattern'] && (messaggioForm.controls['nome'].touched || formInviatoMsg)">
+          {{ 'ui.registrazione.nome.error.pattern' | translate }}
+        </p>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['cognome'].invalid && (messaggioForm.controls['cognome'].touched || formInviatoMsg) }">
+          {{ 'ui.contatti.form.cognome.label' | translate }} <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form">
+          <input type="text" placeholder=" " id="msg_cognome" formControlName="cognome"
+            [ngClass]="{ 'is-invalid': messaggioForm.controls['cognome'].invalid && (messaggioForm.controls['cognome'].touched || formInviatoMsg) }" />
+          <label for="msg_cognome">{{ 'ui.contatti.form.cognome.label' | translate }}</label>
+        </div>
+        <p class="form-errore" *ngIf="messaggioForm.controls['cognome'].errors?.['required'] && (messaggioForm.controls['cognome'].touched || formInviatoMsg)">
+          {{ 'ui.contatti.form.cognome.error.required' | translate }}
+        </p>
+        <p class="form-errore" *ngIf="messaggioForm.controls['cognome'].errors?.['minlength'] && (messaggioForm.controls['cognome'].touched || formInviatoMsg)">
+          {{ 'ui.registrazione.cognome.error.minlength' | translate }}
+        </p>
+        <p class="form-errore" *ngIf="messaggioForm.controls['cognome'].errors?.['pattern'] && (messaggioForm.controls['cognome'].touched || formInviatoMsg)">
+          {{ 'ui.registrazione.cognome.error.pattern' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Tipologia -->
+    <div class="campo-wrapper">
+      <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['tipologia'].invalid && (messaggioForm.controls['tipologia'].touched || formInviatoMsg) }">
+        {{ 'ui.contatti.form.tipologia.label' | translate }} <span class="asterisco">*</span>
+      </p>
+      <div class="tipologia-wrapper">
+        <label class="tipologia-pill" [class.attiva]="messaggioForm.controls['tipologia'].value === 'assistenza'">
+          <input type="radio" formControlName="tipologia" value="assistenza" />
+          {{ 'ui.contatti.form.tipologia.assistenza' | translate }}
+        </label>
+        <label class="tipologia-pill" [class.attiva]="messaggioForm.controls['tipologia'].value === 'collaborazioni'">
+          <input type="radio" formControlName="tipologia" value="collaborazioni" />
+          {{ 'ui.contatti.form.tipologia.collaborazioni' | translate }}
+        </label>
+        <label class="tipologia-pill" [class.attiva]="messaggioForm.controls['tipologia'].value === 'informazioni'">
+          <input type="radio" formControlName="tipologia" value="informazioni" />
+          {{ 'ui.contatti.form.tipologia.informazioni' | translate }}
+        </label>
+      </div>
+      <p class="form-errore" *ngIf="messaggioForm.controls['tipologia'].errors?.['required'] && (messaggioForm.controls['tipologia'].touched || formInviatoMsg)">
+        {{ 'ui.contatti.form.tipologia.error.required' | translate }}
+      </p>
+    </div>
+
+    <!-- Messaggio -->
+    <div class="campo-wrapper">
+      <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['messaggio'].invalid && (messaggioForm.controls['messaggio'].touched || formInviatoMsg) }">
+        {{ 'ui.contatti.form.messaggio.label' | translate }} <span class="asterisco">*</span>
+      </p>
+      <textarea id="msg_messaggio" formControlName="messaggio"
+        [placeholder]="'ui.contatti.form.messaggio.placeholder' | translate"
+        [ngClass]="{ 'is-invalid': messaggioForm.controls['messaggio'].invalid && (messaggioForm.controls['messaggio'].touched || formInviatoMsg) }">
+      </textarea>
+      <p class="form-errore" *ngIf="messaggioForm.controls['messaggio'].errors?.['required'] && (messaggioForm.controls['messaggio'].touched || formInviatoMsg)">
+        {{ 'ui.contatti.form.messaggio.error.required' | translate }}
+      </p>
+      <p class="form-errore" *ngIf="messaggioForm.controls['messaggio'].errors?.['minlength'] && (messaggioForm.controls['messaggio'].touched || formInviatoMsg)">
+        {{ 'ui.contatti.form.messaggio.error.minlength' | translate }}
+      </p>
+      <p class="form-errore" *ngIf="messaggioForm.controls['messaggio'].errors?.['maxlength'] && (messaggioForm.controls['messaggio'].touched || formInviatoMsg)">
+        {{ 'ui.contatti.form.messaggio.error.maxlength' | translate }}
+      </p>
+    </div>
+
+    <!-- Bottoni -->
+    <div class="form-bottoni">
+      <button type="button" class="indietro-form-btn" (click)="chiudiForm()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        {{ 'ui.contatti.form.indietro' | translate }}
+      </button>
+      <button type="button" class="invia-btn" [disabled]="messaggioForm.invalid" (click)="inviaMessaggio()">
+        {{ 'ui.contatti.form.invia' | translate }}
+      </button>
+    </div>
+  </form>
+
   <app-footer></app-footer>
 </section>

@@ -68,7 +68,7 @@ provinciaFlash = false;
 erroreCoerenzaIndirizzo = false;
 prezzoBase    = '5€';
 prezzoPremium = '10€';
-
+emailUtente   = '';
 // ─── Step 3 ───────────────────────────────────────────────
 formInviatoStep3 = false;
 pianoSelezionato: 'base' | 'pro' | null = null;
@@ -212,6 +212,7 @@ chiudiDropdown(): void {
 
   ngOnInit(): void {
     try { sessionStorage.setItem(CHIAVE_PAGINA_REGISTRAZIONE, '1'); } catch {}
+    this.emailUtente = history.state?.email ?? '';
     this.aggiornaPrezzi(this.paeseDomValore);
 
     fetch('assets/common_words.json')
@@ -292,8 +293,8 @@ animaSfocatura(entra: boolean): Promise<void> {
       weekStart: 1,
     });
 
-    input.addEventListener('show', () => { console.log('📅 datepicker SHOW'); this.datepickerAperto = true; });
-    input.addEventListener('hide', () => { console.log('📅 datepicker HIDE'); this.datepickerAperto = false; });
+    input.addEventListener('show', () => { this.datepickerAperto = true; });
+    input.addEventListener('hide', () => { this.datepickerAperto = false; });
 
     input.addEventListener('changeDate', (e: any) => {
   const data: Date = e.detail.date;
@@ -317,7 +318,6 @@ animaSfocatura(entra: boolean): Promise<void> {
  apriDatepicker(event: Event): void {
     if (!this.datepicker) return;
     event.stopPropagation();
-    console.log('🖱️ click bottone — datepickerAperto:', this.datepickerAperto, '| .active:', this.datepicker.active);
     this.datepickerAperto ? this.datepicker.hide() : this.datepicker.show();
   }
   private animaEntrata(): void {
@@ -477,20 +477,17 @@ private aggiornaPrezzi(iso: string): void {
 }
 toggleSesso(event: Event): void {
   event.stopPropagation();
-  console.log('🔴 toggleSesso — sessoAperto prima:', this.sessoAperto, '→ dopo:', !this.sessoAperto);
   this.sessoAperto = !this.sessoAperto;
   if (this.sessoAperto) { this.paeseAperto = false; this.comuneAperto = false; }
   if (!this.sessoAperto) { this.indiceSesso = -1; }
 }
 
 apriSessoSoloTastiera(_event: FocusEvent): void {
-  console.log('🟡 apriSessoSoloTastiera — _sessoFocusDaTab:', this._sessoFocusDaTab);
   if (this._sessoFocusDaTab) {
     this._sessoFocusDaTab = false;
     this.sessoAperto = true;
     this.paeseAperto = false;
     this.comuneAperto = false;
-    console.log('✅ sessoAperto = true via tastiera');
   }
 }
 togglePaese(event: Event): void {
@@ -1072,10 +1069,8 @@ selezionaComuneDom(valore: string): void {
   this.reactiveFormStep2.get('comuneD')!.setValue(valore);
   this.reactiveFormStep2.get('comuneD')!.markAsTouched();
 
-  // Auto-fill provincia e CAP dal modello comune
   const comune = this.comuni.find(c => c.comune === valore);
   if (!comune) return;
-  console.log('🏙️ comune trovato:', JSON.stringify(comune));
 
   // Provincia: sigla automobilistica
  const sigla = (comune.sigla_automobilistica ?? '').toUpperCase();
@@ -1250,8 +1245,50 @@ avanti3(): void {
   });
 }
 
+private async sha512(testo: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(testo);
+  const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 avanti4(): void {
-  // qui invii i dati al backend
+  const f1 = this.reactiveForm.value;
+  const f2 = this.reactiveFormStep2.value;
+  const f3 = this.reactiveFormStep3.value;
+
+  Promise.all([
+    this.sha512(this.emailUtente),
+    this.sha512(f3.password),
+  ]).then(([emailHash, passwordHash]) => {
+    console.log('=== DATI REGISTRAZIONE ===', {
+      // Step 1
+      nome:           f1.nome,
+      cognome:        f1.cognome,
+      dataNascita:    `${f1.dataGg}/${f1.dataMm}/${f1.dataAaaa}`,
+      sesso:          f1.sesso,
+      paeseNascita:   f1.paese,
+      comuneNascita:  f1.comune || f1.citta,
+      codiceFiscale:  f1.codiceFiscale,
+      // Step 2
+      paeseDomicilio: f2.nazioneD,
+      comuneDomicilio: f2.comuneD || f2.cittaD,
+      via:            f2.via,
+      civico:         f2.civico,
+      provinciaD:     f2.provinciaD,
+      cap:            f2.cap,
+      dettagli:       f2.dettagli,
+      // Step 3
+      telefono:       f3.telefono,
+      emailSecondaria: f3.emailSecondaria,
+      // Step 4
+      piano:          this.pianoSelezionato,
+      // Credenziali (hashed SHA-512)
+      email_sha512:    emailHash,
+      password_sha512: passwordHash,
+    });
+  });
 }
 
 indietro3(): void {

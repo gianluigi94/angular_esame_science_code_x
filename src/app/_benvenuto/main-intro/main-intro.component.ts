@@ -47,7 +47,9 @@ export class MainIntroComponent {
     }
 
     setTimeout(() => {
-      this.router.navigateByUrl(`${base}/${sottoPath}`);
+      this.router.navigateByUrl(`${base}/${sottoPath}`, {
+        state: { email: this.reactiveForm.get('email')!.value }
+      });
     }, durata * 1500 + 80);
   }
 }
