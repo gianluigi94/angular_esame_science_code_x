@@ -12,19 +12,24 @@
   import { Subscription, take, skip, distinctUntilChanged, forkJoin } from 'rxjs';
   import { ApiService } from 'src/app/_servizi_globali/api.service';
   import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+  import { CatalogoRoutingUtility } from './catalogo_utility/catalogo-routing.utility';
+  import { CatalogoPreloadUtility } from './catalogo_utility/catalogo-preload.utility';
+  import { CatalogoCaricamentoUtility } from './catalogo_utility/catalogo-caricamento.utility';
+  import { CatalogoSentinellaUtility } from './catalogo_utility/catalogo-sentinella.utility';
   import {
     TipoContenuto,
     TipoContenutoService,
   } from '../app-riga-categoria/categoria_services/tipo-contenuto.service';
   import { Router } from '@angular/router';
+  import { CatalogoSessionStorageUtility } from './catalogo_utility/catalogo-session-storage.utility';
   import { Location } from '@angular/common';
+  import { CatalogoScrollCategoriaUtility } from './catalogo_utility/catalogo-scroll-categoria.utility';
   import { AnimazioniScomparsaService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/animazioni-scomparsa.service';
   import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_services/scorrimento-catalogo.service';
   import { CatalogoCacheService } from '../app-riga-categoria/categoria_services/catalogo-cache.service';
   import { RigaCategoriaComponent } from '../app-riga-categoria/riga-categoria.component';
   import { SchedaCacheService } from '../scheda/scheda_service/scheda-cache.service';
-  import { calcolaHash32, slugDaLocandina, mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
-  @Component({
+    @Component({
     selector: 'app-catalogo',
     templateUrl: './catalogo.component.html',
     styleUrls: ['./catalogo.component.scss'],
@@ -188,115 +193,37 @@
       return riga.idCategoria;
     }
 
-    baseCatalogoDaLingua(): string {
-      const codice = this.cambioLingua.leggiCodiceLingua();
-      const pref = codice === 'it' ? '/it' : '/en';
-      const base = codice === 'it' ? '/catalogo' : '/catalog';
-      return pref + base;
-    }
+     baseCatalogoDaLingua(): string {
+   return CatalogoRoutingUtility.baseCatalogoDaLingua(this);
+ }
 
-    sottoPathDaTipo(val: TipoContenuto): string {
-      const codice = this.cambioLingua.leggiCodiceLingua();
-      const en = codice === 'en';
-      if (val === 'film') return en ? '/movies' : '/film';
-      if (val === 'serie') return en ? '/series' : '/serie';
-      return en ? '/movies-series' : '/film-serie';
-    }
+     sottoPathDaTipo(val: TipoContenuto): string {
+   return CatalogoRoutingUtility.sottoPathDaTipo(this, val);
+ }
 
-    forzaRottaCatalogoDaLinguaETipo(preservaBaseDaUrl: boolean = false): void {
-      const full = this.location.path(true) || '';
-      const soloPath = full.split('?')[0].split('#')[0];
-      const tail = full.substring(soloPath.length); // include ?query e/o #hash
-
-      const matchBase = soloPath.match(/^\/(it|en)\/(catalogo|catalog)(\/.*)?$/);
-      if (!matchBase) return;
-      const prefissoDaUrl = '/' + matchBase[1];
-      const baseCatalogoDaUrl = prefissoDaUrl + '/' + matchBase[2];
-
-      const nuovaBase = preservaBaseDaUrl
-        ? baseCatalogoDaUrl
-        : this.baseCatalogoDaLingua();
-      const resto = soloPath.replace(/^\/(it|en)\/(catalogo|catalog)/, '');
-
-      const eRootCatalogo = resto === '' || resto === '/';
-      const eVistaPrincipale =
-        /^\/(film|serie|film-serie|movies|series|movies-series)\/?$/.test(resto);
-
-      const nuovoResto =
-        eRootCatalogo || eVistaPrincipale
-          ? this.sottoPathDaTipo(this.tipoSelezionato)
-          : resto;
-
-      const targetPath = (nuovaBase + nuovoResto).replace(/\/+$/, '');
-      const currentPath = soloPath.replace(/\/+$/, '');
-
-      if (targetPath !== currentPath) this.location.go(targetPath + tail);
-    }
+     forzaRottaCatalogoDaLinguaETipo(preservaBaseDaUrl: boolean = false): void {
+   CatalogoRoutingUtility.forzaRottaCatalogoDaLinguaETipo(this, preservaBaseDaUrl);
+ }
 
 
 
 
 
-    precaricaImmaginiRighe(
-      righe: { locandine: { src: string }[] }[],
-    ): Promise<void> {
-      const urls: string[] = [];
-      for (const r of righe || []) {
-        for (const u of r.locandine || []) {
-          const s = String(u?.src || '');
-          if (s) urls.push(s);
-        }
-      }
-      if (!urls.length) return Promise.resolve();
+     precaricaImmaginiRighe(
+   righe: { locandine: { src: string }[] }[],
+ ): Promise<void> {
+   return CatalogoPreloadUtility.precaricaImmaginiRighe(righe);
+ }
 
-      const promesse = urls.map(
-        (u) =>
-          new Promise<void>((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-            (img as any).decode
-              ? (img as any)
-                  .decode()
-                  .then(() => resolve())
-                  .catch(() => resolve())
-              : (img.src = u);
-            img.src = u;
-          }),
-      );
-      return Promise.all(promesse).then(() => {});
-    }
+     aggiornaRigheInPlace(
+   nuoveRighe: { idCategoria: string; category: string; posters: string[] }[],
+ ): void {
+   CatalogoPreloadUtility.aggiornaRigheInPlace(this, nuoveRighe);
+ }
 
-    aggiornaRigheInPlace(
-      nuoveRighe: { idCategoria: string; category: string; posters: string[] }[],
-    ): void {
-      const mappaEsistenti: Record<string, any> = {};
-      for (const r of this.righeDemo || [])
-        mappaEsistenti[String(r.idCategoria)] = r;
-
-      const ordine: any[] = [];
-      for (const n of nuoveRighe) {
-        const idCat = String(n.idCategoria);
-        const r = mappaEsistenti[idCat] || {
-          idCategoria: idCat,
-          category: '',
-          posters: [],
-        };
-        r.category = n.category;
-        this.aggiornaLocandineInPlace(r.posters, n.posters);
-        ordine.push(r);
-      }
-
-      this.righeDemo.splice(0, this.righeDemo.length, ...ordine);
-    }
-
-    aggiornaLocandineInPlace(target: string[], sorgente: string[]): void {
-      const t = target || [];
-      const s = sorgente || [];
-      while (t.length < s.length) t.push('');
-      if (t.length > s.length) t.splice(s.length);
-      for (let i = 0; i < s.length; i++) t[i] = s[i];
-    }
+     aggiornaLocandineInPlace(target: string[], sorgente: string[]): void {
+   CatalogoPreloadUtility.aggiornaLocandineInPlace(target, sorgente);
+ }
 
     avviaCambioTipoConAttese(): void {
       if (this.timerCambioTipo) {
@@ -315,545 +242,67 @@
       }, 100);
     }
 
-    inizializzaOsservatoreSentinella(): void {
-      try {
-        this.osservatoreSentinella?.disconnect();
-      } catch {}
-      this.osservatoreSentinella = null;
+     inizializzaOsservatoreSentinella(): void {
+   CatalogoSentinellaUtility.inizializzaOsservatoreSentinella(this);
+ }
 
-      const host = this.sentinella?.nativeElement;
-      if (!host) return;
+     caricaPrimeRigheDaApi(
+   idForzato: number = 0,
+   notificaTipoApplicato: boolean = false,
+ ): void {
+   CatalogoCaricamentoUtility.caricaPrimeRigheDaApi(
+     this,
+     idForzato,
+     notificaTipoApplicato,
+   );
+ }
 
-      this.osservatoreSentinella = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            if (!e.isIntersecting) continue;
+     caricaAltreQuattroRigheDaApi(): void {
+   CatalogoCaricamentoUtility.caricaAltreQuattroRigheDaApi(this);
+ }
 
-
-            if (!this.sentinellaPronta) continue;
-            if (!this.utenteHaScrollato) continue;
-            if (!this.haAltreRighe) return;
-            if (this.caricamentoRighe) return;
-
-            if (this.timerSentinella) clearTimeout(this.timerSentinella);
-            this.timerSentinella = setTimeout(() => {
-              this.timerSentinella = 0;
-              this.caricaAltreQuattroRigheDaApi();
-            }, 400);
-          }
-        },
-        { root: null, threshold: 0.1 },
-      );
-
-      this.osservatoreSentinella.observe(host);
-    }
-
-    caricaPrimeRigheDaApi(
-      idForzato: number = 0,
-      notificaTipoApplicato: boolean = false,
-    ): void {
-      const id = idForzato ? idForzato : this.idCicloRighe + 1;
-      if (!idForzato) this.idCicloRighe = id;
-
-      this.scrollYPrimaCambio = window.scrollY || 0;
-  // se siamo a y=0 (caricamento fresco, non ritorno da scheda) lo azzeramento
-  // deve avvenire via GSAP così ScrollTrigger non interferisce e il
-  // requestAnimationFrame interno troverà scrollYPrimaCambio già a 0
-  if (this.scrollYPrimaCambio === 0) {
-    this.servizioAnimazioni.scrollaA(0, 0);
-  }
-  const eroFinitoPrimaDelCambio = this.hoFinitoTutto;
-      if (this.timerSentinella) {
-        clearTimeout(this.timerSentinella);
-        this.timerSentinella = 0;
-      }
-      try {
-        this.osservatoreSentinella?.disconnect();
-      } catch {}
-      this.osservatoreSentinella = null;
-
-      const totaleDaRicaricare =
-        this.offsetRighe > 0 ? this.offsetRighe : this.limiteRighe;
-      const lingua = this.cambioLingua.leggiCodiceLingua();
-      const tipo = this.tipoSelezionato;
-
-      this.haAltreRighe = true;
-      this.hoFinitoTutto = false;
-      this.caricamentoRighe = true;
-      this.sentinellaPronta = false;
-      this.utenteHaScrollato = false;
-
-      const richieste: any[] = [];
-      for (let off = 0; off < totaleDaRicaricare; off += this.limiteRighe) {
-        const lim = Math.min(this.limiteRighe, totaleDaRicaricare - off);
-        richieste.push(
-          this.api.getCatalogoRighe(lingua, tipo, lim, off).pipe(take(1)),
-        );
-      }
-
-      forkJoin(richieste).subscribe((risposte: any[]) => {
-        const itemsTotali: any[] = [];
-        for (const ris of risposte || []) {
-          const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
-          itemsTotali.push(...items);
-        }
-
-        const nuoveRighe = itemsTotali
-          .map((x: any) => {
-            const idCategoria = String(x?.idCategoria || '');
-
-            let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
-              .map((p: any) => ({
-                src: String(p?.src || ''),
-                titolo: String(p?.titolo || ''),
-                sottotitolo: String(p?.sottotitolo || ''),
-                tipo: String(p?.tipo || ''), // 'film' | 'serie'
-                id_media: String(p?.id_media || ''), // id originale in tabella film/serie
-              }))
-              .filter((p: any) => !!p.src);
-            if (this.tipoSelezionato === 'film_serie' && locandine.length) {
-              locandine = mescolaDeterministicaLocandine(
-                locandine as any,
-                idCategoria,
-              ) as any;
-            }
-
-            return {
-              idCategoria,
-              category: String(x?.category || ''),
-              locandine: locandine.length
-                ? (locandine as any)
-                : this.locandineDemo,
-            };
-          })
-          .filter((r: any) => !!r.idCategoria);
-
-        this.precaricaImmaginiRighe(nuoveRighe).then(() => {
-          if (id !== this.idCicloRighe) return;
-
-          this.righeDemo.splice(0, this.righeDemo.length, ...nuoveRighe);
-          this.offsetRighe = nuoveRighe.length;
-
-          const ultimo =
-            risposte && risposte.length ? risposte[risposte.length - 1] : null;
-          const itemsUltimo = Array.isArray(ultimo?.data?.items)
-            ? ultimo.data.items
-            : [];
-          const limUltimo = Math.min(
-            this.limiteRighe,
-            totaleDaRicaricare -
-              Math.max(0, (risposte.length - 1) * this.limiteRighe),
-          );
-
-          this.haAltreRighe = itemsUltimo.length === limUltimo;
-          this.hoFinitoTutto = !this.haAltreRighe;
-          this.caricamentoRighe = false;
-          this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
-          if (!this.haAltreRighe) {
-            try {
-              this.osservatoreSentinella?.disconnect();
-            } catch {}
-            this.osservatoreSentinella = null;
-          }
-
-          requestAnimationFrame(() => {
-            window.scrollTo(0, this.scrollYPrimaCambio);
-            if (eroFinitoPrimaDelCambio) this.hoFinitoTutto = true;
-            this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
-            if (this.sentinellaPronta) this.inizializzaOsservatoreSentinella();
-            if (this.hoFinitoTutto) {
-              try {
-                this.osservatoreSentinella?.disconnect();
-              } catch {}
-              this.osservatoreSentinella = null;
-            }
-          });
-
-          if (notificaTipoApplicato) {
-            this.tipoContenuto.notificaCambioTipoApplicato(
-              this.tipoSelezionato,
-              id,
-            );
-          }
-        });
-      });
-    }
-
-    caricaAltreQuattroRigheDaApi(): void {
-      if (!this.haAltreRighe) return;
-      if (this.caricamentoRighe) return;
-
-      this.caricamentoRighe = true;
-
-      this.idCicloRighe += 1;
-      const id = this.idCicloRighe;
-
-      const lingua = this.cambioLingua.leggiCodiceLingua();
-      const tipo = this.tipoSelezionato;
-      const offset = this.offsetRighe;
-
-      this.api
-        .getCatalogoRighe(lingua, tipo, this.limiteRighe, offset)
-        .pipe(take(1))
-        .subscribe((ris: any) => {
-          const items = Array.isArray(ris?.data?.items) ? ris.data.items : [];
-
-          const nuoveRighe = items
-            .map((x: any) => {
-              const idCategoria = String(x?.idCategoria || '');
-
-              let locandine = (Array.isArray(x?.locandine) ? x.locandine : [])
-                .map((p: any) => ({
-                  src: String(p?.src || ''),
-                  titolo: String(p?.titolo || ''),
-                  sottotitolo: String(p?.sottotitolo || ''),
-                  tipo: String(p?.tipo || ''), // 'film' | 'serie'
-                  id_media: String(p?.id_media || ''), // id originale in tabella film/serie
-                }))
-                .filter((p: any) => !!p.src);
-
-              if (this.tipoSelezionato === 'film_serie' && locandine.length) {
-                locandine = mescolaDeterministicaLocandine(
-                  locandine as any,
-                  idCategoria,
-                ) as any;
-              }
-
-              return {
-                idCategoria,
-                category: String(x?.category || ''),
-                locandine: locandine.length
-                  ? (locandine as any)
-                  : this.locandineDemo,
-              };
-            })
-            .filter((r: any) => !!r.idCategoria);
-
-          this.precaricaImmaginiRighe(nuoveRighe).then(() => {
-            if (id !== this.idCicloRighe) return;
-
-            const gia: Record<string, boolean> = {};
-            for (const r of this.righeDemo) gia[String(r.idCategoria)] = true;
-            const soloNuove = nuoveRighe.filter(
-              (r: any) => !gia[String(r.idCategoria)],
-            );
-
-            this.righeDemo.push(...soloNuove);
-            this.offsetRighe += nuoveRighe.length;
-
-            this.haAltreRighe = nuoveRighe.length === this.limiteRighe;
-            if (!this.haAltreRighe) this.hoFinitoTutto = true;
-
-            this.caricamentoRighe = false;
-
-            this.sentinellaPronta = this.haAltreRighe && !this.hoFinitoTutto;
-
-            if (!this.haAltreRighe) {
-              try {
-                this.osservatoreSentinella?.disconnect();
-              } catch {}
-              this.osservatoreSentinella = null;
-            }
-          });
-        });
-    }
-
-    gestisciScrollACategoria(idCategoria: string): void {
-      const id = String(idCategoria || '').trim();
-      if (!id) return;
-
-      this.scorrimentoCatalogo.impostaSpinnerScroll(true);
-      this.utenteHaScrollato = true;
-
-      this.tokenScroll += 1;
-      const token = this.tokenScroll;
-
-      if (this.timerCaricaFino) {
-        clearTimeout(this.timerCaricaFino);
-        this.timerCaricaFino = 0;
-      }
-
-      this.caricaFinoACategoria(id, token).then((trovata: boolean) => {
-        if (!trovata) {
-          this.scorrimentoCatalogo.impostaSpinnerScroll(false);
-          return;
-        }
-
-        requestAnimationFrame(() => {
-          const el = document.getElementById('cat_' + id);
-          if (!el) {
-            this.scorrimentoCatalogo.impostaSpinnerScroll(false);
-            return;
-          }
-
-          const rect = el.getBoundingClientRect();
-          const y =
-            (window.scrollY || 0) +
-            rect.top -
-            Math.floor(window.innerHeight * 0.65);
-          this.scorrimentoCatalogo.impostaSpinnerScroll(false);
-          this.servizioAnimazioni.scrollaA(y, 0.35);
-          setTimeout(() => this.forzaControlloSentinella(), 380);
-        });
-      });
-    }
+   gestisciScrollACategoria(idCategoria: string): void {
+   CatalogoScrollCategoriaUtility.gestisciScrollACategoria(this, idCategoria);
+ }
 
     caricaFinoACategoria(idCategoria: string, token: number): Promise<boolean> {
-      const id = String(idCategoria || '').trim();
-      if (!id) return Promise.resolve(false);
+   return CatalogoCaricamentoUtility.caricaFinoACategoria(
+     this,
+     idCategoria,
+     token,
+   );
+ }
 
-      const gia = this.righeDemo.some((r) => String(r?.idCategoria) === id);
-      if (gia) return Promise.resolve(true);
-      if (!this.haAltreRighe) return Promise.resolve(false);
+     forzaControlloSentinella(): void {
+   CatalogoSentinellaUtility.forzaControlloSentinella(this);
+ }
 
-      const lingua = this.cambioLingua.leggiCodiceLingua();
-      const tipo = this.tipoSelezionato;
+     leggiCategoriaDaSessionStorage(): string {
+   return CatalogoSessionStorageUtility.leggiCategoriaDaSessionStorage();
+ }
 
-      return new Promise<boolean>((resolve) => {
-        let finito = false;
-        const chiudi = (esito: boolean) => {
-          if (finito) return;
-          finito = true;
-          if (this.timerCaricaFino) {
-            clearTimeout(this.timerCaricaFino);
-            this.timerCaricaFino = 0;
-          }
-          resolve(esito);
-        };
+   pulisciCategoriaDaSessionStorage(): void {
+   CatalogoSessionStorageUtility.pulisciCategoriaDaSessionStorage();
+ }
 
-        const caricaUnBlocco = () => {
-          if (finito) return;
-          if (token !== this.tokenScroll) return;
+   pulisciStoricoScrollOrizzontaleDaSessionStorage(): void {
+   CatalogoSessionStorageUtility.pulisciStoricoScrollOrizzontaleDaSessionStorage();
+ }
 
-          const giaOra = this.righeDemo.some(
-            (r) => String(r?.idCategoria) === id,
-          );
-          if (giaOra) return chiudi(true);
-          if (!this.haAltreRighe) return chiudi(false);
-
-          if (this.caricamentoRighe) {
-            if (this.timerCaricaFino) clearTimeout(this.timerCaricaFino);
-            this.timerCaricaFino = setTimeout(caricaUnBlocco, 50);
-            return;
-          }
-
-          this.caricamentoRighe = true;
-          const offset = this.offsetRighe;
-          const limiteJump = this.limiteRighe;
-
-          this.api
-            .getCatalogoRighe(lingua, tipo, limiteJump, offset)
-            .pipe(take(1))
-            .subscribe({
-              next: (ris: any) => {
-                const items = Array.isArray(ris?.data?.items)
-                  ? ris.data.items
-                  : [];
-                const nuoveRighe = items
-                  .map((x: any) => {
-                    const idCategoriaRiga = String(x?.idCategoria || '');
-
-                    let locandine = (
-                      Array.isArray(x?.locandine) ? x.locandine : []
-                    )
-                      .map((p: any) => ({
-                  src: String(p?.src || ''),
-                  titolo: String(p?.titolo || ''),
-                  sottotitolo: String(p?.sottotitolo || ''),
-                  tipo: String(p?.tipo || ''), // 'film' | 'serie'
-                  id_media: String(p?.id_media || ''), // id originale in tabella film/serie
-                }))
-                      .filter((p: any) => !!p.src);
-
-                    if (
-                      this.tipoSelezionato === 'film_serie' &&
-                      locandine.length
-                    ) {
-                      locandine = mescolaDeterministicaLocandine(
-                        locandine as any,
-                        idCategoriaRiga,
-                      ) as any;
-                    }
-
-                    return {
-                      idCategoria: idCategoriaRiga,
-                      category: String(x?.category || ''),
-                      locandine: locandine.length
-                        ? (locandine as any)
-                        : this.locandineDemo,
-                    };
-                  })
-                  .filter((x: any) => !!x.idCategoria);
-
-                // durante il salto NON blocco: pre-carico in background, ma aggiorno subito DOM
-                this.precaricaImmaginiRighe(nuoveRighe);
-
-                // evita duplicati
-                const giaMap: Record<string, boolean> = {};
-                for (const r of this.righeDemo)
-                  giaMap[String(r.idCategoria)] = true;
-                const soloNuove = nuoveRighe.filter(
-                  (r: any) => !giaMap[String(r.idCategoria)],
-                );
-
-                this.righeDemo.push(...soloNuove);
-                this.offsetRighe += nuoveRighe.length;
-
-                this.haAltreRighe = nuoveRighe.length === limiteJump;
-                if (!this.haAltreRighe) this.hoFinitoTutto = true;
-
-                this.caricamentoRighe = false;
-
-                try {
-                  (window as any).ScrollTrigger?.refresh?.();
-                } catch {}
-
-                const trovataOra = this.righeDemo.some(
-                  (r) => String(r?.idCategoria) === id,
-                );
-                if (trovataOra) return chiudi(true);
-                if (!this.haAltreRighe) return chiudi(false);
-                if (this.timerCaricaFino) clearTimeout(this.timerCaricaFino);
-                this.timerCaricaFino = setTimeout(caricaUnBlocco, 0);
-              },
-              error: () => {
-                this.caricamentoRighe = false;
-                this.haAltreRighe = false;
-                this.hoFinitoTutto = true;
-                this.scorrimentoCatalogo.impostaSpinnerScroll(false);
-                chiudi(false);
-              },
-            });
-        };
-
-        caricaUnBlocco();
-      });
-    }
-
-    forzaControlloSentinella(): void {
-      if (!this.sentinellaPronta) return;
-      if (!this.haAltreRighe) return;
-      if (this.caricamentoRighe) return;
-
-      const host = this.sentinella?.nativeElement as HTMLElement;
-      if (!host) return;
-
-      const r = host.getBoundingClientRect();
-      const inVista = r.top <= window.innerHeight && r.bottom >= 0;
-      if (!inVista) return;
-
-      this.caricaAltreQuattroRigheDaApi();
-    }
-
-    leggiCategoriaDaSessionStorage(): string {
-    try {
-      return String(sessionStorage.getItem('ultima_categoria_click') || '').trim();
-    } catch {
-      return '';
-    }
-  }
-
-  pulisciCategoriaDaSessionStorage(): void {
-    try {
-      sessionStorage.removeItem('ultima_categoria_click');
-    } catch {}
-  }
-
-  pulisciStoricoScrollOrizzontaleDaSessionStorage(): void {
-    try {
-      sessionStorage.removeItem('storico_scroll_categorie');
-    } catch {}
-  }
-
-  provaAutoScrollDaSessionStorage(): void {
-    if (this.autoScrollSessioneEseguito) return;
-    const idCategoria = this.leggiCategoriaDaSessionStorage();
-    if (!idCategoria) {
-      this.servizioAnimazioni.scrollaA(0, 0); // GSAP, istantaneo, non combatte con ScrollTrigger
-      return;
-    }
-
-    this.autoScrollSessioneEseguito = true;
-
-    if (this.timerAutoScrollSessione) {
-      clearTimeout(this.timerAutoScrollSessione);
-      this.timerAutoScrollSessione = 0;
-    }
-
-    // piccolo delay per lasciare montare DOM/sentinella e poi riusare la tua pipeline standard
-  this.timerAutoScrollSessione = setTimeout(() => {
-    this.timerAutoScrollSessione = 0;
-    this.gestisciScrollACategoria(idCategoria);
-    setTimeout(() => {
-      const esito = this.applicaScrollOrizzontaleInizialePerCategoria(idCategoria);
-      // pulizia SEMPRE, anche se non ha trovato match o non ha scrollato
-      this.pulisciStoricoScrollOrizzontaleDaSessionStorage();
-      if (esito?.eseguito) {
-        this.salvaScrollOrizzontaleInSessionStorage(esito.idCategoria, esito.pagina);
-      }
-    }, 120);
-    this.pulisciCategoriaDaSessionStorage();
-  }, 80);
-  }
+   provaAutoScrollDaSessionStorage(): void {
+   CatalogoSessionStorageUtility.provaAutoScrollDaSessionStorage(this);
+ }
 
   leggiScrollOrizzontalePerCategoriaDaSessionStorage(idCategoria: string): { idCategoria: string; pagina: number } | null {
-    try {
-      const id = String(idCategoria || '').trim();
-      if (!id) return null;
-
-      const raw = sessionStorage.getItem('storico_scroll_categorie');
-      if (!raw) return null;
-      const storico = JSON.parse(raw);
-      if (!Array.isArray(storico) || !storico.length) return null;
-
-
-      // prendo l'ULTIMA occorrenza della categoria cliccata in locandina
-      let trovato: any = null;
-      for (let i = storico.length - 1; i >= 0; i--) {
-        const voce = storico[i] || {};
-        const idVoce = String(voce?.idCategoria || '').trim();
-        if (idVoce === id) {
-          trovato = voce;
-          break;
-        }
-      }
-      if (!trovato) return null;
-
-      const pagina = Number(trovato?.pagina);
-      if (!Number.isFinite(pagina) || pagina < 0) return null;
-
-      return { idCategoria: id, pagina: Math.floor(pagina) };
-    } catch {
-      return null;
-    }
-  }
+   return CatalogoSessionStorageUtility.leggiScrollOrizzontalePerCategoriaDaSessionStorage(idCategoria);
+ }
 
 
   applicaScrollOrizzontaleInizialePerCategoria(idCategoria: string): { eseguito: boolean; idCategoria: string; pagina: number } | null {
-    const match = this.leggiScrollOrizzontalePerCategoriaDaSessionStorage(idCategoria);
-  if (!match) return null;
+   return CatalogoSessionStorageUtility.applicaScrollOrizzontaleInizialePerCategoria(this, idCategoria);
+ }
 
-    const righe = this.righeComponenti ? this.righeComponenti.toArray() : [];
-  if (!righe.length) return null;
-
-    const target = righe.find(
-      (r) => String(r?.idCategoria || '').trim() === match.idCategoria,
-    );
-  if (!target) return null;
-
-    target.impostaPaginaIniziale(match.pagina);
-  return { eseguito: true, idCategoria: match.idCategoria, pagina: match.pagina };
-  }
-
-  salvaScrollOrizzontaleInSessionStorage(idCategoria: string, pagina: number): void {
-    try {
-      const id = String(idCategoria || '').trim();
-      const p = Number.isFinite(pagina) ? Math.max(0, Math.floor(pagina)) : 0;
-      if (!id) return;
-
-      const chiave = 'storico_scroll_categorie';
-      const storico = [{ idCategoria: id, pagina: p }];
-      sessionStorage.setItem(chiave, JSON.stringify(storico));
-    } catch {}
-  }
+ salvaScrollOrizzontaleInSessionStorage(idCategoria: string, pagina: number): void {
+   CatalogoSessionStorageUtility.salvaScrollOrizzontaleInSessionStorage(idCategoria, pagina);
+ }
   }
