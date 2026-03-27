@@ -5,7 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { WelcomeComponent } from './welcome/welcome.component';
 import { LoginComponent } from './login/login.component';
 import { LoginUscitaGuard } from '../_guard/login-uscita.guard';
-import { IscrizioneComponent } from './iscrizione/iscrizione.component';
+import { IscrizioneComponent } from './registrazione/iscrizione.component';
 import { IscrizioneUscitaGuard } from '../_guard/iscrizione-uscita.guard';
 const routes: Routes = [
   {

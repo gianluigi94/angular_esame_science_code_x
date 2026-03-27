@@ -10,8 +10,10 @@ import {
   HostListener,
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { CaroselloAudioDebugUtility } from './carosello_utility/carosello-audio-debug.utility';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { CaroselloNovitaService } from './carosello_services/carosello-novita.service';
+import { CaroselloHoverTrailerUtility } from './carosello_utility/carosello-hover-trailer.utility';
 import { NovitaInfo } from 'src/app/_interfacce/Inovita-info.interface';
 import { CaricamentoCaroselloService } from './carosello_services/caricamento-carosello.service';
 import { Subscription } from 'rxjs';
@@ -29,10 +31,10 @@ import { CaroselloScrollStateUtility } from './carosello_utility/carosello-scrol
 import { CaroselloCopertureUtility } from './carosello_utility/carosello-coperture.utility';
 import { HoverLocandinaService } from '../app-riga-categoria/categoria_services/hover-locandina.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+import { CaroselloStopUtility } from './carosello_utility/carosello-stop.utility';
+import { CaroselloNavigazioneUtility } from './carosello_utility/carosello-navigazione.utility';
 import { Router } from '@angular/router';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
-import { firstValueFrom } from 'rxjs';
-import { take } from 'rxjs/operators';
 import { BarraAvanzamentoService } from 'src/app/_componenti_comuni/barra-avanzamento/barra-avanzamento.service';
 @Component({
   selector: 'app-carosello-novita',
@@ -1070,338 +1072,17 @@ inizializzaPlayerSePronto(): void {
   private riprovaTrailerCorrente(token: number): void {
     CaroselloVideoUtility.riprovaTrailerCorrente(this, token); // delego la logica di retry trailer alla utility passando il componente come contesto
   }
+ preparaTrailerHoverDopoImmaginePronta(): void {
+   CaroselloHoverTrailerUtility.preparaTrailerHoverDopoImmaginePronta(this);
+ }
+   intercetta_tipo_blocco_audio(): void {
+   CaroselloAudioDebugUtility.intercettaTipoBloccoAudio(this);
+ }
+   stopDolceImmediato(durataMs: number): Promise<void> {
+   return CaroselloStopUtility.stopDolceImmediato(this, durataMs);
+ }
 
-  preparaTrailerHoverDopoImmaginePronta(): void {
-    const token = ++this.tokenHoverTrailer;
-
-    if (this.timerMostraTrailerHover)
-      clearTimeout(this.timerMostraTrailerHover);
-    this.timerMostraTrailerHover = null;
-
-    if (!this.player) {
-      this.hoverTrailerInAttesa = true;
-      return;
-    }
-
-    this.hoverTrailerInAttesa = false;
-
-    const hoverValido =
-      this.pausaPerHover &&
-      (this.mostraImmagineHover || this.mostraVideo) &&
-      this.immagineHoverPronta;
-    if (!hoverValido) {
-      return;
-    }
-
-    const onCanPlay = () => {
-      if (token !== this.tokenHoverTrailer) return;
-
-      // Se la cover e' visibile, rispetto il minimo tempo immagine; se gia' sparita (restart), parto subito.
-      const restante = this.mostraImmagineHover
-        ? Math.max(
-            0,
-            this.MIN_MS_IMMAGINE_HOVER -
-              (Date.now() - this.inizioImmagineHoverMs),
-          )
-        : 0;
-
-      this.timerMostraTrailerHover = setTimeout(() => {
-        if (token !== this.tokenHoverTrailer) return;
-        if (!this.pausaPerHover) return;
-
-        this.mostraVideo = true;
-        this.verificaRicollegamentoVideo();
-
-        this.inizializzaWebAudioSuVideoReale();
-
-        try {
-          if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
-            this.contestoAudio.resume().catch(() => {});
-          }
-        } catch {}
-
-        try {
-          if (this.nodoGuadagno && this.contestoAudio) {
-            const t0 = this.contestoAudio.currentTime;
-            this.nodoGuadagno.gain.cancelScheduledValues(t0);
-            this.nodoGuadagno.gain.setValueAtTime(0, t0);
-          }
-        } catch {}
-
-        if (this.audioBloccatoDaUtente) this.impostaMuteReale(true);
-        else this.impostaMuteReale(false);
-
-        try {
-  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
-    this.player.currentTime(0);
-  }
-} catch {}
-
-        const preparaSbloccoHover = () => {
-          if (this.audioBloccatoDaUtente) return;
-
-          const onClick = () => {
-            window.removeEventListener('click', onClick, true);
-            if (token !== this.tokenHoverTrailer) return;
-            if (!this.pausaPerHover) return;
-
-            // IMPORTANTISSIMO: stesso comportamento "giusto" del carosello -> rewind + restart con audio
-            this.audioConsentito = true;
-            // FIX: evito "nero" durante il restart -> nascondo player e mostro cover
-            try {
-              this.mostraVideo = false;
-            } catch {}
-            try {
-              this.mostraImmagineHover = true;
-            } catch {}
-            try {
-              this.inizioImmagineHoverMs = Date.now();
-            } catch {}
-            try {
-              if (
-                this.contestoAudio &&
-                this.contestoAudio.state === 'suspended'
-              ) {
-                this.contestoAudio.resume().catch(() => {});
-              }
-            } catch {}
-
-            try {
-              this.sfumaGuadagnoVerso(0, 0);
-            } catch {}
-            try {
-              this.player.pause();
-            } catch {}
-           try {
-  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
-    this.player.currentTime(0);
-  }
-} catch {}
-            try {
-              this.impostaMuteReale(false);
-            } catch {}
-
-            // riavvio hover trailer (da 0) con audio
-            this.preparaTrailerHoverDopoImmaginePronta();
-          };
-
-          window.addEventListener('click', onClick, {
-            once: true,
-            passive: true,
-            capture: true,
-          });
-        };
-
-        try {
-          const p = this.player.play();
-
-          if (p && typeof p.then === 'function') {
-            p.then(() => {
-              try {
-                const el = this.ottieniElementoVideoReale();
-                if (el && !el.muted) this.audioConsentito = true;
-              } catch {}
-
-              if (!this.audioBloccatoDaUtente)
-                this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
-            }).catch(() => {
-              this.impostaMuteReale(true);
-              try {
-                this.player.play();
-              } catch {}
-              this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
-              preparaSbloccoHover();
-            });
-          } else {
-            if (!this.audioBloccatoDaUtente) {
-              this.audioConsentito = true;
-              this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
-            } else {
-              this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
-            }
-          }
-        } catch {
-          this.impostaMuteReale(true);
-          try {
-            this.player.play();
-          } catch {}
-          this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs);
-          preparaSbloccoHover();
-        }
-
-        // Nascondo la cover solo se e' effettivamente visibile (altrimenti e' un restart)
-        if (this.mostraImmagineHover) {
-          requestAnimationFrame(() => {
-            if (token !== this.tokenHoverTrailer) return;
-
-            setTimeout(() => {
-              if (token !== this.tokenHoverTrailer) return;
-              this.mostraImmagineHover = false;
-            }, 200);
-          });
-        }
-      }, restante);
-    };
-
-    const avviaNuovoSrc = () => {
-      if (token !== this.tokenHoverTrailer) return;
-
-      try {
-        this.player.off('canplay');
-      } catch {}
-      try {
-        this.player.one('canplay', onCanPlay);
-      } catch {}
-
-      try {
-        this.verificaRicollegamentoVideo();
-        this.applicaAttributiVideoReale(); // mette crossorigin="anonymous" sul <video> reale
-
-       this.player.src({
-  src: this.trailerHoverProvvisorio,
-  type: 'video/mp4',
-});
-this.player.load?.();
-
-this.barraAvanzamentoService.resetBarraAvanzamento();
-
-        // importantissimo: dopo src/load Video.js puo' rimpiazzare il <video>, quindi riallineo
-        this.verificaRicollegamentoVideo();
-        this.applicaAttributiVideoReale();
-      } catch {
-        return;
-      }
-
-      // Se canplay e' gia' passato (cache), non aspetto l'evento
-      try {
-        const rs =
-          typeof this.player.readyState === 'function'
-            ? this.player.readyState()
-            : 0;
-        if (rs >= 3) setTimeout(() => onCanPlay(), 0);
-      } catch {}
-    };
-
-    // Fade-out GARANTITO prima di cambiare trailer (ripristina la transizione audio)
-    this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
-      if (token !== this.tokenHoverTrailer) return;
-      try {
-        this.player.pause();
-      } catch {}
-     try {
-  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
-    this.player.currentTime(0);
-  }
-} catch {}
-      avviaNuovoSrc();
-    });
-  }
-
-  intercetta_tipo_blocco_audio(): void {
-    // Questa funzione viene chiamata ad OGNI 'playing' del player (carosello  hover)
-    // e produce SEMPRE uno dei 3 log richiesti.
-
-    // 1) Scelta utente: ha salvato "senza audio" -> non si sblocca con click casuali
-    if (this.audioBloccatoDaUtente) {
-      console.log('audio bloccato da utente');
-      try {
-        this.audioGlobaleService.setSoloBrowserBlocca(false);
-      } catch {}
-      return;
-    }
-
-    // 2) Preferenza utente = audio ON, ma il browser forza muted (autoplay policy)
-    let mutato = false;
-    try {
-      const el = this.ottieniElementoVideoReale();
-      mutato = !!el && !!el.muted;
-    } catch {}
-
-    if (mutato) {
-      console.log('audio bloccato dal brawser');
-      try {
-        this.audioGlobaleService.setSoloBrowserBlocca(true);
-      } catch {}
-      return;
-    }
-
-    // 3) Audio effettivamente non bloccato (non muted  utente non lo ha disabilitato)
-    console.log('audio non bloccato');
-    try {
-      this.audioGlobaleService.setSoloBrowserBlocca(false);
-    } catch {}
-  }
-  stopDolceImmediato(durataMs: number): Promise<void> {
-    // blocco avvii pendenti
-    try { this.fermaAvvioPendete(); } catch {}
-
-    // se non ho player, chiudo subito
-    if (!this.player) return Promise.resolve();
-
-    // fade-out  pausa  reset (sempre, anche se non in play: non fa male)
-    return this.sfumaGuadagnoVerso(0, Math.max(0, durataMs || 0)).finally(() => {
-  try { this.player.pause(); } catch {}
-  try {
-    if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
-      this.player.currentTime(0);
-    }
-  } catch {}
-  try { this.mostraVideo = false; } catch {}
-});
-  }
-
-
-  // Aggiungi questo metodo nella classe:
-async vaiAllaSchedaCorrente(): Promise<void> {
-  // indice reale 0-based della slide corrente
-  const indiceReale = CaroselloGettersUtility.getIndiceRealeZeroBased(this);
-  const descrizione = this.descrizioni[indiceReale];
-  if (!descrizione) return;
-
-  const info = this.mappaNovitaCorrente[descrizione];
-  if (!info?.tipo || !info?.id_media) return;
-
-  const tipo = info.tipo;
-  const id = info.id_media;
-  const lingua = this.cambioLinguaService.leggiCodiceLingua();
-
-  const baseCatalogo = lingua === 'it' ? '/it/catalogo' : '/en/catalog';
-  const fogliaFilm = lingua === 'it' ? '/film' : '/movies';
-  const fogliaSerie = lingua === 'it' ? '/serie' : '/series';
-  const fogliaUrl = tipo === 'serie' ? fogliaSerie : fogliaFilm;
-  const url = baseCatalogo + fogliaUrl + '/' + id;
-
-  const slug = String(descrizione).replace(/^(film|serie)\./, '').trim();
-  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
-  const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
-
-  const caricaImmagine = (src: string): Promise<void> =>
-    new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve();
-      img.src = src;
-    });
-
-  const traduzioni$ = tipo === 'film'
-    ? this.api.getFilmTraduzioni(id, lingua)
-    : this.api.getSerieTraduzioni(id, lingua);
-
-  const tabella$ = tipo === 'film'
-    ? this.api.getFilm(id)
-    : this.api.getSerie(id);
-
-  const [_sfondo, tradRes, tabellaRes] = await Promise.all([
-    caricaImmagine(urlSfondo),
-    firstValueFrom(traduzioni$.pipe(take(1))).catch(() => null),
-    firstValueFrom(tabella$.pipe(take(1))).catch(() => null),
-  ]);
-
-  const descrizioneTestuale = String((tradRes as any)?.data?.descrizione || '');
-  const tabellaDati = (tabellaRes as any)?.data ?? null;
-
-  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
-
-  this.router.navigateByUrl(url, { state: { urlSfondo, urlImgTitolo, descrizioneTestuale, tabellaDati } });
-}
+ vaiAllaSchedaCorrente(): Promise<void> {
+   return CaroselloNavigazioneUtility.vaiAllaSchedaCorrente(this);
+ }
 }

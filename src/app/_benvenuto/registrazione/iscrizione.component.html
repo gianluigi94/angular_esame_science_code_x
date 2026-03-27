@@ -1,0 +1,1068 @@
+<app-saturno [usaAnimazioniIngresso]="false" [usaAnimazioniScroll]="false"></app-saturno>
+
+<span class="sfocatura"></span>
+
+<section class="registrazione-contenuto">
+  <form
+    class="form-registrazione"
+    *ngIf="stepAttuale === 1"
+    [formGroup]="sf.reactiveForm"
+    (ngSubmit)="avanti()"
+    (keydown.enter)="s1.onEnterForm($any($event))"
+    (keydown.tab)="s1.onTabForm($any($event))"
+  >
+    <h2 class="titolo-animato" [innerHTML]="'ui.registrazione.step1.titolo' | translate"></h2>
+
+    <div class="riga-doppia campo-animato">
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['nome'].invalid && (sf.reactiveForm.controls['nome'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.nome.label' | translate }} <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="text"
+            placeholder=" "
+            id="nome"
+            formControlName="nome"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['nome'].invalid && (sf.reactiveForm.controls['nome'].touched || formInviato) }"
+            (blur)="s1.onBlurAnag($event)"
+          />
+          <label
+            for="nome"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['nome'].invalid && (sf.reactiveForm.controls['nome'].touched || formInviato) }"
+          >
+            {{ 'ui.registrazione.nome.input_label' | translate }}
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['nome'].touched || formInviato) && sf.reactiveForm.controls['nome'].errors?.['required']">
+            {{ 'ui.registrazione.nome.error.required' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['nome'].touched || formInviato) && sf.reactiveForm.controls['nome'].errors?.['minlength']">
+            {{ 'ui.registrazione.nome.error.minlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['nome'].touched || formInviato) && sf.reactiveForm.controls['nome'].errors?.['maxlength']">
+            {{ 'ui.registrazione.nome.error.maxlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['nome'].touched || formInviato) && sf.reactiveForm.controls['nome'].errors?.['pattern']">
+            {{ 'ui.registrazione.nome.error.pattern' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['cognome'].invalid && (sf.reactiveForm.controls['cognome'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.cognome.label' | translate }} <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="text"
+            placeholder=" "
+            id="cognome"
+            formControlName="cognome"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['cognome'].invalid && (sf.reactiveForm.controls['cognome'].touched || formInviato) }"
+            (blur)="s1.onBlurAnag($event)"
+          />
+          <label
+            for="cognome"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['cognome'].invalid && (sf.reactiveForm.controls['cognome'].touched || formInviato) }"
+          >
+            {{ 'ui.registrazione.cognome.input_label' | translate }}
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['cognome'].touched || formInviato) && sf.reactiveForm.controls['cognome'].errors?.['required']">
+            {{ 'ui.registrazione.cognome.error.required' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['cognome'].touched || formInviato) && sf.reactiveForm.controls['cognome'].errors?.['minlength']">
+            {{ 'ui.registrazione.cognome.error.minlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['cognome'].touched || formInviato) && sf.reactiveForm.controls['cognome'].errors?.['maxlength']">
+            {{ 'ui.registrazione.cognome.error.maxlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveForm.controls['cognome'].touched || formInviato) && sf.reactiveForm.controls['cognome'].errors?.['pattern']">
+            {{ 'ui.registrazione.cognome.error.pattern' | translate }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="riga-doppia campo-animato">
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': (sf.reactiveForm.controls['dataGg'].invalid || sf.reactiveForm.controls['dataMm'].invalid || sf.reactiveForm.controls['dataAaaa'].invalid) && (sf.reactiveForm.controls['dataAaaa'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.data_nascita.label' | translate }} <span class="asterisco">*</span>
+        </p>
+
+        <div class="data-custom" [class.data-compilata]="s1.dataCompilata()" (click)="s1.focusData($event)">
+          <span class="data-label-piccola">{{ 'ui.registrazione.data_nascita.piccola' | translate }}</span>
+
+          <input
+            type="text"
+            class="data-parte"
+            id="data_gg"
+            [placeholder]="'ui.registrazione.data_nascita.placeholder_gg' | translate"
+            maxlength="2"
+            inputmode="numeric"
+            formControlName="dataGg"
+            (input)="s1.avanzaData($event, 'gg')"
+            (keydown)="s1.soloNumeri($event, 'gg')"
+          />
+          <span class="data-sep">/</span>
+
+          <input
+            type="text"
+            class="data-parte"
+            id="data_mm"
+            [placeholder]="'ui.registrazione.data_nascita.placeholder_mm' | translate"
+            maxlength="2"
+            inputmode="numeric"
+            formControlName="dataMm"
+            (input)="s1.avanzaData($event, 'mm')"
+            (keydown)="s1.soloNumeri($event, 'mm')"
+          />
+          <span class="data-sep">/</span>
+
+          <input
+            type="text"
+            class="data-parte data-anno"
+            id="data_aaaa"
+            [placeholder]="'ui.registrazione.data_nascita.placeholder_aaaa' | translate"
+            maxlength="4"
+            inputmode="numeric"
+            formControlName="dataAaaa"
+            (keydown)="s1.soloNumeri($event, 'aaaa')"
+            (blur)="s1.onBlurAnag($event)"
+          />
+
+          <input
+            id="datepicker-input"
+            tabindex="-1"
+            style="width:0;height:0;opacity:0;position:absolute;pointer-events:none;"
+          />
+
+          <button
+            type="button"
+            class="btn-calendario"
+            tabindex="-1"
+            (mousedown)="$event.stopPropagation()"
+            (click)="s1.apriDatepicker($event)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V9h14v11ZM5 7V6h14v1H5Z"/>
+            </svg>
+          </button>
+        </div>
+
+        <p
+          class="errore-campo"
+          *ngIf="(sf.reactiveForm.controls['dataGg'].invalid || sf.reactiveForm.controls['dataMm'].invalid || sf.reactiveForm.controls['dataAaaa'].invalid) && (sf.reactiveForm.controls['dataAaaa'].touched || formInviato)"
+        >
+          {{ 'ui.registrazione.data_nascita.error.invalid' | translate }}
+        </p>
+      </div>
+
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['sesso'].invalid && (sf.reactiveForm.controls['sesso'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.sesso.label' | translate }} <span class="asterisco">*</span>
+        </p>
+        <div class="select-custom">
+          <div
+            class="select-header"
+            (click)="s1.toggleSesso($event)"
+            (focus)="s1.apriSessoSoloTastiera($event)"
+            (keydown)="s1.navigaSesso($event)"
+            tabindex="0"
+            [class.aperto]="s1.sessoAperto"
+            [class.compilato]="s1.sessoValore"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['sesso'].invalid && (sf.reactiveForm.controls['sesso'].touched || formInviato) }"
+          >
+            <span class="select-label-piccola">{{ 'ui.registrazione.sesso.piccola' | translate }}</span>
+            <span [class.placeholder]="!s1.sessoValore">{{ s1.sessoLabel() }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+
+          <div class="select-dropdown" *ngIf="s1.sessoAperto">
+            <div class="select-opzione" [class.attivo]="s1.indiceSesso === 0" (click)="s1.selezionaSesso('M')">
+              {{ 'ui.registrazione.sesso.maschio' | translate }}
+            </div>
+            <div class="select-opzione" [class.attivo]="s1.indiceSesso === 1" (click)="s1.selezionaSesso('F')">
+              {{ 'ui.registrazione.sesso.femmina' | translate }}
+            </div>
+            <div class="select-opzione" [class.attivo]="s1.indiceSesso === 2" (click)="s1.selezionaSesso('NS')">
+              {{ 'ui.registrazione.sesso.non_specificato' | translate }}
+            </div>
+          </div>
+        </div>
+
+        <p class="errore-campo" *ngIf="sf.reactiveForm.controls['sesso'].invalid && (sf.reactiveForm.controls['sesso'].touched || formInviato)">
+          {{ 'ui.registrazione.sesso.error.required' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <div class="riga-doppia campo-animato">
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['paese'].invalid && (sf.reactiveForm.controls['paese'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.paese_nascita.label' | translate }} <span class="asterisco">*</span>
+        </p>
+
+        <div class="select-custom">
+          <div
+            class="select-header"
+            (click)="s1.togglePaese($event)"
+            [class.aperto]="s1.paeseAperto"
+            [class.compilato]="s1.paeseValore"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['paese'].invalid && (sf.reactiveForm.controls['paese'].touched || formInviato) }"
+          >
+            <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
+            <input
+              class="select-input-testo paese-input"
+              type="text"
+              [placeholder]="'ui.registrazione.placeholder.seleziona_paese' | translate"
+              [value]="s1.paeseAperto ? s1.filtroNazioni : (s1.paeseValore ? s1.paeseLabel() : '')"
+              (click)="s1.togglePaese($event)"
+              (input)="s1.onInputPaese($event)"
+              (keydown)="s1.navigaPaese($event)"
+              (blur)="s1.onBlurPaese($event)"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+
+          <div class="select-dropdown" *ngIf="s1.paeseAperto">
+            <div
+              class="select-opzione"
+              *ngFor="let n of s1.nazioniFiltrate; let i = index"
+              [class.attivo]="i === s1.indiceNazione"
+              (click)="s1.selezionaPaese(n.iso)"
+            >
+              {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
+            </div>
+          </div>
+        </div>
+
+        <p class="errore-campo" *ngIf="sf.reactiveForm.controls['paese'].invalid && (sf.reactiveForm.controls['paese'].touched || formInviato)">
+          {{ 'ui.registrazione.paese_nascita.error.required' | translate }}
+        </p>
+      </div>
+
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': (s1.isItalia ? sf.reactiveForm.controls['comune'].invalid : sf.reactiveForm.controls['citta'].invalid) && ((s1.isItalia ? sf.reactiveForm.controls['comune'].touched : sf.reactiveForm.controls['citta'].touched) || formInviato) }"
+        >
+          {{ s1.isItalia ? ('ui.registrazione.comune_nascita.label' | translate) : ('ui.registrazione.citta_nascita.label' | translate) }}
+          <span class="asterisco">*</span>
+        </p>
+
+        <div class="select-custom" *ngIf="s1.isItalia">
+          <div
+            class="select-header"
+            (click)="s1.toggleComune($event)"
+            [class.aperto]="s1.comuneAperto"
+            [class.compilato]="s1.comuneValore"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['comune'].invalid && (sf.reactiveForm.controls['comune'].touched || formInviato) }"
+          >
+            <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
+            <input
+              class="select-input-testo comune-input"
+              type="text"
+              [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
+              [value]="s1.comuneAperto ? s1.filtroComuni : (s1.comuneValore ? s1.comuneLabel() : '')"
+              (click)="s1.toggleComune($event)"
+              (input)="s1.onInputComune($event)"
+              (keydown)="s1.navigaComune($event)"
+              (blur)="s1.onBlurComune($event)"
+            />
+          </div>
+
+          <div class="select-dropdown" *ngIf="s1.comuneAperto">
+            <div
+              class="select-opzione"
+              *ngFor="let c of s1.comuniFiltrati; let i = index"
+              [class.attivo]="i === s1.indiceComune"
+              (click)="s1.selezionaComune(c.comune)"
+            >
+              {{ c.comune }}
+            </div>
+          </div>
+        </div>
+
+        <p class="errore-campo" *ngIf="s1.isItalia && sf.reactiveForm.controls['comune'].invalid && (sf.reactiveForm.controls['comune'].touched || formInviato)">
+          {{ 'ui.registrazione.comune_nascita.error.required' | translate }}
+        </p>
+
+        <div class="campo-form" *ngIf="!s1.isItalia">
+          <input
+            type="text"
+            placeholder=" "
+            id="citta_nascita"
+            formControlName="citta"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['citta'].invalid && (sf.reactiveForm.controls['citta'].touched || formInviato) }"
+            (input)="s1.comuneValore = $any($event.target).value"
+          />
+          <label
+            for="citta_nascita"
+            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['citta'].invalid && (sf.reactiveForm.controls['citta'].touched || formInviato) }"
+          >
+            {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
+          </label>
+        </div>
+
+        <p class="errore-campo" *ngIf="!s1.isItalia && sf.reactiveForm.controls['citta'].invalid && (sf.reactiveForm.controls['citta'].touched || formInviato)">
+          {{ 'ui.registrazione.citta_nascita.error.invalid' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <div class="campo-wrapper campo-centrato campo-animato">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['codiceFiscale'].invalid && (sf.reactiveForm.controls['codiceFiscale'].touched || formInviato) }"
+      >
+        {{ 'ui.registrazione.codice_fiscale.label' | translate }}
+        <span class="asterisco" *ngIf="s1.isItalia">*</span>
+        <span class="opzionale" *ngIf="!s1.isItalia">{{ 'ui.registrazione.opzionale' | translate }}</span>
+      </p>
+
+      <div class="campo-form">
+        <input
+          type="text"
+          placeholder=" "
+          id="codice_fiscale"
+          maxlength="16"
+          formControlName="codiceFiscale"
+          [class.cf-flash]="s1.cfFlash"
+          [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['codiceFiscale'].invalid && (sf.reactiveForm.controls['codiceFiscale'].touched || formInviato) }"
+          (input)="s1.cfValore = $any($event.target).value; s1.cfFlash = false; s1.cfModificatoManualmente = true"
+        />
+        <label
+          for="codice_fiscale"
+          [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['codiceFiscale'].invalid && (sf.reactiveForm.controls['codiceFiscale'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.codice_fiscale.input_label' | translate }}
+        </label>
+
+        <button *ngIf="s1.cfValore" type="button" class="btn-clear-cf" tabindex="-1" (click)="s1.svuotaCF()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#e79c50">
+            <path d="M18 6L6 18M6 6l12 12" stroke="#e79c50" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="errore-campo" *ngIf="sf.reactiveForm.controls['codiceFiscale'].invalid && (sf.reactiveForm.controls['codiceFiscale'].touched || formInviato)">
+        {{ 'ui.registrazione.codice_fiscale.error.invalid' | translate }}
+      </p>
+    </div>
+
+    <div class="campo-animato" style="align-self: flex-end;">
+      <button
+        class="avanti_btn"
+        type="submit"
+        [disabled]="!sf.reactiveForm.valid"
+        [title]="'ui.registrazione.bottone.avanti.title' | translate"
+      >
+        {{ 'ui.registrazione.bottone.avanti' | translate }}
+        <span class="step-btn">{{ 'ui.registrazione.step1.indicatore' | translate }}</span>
+      </button>
+    </div>
+  </form>
+
+  <form
+    class="form-registrazione"
+    *ngIf="stepAttuale === 2"
+    [formGroup]="sf.reactiveFormStep2"
+    (ngSubmit)="avanti2()"
+    (keydown.enter)="s1.onEnterForm($any($event))"
+  >
+    <h2 class="titolo-animato" [innerHTML]="'ui.registrazione.step2.titolo' | translate"></h2>
+
+    <div class="riga-doppia campo-animato">
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['nazioneD'].invalid && (sf.reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }"
+        >
+          {{ 'ui.registrazione.step2.paese_domicilio.label' | translate }} <span class="asterisco">*</span>
+        </p>
+
+        <div class="select-custom">
+          <div
+            class="select-header"
+            (click)="s2.togglePaeseDom($event)"
+            [class.aperto]="s2.paeseDomAperto"
+            [class.compilato]="s2.paeseDomValore"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['nazioneD'].invalid && (sf.reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2) }"
+          >
+            <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
+            <input
+              class="select-input-testo paese-dom-input"
+              type="text"
+              [placeholder]="'ui.registrazione.placeholder.seleziona_paese' | translate"
+              [value]="s2.paeseDomAperto ? s2.filtroNazioniDom : (s2.paeseDomValore ? s2.paeseDomLabel() : '')"
+              (click)="s2.togglePaeseDom($event)"
+              (input)="s2.onInputPaeseDom($event)"
+              (keydown)="s2.navigaPaeseDom($event)"
+              (blur)="s2.onBlurPaeseDom($event)"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+
+          <div class="select-dropdown" *ngIf="s2.paeseDomAperto">
+            <div
+              class="select-opzione"
+              *ngFor="let n of s2.nazioniFiltrateDom; let i = index"
+              [class.attivo]="i === s2.indiceNazioneDom"
+              (click)="s2.selezionaPaeseDom(n.iso)"
+            >
+              {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
+            </div>
+          </div>
+        </div>
+
+        <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['nazioneD'].invalid && (sf.reactiveFormStep2.controls['nazioneD'].touched || formInviatoStep2)">
+          {{ 'ui.registrazione.paese_domicilio.error.required' | translate }}
+        </p>
+      </div>
+
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': (s2.isItaliaDom ? sf.reactiveFormStep2.controls['comuneD'].invalid : sf.reactiveFormStep2.controls['cittaD'].invalid) && ((s2.isItaliaDom ? sf.reactiveFormStep2.controls['comuneD'].touched : sf.reactiveFormStep2.controls['cittaD'].touched) || formInviatoStep2) }"
+        >
+          {{ s2.isItaliaDom ? ('ui.registrazione.step2.comune_domicilio.label' | translate) : ('ui.registrazione.step2.citta_domicilio.label' | translate) }}
+          <span class="asterisco">*</span>
+        </p>
+
+        <div class="select-custom" *ngIf="s2.isItaliaDom">
+          <div
+            class="select-header"
+            (click)="s2.toggleComuneDom($event)"
+            [class.aperto]="s2.comuneDomAperto"
+            [class.compilato]="s2.comuneDomValore"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['comuneD'].invalid && (sf.reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2) }"
+          >
+            <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
+            <input
+              class="select-input-testo comune-dom-input"
+              type="text"
+              [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
+              [value]="s2.comuneDomAperto ? s2.filtroComuniDom : (s2.comuneDomValore ? s2.comuneDomValore : '')"
+              (click)="s2.toggleComuneDom($event)"
+              (input)="s2.onInputComuneDom($event)"
+              (keydown)="s2.navigaComuneDom($event)"
+              (blur)="s2.onBlurComuneDom($event)"
+            />
+          </div>
+
+          <div class="select-dropdown" *ngIf="s2.comuneDomAperto">
+            <div
+              class="select-opzione"
+              *ngFor="let c of s2.comuniFiltreatiDom; let i = index"
+              [class.attivo]="i === s2.indiceComuneDom"
+              (click)="s2.selezionaComuneDom(c.comune)"
+            >
+              {{ c.comune }}
+            </div>
+          </div>
+        </div>
+
+        <p class="errore-campo" *ngIf="s2.isItaliaDom && sf.reactiveFormStep2.controls['comuneD'].invalid && (sf.reactiveFormStep2.controls['comuneD'].touched || formInviatoStep2)">
+          {{ 'ui.registrazione.comune_domicilio.error.required' | translate }}
+        </p>
+
+        <div class="campo-form" *ngIf="!s2.isItaliaDom">
+          <input
+            type="text"
+            placeholder=" "
+            id="citta_dom"
+            formControlName="cittaD"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cittaD'].invalid && (sf.reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }"
+          />
+          <label
+            for="citta_dom"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cittaD'].invalid && (sf.reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }"
+          >
+            {{ 'ui.registrazione.step2.citta_domicilio.input_label' | translate }}
+          </label>
+        </div>
+
+        <p class="errore-campo" *ngIf="!s2.isItaliaDom && sf.reactiveFormStep2.controls['cittaD'].invalid && (sf.reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2)">
+          {{ 'ui.registrazione.citta_domicilio.error.invalid' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <div class="riga-quadrupla campo-animato">
+      <div class="campo-wrapper">
+        <p class="label-sopra">
+          {{ 'ui.registrazione.step2.via.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="text"
+            placeholder=" "
+            id="via_dom"
+            formControlName="via"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['via'].invalid && sf.reactiveFormStep2.controls['via'].touched }"
+          />
+          <label for="via_dom" [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['via'].invalid && sf.reactiveFormStep2.controls['via'].touched }">
+            {{ 'ui.registrazione.step2.via.input_label' | translate }}
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['via'].touched && sf.reactiveFormStep2.controls['via'].errors?.['minlength']">
+            {{ 'ui.registrazione.via.error.minlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['via'].touched && sf.reactiveFormStep2.controls['via'].errors?.['maxlength']">
+            {{ 'ui.registrazione.via.error.maxlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['via'].touched && sf.reactiveFormStep2.controls['via'].errors?.['pattern']">
+            {{ 'ui.registrazione.via.error.pattern' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">
+          {{ 'ui.registrazione.step2.civico.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="text"
+            placeholder=" "
+            id="civico_dom"
+            formControlName="civico"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['civico'].invalid && sf.reactiveFormStep2.controls['civico'].touched }"
+          />
+          <label for="civico_dom" [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['civico'].invalid && sf.reactiveFormStep2.controls['civico'].touched }">
+            {{ 'ui.registrazione.step2.civico.input_label' | translate }}
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['civico'].touched && sf.reactiveFormStep2.controls['civico'].errors?.['maxlength']">
+            {{ 'ui.registrazione.civico.error.maxlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['civico'].touched && sf.reactiveFormStep2.controls['civico'].errors?.['pattern']">
+            {{ 'ui.registrazione.civico.error.pattern' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <ng-container *ngIf="s2.isItaliaDom">
+        <div class="campo-wrapper">
+          <p
+            class="label-sopra"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['provinciaD'].invalid && (sf.reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }"
+          >
+            {{ 'ui.registrazione.step2.provincia.label' | translate }} <span class="asterisco">*</span>
+          </p>
+          <div class="campo-form">
+            <input
+              type="text"
+              placeholder=" "
+              id="provincia_dom"
+              maxlength="2"
+              [class.cf-flash]="s2.provinciaFlash"
+              formControlName="provinciaD"
+              [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['provinciaD'].invalid && (sf.reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }"
+              (input)="s2.onInputProvincia($event)"
+            />
+            <label
+              for="provincia_dom"
+              [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['provinciaD'].invalid && (sf.reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) }"
+            >
+              {{ 'ui.registrazione.step2.provincia.input_label' | translate }}
+            </label>
+          </div>
+          <div class="errori-stack">
+            <p class="errore-campo" *ngIf="(sf.reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && sf.reactiveFormStep2.controls['provinciaD'].errors?.['required']">
+              {{ 'ui.registrazione.provincia.error.required' | translate }}
+            </p>
+            <p class="errore-campo" *ngIf="(sf.reactiveFormStep2.controls['provinciaD'].touched || formInviatoStep2) && sf.reactiveFormStep2.controls['provinciaD'].errors?.['pattern']">
+              {{ 'ui.registrazione.provincia.error.pattern' | translate }}
+            </p>
+          </div>
+        </div>
+
+        <div class="campo-wrapper">
+          <p
+            class="label-sopra"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cap'].invalid && (sf.reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
+          >
+            {{ 'ui.registrazione.step2.cap.label' | translate }} <span class="asterisco">*</span>
+          </p>
+
+          <div class="campo-form" *ngIf="!s2.capIsMulti">
+            <input
+              type="text"
+              placeholder=" "
+              id="cap_dom"
+              maxlength="5"
+              inputmode="numeric"
+              [class.cf-flash]="s2.capFlash"
+              formControlName="cap"
+              [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cap'].invalid && (sf.reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
+              (input)="s2.onInputCap($event)"
+            />
+            <label
+              for="cap_dom"
+              [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cap'].invalid && (sf.reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
+            >
+              {{ 'ui.registrazione.step2.cap.label' | translate }}
+            </label>
+          </div>
+
+          <div class="select-custom select-cap-dom" *ngIf="s2.capIsMulti">
+            <div
+              class="select-header"
+              (click)="s2.toggleCapDom($event)"
+              [class.aperto]="s2.capDomAperto"
+              [class.compilato]="s2.capValore"
+              [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cap'].invalid && (sf.reactiveFormStep2.controls['cap'].touched || formInviatoStep2) }"
+            >
+              <span class="select-label-piccola">{{ 'ui.registrazione.step2.cap.label' | translate }}</span>
+              <span class="cap-placeholder-fake" *ngIf="!s2.capValore && !s2.filtroCapDom" [class.cf-flash]="s2.capFlash">
+                {{ 'ui.registrazione.placeholder.seleziona_cap' | translate }}
+              </span>
+              <input
+                class="select-input-testo cap-dom-input"
+                type="text"
+                placeholder=""
+                inputmode="numeric"
+                [value]="s2.capDomAperto ? s2.filtroCapDom : (s2.capValore ? s2.capValore : '')"
+                (click)="s2.toggleCapDom($event)"
+                (input)="s2.onInputCapDom($event)"
+                (keydown)="s2.navigaCapDom($event)"
+                (blur)="s2.onBlurCapDom($event)"
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+              </svg>
+            </div>
+
+            <div class="select-dropdown" *ngIf="s2.capDomAperto">
+              <div
+                class="select-opzione"
+                *ngFor="let c of s2.capFiltrate; let i = index"
+                [class.attivo]="i === s2.indiceCapDom"
+                (click)="s2.selezionaCapDom(c)"
+              >
+                {{ c }}
+              </div>
+            </div>
+          </div>
+
+          <div class="errori-stack">
+            <p class="errore-campo" *ngIf="(sf.reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && sf.reactiveFormStep2.controls['cap'].errors?.['required']">
+              {{ 'ui.registrazione.cap.error.required' | translate }}
+            </p>
+            <p class="errore-campo" *ngIf="(sf.reactiveFormStep2.controls['cap'].touched || formInviatoStep2) && sf.reactiveFormStep2.controls['cap'].errors?.['pattern']">
+              {{ 'ui.registrazione.cap.error.pattern' | translate }}
+            </p>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="campo-wrapper campo-centrato campo-animato">
+      <p class="label-sopra">
+        {{ 'ui.registrazione.step2.dettagli.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
+      </p>
+      <div class="campo-form">
+        <input
+          type="text"
+          placeholder=" "
+          id="dettagli_dom"
+          formControlName="dettagli"
+          [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['dettagli'].invalid && sf.reactiveFormStep2.controls['dettagli'].touched }"
+        />
+        <label for="dettagli_dom" [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['dettagli'].invalid && sf.reactiveFormStep2.controls['dettagli'].touched }">
+          {{ 'ui.registrazione.step2.dettagli.input_label' | translate }}
+        </label>
+      </div>
+      <div class="errori-stack">
+        <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['dettagli'].touched && sf.reactiveFormStep2.controls['dettagli'].errors?.['minlength']">
+          {{ 'ui.registrazione.dettagli.error.minlength' | translate }}
+        </p>
+        <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['dettagli'].touched && sf.reactiveFormStep2.controls['dettagli'].errors?.['maxlength']">
+          {{ 'ui.registrazione.dettagli.error.maxlength' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <p class="errore-campo" *ngIf="s2.erroreCoerenzaIndirizzo" style="align-self: center; margin-bottom: -10px;">
+      {{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}
+    </p>
+
+    <div class="bottoni-nav campo-animato">
+      <button class="indietro_btn" type="button" (click)="indietro()" [title]="'ui.registrazione.bottone.indietro.title' | translate">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        {{ 'ui.registrazione.bottone.indietro' | translate }}
+      </button>
+
+      <button
+        class="avanti_btn"
+        type="submit"
+        [disabled]="!sf.reactiveFormStep2.valid"
+        [title]="'ui.registrazione.bottone.avanti.title' | translate"
+      >
+        {{ 'ui.registrazione.bottone.avanti' | translate }}
+        <span class="step-btn">{{ 'ui.registrazione.step2.indicatore' | translate }}</span>
+      </button>
+    </div>
+  </form>
+
+  <form
+    class="form-registrazione"
+    *ngIf="stepAttuale === 3"
+    [formGroup]="sf.reactiveFormStep3"
+    (ngSubmit)="avanti3()"
+    (keydown.enter)="s1.onEnterForm($any($event))"
+  >
+    <h2 class="titolo-animato" [innerHTML]="'ui.registrazione.step3.titolo' | translate"></h2>
+
+    <div class="riga-doppia campo-animato">
+      <div class="campo-wrapper">
+        <p class="label-sopra">
+          {{ 'ui.registrazione.step3.telefono.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="text"
+            placeholder=" "
+            id="telefono"
+            formControlName="telefono"
+            inputmode="tel"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['telefono'].invalid && sf.reactiveFormStep3.controls['telefono'].touched }"
+          />
+          <label for="telefono" [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['telefono'].invalid && sf.reactiveFormStep3.controls['telefono'].touched }">
+            {{ 'ui.registrazione.step3.telefono.input_label' | translate }}
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep3.controls['telefono'].touched && sf.reactiveFormStep3.controls['telefono'].errors?.['minlength']">
+            {{ 'ui.registrazione.telefono.error.minlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep3.controls['telefono'].touched && sf.reactiveFormStep3.controls['telefono'].errors?.['maxlength']">
+            {{ 'ui.registrazione.telefono.error.maxlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep3.controls['telefono'].touched && sf.reactiveFormStep3.controls['telefono'].errors?.['pattern']">
+            {{ 'ui.registrazione.telefono.error.pattern' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p class="label-sopra">
+          {{ 'ui.registrazione.step3.email_secondaria.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="text"
+            placeholder=" "
+            id="email_secondaria"
+            formControlName="emailSecondaria"
+            autocomplete="off"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['emailSecondaria'].invalid && sf.reactiveFormStep3.controls['emailSecondaria'].touched }"
+          />
+          <label for="email_secondaria" [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['emailSecondaria'].invalid && sf.reactiveFormStep3.controls['emailSecondaria'].touched }">
+            {{ 'ui.registrazione.step3.email_secondaria.input_label' | translate }}
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep3.controls['emailSecondaria'].touched && sf.reactiveFormStep3.controls['emailSecondaria'].errors?.['email']">
+            {{ 'ui.registrazione.email_secondaria.error.email' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep3.controls['emailSecondaria'].touched && sf.reactiveFormStep3.controls['emailSecondaria'].errors?.['pattern']">
+            {{ 'ui.registrazione.email_secondaria.error.pattern' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep3.controls['emailSecondaria'].touched && sf.reactiveFormStep3.controls['emailSecondaria'].errors?.['maxlength']">
+            {{ 'ui.registrazione.email_secondaria.error.maxlength' | translate }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="riga-doppia campo-animato">
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['password'].invalid && (sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) }"
+        >
+          {{ 'ui.registrazione.step3.password.label' | translate }} <span class="asterisco">*</span>
+        </p>
+
+        <div class="campo-form password-wrapper-reg">
+          <input
+            [type]="mostraPassword ? 'text' : 'password'"
+            placeholder=" "
+            id="password_reg"
+            formControlName="password"
+            autocomplete="new-password"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['password'].invalid && (sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) }"
+            (input)="onPasswordInput($any($event.target).value)"
+          />
+          <label
+            for="password_reg"
+            [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['password'].invalid && (sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) }"
+          >
+            {{ 'ui.registrazione.step3.password.input_label' | translate }}
+          </label>
+
+          <button
+            type="button"
+            class="toggle-password-reg"
+            tabindex="-1"
+            (mousedown)="$event.preventDefault()"
+            (click)="toggleVisibilitaPassword('password')"
+            [attr.aria-label]="mostraPassword ? ('ui.registrazione.password.aria.nascondi' | translate) : ('ui.registrazione.password.aria.mostra' | translate)"
+          >
+            <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+            </svg>
+            <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+              <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="pwd-robustezza-bar" *ngIf="passwordRobustezza > 0">
+          <div
+            class="pwd-robustezza-fill"
+            [style.width.%]="passwordEntropyPerc"
+            [style.background-color]="pwdColore"
+          ></div>
+          <span class="pwd-robustezza-label">
+            {{
+              passwordEntropyPerc >= 75
+                ? ('ui.registrazione.password.robustezza.forte' | translate)
+                : passwordEntropyPerc >= 50
+                  ? ('ui.registrazione.password.robustezza.discreta' | translate)
+                  : passwordEntropyPerc >= 25
+                    ? ('ui.registrazione.password.robustezza.moderata' | translate)
+                    : ('ui.registrazione.password.robustezza.debole' | translate)
+            }}
+          </span>
+        </div>
+
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) && sf.reactiveFormStep3.controls['password'].errors?.['required']">
+            {{ 'ui.registrazione.password.error.required' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) && sf.reactiveFormStep3.controls['password'].errors?.['minlength']">
+            {{ 'ui.registrazione.password.error.minlength' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) && sf.reactiveFormStep3.controls['password'].errors?.['maxlength']">
+            {{ 'ui.registrazione.password.error.maxlength' | translate }}
+          </p>
+          <ng-container *ngIf="(sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) && sf.reactiveFormStep3.controls['password'].errors?.['pattern']">
+            <p class="errore-campo" *ngIf="pwdMancaMaiuscola">{{ 'ui.registrazione.password.error.maiuscola' | translate }}</p>
+            <p class="errore-campo" *ngIf="pwdMancaNumero">{{ 'ui.registrazione.password.error.numero' | translate }}</p>
+            <p class="errore-campo" *ngIf="pwdMancaSimbolo">{{ 'ui.registrazione.password.error.simbolo' | translate }}</p>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': (sf.reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (sf.reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }"
+        >
+          {{ 'ui.registrazione.step3.conferma_password.label' | translate }} <span class="asterisco">*</span>
+        </p>
+
+        <div class="campo-form password-wrapper-reg">
+          <input
+            [type]="mostraConfermaPassword ? 'text' : 'password'"
+            placeholder=" "
+            id="conferma_password_reg"
+            formControlName="confermaPassword"
+            [ngClass]="{ 'is-invalid': (sf.reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (sf.reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }"
+          />
+          <label
+            for="conferma_password_reg"
+            [ngClass]="{ 'is-invalid': (sf.reactiveFormStep3.controls['confermaPassword'].invalid || errorePasswordNonCombacia) && (sf.reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) }"
+          >
+            {{ 'ui.registrazione.step3.conferma_password.input_label' | translate }}
+          </label>
+
+          <button
+            type="button"
+            class="toggle-password-reg"
+            tabindex="-1"
+            (mousedown)="$event.preventDefault()"
+            (click)="toggleVisibilitaPassword('conferma')"
+            [attr.aria-label]="mostraConfermaPassword ? ('ui.registrazione.password.aria.nascondi' | translate) : ('ui.registrazione.password.aria.mostra' | translate)"
+          >
+            <svg *ngIf="mostraConfermaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+            </svg>
+            <svg *ngIf="!mostraConfermaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+              <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+              <circle cx="12" cy="12" r="2.5"/>
+              <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(sf.reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3) && sf.reactiveFormStep3.controls['confermaPassword'].errors?.['required']">
+            {{ 'ui.registrazione.conferma_password.error.required' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="errorePasswordNonCombacia && (sf.reactiveFormStep3.controls['confermaPassword'].touched || formInviatoStep3)">
+            {{ 'ui.registrazione.conferma_password.error.mismatch' | translate }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottoni-nav campo-animato">
+      <button class="indietro_btn" type="button" (click)="indietro2()" [title]="'ui.registrazione.bottone.indietro.title' | translate">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        {{ 'ui.registrazione.bottone.indietro' | translate }}
+      </button>
+
+      <button
+        class="avanti_btn"
+        type="submit"
+        [disabled]="!sf.reactiveFormStep3.valid"
+        [title]="'ui.registrazione.bottone.avanti.title' | translate"
+      >
+        {{ 'ui.registrazione.bottone.avanti' | translate }}
+        <span class="step-btn">{{ 'ui.registrazione.step3.indicatore' | translate }}</span>
+      </button>
+    </div>
+  </form>
+
+  <div class="form-registrazione" *ngIf="stepAttuale === 4">
+    <div class="piani-wrapper campo-animato">
+      <div
+        class="piano-card"
+        [class.piano-selezionato]="pianoSelezionato === 'base'"
+        (click)="pianoSelezionato = 'base'"
+      >
+        <div class="piano-badge">{{ 'ui.registrazione.piano.base.badge' | translate }}</div>
+
+        <div class="piano-prezzo-wrapper">
+          <span class="piano-prezzo-barrato">{{ s2.prezzoBase }}/{{ 'ui.registrazione.piano.mese' | translate }}</span>
+          <span class="piano-gratis">
+            <span class="piano-gratis-parola">{{ 'ui.registrazione.piano.gratis' | translate }}</span>
+            {{ 'ui.registrazione.piano.per_sempre' | translate }}
+          </span>
+        </div>
+
+        <ul class="piano-features">
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+            {{ 'ui.registrazione.piano.feature.catalogo' | translate }}
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+            {{ 'ui.registrazione.piano.feature.aggiornamenti' | translate }}
+          </li>
+          <li class="feature-no">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#555"><path d="M18 6L6 18M6 6l12 12" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
+            {{ 'ui.registrazione.piano.feature.pubblicita' | translate }}
+          </li>
+        </ul>
+
+        <div class="piano-check" *ngIf="pianoSelezionato === 'base'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" fill="#e79c50"/>
+            <path d="M7 12l4 4 6-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div
+        class="piano-card piano-pro"
+        [class.piano-selezionato]="pianoSelezionato === 'pro'"
+        (click)="pianoSelezionato = 'pro'"
+      >
+        <div class="piano-badge piano-badge-pro">{{ 'ui.registrazione.piano.premium.badge' | translate }}</div>
+
+        <div class="piano-prezzo-wrapper">
+          <span class="piano-prezzo-barrato">{{ s2.prezzoPremium }}/{{ 'ui.registrazione.piano.mese' | translate }}</span>
+          <span class="piano-gratis">
+            <span class="piano-gratis-parola">{{ 'ui.registrazione.piano.gratis' | translate }}</span>
+            {{ 'ui.registrazione.piano.per_sempre' | translate }}
+          </span>
+        </div>
+
+        <ul class="piano-features">
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+            {{ 'ui.registrazione.piano.feature.catalogo' | translate }}
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+            {{ 'ui.registrazione.piano.feature.aggiornamenti' | translate }}
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
+            {{ 'ui.registrazione.piano.feature.no_pubblicita' | translate }}
+          </li>
+        </ul>
+
+        <div class="piano-check" *ngIf="pianoSelezionato === 'pro'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" fill="#e79c50"/>
+            <path d="M7 12l4 4 6-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <p class="piano-disclaimer campo-animato">{{ 'ui.registrazione.piano.disclaimer' | translate }}</p>
+
+    <div class="bottoni-nav campo-animato">
+      <button class="indietro_btn" type="button" (click)="indietro3()" [title]="'ui.registrazione.bottone.indietro.title' | translate">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        {{ 'ui.registrazione.bottone.indietro' | translate }}
+      </button>
+
+      <button
+        class="avanti_btn"
+        type="button"
+        [disabled]="!pianoSelezionato"
+        (click)="avanti4()"
+        [title]="'ui.registrazione.bottone.registrati.title' | translate"
+      >
+        {{ 'ui.registrazione.bottone.registrati' | translate }}
+      </button>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

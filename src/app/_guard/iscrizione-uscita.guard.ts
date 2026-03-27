@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { CanDeactivate, Router } from '@angular/router';
-import { IscrizioneComponent } from '../_benvenuto/iscrizione/iscrizione.component';
+import { IscrizioneComponent } from '../_benvenuto/registrazione/iscrizione.component';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
 import { ScrollWelcomeService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scroll-welcome.service';
+import { animaUscita, animaSfocatura } from '../_benvenuto/registrazione/iscrizione_helpers/animazioni.helper';
 import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/saturno-route-animazioni.service';
 import gsap from 'gsap';
 @Injectable({ providedIn: 'root' })
@@ -50,7 +51,7 @@ async canDeactivate(
   sessionStorage.removeItem('welcome_restore');
   sessionStorage.removeItem('welcome_scrollTop');
 
-  component.animaSfocatura(false);
+  animaSfocatura(false);
 
 
   const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
@@ -95,6 +96,6 @@ async canDeactivate(
   });
 }
 
-    return component.animaUscita().then(() => true);
+    return animaUscita().then(() => true);
   }
 }
