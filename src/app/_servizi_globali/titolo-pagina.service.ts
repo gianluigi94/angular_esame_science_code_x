@@ -120,6 +120,12 @@ if (
 ) {
   titolo = codice === 'it' ? `Accedi - ${base}` : `Sign in - ${base}`;
 
+} else if (
+  path === '/benvenuto/registrazione' || path === '/benvenuto/registration' ||
+  path === '/welcome/registrazione'   || path === '/welcome/registration'
+) {
+  titolo = codice === 'it' ? `Registrazione - ${base}` : `Sign up - ${base}`;
+
 } else if (path === '/catalogo' || path === '/catalogo/' || path === '/catalog' || path === '/catalog/') {
   titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`;
 

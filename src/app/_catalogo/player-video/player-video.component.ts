@@ -119,7 +119,7 @@ constructor(
   this.api.getIntervalloPublicita().pipe(take(1)).subscribe({
     next: (res) => {
       const v = Number(res?.data?.valore);
-      if (v > 0) this.intervallo_ad_s = v / 1000;
+      if (v > 0) this.intervallo_ad_s = v;
     }
   });
 
