@@ -17,7 +17,7 @@ import { CaroselloHoverTrailerUtility } from './carosello_utility/carosello-hove
 import { NovitaInfo } from 'src/app/_interfacce/Inovita-info.interface';
 import { CaricamentoCaroselloService } from './carosello_services/caricamento-carosello.service';
 import { Subscription } from 'rxjs';
-import { StopVideoGlobaleService } from '../app-riga-categoria/categoria_services/stop-video-globale.service';
+import { StopVideoGlobaleService } from '../riga-categoria/categoria_services/stop-video-globale.service';
 import { CaroselloScrollUtility } from './carosello_utility/carosello-scroll.utility';
 import { CaroselloDatiUtility } from './carosello_utility/carosello-dati.utility';
 import { CaroselloOverlayUtility } from './carosello_utility/carosello-overlay.utility';
@@ -29,7 +29,7 @@ import { CaroselloAudioUtility } from './carosello_utility/carosello-audio.utili
 import { CaroselloPlayerUtility } from './carosello_utility/carosello-player.utility';
 import { CaroselloScrollStateUtility } from './carosello_utility/carosello-scroll-state.utility';
 import { CaroselloCopertureUtility } from './carosello_utility/carosello-coperture.utility';
-import { HoverLocandinaService } from '../app-riga-categoria/categoria_services/hover-locandina.service';
+import { HoverLocandinaService } from '../riga-categoria/categoria_services/hover-locandina.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 import { CaroselloStopUtility } from './carosello_utility/carosello-stop.utility';
 import { CaroselloNavigazioneUtility } from './carosello_utility/carosello-navigazione.utility';

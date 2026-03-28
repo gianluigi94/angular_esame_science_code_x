@@ -1,4 +1,4 @@
-import { TipoContenuto } from "../../app-riga-categoria/categoria_services/tipo-contenuto.service";
+import { TipoContenuto } from "../../riga-categoria/categoria_services/tipo-contenuto.service";
 
 export class CatalogoRoutingUtility {
   static baseCatalogoDaLingua(contesto: any): string {

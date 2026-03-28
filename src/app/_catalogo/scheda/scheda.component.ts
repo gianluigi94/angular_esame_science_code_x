@@ -10,7 +10,7 @@ import { SchedaCacheService } from './scheda_service/scheda-cache.service';
 import { take } from 'rxjs/operators';
 import {  mescolaDeterministicaLocandine } from 'src/app/_helpers_globali/helpers';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
-import { StopVideoGlobaleService } from '../app-riga-categoria/categoria_services/stop-video-globale.service';
+import { StopVideoGlobaleService } from '../riga-categoria/categoria_services/stop-video-globale.service';
 import { SchedaPlayerTransizioneTitoloService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scheda-player-transizione-titolo.service';
 import { TranslateService } from '@ngx-translate/core';
 import { TitoloPaginaService } from 'src/app/_servizi_globali/titolo-pagina.service';

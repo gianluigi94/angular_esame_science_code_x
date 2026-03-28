@@ -2,7 +2,7 @@ import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { CambioLinguaService } from './cambio-lingua.service';
 import { Authservice } from '../_benvenuto/login/_login_service/auth.service';
-import { StopVideoGlobaleService } from '../_catalogo/app-riga-categoria/categoria_services/stop-video-globale.service';
+import { StopVideoGlobaleService } from '../_catalogo/riga-categoria/categoria_services/stop-video-globale.service';
 
 @Injectable({ providedIn: 'root' })
 export class ContattiNavigazioneService {

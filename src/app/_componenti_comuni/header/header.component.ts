@@ -11,13 +11,13 @@ import { HttpClient } from '@angular/common/http';
 import { StatoSessioneClientService } from 'src/app/_servizi_globali/stato-sessione-client.service';
 import { ErroreGlobaleService } from 'src/app/_servizi_globali/errore-globale.service';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
-import { TipoContenuto, TipoContenutoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/tipo-contenuto.service';
+import { TipoContenuto, TipoContenutoService } from 'src/app/_catalogo/riga-categoria/categoria_services/tipo-contenuto.service';
 import { SchedaPlayerTransizioneTitoloService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scheda-player-transizione-titolo.service';
 import { Location } from '@angular/common';
-import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
+import { ScorrimentoCatalogoService } from 'src/app/_catalogo/riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 import { ContattiNavigazioneService } from 'src/app/_servizi_globali/contatti-navigazione.service';
-import { StopVideoGlobaleService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/stop-video-globale.service';
+import { StopVideoGlobaleService } from 'src/app/_catalogo/riga-categoria/categoria_services/stop-video-globale.service';
 import { SchedaProntaService } from 'src/app/_catalogo/scheda/scheda_service/scheda-pronta.service';
 @Component({
   selector: 'app-header',

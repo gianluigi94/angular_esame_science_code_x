@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { isMobileOrTablet } from 'src/app/_helpers_globali/helpers';
 import { NotFoundCloseService } from './not-found-close.service';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
-import { StopVideoGlobaleService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/stop-video-globale.service';
+import { StopVideoGlobaleService } from 'src/app/_catalogo/riga-categoria/categoria_services/stop-video-globale.service';
 @Component({
   selector: 'app-titles-main',
   templateUrl: './titles-main.component.html',

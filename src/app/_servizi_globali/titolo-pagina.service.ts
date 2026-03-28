@@ -4,7 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { CambioLinguaService } from './cambio-lingua.service';
-import { TipoContenutoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/tipo-contenuto.service';
+import { TipoContenutoService } from 'src/app/_catalogo/riga-categoria/categoria_services/tipo-contenuto.service';
 
 @Injectable({ providedIn: 'root' }) // Registro il servizio nel root injector
 export class TitoloPaginaService {

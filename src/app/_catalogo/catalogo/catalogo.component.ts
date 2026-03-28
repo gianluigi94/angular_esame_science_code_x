@@ -19,15 +19,15 @@
   import {
     TipoContenuto,
     TipoContenutoService,
-  } from '../app-riga-categoria/categoria_services/tipo-contenuto.service';
+  } from '../riga-categoria/categoria_services/tipo-contenuto.service';
   import { Router } from '@angular/router';
   import { CatalogoSessionStorageUtility } from './catalogo_utility/catalogo-session-storage.utility';
   import { Location } from '@angular/common';
   import { CatalogoScrollCategoriaUtility } from './catalogo_utility/catalogo-scroll-categoria.utility';
-  import { AnimazioniScomparsaService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/animazioni-scomparsa.service';
-  import { ScorrimentoCatalogoService } from '../app-riga-categoria/categoria_services/scorrimento-catalogo.service';
-  import { CatalogoCacheService } from '../app-riga-categoria/categoria_services/catalogo-cache.service';
-  import { RigaCategoriaComponent } from '../app-riga-categoria/riga-categoria.component';
+  import { AnimazioniScomparsaService } from 'src/app/_catalogo/riga-categoria/categoria_services/animazioni-scomparsa.service';
+  import { ScorrimentoCatalogoService } from '../riga-categoria/categoria_services/scorrimento-catalogo.service';
+  import { CatalogoCacheService } from '../riga-categoria/categoria_services/catalogo-cache.service';
+  import { RigaCategoriaComponent } from '../riga-categoria/riga-categoria.component';
   import { SchedaCacheService } from '../scheda/scheda_service/scheda-cache.service';
     @Component({
     selector: 'app-catalogo',

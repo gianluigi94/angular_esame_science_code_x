@@ -14,7 +14,7 @@ import { SaturnoRouteAnimazioniService } from '../gsap/saturno-route-animazioni.
 import { CaricamentoCaroselloService } from 'src/app/_catalogo/carosello-novita/carosello_services/caricamento-carosello.service';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { SaturnoStatoService } from '../saturno-stato.service';
-import { ScorrimentoCatalogoService } from 'src/app/_catalogo/app-riga-categoria/categoria_services/scorrimento-catalogo.service';
+import { ScorrimentoCatalogoService } from 'src/app/_catalogo/riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { leggiPathDaSessionStorage, isAreaCatalogo } from 'src/app/_helpers_globali/helpers';
 import gsap from 'gsap';
 //Serve per calcolare la posizione nello spazio
