@@ -17,35 +17,14 @@ import { SaturnoStatoService } from '../saturno-stato.service';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/riga-categoria/categoria_services/scorrimento-catalogo.service';
 import { leggiPathDaSessionStorage, isAreaCatalogo } from 'src/app/_helpers_globali/helpers';
 import gsap from 'gsap';
-//Serve per calcolare la posizione nello spazio
-const vertexShader = /* glsl */ `
-  varying vec3 vPosition;
-  void main() {
-      vPosition = position;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-
-
-const fragmentShader = /* glsl */ `
-uniform float uInnerRadius;
-uniform float uOuterRadius;
-uniform vec3  uColor;
-uniform float uOpacity;
-varying vec3  vPosition;
-
-void main() {
-    float r = length(vPosition.xy);
-    float m = 0.5 * (uInnerRadius + uOuterRadius);
-    float a = smoothstep(uInnerRadius, m, r);
-    float b = 1.0 - smoothstep(m, uOuterRadius, r);
-    float alpha = a * b * uOpacity;
-    gl_FragColor = vec4(uColor, alpha);
-}
-
-
-`;
+import { GRUPPI_CONFIG } from './saturno-gruppi-config';
+import { SaturnoDischiService } from './saturno-dischi.service';
+import { SaturnoMouseHelper } from './saturno_helpers/saturno-mouse.helper';
+import { SaturnoLoopHelper } from './saturno_helpers/saturno-loop.helper';
+import {
+  eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione,
+  eRottaNotFound, eRottaContatti, eSchedaCatalogo, leggiUrlAttuale,
+} from './saturno-url.utils';
 
 @Injectable({ providedIn: 'root' })
 export class SaturnoService {
@@ -53,46 +32,12 @@ export class SaturnoService {
   saturnoPronto$ = this.saturnoStatoService.saturnoPronto$;
   transizioneDa404ACatalogo: boolean = false;
   private scenaInizializzata: boolean = false;
-  private firstRenderDone = false;
 
-  // 🔹 NUOVO: serve per non rifare l'animazione di /catalogo ad ogni rientro
+  // 🔹 serve per non rifare l'animazione di /catalogo ad ogni rientro
   private catalogoGiaAnimato: boolean = false;
 
   // Configurazioni per i gruppi di particelle (asteroidi)
-  private groupsConfig = [
-    {
-      innerRadius: 1.34,
-      outerRadius: 1.35,
-      particleCount: 70,
-      color: 0xcfcfcf,
-      size: 0.115,
-      rotationSpeed: 0.00315,
-    },
-    {
-      innerRadius: 1.54,
-      outerRadius: 1.65,
-      particleCount: 206,
-      color: 0x9f8873,
-      size: 0.1,
-      rotationSpeed: 0.0019,
-    },
-    {
-      innerRadius: 1.8,
-      outerRadius: 1.82,
-      particleCount: 180,
-      color: 0xc8cca5,
-      size: 0.091,
-      rotationSpeed: 0.00105,
-    },
-    {
-      innerRadius: 2.17,
-      outerRadius: 2.005,
-      particleCount: 126,
-      color: 0xffffff,
-      size: 0.195,
-      rotationSpeed: 0.00102,
-    },
-  ];
+  private groupsConfig = [...GRUPPI_CONFIG];
 
   /**
    * Riferimenti memorizzati per poterne fare l'update continuo.
@@ -101,24 +46,18 @@ export class SaturnoService {
   private camera: THREE.Camera | null = null;
   private renderer: THREE.WebGLRenderer | null = null;
 
-  // Riferimenti per pianeta, particelle e quant’altro ci serve animare
+  // Riferimenti per pianeta, particelle e quant'altro ci serve animare
   private planetMesh: THREE.Mesh | null = null;
   private particleGroups: THREE.Group[] = [];
 
   // Luce direzionale
   private directionalLight: THREE.DirectionalLight | null = null;
-private skipLoginIntroOnce: boolean = false;
-private skipRegistrazioneIntroOnce: boolean = false;
-  // Strumenti di calcolo per il mouse
-  private raycaster = new THREE.Raycaster(); //oggetto threejs che concentra l'attenzione sul mouse
-  private mouse = new THREE.Vector2(9999, 9999); //mouse non attivo in partenza
+  private skipLoginIntroOnce: boolean = false;
+  private skipRegistrazioneIntroOnce: boolean = false;
 
-  // Variabili per il loop a fps fissi visto che uso setInterval per aiutare a far continuare le animazioni anche quando l'utente è in background
-  private animInterval: any; //tiene il riferimento al ciclo di animazione avviato
-  private lastTime = 0; //memorizza l’orario dell’ultimo aggiornamento della scena, il tempo tra un frame e l’altro
-
-  // Riferimento al listener del mouse per poterlo rimuovere
-  private gestoreMouseMove: ((event: MouseEvent) => void) | null = null;
+  // Helper per mouse e loop
+  private readonly mouseHelper = new SaturnoMouseHelper();
+  private loopHelper!: SaturnoLoopHelper;
 
   // capire se è un dispositivo mobile
   private isMobileOrTablet(): boolean {
@@ -142,6 +81,7 @@ private skipRegistrazioneIntroOnce: boolean = false;
   constructor(
     private sceneService: SceneService,
     private diskService: DiskService,
+    private saturnoDischiService: SaturnoDischiService,
     private particleGroupService: AsteroidiParticleGroupService,
     private toastService: ToastService,
     private animateService: AnimateService,
@@ -155,6 +95,15 @@ private skipRegistrazioneIntroOnce: boolean = false;
     private scorrimentoCatalogo: ScorrimentoCatalogoService,
     private ngZone: NgZone,
   ) {
+    this.loopHelper = new SaturnoLoopHelper(
+      ngZone,
+      diskService,
+      saturnoStatoService,
+      this.mouseHelper,
+      () => this.planetMesh,
+      () => this.particleGroups,
+      () => this.camera,
+    );
     this.performanceService.isLowEndPC$.subscribe((isLowEnd) => {
       if (isLowEnd || this.isMobileOrTablet()) {
         this.reduceParticles();
@@ -162,28 +111,20 @@ private skipRegistrazioneIntroOnce: boolean = false;
     });
     this.transizioneDa404ACatalogo = this.leggiFlagTransizione404Catalogo();
 
-this.skipLoginIntroOnce = this.isPageReload() && this.eRottaLogin(window.location.pathname);
-this.skipRegistrazioneIntroOnce = this.isPageReload() && this.eRottaRegistrazione(window.location.pathname);
-this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
+    this.skipLoginIntroOnce = this.isPageReload() && eRottaLogin(window.location.pathname);
+    this.skipRegistrazioneIntroOnce = this.isPageReload() && eRottaRegistrazione(window.location.pathname);
+    this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
   }
-
-  // SaturnoService
 
   private distruggiSaturno(): void {
     // Stop animazioni GSAP e spegni la luce direzionale
     this.animateService.resetAnimations?.();
 
     // Ferma il loop
-    if (this.animInterval) {
-      clearInterval(this.animInterval);
-      this.animInterval = null;
-    }
+    this.loopHelper.stop();
 
     // Rimuovi il listener del mouse
-    if (this.gestoreMouseMove) {
-      window.removeEventListener('mousemove', this.gestoreMouseMove);
-      this.gestoreMouseMove = null;
-    }
+    this.mouseHelper.rimuoviHoverMouse();
 
     // Rimuovi gli oggetti dalla scena
     if (this.scene) {
@@ -222,67 +163,33 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
     this.camera = null;
     this.renderer = null;
 
-    this.firstRenderDone = false;
+    this.loopHelper.resetFirstRender();
     this.saturnoStatoService.reset();
     this.catalogoGiaAnimato = false;
   }
 
   public spegniSaturno(): void {
     // Stoppa il loop ma NON distrugge la scena
-    if (this.animInterval) {
-      clearInterval(this.animInterval);
-      this.animInterval = null;
-    }
-
-    // Rimuovi il listener del mouse
-    if (this.gestoreMouseMove) {
-      window.removeEventListener('mousemove', this.gestoreMouseMove);
-      this.gestoreMouseMove = null;
-    }
+    this.loopHelper.stop();
+    this.mouseHelper.rimuoviHoverMouse();
   }
 
-  /**
-   * Avvia un loop a frequenza fissa (60 fps).
-   */
   private startFixedFPSLoop(): void {
-    this.lastTime = performance.now();
-
-    // si evida di creare più setInterval se (per qualche motivo) viene richiamato più volte
-    if (this.animInterval) {
-      clearInterval(this.animInterval);
-    }
-
-    // 60 fps -> 1000 / 60 = 16.666... ms
-    this.ngZone.runOutsideAngular(() => {
-      this.animInterval = setInterval(() => {
-        const now = performance.now();
-        const deltaTime = (now - this.lastTime) / 1000;
-        this.lastTime = now;
-
-        this.renderAndUpdate(deltaTime);
-      }, 1000 / 60);
-    });
+    this.loopHelper.start(this.scene!, this.camera!, this.renderer!);
   }
 
   /**
    * Carica la texture del pianeta Saturno in una Promise.
    */
-  // Carica la texture del pianeta Saturno in una Promise.
   private loadPlanetTexture(): Promise<THREE.Texture> {
     const textureLoader = new THREE.TextureLoader();
     return new Promise((resolve, reject) => {
-      // Verifica se la texture è già stata caricata in localStorage
       const textureCacheHit = localStorage.getItem('saturnoTextureLoaded');
 
       if (textureCacheHit) {
-        console.log(
-          'NON PRIMA VOLTA: La texture di Saturno è stata caricata dalla cache.',
-        );
+        console.log('NON PRIMA VOLTA: La texture di Saturno è stata caricata dalla cache.');
       } else {
-        console.log(
-          'PRIMA VOLTA: Caricamento texture di Saturno per la prima volta.',
-        );
-        // Impostiamo la flag per non ricaricare la texture nelle future visite, anche se il browser viene riaperto
+        console.log('PRIMA VOLTA: Caricamento texture di Saturno per la prima volta.');
         localStorage.setItem('saturnoTextureLoaded', 'true');
       }
 
@@ -295,10 +202,6 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
     });
   }
 
-  /**
-   * Esegue l'inizializzazione della scena di Saturno, caricando tutte le texture
-   * (Saturno + Asteroidi) prima di mostrare qualsiasi cosa.
-   */
   private attendiCaroselloPronto(timeoutMs: number = 12000): Promise<void> {
     return new Promise((resolve) => {
       if (this.caricamentoCaroselloService.caroselloPronto$.value)
@@ -307,17 +210,13 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
       const sub = this.caricamentoCaroselloService.caroselloPronto$.subscribe(
         (ok) => {
           if (!ok) return;
-          try {
-            sub.unsubscribe();
-          } catch {}
+          try { sub.unsubscribe(); } catch {}
           resolve();
         },
       );
 
       setTimeout(() => {
-        try {
-          sub.unsubscribe();
-        } catch {}
+        try { sub.unsubscribe(); } catch {}
         resolve();
       }, timeoutMs);
     });
@@ -327,25 +226,23 @@ this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
     return new Promise((resolve, reject) => {
 
       // ✅ se vengo da contatti verso catalogo/scheda, faccio sparire sfondo subito
-      // senza aspettare il caricamento delle texture
-      const urlSubito = this.leggiUrlAttuale();
-   // DOPO
-const vengoDaContattiFlag = sessionStorage.getItem('vengo_da_contatti') === 'true';
-if (
-  vengoDaContattiFlag &&
-  this.scenaInizializzata && // ← solo in navigazione interna Angular, non su fresh load
-  (this.eRottaCatalogo(urlSubito) || this.eSchedaCatalogo(urlSubito)) &&
-  !this.catalogoGiaAnimato
-) {
-  try { sessionStorage.removeItem('vengo_da_contatti'); } catch {}
-  const saturno = document.querySelector('app-saturno') as HTMLElement | null;
-  const sfondo = document.querySelector('app-sfondo') as HTMLElement | null;
-  if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
-  if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
-  this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-    this.animateService.enablePageScroll();
-  });
-}
+      const urlSubito = leggiUrlAttuale();
+      const vengoDaContattiFlag = sessionStorage.getItem('vengo_da_contatti') === 'true';
+      if (
+        vengoDaContattiFlag &&
+        this.scenaInizializzata &&
+        (eRottaCatalogo(urlSubito) || eSchedaCatalogo(urlSubito)) &&
+        !this.catalogoGiaAnimato
+      ) {
+        try { sessionStorage.removeItem('vengo_da_contatti'); } catch {}
+        const saturno = document.querySelector('app-saturno') as HTMLElement | null;
+        const sfondo  = document.querySelector('app-sfondo')  as HTMLElement | null;
+        if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
+        if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
+        this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+          this.animateService.enablePageScroll();
+        });
+      }
 
       if (
         this.scenaInizializzata &&
@@ -353,52 +250,43 @@ if (
         this.camera &&
         this.renderer
       ) {
-        const url = this.leggiUrlAttuale();
+        const url  = leggiUrlAttuale();
         const da404 = this.leggiFlagTransizione404Catalogo();
-      if (this.eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
-  // Riattacco il canvas al nuovo container (es. scheda ha un suo app-saturno)
-  const container = document.getElementById('three-container');
-  if (container && this.renderer.domElement.parentElement !== container) {
-    container.appendChild(this.renderer.domElement);
-  }
 
-  const vengoDaContatti =
-    (sessionStorage.getItem('vengo_da_contatti') || '') === 'true';
+        if (eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
+          // Riattacco il canvas al nuovo container (es. scheda ha un suo app-saturno)
+          const container = document.getElementById('three-container');
+          if (container && this.renderer.domElement.parentElement !== container) {
+            container.appendChild(this.renderer.domElement);
+          }
 
-  if (vengoDaContatti) {
-    try {
-      sessionStorage.removeItem('vengo_da_contatti');
-    } catch {}
+          const vengoDaContatti = (sessionStorage.getItem('vengo_da_contatti') || '') === 'true';
 
-    const saturno = document.querySelector('app-saturno') as HTMLElement | null;
-    const sfondo = document.querySelector('app-sfondo') as HTMLElement | null;
+          if (vengoDaContatti) {
+            try { sessionStorage.removeItem('vengo_da_contatti'); } catch {}
 
-    if (saturno) {
-      gsap.killTweensOf(saturno);
-      gsap.set(saturno, { opacity: 1 });
-    }
-    if (sfondo) {
-      gsap.killTweensOf(sfondo);
-      gsap.set(sfondo, { opacity: 1 });
-    }
+            const saturno = document.querySelector('app-saturno') as HTMLElement | null;
+            const sfondo  = document.querySelector('app-sfondo')  as HTMLElement | null;
 
-    requestAnimationFrame(() => {
-      this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-        this.animateService.enablePageScroll();
-      });
-    });
-  } else {
-    this.animateService.fadeOutSaturnoESfondo(0);
-    this.animateService.enablePageScroll();
-  }
+            if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
+            if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
 
-  this.spegniSaturno();
-  this.animateService.pauseClearcoat();
+            requestAnimationFrame(() => {
+              this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+                this.animateService.enablePageScroll();
+              });
+            });
+          } else {
+            this.animateService.fadeOutSaturnoESfondo(0);
+            this.animateService.enablePageScroll();
+          }
 
-  resolve();
-  return;
-}
+          this.spegniSaturno();
+          this.animateService.pauseClearcoat();
 
+          resolve();
+          return;
+        }
 
         const container = document.getElementById('three-container');
         if (!container) {
@@ -414,114 +302,80 @@ if (
         const durata = 0.85;
         const durataCatalogo = 1.6;
 
-        if (this.eRottaLogin(url)) {
-
-  // ✅ SOLO la prima volta dopo F5 su login
-  if (this.skipLoginIntroOnce) {
-    this.animateService.setXNormale();
-    this.animateService.setTitoloAltoGlobal();
-    this.skipLoginIntroOnce = false; // <-- IMPORTANTISSIMO: “consumo” il caso reload
-  } else {
-    // comportamento normale: benvenuto -> login anima verso alto
-    this.animateService.animateTitoloVersoAltoGlobal();
-    this.animateService.setXNormale();
-  }
-
-  this.saturnoRouteAnimazioniService.animaVerso(
-    this.scene,
-    'LOGIN_LATERALE',
-    durata,
-    this.directionalLight || undefined
-  );
-}
-
-else if (this.eRottaNotFound(url)) {
-  const scenaCorrente = this.scene;
-  if (!scenaCorrente) {
-    resolve();
-    return;
-  }
-  this.ensureRingsAndParticlesIfMissing(scenaCorrente);
-  this.saturnoPosizioniService.applicaPoseAScena(scenaCorrente, 'CATALOGO_NASCOSTO');
-  this.animateService.setXNormale();
-  this.animateService.setTitoloAltoGlobal();
-  this.animateService.enablePageScroll();
-
-  requestAnimationFrame(() => {
-  this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
-    scenaCorrente, 1.45, this.directionalLight || undefined
-  );
-});
-}
- else if (this.eRottaWelcome(url)) {
-          // 🔹 Rientro nella pagina di benvenuto con scena già costruita:
-          //    - titolo di nuovo centrale
-          //    - X in versione GIF
-          //    - sottotitolo + scritta scroll di nuovo visibili,
-          //      così gli ScrollTrigger possono fare il "reverse" morbido
+        if (eRottaLogin(url)) {
+          if (this.skipLoginIntroOnce) {
+            this.animateService.setXNormale();
+            this.animateService.setTitoloAltoGlobal();
+            this.skipLoginIntroOnce = false;
+          } else {
+            this.animateService.animateTitoloVersoAltoGlobal();
+            this.animateService.setXNormale();
+          }
+          this.saturnoRouteAnimazioniService.animaVerso(
+            this.scene, 'LOGIN_LATERALE', durata, this.directionalLight || undefined
+          );
+        } else if (eRottaNotFound(url)) {
+          const scenaCorrente = this.scene;
+          if (!scenaCorrente) { resolve(); return; }
+          this.ensureRingsAndParticlesIfMissing(scenaCorrente);
+          this.saturnoPosizioniService.applicaPoseAScena(scenaCorrente, 'CATALOGO_NASCOSTO');
+          this.animateService.setXNormale();
+          this.animateService.setTitoloAltoGlobal();
+          this.animateService.enablePageScroll();
+          requestAnimationFrame(() => {
+            this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
+              scenaCorrente, 1.45, this.directionalLight || undefined
+            );
+          });
+        } else if (eRottaWelcome(url)) {
           this.animateService.setTitoloCentraleGlobal();
           this.animateService.setXGif();
-        } else if (this.eRottaCatalogo(url)) {
-            const da404 = this.leggiFlagTransizione404Catalogo();
+        } else if (eRottaCatalogo(url)) {
+          const da404 = this.leggiFlagTransizione404Catalogo();
 
-// PRIORITA': transizione 404 -> catalogo (stesso Saturno, no rebuild)
-  if (da404) {
-    const durataCatalogo = 1.6;
-    const anticipoMs = 400;
-
-    this.scorrimentoCatalogo.impostaSpinnerScroll(true);
-
-    this.attendiCaroselloPronto().finally(() => {
-      setTimeout(() => {
-        this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-          this.animateService.enablePageScroll();
-        });
-      }, durataCatalogo * 1000 - anticipoMs);
-
-      this.saturnoRouteAnimazioniService.animaVerso(
-        this.scene!,
-        'CATALOGO_NASCOSTO',
-        durataCatalogo,
-        this.directionalLight || undefined,
-        () => {
-          this.spegniSaturno();
-          this.animateService.pauseClearcoat();
-          this.catalogoGiaAnimato = true;
-          this.consumaFlagTransizione404Catalogo();
-          this.scorrimentoCatalogo.impostaSpinnerScroll(false);
-        },
-      );
-    });
-
-    this.attivaHoverMouse();
-    this.startFixedFPSLoop();
-    resolve();
-    return;
-  }
+          if (da404) {
+            const durataCatalogo = 1.6;
+            const anticipoMs = 400;
+            this.scorrimentoCatalogo.impostaSpinnerScroll(true);
+            this.attendiCaroselloPronto().finally(() => {
+              setTimeout(() => {
+                this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+                  this.animateService.enablePageScroll();
+                });
+              }, durataCatalogo * 1000 - anticipoMs);
+              this.saturnoRouteAnimazioniService.animaVerso(
+                this.scene!, 'CATALOGO_NASCOSTO', durataCatalogo,
+                this.directionalLight || undefined,
+                () => {
+                  this.spegniSaturno();
+                  this.animateService.pauseClearcoat();
+                  this.catalogoGiaAnimato = true;
+                  this.consumaFlagTransizione404Catalogo();
+                  this.scorrimentoCatalogo.impostaSpinnerScroll(false);
+                },
+              );
+            });
+            this.attivaHoverMouse();
+            this.startFixedFPSLoop();
+            resolve();
+            return;
+          }
 
           const anticipoMs = 400;
 
           if (this.animateService.isTitoloInPosizioneAlta()) {
             const durataCatalogo = 1.6;
-
             this.attendiCaroselloPronto().finally(() => {
               this.toastService.chiudi('accesso_ok');
-
-              setTimeout(
-                () => {
-                  this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-                    this.animateService.enablePageScroll();
-                  });
+              setTimeout(() => {
+                this.animateService.fadeOutSaturnoESfondo(1.25, () => {
                   this.animateService.enablePageScroll();
-                  this.animateService.fadeOutSaturnoESfondo(1.25);
-                },
-                durataCatalogo * 1000 - anticipoMs,
-              );
-
+                });
+                this.animateService.enablePageScroll();
+                this.animateService.fadeOutSaturnoESfondo(1.25);
+              }, durataCatalogo * 1000 - anticipoMs);
               this.saturnoRouteAnimazioniService.animaVerso(
-                this.scene!,
-                'CATALOGO_NASCOSTO',
-                durataCatalogo,
+                this.scene!, 'CATALOGO_NASCOSTO', durataCatalogo,
                 this.directionalLight || undefined,
                 () => {
                   this.spegniSaturno();
@@ -532,95 +386,60 @@ else if (this.eRottaNotFound(url)) {
             });
           } else {
             this.animateService.setTitoloCentraleGlobal();
-
             const durataCatalogo = 1.6;
-
             this.attendiCaroselloPronto().finally(() => {
-              setTimeout(
-                () => {
-                  this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-                    this.animateService.enablePageScroll();
-
-                    // SOLO ORA: coperture sparite -> ora parte il timer locandina
-                  });
-                },
-                durataCatalogo * 1000 - anticipoMs,
-              );
-
+              setTimeout(() => {
+                this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+                  this.animateService.enablePageScroll();
+                });
+              }, durataCatalogo * 1000 - anticipoMs);
               this.saturnoRouteAnimazioniService.animaVerso(
-                this.scene!,
-                'CATALOGO_NASCOSTO',
-                durataCatalogo,
+                this.scene!, 'CATALOGO_NASCOSTO', durataCatalogo,
                 this.directionalLight || undefined,
                 () => {
                   this.spegniSaturno();
                   this.animateService.pauseClearcoat();
-
                   this.animateService.setXNormale();
                   this.animateService.animateTitoloVersoAltoGlobal();
-                  // niente fadeOutSaturnoESfondo qui: è già partito col setTimeout
-
-                  // 🔹 segno che il catalogo è già stato animato una volta
                   this.catalogoGiaAnimato = true;
                 },
               );
             });
           }
-      } else if (this.eRottaRegistrazione(url)) {
-  const giaInBasso = this.scene.scale.x > 3;
-  const titoloGiaAlto = this.animateService.isTitoloInPosizioneAlta();
-
-  if (!titoloGiaAlto) {
-    this.animateService.setXNormale();
-    this.animateService.animateTitoloVersoAltoGlobal();
-  } else {
-    this.animateService.setXNormale();
-  }
-
-  if (!giaInBasso) {
-    this.saturnoRouteAnimazioniService.animaVerso(
-      this.scene,
-      'REGISTRAZIONE_BASSO',
-      durata,
-      this.directionalLight || undefined
-    );
-  }
-}
+        } else if (eRottaRegistrazione(url)) {
+          const giaInBasso   = this.scene.scale.x > 3;
+          const titoloGiaAlto = this.animateService.isTitoloInPosizioneAlta();
+          if (!titoloGiaAlto) {
+            this.animateService.setXNormale();
+            this.animateService.animateTitoloVersoAltoGlobal();
+          } else {
+            this.animateService.setXNormale();
+          }
+          if (!giaInBasso) {
+            this.saturnoRouteAnimazioniService.animaVerso(
+              this.scene, 'REGISTRAZIONE_BASSO', durata, this.directionalLight || undefined
+            );
+          }
+        }
 
         this.attivaHoverMouse();
         this.startFixedFPSLoop();
-
         resolve();
         return;
       }
 
-
-
-      // 👇 Da qui in poi è uguale a prima
-      // Carica *in parallelo* la texture di Saturno e quelle degli asteroidi
+      // 👇 Prima inizializzazione: carica texture in parallelo
       Promise.all([
-        this.loadPlanetTexture(), // Texture di Saturno
-        this.asteroidiMaterialService.loadAllTextures(), // Texture roccia/normal/ao
+        this.loadPlanetTexture(),
+        this.asteroidiMaterialService.loadAllTextures(),
       ])
         .then(([planetTexture, _]) => {
-          // si procede con tutto
           const { scene, camera, renderer } = this.sceneService;
 
-          // Salvo i riferimenti nella classe
-          this.scene = scene;
-          this.camera = camera;
+          this.scene    = scene;
+          this.camera   = camera;
           this.renderer = renderer;
-          //   // ✅ Imposto la pose "WELCOME_ALTO" come stato iniziale standard
-          //   this.saturnoPosizioniService.applicaPoseAScena(scene, 'WELCOME_ALTO');
 
-          //   // Se sono su /login e NON sto usando le animazioni welcome,
-          // // metto subito Saturno nella posizione laterale di login
-          // const url = this.router.url;
-          // if (!usaAnimazioniWelcome && url.startsWith('/login')) {
-          //   this.saturnoPosizioniService.applicaPoseAScena(scene, 'LOGIN_LATERALE');
-          // }
-
-          // Recupero il contenitore HTML
           const container = document.getElementById('three-container');
           if (!container) {
             console.error('Contenitore non trovato: three-container');
@@ -631,9 +450,6 @@ else if (this.eRottaNotFound(url)) {
           container.appendChild(renderer.domElement);
 
           // Luce direzionale
-          // ...
-
-          // Luce direzionale
           // - su WELCOME: parte spenta e dietro al pianeta (verrà animata da AnimateService)
           // - su LOGIN (e altre pagine): subito accesa e in posizione finale, senza animazione
           let lightIntensity = 0;
@@ -641,21 +457,13 @@ else if (this.eRottaNotFound(url)) {
 
           if (!usaAnimazioniWelcome) {
             lightIntensity = 2.8;
-
             const url = this.router.url;
-            if (this.eRottaLogin(url)) {
-              lightZ = 0.1001; // LOGIN_LATERALE
-            } else if (this.eRottaWelcome(url)) {
-              lightZ = 10.1001; // WELCOME_ALTO
-            } else {
-              lightZ = 5.1001; // WELCOME_BASSO / fallback
-            }
+            if (eRottaLogin(url))        lightZ = 0.1001;  // LOGIN_LATERALE
+            else if (eRottaWelcome(url)) lightZ = 10.1001; // WELCOME_ALTO
+            else                         lightZ = 5.1001;  // WELCOME_BASSO / fallback
           }
 
-          const directionalLight = new THREE.DirectionalLight(
-            0xffffff,
-            lightIntensity,
-          );
+          const directionalLight = new THREE.DirectionalLight(0xffffff, lightIntensity);
           directionalLight.position.set(-5.95, 0.051, lightZ);
           scene.add(directionalLight);
           this.directionalLight = directionalLight;
@@ -672,9 +480,8 @@ else if (this.eRottaNotFound(url)) {
           });
 
           const planetMesh = new THREE.Mesh(geometry, material); //geometria + materiale
-          planetMesh.position.y = 0.4; //posizione saturno sull asse y
-
-          planetMesh.rotation.x = THREE.MathUtils.degToRad(7); //rotazione saturno
+          planetMesh.position.y = 0.4;                          //posizione saturno sull asse y
+          planetMesh.rotation.x = THREE.MathUtils.degToRad(7);  //rotazione saturno
 
           scene.add(planetMesh);
           this.planetMesh = planetMesh;
@@ -684,20 +491,15 @@ else if (this.eRottaNotFound(url)) {
 
           const url = this.router.url;
 
-          // ✅ SE sono in scheda catalogo e NON voglio animazioni di ingresso,
-          //    allora voglio lo stato finale subito (come "catalogo gia finito").
-          if (!usaAnimazioniWelcome && this.eSchedaCatalogo(url)) {
-            // ✅ UI come "catalogo gia finito": titolo alto-sinistra  X normale
+          // ✅ SE sono in scheda catalogo e NON voglio animazioni di ingresso
+          if (!usaAnimazioniWelcome && eSchedaCatalogo(url)) {
             this.ensureRingsAndParticlesIfMissing(scene);
             this.animateService.setXNormale();
             this.animateService.setTitoloAltoGlobal();
-            this.saturnoPosizioniService.applicaPoseAScena(
-              scene,
-              'CATALOGO_NASCOSTO',
-            );
+            this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
             this.animateService.fadeOutSaturnoESfondo(0);
             this.animateService.enablePageScroll();
-            this.firstRenderDone = true;
+            this.loopHelper.resetFirstRender();
             this.saturnoStatoService.setPronto();
             this.spegniSaturno();
             this.animateService.pauseClearcoat();
@@ -706,180 +508,56 @@ else if (this.eRottaNotFound(url)) {
             resolve();
             return;
           }
-          const isLoginRoute = this.eRottaLogin(url);
 
-          const isWelcomeRoute =
-            usaAnimazioniWelcome && this.eRottaWelcome(url) && !isLoginRoute;
+          const isLoginRoute    = eRottaLogin(url);
+          const isWelcomeRoute  = usaAnimazioniWelcome && eRottaWelcome(url) && !isLoginRoute;
+          const isCatalogRoute  = usaAnimazioniWelcome && eRottaCatalogo(url);
+          const isNotFoundRoute = eRottaNotFound(url);
+          const ricaricaCatalogo = usaAnimazioniWelcome && this.isReloadCatalogo();
 
-          const isCatalogRoute =
-            usaAnimazioniWelcome && this.eRottaCatalogo(url);
-          const isNotFoundRoute = this.eRottaNotFound(url);
-          const ricaricaCatalogo =
-            usaAnimazioniWelcome && this.isReloadCatalogo();
+          if (eRottaLogin(url)) {
+            const durata = 0.9;
+            if (this.skipLoginIntroOnce) {
+              this.animateService.setXNormale();
+              this.animateService.setTitoloAltoGlobal();
+              this.skipLoginIntroOnce = false;
+            } else {
+              this.animateService.animateTitoloVersoAltoGlobal();
+              this.animateService.setXNormale();
+            }
+            this.saturnoRouteAnimazioniService.animaVerso(
+              scene, 'LOGIN_LATERALE', durata, this.directionalLight || undefined
+            );
+          }
 
-        if (this.eRottaLogin(url)) {
-  const durata = 0.9;
+          if (eRottaRegistrazione(url)) {
+            if (this.skipRegistrazioneIntroOnce) {
+              this.animateService.setXNormale();
+              this.animateService.setTitoloAltoGlobal();
+              this.skipRegistrazioneIntroOnce = false;
+            } else {
+              this.animateService.setXNormale();
+              this.animateService.animateTitoloVersoAltoGlobal();
+            }
+            this.saturnoRouteAnimazioniService.animaVerso(
+              scene, 'REGISTRAZIONE_BASSO', 0.9, this.directionalLight || undefined
+            );
+          }
 
-  // ✅ SOLO la prima volta dopo F5 su login
-  if (this.skipLoginIntroOnce) {
-    this.animateService.setXNormale();
-    this.animateService.setTitoloAltoGlobal();
-    this.skipLoginIntroOnce = false; // <-- consumo qui (di solito succede già qui al primo load)
-  } else {
-    this.animateService.animateTitoloVersoAltoGlobal();
-    this.animateService.setXNormale();
-  }
-
-  this.saturnoRouteAnimazioniService.animaVerso(
-    scene,
-    'LOGIN_LATERALE',
-    durata,
-    this.directionalLight || undefined
-  );
-}
-
-
-      if (this.eRottaRegistrazione(url)) {
-  if (this.skipRegistrazioneIntroOnce) {
-    this.animateService.setXNormale();
-    this.animateService.setTitoloAltoGlobal();
-    this.skipRegistrazioneIntroOnce = false;
-  } else {
-    this.animateService.setXNormale();
-    this.animateService.animateTitoloVersoAltoGlobal();
-  }
-  // Saturn anima sempre — come login che chiama sempre animaVerso anche su F5
- this.saturnoRouteAnimazioniService.animaVerso(
-    scene,
-    'REGISTRAZIONE_BASSO',
-    0.9,
-    this.directionalLight || undefined
-  );
-}
-
-        if (isNotFoundRoute) {
-  this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
-  this.animateService.setXNormale();
-  this.animateService.setTitoloAltoGlobal();
-  this.animateService.enablePageScroll();
-
- setTimeout(() => {
-  this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
-    scene, 1.05, this.directionalLight || undefined
-  );
-}, 300);
-}
-          // 👉 NIENTE animateAll qui: lo chiameremo DOPO aver creato i gruppi di particelle
+          if (isNotFoundRoute) {
+            this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
+            this.animateService.setXNormale();
+            this.animateService.setTitoloAltoGlobal();
+            this.animateService.enablePageScroll();
+            setTimeout(() => {
+              this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
+                scene, 1.05, this.directionalLight || undefined
+              );
+            }, 300);
+          }
 
           // Creazione dei dischi (anelli di Saturno)
-
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.17,
-            1.305,
-            0xffffff,
-            0.18,
-            true,
-            true,
-            0.01,
-            0,
-          );
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.245,
-            1.27,
-            0xffffff,
-            0.45,
-            true,
-            true,
-            0.03,
-            0,
-          );
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.27,
-            1.49,
-            0xfffee9,
-            0.55,
-            true,
-            true,
-            -0.01,
-            0,
-          );
-          //piccolo
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.34,
-            1.39,
-            0xfffee9,
-            0.65,
-            true,
-            true,
-            0.01,
-            0,
-          );
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.54,
-            1.74,
-            0xffffff,
-            0.05,
-            true,
-            true,
-            -0.01,
-            0,
-          );
-
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.57,
-            1.97,
-            0xfff4e9,
-            0.25,
-            true,
-            true,
-            0.01,
-            0,
-          );
-          //piccolo
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.715,
-            1.799,
-            0xfff4e9,
-            0.25,
-            true,
-            true,
-            0.03,
-            0,
-          );
-          this.diskService.createDisk(
-            scene,
-            vertexShader,
-            fragmentShader,
-            1.9,
-            2.17,
-            0xffffff,
-            0.055,
-            true,
-            false,
-            0.03,
-            0,
-          );
+          this.saturnoDischiService.creaDischi(scene);
 
           // Creazione dei gruppi di particelle (asteroidi) attorno a Saturno
           const particleGroups: THREE.Group[] = [];
@@ -889,99 +567,56 @@ else if (this.eRottaNotFound(url)) {
             particleGroups.push(group);
           });
           this.particleGroups = particleGroups;
-          if (this.eRottaContatti(url)) {
-            this.ensureRingsAndParticlesIfMissing(scene);
 
-            // UI coerente con area login/laterale
+          if (eRottaContatti(url)) {
+            this.ensureRingsAndParticlesIfMissing(scene);
             this.animateService.setXNormale();
             this.animateService.setTitoloAltoGlobal();
-
-            // Posa scena coerente con contatti (laterale)
             this.saturnoPosizioniService.applicaPoseAScena(scene, 'LOGIN_LATERALE');
-
-            // Luce coerente: su contatti non deve rimanere quella "welcome" (spenta/dietro)
             if (this.directionalLight) {
               this.directionalLight.intensity = 2.8;
               this.directionalLight.position.z = 0.1001;
             }
-
-            // Contatti non deve bloccare lo scroll come welcome
-            // this.animateService.enablePageScroll();
           }
-          // Avvia le animazioni di ingresso SOLO sulla welcome
 
           // ✅ Ora che i gruppi di particelle ESISTONO, posso lanciare la timeline unica
-          const firstElement = document.querySelector(
-            '[data-titolo-first]',
-          ) as HTMLElement | null;
-          const xElement = document.querySelector(
-            '[data-titolo-x]',
-          ) as HTMLElement | null;
+          const firstElement = document.querySelector('[data-titolo-first]') as HTMLElement | null;
+          const xElement     = document.querySelector('[data-titolo-x]')     as HTMLElement | null;
 
           if (isWelcomeRoute) {
             // pagina di benvenuto: luce + accelerazione particelle + collisione titolo
             this.animateService.animateAll(
-              firstElement,
-              xElement,
-              this.directionalLight,
-              this.particleGroups,
+              firstElement, xElement, this.directionalLight, this.particleGroups,
             );
           } else if (isCatalogRoute) {
             /* ✅ CASO 1: reload su /catalogo -> stato finale subito (niente animazione) */
             if (ricaricaCatalogo) {
-              // stato UI finale
               this.animateService.setXNormale();
               this.animateService.setTitoloAltoGlobal();
-
-              // posa finale della scena (saturno "in basso")
-              this.saturnoPosizioniService.applicaPoseAScena(
-                scene,
-                'CATALOGO_NASCOSTO',
-              );
-
-              // componenti finali gia' spariti (come dopo l'animazione)
+              this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
               this.animateService.fadeOutSaturnoESfondo(0);
               this.animateService.enablePageScroll();
-
-              // IMPORTANTISSIMO: il loader dipende da saturnoPronto$
-              this.firstRenderDone = true;
+              this.loopHelper.resetFirstRender();
               this.saturnoStatoService.setPronto();
-
-              // non distruggo la scena, ma spengo loop e effetti come nello stato finale
               this.spegniSaturno();
               this.animateService.pauseClearcoat();
-
-              // segno che catalogo e' gia' "finito"
               this.catalogoGiaAnimato = true;
-
             } else {
-              /* ✅ CASO 2: / -> (diorottamento) -> /catalogo (navigate) -> resta identico a prima */
+              /* ✅ CASO 2: / -> (dirottamento) -> /catalogo (navigate) */
               this.animateService.setTitoloCentraleGlobal();
-
               const durataCatalogo = 1.6;
               const anticipoMs = 500;
-
               this.animateService.animateAll(
-                firstElement,
-                xElement,
-                this.directionalLight,
-                this.particleGroups,
+                firstElement, xElement, this.directionalLight, this.particleGroups,
                 () => {
                   this.animateService.setXNormale();
                   this.animateService.animateTitoloVersoAltoGlobal();
-
-                  setTimeout(
-                    () => {
-                      this.animateService.fadeOutSaturnoESfondo(1.2);
-                      this.animateService.enablePageScroll();
-                    },
-                    durataCatalogo * 1000 - anticipoMs,
-                  );
-
+                  setTimeout(() => {
+                    this.animateService.fadeOutSaturnoESfondo(1.2);
+                    this.animateService.enablePageScroll();
+                  }, durataCatalogo * 1000 - anticipoMs);
                   this.saturnoRouteAnimazioniService.animaVerso(
-                    scene,
-                    'CATALOGO_NASCOSTO',
-                    durataCatalogo,
+                    scene, 'CATALOGO_NASCOSTO', durataCatalogo,
                     this.directionalLight || undefined,
                     () => {
                       this.spegniSaturno();
@@ -1003,10 +638,8 @@ else if (this.eRottaNotFound(url)) {
           // Avvio il loop di animazione dopo che la scena è pronta
           this.startFixedFPSLoop();
 
-          // NEW: segno che la scena è stata inizializzata una volta
+          // segno che la scena è stata inizializzata una volta
           this.scenaInizializzata = true;
-
-          // 👇 NUOVO: Saturno pronto per la prima volta
 
           resolve();
         })
@@ -1017,131 +650,10 @@ else if (this.eRottaNotFound(url)) {
     });
   }
 
-  /**
-   * Esegue il rendering della scena e aggiorna gli oggetti (chiamato dal setInterval).
-   */
-  private renderAndUpdate(deltaTime: number): void {
-    if (!this.scene || !this.camera || !this.renderer) {
-      // controllo che tutto sia pronto
-      return;
-    }
-
-    // Render della scena
-    this.renderer.render(this.scene, this.camera);
-
-    if (!this.firstRenderDone) {
-      this.firstRenderDone = true;
-      this.saturnoStatoService.setPronto();
-    }
-
-    // Rotazione del pianeta
-    if (this.planetMesh) {
-      this.planetMesh.rotation.y += 0.004 * deltaTime * 60;
-    }
-
-    // Animazione dischi
-    this.diskService.animateDisks(deltaTime);
-
-    // Animazione particelle
-    this.particleGroups.forEach((group) => {
-      this.animateGroup(group, deltaTime);
-      group.rotation.y += group.userData['rotationSpeed'] * deltaTime * 60;
-    });
-  }
-
-  //animazioni particelle di default+ sollevamento
-  private animateGroup(group: THREE.Group, deltaTime: number): void {
-    const offsets = group.userData['offsets']; //dati casuali di generazione particelle
-    const originalPositions = group.userData[ // posizione iniziale delle particelle
-      'originalPositions'
-    ] as THREE.Vector3[];
-    const time = performance.now() * 0.001; //presa tempo
-
-    this.raycaster.setFromCamera(this.mouse, this.camera!); //Allinea il Raycaster in base alla posizione attuale del mouse e della camera, per poter fare confronti di distanza dal puntatore.
-
-    // Soglie di ingresso/uscita per "hover"
-    const approachInThreshold = 0.1; // oppure 0.08 se vuoi area piccola
-    const approachOutThreshold = 0.13;
-
-    group.children.forEach((particle: THREE.Object3D, i: number) => {
-      // loop per tutte le particelle di un gruppo
-      const data = particle.userData; // stato particelle, riposo o in tensione mouse
-      const off = offsets[i];
-      const origPos = originalPositions[i];
-
-      // Calcolo della distanza 2D sullo schermo con conversione
-      const worldPos = new THREE.Vector3();
-      particle.getWorldPosition(worldPos);
-      const screenPos = worldPos.clone().project(this.camera!);
-
-      const dy = screenPos.y - (this.mouse.y + (150 / window.innerHeight) * 2);
-
-      const dx = screenPos.x - this.mouse.x;
-      const distance2D = Math.sqrt(dx * dx + dy * dy);
-
-      // Entrata e uscita dalla "hover zone"
-      // if (data['state'] === 'idle' && distance2D < approachInThreshold) {
-      //   data['state'] = 'hover';
-      // }
-
-      const now = performance.now();
-      const lastLift = data['lastLift'] || 0;
-      const cooldown = 1050; // 2 secondi in millisecondi
-
-      if (data['state'] === 'idle' && distance2D < approachInThreshold) {
-        if (now - lastLift > cooldown) {
-          data['state'] = 'hover';
-          data['lastLift'] = now;
-        }
-      }
-
-      if (data['state'] === 'hover' && distance2D > approachOutThreshold) {
-        data['state'] = 'idle';
-      }
-
-      // Fattore di "sollevamento" (hover)
-      // const liftFactor = 3.5 / (worldPos.distanceTo(this.camera!.position) + 1.0);
-      // AGGIUNGI questo blocco
-      const distance = worldPos.distanceTo(this.camera!.position);
-      const minDist = 0.8; // regola a piacere
-      const maxDist = 3.0; // regola a piacere
-      const liftMin = 0.01; // lift per le particelle vicine
-      const liftMax = 0.08; // lift per le particelle lontane
-
-      // trasformiamo la distanza in un valore compreso fra 0 e 1
-      let t = (distance - minDist) / (maxDist - minDist);
-      t = THREE.MathUtils.clamp(t, 0, 1);
-
-      // interpolazione lineare fra liftMin e liftMax
-      const dynamicLift = THREE.MathUtils.lerp(liftMin, liftMax, t);
-
-      // Piccole oscillazioni
-      const floatX = Math.sin(time * off.freqX + off.timeOffset) * off.ampX;
-      const floatY = Math.sin(time * off.freqY + off.timeOffset) * off.ampY;
-      const floatZ = Math.sin(time * off.freqZ + off.timeOffset) * off.ampZ;
-
-      const finalX = origPos.x + floatX;
-
-      // posizione finale con tutte le animazioni
-      const finalY =
-        (data['state'] === 'hover'
-          ? THREE.MathUtils.lerp(
-              particle.position.y,
-              data['originalY'] + dynamicLift,
-              0.1,
-            )
-          : THREE.MathUtils.lerp(particle.position.y, data['originalY'], 0.1)) +
-        floatY;
-
-      const finalZ = origPos.z + floatZ;
-
-      particle.position.set(finalX, finalY, finalZ);
-    });
-  }
-
   public getCamera(): THREE.Camera | null {
     return this.camera;
   }
+
   public getScene(): THREE.Scene | null {
     return this.scene;
   }
@@ -1155,229 +667,106 @@ else if (this.eRottaNotFound(url)) {
   }
 
   private attivaHoverMouse(): void {
-    // Per sicurezza rimuovo l’eventuale listener precedente
-    if (this.gestoreMouseMove) {
-      window.removeEventListener('mousemove', this.gestoreMouseMove);
-    }
-
-    this.gestoreMouseMove = (event: MouseEvent) => {
-      const correctedY = event.clientY + 150; // le particelle si spostano in alto di 150 px
-      this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      this.mouse.y = -(correctedY / window.innerHeight) * 2 + 1;
-    };
-
-    window.addEventListener('mousemove', this.gestoreMouseMove);
+    this.mouseHelper.attivaHoverMouse();
   }
 
- public flashErrorLight(): void {
-  if (!this.scene || !this.directionalLight) {
-    return;
-  }
+  public flashErrorLight(): void {
+    if (!this.scene || !this.directionalLight) return;
 
-  const scene = this.scene;
-  const light = this.directionalLight;
+    const scene = this.scene;
+    const light = this.directionalLight;
 
-  const originalColor = light.color.clone();
-  const originalX = scene.position.x;
+    const originalColor = light.color.clone();
+    const originalX     = scene.position.x;
 
-  const durata = 400;
-  const jitterOffsets = [-0.12, 0.18, -0.25, 0.3, -0.18, 0.12, -0.08, 0.06];
-  const step = durata / jitterOffsets.length;
+    const durata        = 400;
+    const jitterOffsets = [-0.12, 0.18, -0.25, 0.3, -0.18, 0.12, -0.08, 0.06];
+    const step          = durata / jitterOffsets.length;
 
-  // luce rossa per tutta la durata
- light.color.set(0xb42f14);
+    // luce rossa per tutta la durata
+    light.color.set(0xb42f14);
 
-  // salvo i colori originali degli anelli e li imposto rossi
-  const disks = this.diskService.getDisks();
-  const originalDiskColors = disks.map(({ mesh }) => {
-    const mat = mesh.material as THREE.ShaderMaterial;
-    return (mat.uniforms['uColor'].value as THREE.Color).clone();
-  });
-  disks.forEach(({ mesh }) => {
-    const mat = mesh.material as THREE.ShaderMaterial;
-    (mat.uniforms['uColor'].value as THREE.Color).set(0xb41447);
-  });
-
-  // scatti sull'asse X
-  jitterOffsets.forEach((offset, index) => {
-    setTimeout(() => {
-      if (!this.scene) {
-        return;
-      }
-      this.scene.position.x = originalX + offset;
-    }, step * index);
-  });
-
-  // ripristino posizione, colore luce e colori anelli dopo i 400 ms
-  setTimeout(() => {
-    if (this.scene) {
-      this.scene.position.x = originalX;
-    }
-    if (this.directionalLight) {
-      this.directionalLight.color.copy(originalColor);
-    }
-    this.diskService.getDisks().forEach(({ mesh }, i) => {
+    // salvo i colori originali degli anelli e li imposto rossi
+    const disks             = this.diskService.getDisks();
+    const originalDiskColors = disks.map(({ mesh }) => {
       const mat = mesh.material as THREE.ShaderMaterial;
-      (mat.uniforms['uColor'].value as THREE.Color).copy(originalDiskColors[i]);
+      return (mat.uniforms['uColor'].value as THREE.Color).clone();
     });
-  }, durata);
-}
+    disks.forEach(({ mesh }) => {
+      const mat = mesh.material as THREE.ShaderMaterial;
+      (mat.uniforms['uColor'].value as THREE.Color).set(0xb41447);
+    });
+
+    // scatti sull'asse X
+    jitterOffsets.forEach((offset, index) => {
+      setTimeout(() => {
+        if (!this.scene) return;
+        this.scene.position.x = originalX + offset;
+      }, step * index);
+    });
+
+    // ripristino posizione, colore luce e colori anelli dopo i 400 ms
+    setTimeout(() => {
+      if (this.scene)            this.scene.position.x = originalX;
+      if (this.directionalLight) this.directionalLight.color.copy(originalColor);
+      this.diskService.getDisks().forEach(({ mesh }, i) => {
+        const mat = mesh.material as THREE.ShaderMaterial;
+        (mat.uniforms['uColor'].value as THREE.Color).copy(originalDiskColors[i]);
+      });
+    }, durata);
+  }
 
   private isReloadCatalogo(): boolean {
     try {
-      const nav = performance.getEntriesByType('navigation') as any[];
+      const nav  = performance.getEntriesByType('navigation') as any[];
       const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
-      const raw = (window.location.pathname || '').split('?')[0].split('#')[0];
+      const raw  = (window.location.pathname || '').split('?')[0].split('#')[0];
       const pathIntero = raw.replace(/\/+$/, '') || '/';
-
-      // tolgo /it o /en se presente
       const path = pathIntero.replace(/^\/(it|en)(?=\/|$)/, '');
 
       const eCatalogoHome =
-        path === '/catalogo' ||
-        path === '/catalogo/film' ||
-        path === '/catalogo/serie' ||
-        path === '/catalogo/film-serie' ||
-        path === '/catalog' ||
-        path === '/catalog/movies' ||
-        path === '/catalog/series' ||
-        path === '/catalog/movies-series' ||
-        path === '/catalog/film' ||
-        path === '/catalog/serie' ||
+        path === '/catalogo'              || path === '/catalogo/film'         ||
+        path === '/catalogo/serie'        || path === '/catalogo/film-serie'   ||
+        path === '/catalog'               || path === '/catalog/movies'        ||
+        path === '/catalog/series'        || path === '/catalog/movies-series' ||
+        path === '/catalog/film'          || path === '/catalog/serie'         ||
         path === '/catalog/film-serie';
 
-           const ingressoDirettoConStoricoCatalogo =
-       tipo !== 'reload' &&
-       eCatalogoHome &&
-       isAreaCatalogo(this.pathPrecedenteSessioneAllAvvio);
+      const ingressoDirettoConStoricoCatalogo =
+        tipo !== 'reload' &&
+        eCatalogoHome &&
+        isAreaCatalogo(this.pathPrecedenteSessioneAllAvvio);
 
-     return (tipo === 'reload' && eCatalogoHome) || ingressoDirettoConStoricoCatalogo;
+      return (tipo === 'reload' && eCatalogoHome) || ingressoDirettoConStoricoCatalogo;
     } catch {
       return false;
     }
   }
 
-  private leggiUrlAttuale(): string {
-    const p = String(window.location.pathname || '');
-    const q = String(window.location.search || '');
-    const h = String(window.location.hash || '');
-    return p + q + h;
-  }
-
-  private eRottaCatalogo(url: string): boolean {
-    const u = String(url || '');
-    return /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(u);
-  }
-
- private eRottaWelcome(url: string): boolean {
-  const u = String(url || '').split('?')[0].split('#')[0];
-  // registrazione e login sono sotto /benvenuto/ ma hanno comportamento proprio
-  if (this.eRottaLogin(u) || this.eRottaRegistrazione(u)) return false;
-  return (
-    u === '/it/benvenuto' ||
-    u.startsWith('/it/benvenuto/') ||
-    u === '/en/benvenuto' ||
-    u.startsWith('/en/benvenuto/') ||
-    u === '/it/welcome' ||
-    u.startsWith('/it/welcome/') ||
-    u === '/en/welcome' ||
-    u.startsWith('/en/welcome/')
-  );
-}
-
-  private eRottaLogin(url: string): boolean {
-    const path = String(url || '')
-      .split('?')[0]
-      .split('#')[0];
-    return (
-      /^\/(it|en)\/benvenuto\/(login|accedi)(\/|$)/.test(path) ||
-      /^\/(it|en)\/welcome\/(login|accedi)(\/|$)/.test(path)
-    );
-  }
-
-  private eSchedaCatalogo(url: string): boolean {
-    const path = String(url || '')
-      .split('?')[0]
-      .split('#')[0];
-    // /it/catalogo/film/21
-    // /en/catalog/movies/21
-    // /it/catalogo/serie/1
-    // /en/catalog/series/1
-    return /^\/(it|en)\/(catalogo|catalog)\/(film|movies|serie|series)\/\d+(\/|$)/.test(
-      path,
-    );
-  }
-
-  private eRottaNotFound(url: string): boolean {
-    const path = String(url || '').split('?')[0].split('#')[0];
-    return /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(path);
-  }
-
-  private eRottaContatti(url: string): boolean {
-    const path = String(url || '').split('?')[0].split('#')[0];
-    return /^\/(it|en)\/(contatti|contact)(\/|$)/.test(path);
-  }
-
-  private eRottaRegistrazione(url: string): boolean {
-    const path = String(url || '').split('?')[0].split('#')[0];
-    return (
-      /^\/(it|en)\/benvenuto\/registrazione(\/|$)/.test(path) ||
-      /^\/(it|en)\/welcome\/registration(\/|$)/.test(path)
-    );
-  }
-
-
   private isPageReload(): boolean {
-  try {
-    const nav = performance.getEntriesByType('navigation') as any[];
-    const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
-    return tipo === 'reload';
-  } catch {
-    return false;
+    try {
+      const nav  = performance.getEntriesByType('navigation') as any[];
+      const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
+      return tipo === 'reload';
+    } catch {
+      return false;
+    }
   }
-}
-  private forzaPosaLateraleSePresente404(): void {
-    // const path = String(window.location.pathname || '')
-    //   .split('?')[0]
-    //   .split('#')[0];
-
-    // // Pagina 404: forza sempre la posa laterale, senza altre logiche
-    // if (/^\/(it|en)\/non-trovato(\/|$)/.test(path) && this.scene) {
-    //   this.saturnoPosizioniService.applicaPoseAScena(this.scene, 'LOGIN_LATERALE');
-    //   this.animateService.setXNormale();
-    //   this.animateService.setTitoloAltoGlobal();
-    //   this.animateService.enablePageScroll();
-    // }
-    return;
-  }
-
 
   private ensureRingsAndParticlesIfMissing(scene: THREE.Scene): void {
-  // ✅ se i dischi esistono già, NON ricreare
-  if (this.diskService.getDisks().length === 0) {
-    // --- dischi (copiati dal tuo blocco originale) ---
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.17, 1.305, 0xffffff, 0.18, true, true, 0.01, 0);
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.245, 1.27, 0xffffff, 0.45, true, true, 0.03, 0);
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.27, 1.49, 0xfffee9, 0.55, true, true, -0.01, 0);
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.34, 1.39, 0xfffee9, 0.65, true, true, 0.01, 0);
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.54, 1.74, 0xffffff, 0.05, true, true, -0.01, 0);
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.57, 1.97, 0xfff4e9, 0.25, true, true, 0.01, 0);
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.715, 1.799, 0xfff4e9, 0.25, true, true, 0.03, 0);
-    this.diskService.createDisk(scene, vertexShader, fragmentShader, 1.9, 2.17, 0xffffff, 0.055, true, false, 0.03, 0);
+    if (this.diskService.getDisks().length === 0) {
+      this.saturnoDischiService.creaDischi(scene);
+    }
+    if (this.particleGroups.length === 0) {
+      const particleGroups: THREE.Group[] = [];
+      this.groupsConfig.forEach((config) => {
+        const group = this.particleGroupService.createParticleGroup(config);
+        scene.add(group);
+        particleGroups.push(group);
+      });
+      this.particleGroups = particleGroups;
+    }
   }
-
-  // ✅ se i gruppi particelle esistono già, NON ricreare
-  if (this.particleGroups.length === 0) {
-    const particleGroups: THREE.Group[] = [];
-    this.groupsConfig.forEach((config) => {
-      const group = this.particleGroupService.createParticleGroup(config);
-      scene.add(group);
-      particleGroups.push(group);
-    });
-    this.particleGroups = particleGroups;
-  }
-}
-
 
   leggiFlagTransizione404Catalogo(): boolean {
     try {
@@ -1393,7 +782,7 @@ else if (this.eRottaNotFound(url)) {
     } catch {}
   }
 
-public riaccendiSaturno(): void {
+  public riaccendiSaturno(): void {
     if (!this.scene || !this.renderer) return;
 
     // FIX 1: se la luce è spenta (es. F5 su catalogo → intensity rimasta a 0)
@@ -1421,6 +810,4 @@ public riaccendiSaturno(): void {
     this.attivaHoverMouse();
     this.animateService.resumeClearcoat();
   }
-
-
 }
