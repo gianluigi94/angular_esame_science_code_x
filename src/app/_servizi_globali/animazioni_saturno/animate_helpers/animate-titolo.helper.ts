@@ -1,0 +1,211 @@
+// ─── animate-titolo.helper.ts ─────────────────────────────────────────────────
+// Gestisce posizione/animazione del titolo e stato della X.
+// Estratto da animate.service.ts.
+
+import { gsap }          from 'gsap';
+import { CSSRulePlugin } from 'gsap/CSSRulePlugin';
+
+export class AnimateTitoloHelper {
+
+  titoloInPosizioneAlta = false;
+
+  // ── Calcolo responsive ────────────────────────────────────────────────────
+  getTitoloAltoConfig(): {
+    top: number; left: number;
+    scaleX: number; scaleY: number;
+    xPercent: number; yPercent: number;
+  } {
+    let scaleValue: number;
+    if      (window.innerWidth <= 375) scaleValue = 0.225;
+    else if (window.innerWidth <= 485) scaleValue = 0.21;
+    else if (window.innerWidth <= 868) scaleValue = 0.17;
+    else                               scaleValue = 0.15;
+
+    const scaleX = scaleValue;
+    const scaleY = scaleValue * 1.3;
+
+    let leftValue: number;
+    if      (window.matchMedia('(max-width: 900px) and (max-height: 460px) and (orientation: landscape)').matches)  leftValue = -22;
+    else if (window.matchMedia('(max-width: 1020px) and (max-height: 660px) and (orientation: landscape)').matches) leftValue = 12;
+    else if (window.innerWidth <= 560)  leftValue = 6;
+    else if (window.innerWidth <= 868)  leftValue = 0;
+    else if (window.innerWidth <= 1000) leftValue = 25;
+    else if (window.innerWidth <= 1200) leftValue = 15;
+    else if (window.innerWidth <= 1500) leftValue = 10;
+    else                                leftValue = 25;
+
+    let topValue: number;
+    if      (window.matchMedia('(max-width: 900px) and (max-height: 460px) and (orientation: landscape)').matches)  topValue = 16;
+    else if (window.matchMedia('(max-width: 1020px) and (max-height: 660px) and (orientation: landscape)').matches) topValue = 12;
+    else if (window.innerWidth <= 560)  topValue = 15;
+    else if (window.innerWidth <= 900)  topValue = 8;
+    else if (window.innerWidth <= 1000) topValue = 8;
+    else                                topValue = 11;
+
+    const softOffset = ((1 - scaleValue) * 100) / 2;
+    const isTablet   = window.innerWidth <= 868;
+
+    return {
+      top: topValue, left: leftValue,
+      scaleX, scaleY,
+      xPercent: isTablet ? -softOffset : -softOffset * 1.1,
+      yPercent: -softOffset,
+    };
+  }
+
+  // ── Set immediato ─────────────────────────────────────────────────────────
+  setTitoloAlto(title: HTMLElement): void {
+    const cfg = this.getTitoloAltoConfig();
+    gsap.set(title, {
+      top: cfg.top, left: cfg.left,
+      xPercent: cfg.xPercent, yPercent: cfg.yPercent,
+      paddingTop: 0, marginTop: 0,
+      scaleX: cfg.scaleX, scaleY: cfg.scaleY,
+      transformOrigin: 'center center',
+    });
+  }
+
+  setTitoloCentrale(title: HTMLElement): void {
+    gsap.set(title, {
+      top: '50%', left: '50%',
+      xPercent: -50, yPercent: -50,
+      paddingTop: 210, marginTop: 0,
+      scaleX: 1, scaleY: 1,
+      transformOrigin: 'center center',
+    });
+    this.titoloInPosizioneAlta = false;
+  }
+
+  // ── Animazioni ────────────────────────────────────────────────────────────
+  animateTitoloVersoAlto(title: HTMLElement, duration = 0.85, delay = 0.2): void {
+    const cfg = this.getTitoloAltoConfig();
+    gsap.to(title, {
+      top: cfg.top, left: cfg.left,
+      xPercent: cfg.xPercent, yPercent: cfg.yPercent,
+      paddingTop: 0, marginTop: 0,
+      scaleX: cfg.scaleX, scaleY: cfg.scaleY,
+      duration, delay,
+      ease: 'power2.inOut',
+      onComplete: () => { this.titoloInPosizioneAlta = true; },
+    });
+  }
+
+  // ── Global (cerca .title-container nel DOM) ───────────────────────────────
+  animateTitoloVersoAltoGlobal(durata = 0.85, delay = 0.2): void {
+    const title    = document.querySelector('.title-container') as HTMLElement | null;
+    const subtitle = document.querySelector('.subtitle')        as HTMLElement | null;
+    const scrol    = document.querySelector('.scrol')           as HTMLElement | null;
+    const first    = document.querySelector('[data-titolo-first]') as HTMLElement | null;
+    const x        = document.querySelector('[data-titolo-x]')     as HTMLElement | null;
+
+    if (subtitle) { gsap.killTweensOf(subtitle); gsap.set(subtitle, { opacity: 0, display: 'none' }); }
+    if (scrol)    { gsap.killTweensOf(scrol);    gsap.set(scrol,    { opacity: 0 }); }
+    if (first)    { gsap.killTweensOf(first);    gsap.set(first,    { opacity: 1, clearProps: 'transform' }); }
+    if (x)        { gsap.killTweensOf(x);        gsap.set(x,        { opacity: 1, clearProps: 'transform' }); }
+
+    if (title) {
+      gsap.killTweensOf(title);
+      gsap.set(title, { opacity: 1 });
+      setTimeout(() => { title.classList.add('titolo-alto'); }, 1000);
+      this.animateTitoloVersoAlto(title, durata, delay);
+    }
+  }
+
+  animateTitoloVersoCentroGlobal(durata = 0.85, delay = 0.2): void {
+    const title    = document.querySelector('.title-container') as HTMLElement | null;
+    const subtitle = document.querySelector('.subtitle')        as HTMLElement | null;
+
+    if (title) {
+      title.classList.remove('titolo-alto');
+      gsap.to(title, {
+        top: '50%', left: '50%',
+        xPercent: -50, yPercent: -50,
+        paddingTop: 210, marginTop: 0,
+        scaleX: 1, scaleY: 1,
+        duration: durata, delay,
+        ease: 'power2.inOut',
+        onComplete: () => { this.titoloInPosizioneAlta = false; },
+      });
+    }
+
+    if (subtitle) {
+      gsap.killTweensOf(subtitle);
+      gsap.set(subtitle, { display: 'block' });
+      gsap.to(subtitle, { opacity: 1, duration: 0.5, delay, ease: 'power1.out' });
+    }
+  }
+
+  setTitoloAltoGlobal(): void {
+    const title    = document.querySelector('.title-container') as HTMLElement | null;
+    const subtitle = document.querySelector('.subtitle')        as HTMLElement | null;
+    const scrol    = document.querySelector('.scrol')           as HTMLElement | null;
+    const first    = document.querySelector('[data-titolo-first]') as HTMLElement | null;
+    const x        = document.querySelector('[data-titolo-x]')     as HTMLElement | null;
+
+    if (subtitle) { gsap.killTweensOf(subtitle); gsap.set(subtitle, { opacity: 0, display: 'none' }); }
+    if (scrol)    { gsap.killTweensOf(scrol);    gsap.set(scrol,    { opacity: 0 }); }
+    if (first)    { gsap.killTweensOf(first);    gsap.set(first,    { opacity: 1, clearProps: 'transform' }); }
+    if (x)        { gsap.killTweensOf(x);        gsap.set(x,        { opacity: 1, clearProps: 'transform' }); }
+
+    if (title) {
+      gsap.killTweensOf(title);
+      gsap.set(title, { opacity: 1 });
+      title.classList.add('titolo-alto');
+      this.setTitoloAlto(title);
+    }
+
+    this.titoloInPosizioneAlta = true;
+  }
+
+  setTitoloCentraleGlobal(): void {
+    const title    = document.querySelector('.title-container') as HTMLElement | null;
+    const subtitle = document.querySelector('.subtitle')        as HTMLElement | null;
+
+    if (title) {
+      title.classList.remove('titolo-alto');
+      this.setTitoloCentrale(title);
+    }
+
+    if (subtitle) {
+      gsap.killTweensOf(subtitle);
+      gsap.set(subtitle, { opacity: 1, display: 'block' });
+    }
+
+    this.titoloInPosizioneAlta = false;
+  }
+
+  // ── X ─────────────────────────────────────────────────────────────────────
+  setXNormale(): void {
+    const xLow  = document.querySelector('#x_low');
+    const xHigh = document.querySelector('#x_hegh');
+    if (xLow)  { xLow.classList.add('x-orange');  xLow.classList.remove('x-low'); }
+    if (xHigh) { xHigh.classList.add('x-orange'); xHigh.classList.remove('x-high'); }
+  }
+
+  setXGif(): void {
+    const xLow      = document.querySelector('#x_low');
+    const xHigh     = document.querySelector('#x_hegh');
+    const xAfterRule = CSSRulePlugin.getRule('.x::after');
+
+    if (xLow) {
+      gsap.killTweensOf(xLow);
+      xLow.classList.remove('x-orange');
+      xLow.classList.add('x', 'x-low');
+    }
+    if (xHigh) {
+      gsap.killTweensOf(xHigh);
+      xHigh.classList.remove('x-orange');
+      xHigh.classList.add('x', 'x-high');
+      gsap.set(xHigh, { color: 'transparent', opacity: 1, clearProps: 'transform' });
+    }
+    if (xAfterRule) gsap.set(xAfterRule, { opacity: 1 });
+  }
+
+  refreshXGif(): void {
+    const xAfterLow  = CSSRulePlugin.getRule('.x-low::after');
+    const xAfterHigh = CSSRulePlugin.getRule('.x-high::after');
+    const ts = `?t=${Date.now()}`;
+    if (xAfterLow)  gsap.set(xAfterLow,  { backgroundImage: `url("/assets/img/x_piccola.gif${ts}")` });
+    if (xAfterHigh) gsap.set(xAfterHigh, { backgroundImage: `url("/assets/img/x_grende.gif${ts}")` });
+  }
+}
