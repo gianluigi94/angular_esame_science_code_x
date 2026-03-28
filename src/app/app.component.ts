@@ -1,514 +1,222 @@
 import { Component, OnInit, Inject, NgZone } from '@angular/core';
-import { CambioLinguaService } from './_servizi_globali/cambio-lingua.service';
-import { TraduzioniService } from './_servizi_globali/traduzioni.service';
-import { ErroreGlobaleService } from './_servizi_globali/errore-globale.service';
-import { ToastService } from './_servizi_globali/toast.service';
+import { CambioLinguaService }    from './_servizi_globali/cambio-lingua.service';
+import { TraduzioniService }      from './_servizi_globali/traduzioni.service';
+import { ErroreGlobaleService }   from './_servizi_globali/errore-globale.service';
+import { ToastService }           from './_servizi_globali/toast.service';
 import { StatoSessioneClientService } from './_servizi_globali/stato-sessione-client.service';
-import { TranslateService } from '@ngx-translate/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { PerformanceService } from './_servizi_globali/performance.service';
-import { filter, take } from 'rxjs/operators';
+import { TranslateService }       from '@ngx-translate/core';
+import { Router, NavigationEnd }  from '@angular/router';
+import { PerformanceService }     from './_servizi_globali/performance.service';
+import { filter, take }           from 'rxjs/operators';
 import { CaricamentoCaroselloService } from './_catalogo/carosello-novita/carosello_services/caricamento-carosello.service';
-import { BehaviorSubject, combineLatest } from 'rxjs';
-import { AnimateService } from './_servizi_globali/animazioni_saturno/animate.service';
-import { DOCUMENT } from '@angular/common';
-import gsap from 'gsap';
-import { traduciSegmentiUrl } from './_helpers_globali/helpers';
-import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
-import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
-import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
- import {
-   isFirefox,
-   pulisciUrl,
-   isCatalogoHome,
-   isAreaCatalogo,
-   leggiPathDaSessionStorage,
-   salvaPathInSessionStorage,
-   impostaLangHtml,
- } from './_helpers_globali/helpers';
-import { SchedaProntaService } from './_catalogo/scheda/scheda_service/scheda-pronta.service';
+import { AnimateService }         from './_servizi_globali/animazioni_saturno/animate.service';
+import { DOCUMENT }               from '@angular/common';
+import gsap                       from 'gsap';
+import { traduciSegmentiUrl }     from './_helpers_globali/helpers';
+import { Authservice }            from 'src/app/_benvenuto/login/_login_service/auth.service';
+import { TitoloPaginaService }    from './_servizi_globali/titolo-pagina.service';
+import { SaturnoStatoService }    from './_servizi_globali/animazioni_saturno/saturno-stato.service';
+import { SchedaProntaService }    from './_catalogo/scheda/scheda_service/scheda-pronta.service';
+import {
+  isFirefox, pulisciUrl, isCatalogoHome, isAreaCatalogo,
+  leggiPathDaSessionStorage, salvaPathInSessionStorage, impostaLangHtml,
+} from './_helpers_globali/helpers';
+import {
+  isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo,
+} from './_helpers_globali/app-routes.utils';
+import { AppToastService } from './_servizi_globali/app-toast.service';
+import { AppLoaderService } from './_servizi_globali/app-loader.service';
+
 @Component({
-  selector: 'app-root',
+  selector:    'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  styleUrls:   ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  private pathPrecedenteSessioneAllAvvio: string = '';
-  // Qui definisco tutte le variabili che uso per gestire loader, errori e caricamenti
-  traduzioniPronte$ = this.traduzioniService.traduzioniInizialiCaricate$; // Tengo traccia se le traduzioni iniziali sono pronte
-  erroreFatale$ = this.erroreGlobaleService.erroreFatale$; // Osservo se si è verificato un errore fatale globale
-  sessioneVerificata$ = this.statoSessioneClient.sessioneVerificata$; // Controllo se la sessione utente è stata verificata
-  saturnoPronto$ = this.saturnoStatoService.saturnoPronto$; // Verifico se l'animazione/stato di Saturno è pronto
-  caroselloPronto$ = this.caricamentoCaroselloService.caroselloPronto$; // Controllo se il carosello ha finito di caricarsi
-  forzaLoaderExtra = false; // Decido se forzare la visualizzazione extra del loader
-  chiaveToast404 = 'toast_404_persistente';
-  private extraLoaderTimer: any = null; // Uso un timer per gestire il loader extra
-  private readonly EXTRA_LOADER_MS = 2600; // Definisco la durata del loader extra in millisecondi
-  devoCaricareTexturePrimaVolta = false; // Indico se devo caricare le texture solo al primo avvio
-  deveCaricareImmaginiCarosello = false; // Indico se devo caricare le immagini del carosello
-  deveCaricareImmaginiCarosello$ = new BehaviorSubject<boolean>(false); // Espongo come stream se il carosello deve caricare immagini
-  sonoIn404 = false;
-  nascondiSfondoIn404 = false;
-  caricamentoDisabilitato = false; // Indico se il loader globale è disabilitato
-  caricamentoDisabilitato$ = new BehaviorSubject<boolean>(false); // Espongo lo stato del loader disabilitato come observable
-  ultimaUrl = ''; // Memorizzo l'ultima URL visitata
-  private loaderDelayTimer: any = null;
-private readonly LOADER_DELAY_MS = 140; // 120–180 va bene
 
-loaderDaMostrare = false;
-  private loaderVisibile = true; // Tengo traccia se il loader è attualmente visibile
-  isFirefox = false; // Indico se il browser in uso è Firefox
-  loaderAvvioCatalogo = false; // Indico se il loader è mostrato durante l'avvio del catalogo
-schedaPronta$ = this.schedaProntaService.schedaPronta$;
+  private pathPrecedenteSessioneAllAvvio = '';
+
+  // Stream esposti al template
+  traduzioniPronte$  = this.traduzioniService.traduzioniInizialiCaricate$;
+  erroreFatale$      = this.erroreGlobaleService.erroreFatale$;
+  sessioneVerificata$ = this.statoSessioneClient.sessioneVerificata$;
+  saturnoPronto$     = this.saturnoStatoService.saturnoPronto$;
+  caroselloPronto$   = this.caricamentoCaroselloService.caroselloPronto$;
+  schedaPronta$      = this.schedaProntaService.schedaPronta$;
+
+  // Getter che delegano all'AppLoaderService (usati dal template)
+  get forzaLoaderExtra():    boolean { return this.appLoader.forzaLoaderExtra; }
+  get loaderAvvioCatalogo(): boolean { return this.appLoader.loaderAvvioCatalogo; }
+  get loaderDaMostrare():    boolean { return this.appLoader.loaderDaMostrare; }
+  get caricamentoDisabilitato$() { return this.appLoader.caricamentoDisabilitato$; }
+  get caricamentoDisabilitato():  boolean { return this.appLoader.caricamentoDisabilitato$.value; }
+  get deveCaricareImmaginiCarosello$() { return this.appLoader.deveCaricareImmaginiCarosello$; }
+  get deveCaricareImmaginiCarosello(): boolean { return this.appLoader.deveCaricareImmaginiCarosello$.value; }
+
+  sonoIn404            = false;
+  nascondiSfondoIn404  = false;
+  ultimaUrl            = '';
+  isFirefox            = false;
+  chiaveToast404       = this.appToast.chiaveToast404;
+  private appLoader:   AppLoaderService;
+
   constructor(
-    private ngZone: NgZone,
-    private cambioLinguaService: CambioLinguaService,
-    private traduzioniService: TraduzioniService,
-    private erroreGlobaleService: ErroreGlobaleService,
-    private toastService: ToastService,
-    private animateService: AnimateService,
-    private statoSessioneClient: StatoSessioneClientService,
-    private translate: TranslateService,
-    private saturnoStatoService: SaturnoStatoService,
-    private router: Router,
-    private schedaProntaService: SchedaProntaService,
+    private ngZone:                   NgZone,
+    private cambioLinguaService:      CambioLinguaService,
+    private traduzioniService:        TraduzioniService,
+    private erroreGlobaleService:     ErroreGlobaleService,
+    private toastService:             ToastService,
+    private animateService:           AnimateService,
+    private statoSessioneClient:      StatoSessioneClientService,
+    private translate:                TranslateService,
+    private saturnoStatoService:      SaturnoStatoService,
+    private router:                   Router,
+    private schedaProntaService:      SchedaProntaService,
     private caricamentoCaroselloService: CaricamentoCaroselloService,
-    private titoloPaginaService: TitoloPaginaService,
-    private performanceService: PerformanceService,
-    private authService: Authservice,
-    @Inject(DOCUMENT) private documento: Document // Inietto il DOM Document di Angular per poter leggere/modificare il tag <html> (impostare la lingua)
-  ) {}
+    private titoloPaginaService:      TitoloPaginaService,
+    private performanceService:       PerformanceService,
+    private authService:              Authservice,
+    private appToast:                 AppToastService,
+    @Inject(DOCUMENT) private documento: Document,
+  ) {
+    this.appLoader = new AppLoaderService(
+      erroreGlobaleService,
+      traduzioniService,
+      statoSessioneClient,
+      saturnoStatoService,
+    );
+  }
 
-  /**
-   *  Eseguito una sola volta quando il componente root viene inizializzato.
-   *
-   * Responsabilità principali:
-   * - Rileva alcune condizioni iniziali (browser, URL iniziale, stato texture in localStorage).
-   * - Avvia servizi di app (titolo pagina, performance) e imposta la lingua sul tag <html>.
-   * - Inizializza e aggiorna la logica di loader/caricamenti in base alla rotta corrente e ai cambi di navigazione.
-   * - Gestisce toast di “bentornato” e la visualizzazione di errori fatali globali (server/sessione).
-   * - Combina più stati asincroni (traduzioni, sessione, saturno, carosello, ecc.) per decidere quando nascondere il loader.
-   *
-   * @returns void
-   */
-    ngOnInit(): void {
-    this.ngZone.runOutsideAngular(() => {
-      gsap.ticker.lagSmoothing(0);
-    });
+  ngOnInit(): void {
+    this.ngZone.runOutsideAngular(() => { gsap.ticker.lagSmoothing(0); });
+
     this.isFirefox = isFirefox();
-        const urlIniziale = this.router.url || ''; // Mi salvo l'URL attuale (o stringa vuota se non c'è)
+    const urlIniziale = this.router.url || '';
 
-    // ✅ se sono loggato e apro direttamente /contatti (F5 / deep link), apro overlay dati personali
-    if (this.isContattiUrl(urlIniziale) && this.isLoggato()) {
+    // Contatti
+    if (isRottaContatti(urlIniziale) && this.isLoggato())
       window.dispatchEvent(new CustomEvent('apri-dati-personali'));
-    }
-        if (!this.isContattiUrl(urlIniziale)) {
+    if (!isRottaContatti(urlIniziale))
       window.dispatchEvent(new CustomEvent('chiudi-dati-personali'));
-    }
+
     this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
-    this.sonoIn404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale);
+    this.appLoader.impostaPathPrecedente(this.pathPrecedenteSessioneAllAvvio);
+
+    this.sonoIn404 = isRotta404(urlIniziale);
     this.aggiornaVisibilitaSfondo404();
     this.gestisciFadeInSfondo404();
     setTimeout(() => salvaPathInSessionStorage(urlIniziale), 0);
-        if (/^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale)) {
-      this.mostraToast404Persistente();
-    }
-    this.devoCaricareTexturePrimaVolta = // Decido se devo caricare le texture al primo avvio
-      localStorage.getItem('saturnoTextureLoaded') !== 'true'; // Controllo in localStorage se avevo già caricato le texture
 
-    this.titoloPaginaService.avvia(); // Avvio il servizio che gestisce il titolo della pagina
-    this.performanceService.performanceLevel$ // Leggo lo stream con il livello di performance calcolato
-      .pipe(
-        // Applico operatori per filtrare e prendere solo un valore
-        filter((level) => level !== 'Calcolando...'), // Ignoro lo stato 'in calcolo'
-        take(1) // Prendo solo il primo valore valido e poi chiudo la subscription
-      )
-      .subscribe((level) => {
-        // Quando arriva il livello definitivo, lo uso qui
-        console.log('[Performance] Classificazione GPU:', level); // Loggo in console la classificazione della GPU/performance
-      }); // Chiudo la subscription
+    if (isRotta404(urlIniziale)) this.appToast.mostraToast404Persistente();
 
-    impostaLangHtml(
-      this.documento,
-      this.cambioLinguaService.leggiCodiceLingua()
-    ); // Imposto subito la lingua sul tag <html> leggendo la lingua salvata
+    this.titoloPaginaService.avvia();
+    this.performanceService.performanceLevel$
+      .pipe(filter(l => l !== 'Calcolando...'), take(1))
+      .subscribe(level => console.log('[Performance] Classificazione GPU:', level));
+
+    impostaLangHtml(this.documento, this.cambioLinguaService.leggiCodiceLingua());
     this.ultimaUrl = urlIniziale;
-this.correggiPrefissoLingua(urlIniziale); // ← AGGIUNTO
+    this.correggiPrefissoLingua(urlIniziale);
 
-this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
+    this.cambioLinguaService.cambioLinguaApplicata$.subscribe(({ codice }) => {
       impostaLangHtml(this.documento, codice);
-      if (this.sonoIn404) {
-        this.mostraToast404Persistente();
-      }
+      if (this.sonoIn404) this.appToast.mostraToast404Persistente();
     });
 
-    // Qui decido se mostrare il loader e se caricare il carosello in base all'URL, e mi aggancio ai cambi rotta per aggiornare tutto durante la navigazione
-               this.caricamentoDisabilitato =
-  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(urlIniziale) ||
-  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(urlIniziale) ||
-  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(urlIniziale);
-    this.caricamentoDisabilitato$.next(this.caricamentoDisabilitato); // Propago subito lo stato del loader disabilitato nello stream
+    // Stato loader iniziale
+    const disabilita =
+      isRottaLogin(urlIniziale) || isRotta404(urlIniziale);
+    this.appLoader.caricamentoDisabilitato$.next(disabilita);
 
-    this.deveCaricareImmaginiCarosello = isCatalogoHome(urlIniziale);
-    this.deveCaricareImmaginiCarosello$.next(
-      // Propago nello stream la decisione sul caricamento del carosello
-      this.deveCaricareImmaginiCarosello // Passo il valore booleano calcolato sopra
-    ); // Chiudo la next
-    if (this.deveCaricareImmaginiCarosello) this.caricamentoCaroselloService.resetta();
+    const deveCaricare = isCatalogoHome(urlIniziale);
+    this.appLoader.deveCaricareImmaginiCarosello$.next(deveCaricare);
+    if (deveCaricare) this.caricamentoCaroselloService.resetta();
 
-    // Correggo prefisso lingua PRIMA che il componente destinazione venga creato
-this.router.events
-  .pipe(filter((ev) => ev instanceof NavigationEnd)) // Considero solo gli eventi di fine navigazione
-  .subscribe((ev: any) => {
-        // Quando una navigazione è finita, aggiorno lo stato interno
+    // Router events
+    this.router.events
+      .pipe(filter(ev => ev instanceof NavigationEnd))
+      .subscribe((ev: any) => {
+        const url = ev?.urlAfterRedirects || ev?.url || '';
+        this.correggiPrefissoLingua(url);
 
-        const url =
-  ev && ev.urlAfterRedirects
-    ? ev.urlAfterRedirects
-    : ev && ev.url
-    ? ev.url
-    : '';
-
-this.correggiPrefissoLingua(url); // ← AGGIUNTO
-
-if (!this.isContattiUrl(url)) {
+        if (!isRottaContatti(url))
           window.dispatchEvent(new CustomEvent('chiudi-dati-personali'));
-        }
-                    if (this.isContattiUrl(url) && this.isLoggato()) {
+        if (isRottaContatti(url) && this.isLoggato())
           window.dispatchEvent(new CustomEvent('apri-dati-personali'));
-        }
-        this.sonoIn404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
-        const precedente = this.ultimaUrl; // Mi salvo l'URL precedente prima di aggiornarlo
-        this.ultimaUrl = url; // Aggiorno l'ultima URL con quella nuova
+
+        this.sonoIn404 = isRotta404(url);
+        const precedente = this.ultimaUrl;
+        this.ultimaUrl   = url;
         salvaPathInSessionStorage(url);
         this.aggiornaVisibilitaSfondo404();
         this.gestisciFadeInSfondo404();
 
-if (
-  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(url) ||
-  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(url)
-) {
-  this.toastService.chiudi('toast_benvenuto');
-}
+        if (isRottaLogin(url)) this.toastService.chiudi('toast_benvenuto');
+        if (isRotta404(url))   { this.erroreGlobaleService.resettaErroreFatale(); this.appToast.mostraToast404Persistente(); }
+        if (!isRotta404(url))  this.toastService.chiudi(this.chiaveToast404);
 
-        // Qui aggiorno le regole del loader e del carosello ad ogni navigazione, poi gestisco un toast di 'bentornato' e mi metto in ascolto degli errori fatali
-             const sonoNelLogin =
-  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(url) ||
-  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(url);
+        const vengoDaContatti = (() => {
+          try { return sessionStorage.getItem('vengo_da_contatti') === 'true'; } catch { return false; }
+        })();
+        const eroInContatti = isRottaContatti(precedente);
 
-  const sonoInNonTrovato =
-  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
+        const disabilitaLoader =
+          isRottaLogin(url) ||
+          isRotta404(url) ||
+          (isRottaCatalogo(url) && (isRottaLogin(precedente) || isRotta404(precedente) || (vengoDaContatti && eroInContatti))) ||
+          (eroInContatti && isRotta404(precedente));
 
-  if (sonoInNonTrovato) {
-  this.erroreGlobaleService.resettaErroreFatale();
-  this.mostraToast404Persistente();
-}
-if (!sonoInNonTrovato) {
-  this.toastService.chiudi(this.chiaveToast404);
-}
-const eroNelLogin =
-  /^\/(it|en)\/benvenuto\/(login|accedi|registrazione)(\/|$)/.test(precedente) ||
-  /^\/(it|en)\/welcome\/(login|accedi|registration)(\/|$)/.test(precedente);
+        this.appLoader.caricamentoDisabilitato$.next(disabilitaLoader);
 
-  const eroInNonTrovato =
-  /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(precedente);
-const sonoNelCatalogo =
-  /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url);
-
-// DOPO
-const vengoDaContatti = (() => {
-  try { return sessionStorage.getItem('vengo_da_contatti') === 'true'; }
-  catch { return false; }
-})();
-// Il flag vengo_da_contatti è valido solo se il precedente URL Angular
-// era effettivamente contatti (navigazione interna), non su fresh load da root
-const eroInContatti = /^\/(it|en)\/(contatti|contact)(\/|$)/.test(precedente);
-
-const disabilitaLoader =
-  sonoNelLogin ||
-  sonoInNonTrovato ||
-  (sonoNelCatalogo && (eroNelLogin || eroInNonTrovato || (vengoDaContatti && eroInContatti))) ||
-  (eroInContatti && eroInNonTrovato);
-
-this.caricamentoDisabilitato = disabilitaLoader;
-this.caricamentoDisabilitato$.next(disabilitaLoader);
-
-
-        const deve = isCatalogoHome(url); // Capisco se sono esattamente nella home del catalogo
-
-        this.deveCaricareImmaginiCarosello = deve; // Salvo se devo caricare le immagini del carosello
-        this.deveCaricareImmaginiCarosello$.next(deve); // Notifico nello stream se devo caricare le immagini del carosello
-
-        if (deve && !isAreaCatalogo(precedente)) {
-          this.caricamentoCaroselloService.resetta();
-        }
+        const deve = isCatalogoHome(url);
+        this.appLoader.deveCaricareImmaginiCarosello$.next(deve);
+        if (deve && !isAreaCatalogo(precedente)) this.caricamentoCaroselloService.resetta();
       });
 
-    const haToastBenvenuto = localStorage.getItem('toast_benvenuto'); // Leggo da localStorage se devo mostrare il toast 'bentornato'
-
-    if (haToastBenvenuto !== null) {
-      // Se la chiave esiste, significa che devo mostrare il messaggio
-      const chiave = 'toast_benvenuto'; // Mi preparo la chiave identificativa del toast
-      const codiceLingua = this.cambioLinguaService.leggiCodiceLingua(); // Leggo la lingua corrente per scegliere il testo
-
-      const testo = // Preparo il testo del toast in base alla lingua
-        codiceLingua === 'it' // Controllo se la lingua è italiano (non prendo le traduzioni dal server perche potrebbero non essere prese in tempo)
-          ? "\nBENTORNATO!\n\nLa tua precedente sessione è scaduta,\nripeti l'accesso e riprendi la visione dei tuoi contenuti preferiti\n\n"
-          : '\nWELCOME BACK!\n\nYour previous session has expired,\nplease sign in again to resume watching your favorite content\n\n';
-
-      this.toastService.successo(testo, chiave); // Mostro il toast di successo con testo e chiave
-      localStorage.removeItem('toast_benvenuto'); // Cancello la chiave così il toast non si ripete al prossimo avvio
-    }
-
-    this.erroreGlobaleService.erroreFatale$.subscribe((isFatal) => {
-      // Mi metto in ascolto degli errori fatali globali
-      if (!isFatal) return; // Se non è fatale, esco subito e non faccio nulla
-
-      const tipo = this.erroreGlobaleService.tipoErrore$.value; // Leggo il tipo di errore fatale per decidere cosa mostrare
-
-      // Qui gestisco il caso di errore fatale lato server mostrando un messaggio persistente, evitando falsi allarmi durante reload o login
-      if (tipo === 'server') {
-        // Controllo se l'errore fatale è di tipo server
-
-        if (
-          // Verifico se devo ignorare temporaneamente l'errore
-          this.statoSessioneClient.staRicaricando || // Ignoro l'errore se sto ricaricando la pagina per sessione scaduta
-          localStorage.getItem('toast_benvenuto') !== null // Ignoro l'errore se sto per mostrare il toast di bentornato
-        ) {
-          return; // Esco senza mostrare nulla per evitare errori transitori
-        }
-
-        const msg = this.erroreGlobaleService.messaggioErrore$.value; // Leggo l'eventuale messaggio di errore specifico dal servizio
-        const codiceLingua = this.cambioLinguaService.leggiCodiceLingua(); // Leggo la lingua corrente per localizzare il messaggio
-        const base = // Preparo il testo base dell'errore in base alla lingua
-          codiceLingua === 'it' // Controllo se la lingua è italiano
-            ? 'Errore imprevisto del server' // Testo base in italiano
-            : 'Unexpected server error'; // Testo base in inglese
-        const suffix = // Preparo il suffisso con le istruzioni per l'utente
-          codiceLingua === 'it' // Controllo se la lingua è italiano
-            ? " Riprova piu tardi o contatta l'amministratore." // Suffisso in italiano
-            : ' Please try again later or contact the administrator.'; // Suffisso in inglese
-        const testo = msg ? `${base}: ${msg}.${suffix}` : `${base}.${suffix}`; // Compongo il messaggio finale includendo il dettaglio se presente
-        this.toastService.errorePersistente(testo); // Mostro un toast di errore persistente con il messaggio costruito
-        return;
-      }
-
-      // Qui gestisco gli errori di sessione con un toast tradotto e poi decido quando mostrare/nascondere il loader combinando vari stati (errori, traduzioni, sessione, saturno, carosello)
-      if (tipo === 'sessione') {
-        // Controllo se l'errore fatale è legato alla sessione
-        const codice = this.erroreGlobaleService.codiceSessione$.value; // Leggo il codice che mi dice che tipo di problema di sessione è
-
-        let chiave: string; // Mi preparo una chiave di traduzione da scegliere in base al codice
-
-        if (codice === 'STANDARD') {
-          // Controllo se la sessione è stata scollegata in modo standard
-          chiave = 'ui.toast.sessione.scollegato'; // Scelgo la chiave traduzione
-        } else if (codice === 'INATTIVITA') {
-          // Controllo se la sessione è scaduta per inattività
-          chiave = 'ui.toast.sessione.inattivita'; // Scelgo la chiave traduzione
-        } else if (codice === 'COLLEGATO') {
-          // Controllo se c'è un caso 'scaduto, ma da collegato'
-          chiave = 'ui.toast.sessione.collegato'; // Scelgo la chiave traduzione
-        } else {
-          // Gestisco qualunque altro caso non previsto
-          chiave = 'ui.toast.sessione.generico'; // Scelgo la chiave generica
-        }
-
-        const testoSessione = this.translate.instant(chiave); // Traduco subito la chiave in una stringa nella lingua corrente
-        this.toastService.allarmPersistenteRipetiAccesso(testoSessione); // Mostro un toast persistente che chiede di ripetere l'accesso
-      }
-    });
-
-    combineLatest([
-      // Metto insieme più casi per decidere quando il loader può sparire
-      this.erroreFatale$, // Osservo se c'è un errore fatale
-      this.traduzioniPronte$, // Osservo se le traduzioni sono pronte
-      this.sessioneVerificata$, // Osservo se la sessione è verificata
-      this.saturnoPronto$, // Osservo se Saturno è pronto
-      this.caroselloPronto$, // Osservo se il carosello è pronto
-      this.deveCaricareImmaginiCarosello$, // Osservo se devo caricare le immagini del carosello
-      this.caricamentoDisabilitato$, // Osservo se il loader è disabilitato
-    ]).subscribe(
-      // Mi iscrivo ai cambi di uno qualunque di questi stati
-      ([
-        erroreFatale, // Mi arriva lo stato di errore fatale
-        traduzioniPronte, // Mi arriva se le traduzioni sono pronte
-        sessioneVerificata, // Mi arriva se la sessione è verificata
-        saturnoPronto, // Mi arriva se Saturno è pronto
-        caroselloPronto, // Mi arriva se il carosello è pronto
-        deveCaricare, // Mi arriva se devo caricare immagini carosello
-        caricamentoDisabilitato, // Mi arriva se il loader è disabilitato
-      ]) => {
-        console.log(
-  '[LOADER STATE]',
-  'url=', this.ultimaUrl,
-  '| disabilitato=', caricamentoDisabilitato,
-  '| forzaExtra=', this.forzaLoaderExtra,
-  '| erroreFatale=', erroreFatale,
-  '| traduzioniPronte=', traduzioniPronte,
-  '| sessioneVerificata=', sessioneVerificata,
-  '| saturnoPronto=', saturnoPronto,
-  '| deveCaricareCarosello=', deveCaricare,
-  '| caroselloPronto=', caroselloPronto,
-);
-        const deveMostrareLoader = // Calcolo se il loader deve rimanere visibile
-          !caricamentoDisabilitato && // Mostro il loader solo se non è disabilitato
-          (erroreFatale || // Mostro il loader se c'è un errore fatale
-            !traduzioniPronte || // Mostro il loader se mancano le traduzioni
-            !sessioneVerificata || // Mostro il loader se la sessione non è verificata
-            !saturnoPronto || // Mostro il loader se Saturno non è pronto
-            (deveCaricare && !caroselloPronto)); // Mostro il loader se devo caricare il carosello ma non è pronto
-
-        try {
-          // Provo a capire se sono in un reload del catalogo usando l'API performance
-          const nav = performance.getEntriesByType('navigation') as any[]; // Leggo le info di navigazione del browser
-          const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : ''; // Ricavo il tipo di navigazione (es. reload) se disponibile
-                      const path = pulisciUrl(window.location.pathname || '');
-   const ingressoDirettoCatalogoConStoricoCatalogo =
-     tipo !== 'reload' &&
-     isAreaCatalogo(path) &&
-     isAreaCatalogo(this.pathPrecedenteSessioneAllAvvio);
-   this.loaderAvvioCatalogo =
-     (tipo === 'reload' && isAreaCatalogo(path)) ||
-     ingressoDirettoCatalogoConStoricoCatalogo;
-
-        } catch {
-          // Se l'API performance non è disponibile o fallisce
-          this.loaderAvvioCatalogo = false; // Metto false per sicurezza
-        }
-
-        if (caricamentoDisabilitato) {
-          // Se il loader è disabilitato
-          this.forzaLoaderExtra = false; // Non devo forzare alcun loader extra
-          if (this.extraLoaderTimer) {
-            // Se avevo un timer attivo
-            clearTimeout(this.extraLoaderTimer); // Lo annullo
-            this.extraLoaderTimer = null; // E lo azzero
-          }
-        } else if (deveMostrareLoader) {
-          // Se devo mostrare il loader normale
-          this.forzaLoaderExtra = false; // Non devo forzare il loader extra
-          if (this.extraLoaderTimer) {
-            // Se avevo un timer extra attivo
-            clearTimeout(this.extraLoaderTimer); // Lo annullo
-            this.extraLoaderTimer = null; // E lo azzero
-          }
-        } else {
-          // Se non devo mostrare il loader normale
-          if (
-            // Controllo se devo forzare un po' di loader extra su Firefox al primo caricamento texture
-            this.devoCaricareTexturePrimaVolta && // Lo faccio solo se è la prima volta che carico le texture
-            this.isFirefox && // Lo faccio solo su Firefox
-            !this.forzaLoaderExtra // Lo faccio solo se non lo sto già forzando
-          ) {
-            this.forzaLoaderExtra = true; // Attivo il flag del loader extra
-
-            if (this.extraLoaderTimer) {
-              // Se esiste già un timer (per sicurezza)
-              clearTimeout(this.extraLoaderTimer); // Lo annullo
-              this.extraLoaderTimer = null; // E lo azzero
-            }
-
-          this.extraLoaderTimer = setTimeout(() => {
-  this.forzaLoaderExtra = false;
-  this.extraLoaderTimer = null;
-  this.devoCaricareTexturePrimaVolta = false;
-  // Forza il combineLatest a rieseguire così loader-hidden viene dispatchato correttamente
-  this.caricamentoDisabilitato$.next(this.caricamentoDisabilitato);
-}, this.EXTRA_LOADER_MS);
-          }
-        }
-
-       if (caricamentoDisabilitato) {
-  if (!this.schedaProntaService.loaderGlobalmenteNascosto) {
-    this.schedaProntaService.loaderGlobalmenteNascosto = true;
-    window.dispatchEvent(new CustomEvent('loader-hidden'));
-  }
-  this.loaderVisibile = false;
-}
-
-        if (
-          // Controllo se posso far sparire definitivamente il loader
-          this.loaderVisibile && // solo se era ancora visibile
-          !deveMostrareLoader && // solo se non serve più il loader normale
-          !this.forzaLoaderExtra // solo se non sto forzando il loader extra
-        ) {
-         this.loaderVisibile = false;
-window.dispatchEvent(new CustomEvent('loader-hidden'));
-this.schedaProntaService.loaderGlobalmenteNascosto = true; // ← AGGIUNTO
-const now = performance.now();
-console.log('LOADER SPARITO alle ' + now + ' ms');
-        }
-      }
+  this.appToast.gestisciToastBenvenuto();
+    this.appToast.gestisciErroriFatali();
+    this.appLoader.avvia(
+      this.caricamentoCaroselloService.caroselloPronto$,
+      this.schedaProntaService,
+      () => {},
     );
   }
 
-   mostraToast404Persistente(): void {
-    this.toastService.chiudi(this.chiaveToast404);
-
-    const codiceLingua = this.cambioLinguaService.leggiCodiceLingua();
-    this.traduzioniService.assicuraTraduzioni$(codiceLingua).pipe(take(1)).subscribe(() => {
-      this.translate.get('ui.toast.non-trovato').pipe(take(1)).subscribe((testo) => {
-        this.toastService.mostra(
-          testo,
-          'error',
-          true,
-          undefined,
-          this.chiaveToast404
-        );
-      });
-    });
+  mostraToast404Persistente(): void {
+    this.appToast.mostraToast404Persistente();
   }
 
-    aggiornaVisibilitaSfondo404(): void {
-    const raw = leggiPathDaSessionStorage();
-    const path = raw.replace(/^\/+/, ''); // tolgo eventuali slash iniziali
-    const vieneDaCatalogo =
-      path.startsWith('it/catalogo') || path.startsWith('en/catalog');
-
+  aggiornaVisibilitaSfondo404(): void {
+    const raw  = leggiPathDaSessionStorage();
+    const path = raw.replace(/^\/+/, '');
+    const vieneDaCatalogo = path.startsWith('it/catalogo') || path.startsWith('en/catalog');
     this.nascondiSfondoIn404 = this.sonoIn404 && vieneDaCatalogo;
   }
 
-    gestisciFadeInSfondo404(): void {
-    // Caso in cui prima lo sfondo NON veniva montato:
-    // ora lo montiamo sempre, ma lo facciamo comparire con fade-in.
+  gestisciFadeInSfondo404(): void {
     if (this.nascondiSfondoIn404) {
       this.animateService.fadeInSoloSfondo(1.85);
-      return;
     }
-
-    // Negli altri casi non forziamo nulla: non tocchiamo i flussi gia' esistenti.
   }
 
+  private correggiPrefissoLingua(url: string): void {
+    const match = url.match(/^\/(it|en)(\/|$)/);
+    if (!match) return;
 
-private correggiPrefissoLingua(url: string): void {
-  const match = url.match(/^\/(it|en)(\/|$)/);
-  if (!match) return; // non è it/en → il router gestirà normalmente (404 ecc.)
+    const langNelUrl = match[1];
+    const langSalvata = this.cambioLinguaService.leggiCodiceLingua();
+    let urlCorretto = url;
 
-  const langNelUrl = match[1];
-  const langSalvata = this.cambioLinguaService.leggiCodiceLingua(); // legge da localStorage
+    if (langNelUrl !== langSalvata)
+      urlCorretto = urlCorretto.replace(/^\/(it|en)/, '/' + langSalvata);
 
-  let urlCorretto = url;
+    urlCorretto = traduciSegmentiUrl(urlCorretto, langSalvata as 'it' | 'en');
+    if (urlCorretto === url) return;
 
-  // 1. correggi il prefisso lingua se sbagliato
-  if (langNelUrl !== langSalvata) {
-    urlCorretto = urlCorretto.replace(/^\/(it|en)/, '/' + langSalvata);
+    this.router.navigateByUrl(urlCorretto, { replaceUrl: true });
   }
 
-  // 2. correggi benvenuto/welcome e accedi/login in base alla lingua canonica
-urlCorretto = traduciSegmentiUrl(urlCorretto, langSalvata as 'it' | 'en');
-
-  if (urlCorretto === url) return; // niente da correggere, evito navigazioni inutili
-
-  this.router.navigateByUrl(urlCorretto, { replaceUrl: true });
-}
-
-private isLoggato(): boolean {
+  private isLoggato(): boolean {
     return !!this.authService.leggiObsAuth().value?.tk;
-  }
-
-  private isContattiUrl(url: string): boolean {
-    const path = String(url || '').split('?')[0].split('#')[0];
-    return /^\/(it|en)\/(contatti|contact)(\/|$)/.test(path);
   }
 }
