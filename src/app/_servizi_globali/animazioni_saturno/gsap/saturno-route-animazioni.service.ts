@@ -252,6 +252,6 @@ export class SaturnoRouteAnimazioniService {
           },
         }, 0.75);
       }
-    }); // chiude runOutsideAngular
+    });
   }
 }

@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes, UrlSegment, UrlMatchResult } from '@angular/router';
 import { AvvioGuard } from './_guard/avvio.guard';
-import { RedirectVuotoComponent } from './redirect-vuoto.component';
-import { RedirectNonTrovatoComponent } from './_helpers_globali/redirect-non-trovato.component';
+import { RedirectVuotoComponent } from './redirect/redirect-vuoto.component';
+import { RedirectNonTrovatoComponent } from './redirect/redirect-non-trovato.component';
 import { LinguaGuard } from './_guard/lingua.guard';
 export function linguaMatcher(segmenti: UrlSegment[]): UrlMatchResult | null {
   if (segmenti.length > 0 && (segmenti[0].path === 'it' || segmenti[0].path === 'en')) {
