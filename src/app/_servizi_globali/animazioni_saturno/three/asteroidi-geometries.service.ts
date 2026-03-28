@@ -2,12 +2,9 @@
 
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
+import { GeometryType } from 'src/app/_type/saturno.types';
 
-export type GeometryType = THREE.DodecahedronGeometry; //geometria
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class AsteroidiGeometriesService {
   // forma geometrica da cui partiranno
   private geometryStandard: GeometryType = new THREE.DodecahedronGeometry(0.02, 0);

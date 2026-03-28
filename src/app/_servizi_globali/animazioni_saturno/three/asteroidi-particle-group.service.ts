@@ -4,42 +4,12 @@ import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import { AsteroidiMaterialService } from './asteroidi-material.service';
 import { AsteroidiGeometriesService } from './asteroidi-geometries.service';
-
-
-// definizioni tipi per la creazione dei gruppi
-export interface ParticleGroupOptions {
-  innerRadius: number; // raggio iniziale del disco con buco (dove inizia)
-  outerRadius: number; // raggio finale del disco con buco (dove finisce)
-  particleCount: number; // numero di particelle di un gruppo specifico
-  color: string | number; // color delle particelle di un gruppo specifico
-  size: number; //dimensione delle pariticelle di un gruppo specifico
-  rotationSpeed: number; // velocità rotazione del gruppo specifico
-}
-
-// questa interfaccia serve per definire le oscillazioni di ritardo temporale per ottenere diverse posizioni nel tempo
-export interface OffsetData {
-  timeOffset: number; //punto iniziale
-  freqX: number; //velocità asse x
-  freqY: number; // velocità asse y
-  freqZ: number; // velocità asse z
-  ampX: number; // distanza asse x
-  ampY: number; // distanza asse y
-  ampZ: number; // distanza asse z
-}
-
-//interfaccia per gestire le proprietà delle particelle per le interazione
-export interface ParticleUserData {
-  state: 'idle' | 'hover'; // i due stati possibili, particella a riposo, o particella 'spostata' dal movimento del mouse
-  originalY: number; // posizione asse y a riposo
-  targetY: number; // posizione asse y sollecitata dal passaggio mouse
-}
-
-// interfaccia per raccogliere i dati dell'intero gruppo
-export interface GroupUserData {
-  rotationSpeed: number; // velocità di rotazione
-  offsets: OffsetData[]; // array di dati di oscillazione
-  originalPositions: THREE.Vector3[]; //ricordo posizione iniziale per ritornare al posto di origine, dopo che il mouse è passato altrove
-}
+import {
+  ParticleGroupOptions,
+  OffsetData,
+  ParticleUserData,
+  GroupUserData,
+} from 'src/app/_interfacce/saturno.interfacce';
 
 @Injectable({
   providedIn: 'root',

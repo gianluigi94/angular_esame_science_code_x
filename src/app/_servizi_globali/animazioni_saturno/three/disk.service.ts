@@ -1,18 +1,13 @@
 // servizio che gestisci i 'dischi di luce' su cui flutano gli asteroidi di saturno
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
+import { Disk } from 'src/app/_interfacce/saturno.interfacce';
 
-// Definizione del tipo per i dischi
-export interface Disk {
-  mesh: THREE.Mesh<THREE.RingGeometry, THREE.Material | THREE.Material[]>; //definizione della mesh (geometria + materiale)
-  speed: number; //eventuale velocità dei dischi di luce nel roteare
-}
+export type { Disk };
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class DiskService {
-  private disks: Disk[] = []; //array di dischi
+  private disks: Disk[] = [];
 
   // Metodo per creare un disco
   public createDisk(
