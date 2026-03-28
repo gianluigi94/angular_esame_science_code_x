@@ -1,499 +1,188 @@
-import { Component, Input, OnChanges, SimpleChanges, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, QueryList, ViewChildren } from '@angular/core';
-import { HoverLocandinaService } from './categoria_services/hover-locandina.service';
-import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
-import { Subscription } from 'rxjs';
-import { TipoContenutoService } from './categoria_services/tipo-contenuto.service';
-import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
-import { StopVideoGlobaleService } from './categoria_services/stop-video-globale.service';
-import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { take } from 'rxjs/operators';
-import { ApiService } from 'src/app/_servizi_globali/api.service';
-import { slugDaLocandina } from 'src/app/_helpers_globali/helpers';
+// ─── riga-categoria.component.ts ─────────────────────────────────────────────
+// Orchestratore puro: inizializza gli helper, collega gli eventi, delega tutto.
+
+import {
+  Component, Input, OnChanges, SimpleChanges, OnInit, OnDestroy,
+  ChangeDetectorRef, ElementRef, QueryList, ViewChildren,
+} from '@angular/core';
+import { Subscription }             from 'rxjs';
+import { Router }                   from '@angular/router';
+import { HoverLocandinaService }    from './categoria_services/hover-locandina.service';
+import { CambioLinguaService }      from 'src/app/_servizi_globali/cambio-lingua.service';
+import { TipoContenutoService }     from './categoria_services/tipo-contenuto.service';
+import { AudioGlobaleService }      from 'src/app/_servizi_globali/audio-globale.service';
+import { StopVideoGlobaleService }  from './categoria_services/stop-video-globale.service';
+import { ApiService }               from 'src/app/_servizi_globali/api.service';
+
+import { titoloPulitoPerTooltip }       from './categoria_utility/categoria-url.utils';
+import { CategoriaPaginazioneHelper }   from './categoria_helpers/categoria-paginazione.helper';
+import { CategoriaSpinnerHelper }       from './categoria_helpers/categoria-spinner.helper';
+import { CategoriaHoverHelper }         from './categoria_helpers/categoria-hover.helper';
+import { CategoriaClickHelper }         from './categoria_helpers/categoria-click.helper';
+
 @Component({
-  selector: 'app-riga-categoria',
+  selector:    'app-riga-categoria',
   templateUrl: './riga-categoria.component.html',
-  styleUrls: ['./riga-categoria.component.scss'],
+  styleUrls:   ['./riga-categoria.component.scss'],
 })
 export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
- @Input() locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[] = [];
-  @Input() categoria = '';
-@Input() idCategoria = '';
-@Input() tickResetPagine = 0;
-@Input() ritardoNavigazioneStessaTipologiaMs = 0;
-@Input() ritardoClickLocandinaMs = 0;
-@Input() attendiChiusuraPlayerSchedaPrimaDiNavigare = false;
-@Input() abilitaSalvataggiSessionStorage = true;
-  @Input() titolo = '';
-   @ViewChildren('elementoLocandina', { read: ElementRef })
- elementiLocandina!: QueryList<ElementRef>;
-  @Input() locandineVisibili = 5;
-  indicePagina = 0;
-  numeroMassimoPagine = 0;
-  trasformazioneWrapper = '';
-  mostraSpinner = false;
-  solo_brawser_blocca = false;
-  sottoscrizioni = new Subscription();
-  idCiclo = 0;
-  cicloTrackBy = 0;
-  motivoCopertura = '';
-  attendoAggiornamentoLocandine = false;
-  inAttesaImmagini = false;
-  totaleAtteso = 0;
-  conteggioCaricate = 0;
-  avvioSpinnerAt = 0;
-  permanenzaMinimaMs = 350;
-  fallbackMaxMs = 2000;
-  timerFallback: any = 0;
-  timerNascondi: any = 0;
 
-  ritardoHoverMs = 380;
-  ritardoUscitaHoverMs = 320;
-  timerEntrata: any = null;
-  timerUscita: any = null;
+  // ── Input ─────────────────────────────────────────────────────────────────
+  @Input() locandine: { src: string; titolo: string; sottotitolo: string; tipo: string; id_media: string }[] = [];
+  @Input() categoria  = '';
+  @Input() idCategoria = '';
+  @Input() tickResetPagine = 0;
+  @Input() ritardoNavigazioneStessaTipologiaMs  = 0;
+  @Input() ritardoClickLocandinaMs              = 0;
+  @Input() attendiChiusuraPlayerSchedaPrimaDiNavigare = false;
+  @Input() abilitaSalvataggiSessionStorage      = true;
+  @Input() titolo      = '';
+  @Input() locandineVisibili = 5;
+
+  @ViewChildren('elementoLocandina', { read: ElementRef })
+  elementiLocandina!: QueryList<ElementRef>;
+
+  // ── Binding per il template (delegati agli helper) ────────────────────────
+  get indicePagina():          number  { return this.paginazione.indicePagina; }
+  get numeroMassimoPagine():   number  { return this.paginazione.numeroMassimoPagine; }
+  get trasformazioneWrapper(): string  { return this.paginazione.trasformazioneWrapper; }
+  get cicloTrackBy():          number  { return this.paginazione.cicloTrackBy; }
+  get mostraSpinner():         boolean { return this.spinner.mostraSpinner; }
+  get motivoCopertura():       string  { return this.spinner.motivoCopertura; }
+
+  solo_brawser_blocca = false;
+
+  // ── Helper ────────────────────────────────────────────────────────────────
+  private readonly paginazione: CategoriaPaginazioneHelper;
+  private readonly spinner:     CategoriaSpinnerHelper;
+  private readonly hover:       CategoriaHoverHelper;
+  private readonly click:       CategoriaClickHelper;
+  private sottoscrizioni = new Subscription();
 
   constructor(
-    public servizioHoverLocandina: HoverLocandinaService,
-    public cambioLingua: CambioLinguaService,
-    private audioGlobaleService: AudioGlobaleService,
-     public tipoContenuto: TipoContenutoService,
-     public router: Router,
-     private api: ApiService,
-     private stopVideoGlobale: StopVideoGlobaleService,
- public riferitore: ChangeDetectorRef,
-  ) {}
+    public  servizioHoverLocandina: HoverLocandinaService,
+    public  cambioLingua:           CambioLinguaService,
+    private audioGlobaleService:    AudioGlobaleService,
+    public  tipoContenuto:          TipoContenutoService,
+    public  router:                 Router,
+    private api:                    ApiService,
+    private stopVideoGlobale:       StopVideoGlobaleService,
+    public  riferitore:             ChangeDetectorRef,
+  ) {
+    this.paginazione = new CategoriaPaginazioneHelper();
+    this.spinner     = new CategoriaSpinnerHelper(
+      riferitore,
+      () => this.elementiLocandina,
+      () => this.locandine,
+    );
+    this.hover  = new CategoriaHoverHelper(servizioHoverLocandina, cambioLingua);
+    this.click  = new CategoriaClickHelper(router, api, cambioLingua, tipoContenuto, stopVideoGlobale);
+  }
 
-  ngOnChanges(_changes: SimpleChanges): void {
-     if (_changes['tickResetPagine']) {
- this.indicePagina = 0;
- }
-    this.calcolaNumeroMassimoPagine();
-    if (this.indicePagina > this.numeroMassimoPagine) this.indicePagina = 0;
-    this.aggiornaTrasformazioneWrapper();
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['tickResetPagine']) this.paginazione.resetPagina();
 
-    if (
-      _changes['locandine'] &&
-      this.mostraSpinner &&
-      this.motivoCopertura === 'lingua'
-    ) {
-      if (this.attendoAggiornamentoLocandine) {
-        this.attendoAggiornamentoLocandine = false;
-        this.avviaAttesaImmaginiLingua(this.idCiclo);
+    this.paginazione.calcolaNumeroMassimoPagine(this.locandine.length, this.locandineVisibili);
+    if (this.paginazione.indicePagina > this.paginazione.numeroMassimoPagine)
+      this.paginazione.resetPagina();
+    this.paginazione.aggiornaTrasformazioneWrapper();
+
+    if (changes['locandine'] && this.spinner.mostraSpinner && this.spinner.motivoCopertura === 'lingua') {
+      if (this.spinner.attendoAggiornamentoLocandine) {
+        this.spinner.attendoAggiornamentoLocandine = false;
+        this.spinner.avviaAttesaImmaginiLingua(this.spinner.leggiIdCiclo());
       }
     }
-     if (this.mostraSpinner && this.motivoCopertura === 'tipo') {
- this.assicuraCoperturaCompleta(this.idCiclo, 0);
- }
+    if (this.spinner.mostraSpinner && this.spinner.motivoCopertura === 'tipo')
+      this.spinner.assicuraCoperturaCompleta(this.spinner.leggiIdCiclo(), 0);
   }
 
   ngOnInit(): void {
-    try {
-      this.sottoscrizioni.unsubscribe();
-    } catch {}
+    try { this.sottoscrizioni.unsubscribe(); } catch {}
     this.sottoscrizioni = new Subscription();
 
     this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaAvviato$.subscribe(() => {
-        this.avviaCopertura('lingua');
-        this.attendoAggiornamentoLocandine = true;
+        this.spinner.avviaCopertura('lingua');
+        this.spinner.attendoAggiornamentoLocandine = true;
       }),
     );
 
-    // quando la lingua e' stata applicata, mi preparo ad aspettare le nuove <img>
-    // (ma l'Input locandine potrebbe arrivare un attimo dopo -> gestito da attendoAggiornamentoLocandine)
     this.sottoscrizioni.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
-        if (!this.mostraSpinner) this.avviaCopertura('lingua');
-            if (this.attendoAggiornamentoLocandine) return;
-    // se invece sono gia' arrivate (ordine eventi diverso), posso partire subito
-    this.avviaAttesaImmaginiLingua(this.idCiclo);
+        if (!this.spinner.mostraSpinner) this.spinner.avviaCopertura('lingua');
+        if (this.spinner.attendoAggiornamentoLocandine) return;
+        this.spinner.avviaAttesaImmaginiLingua(this.spinner.leggiIdCiclo());
       }),
     );
 
+    this.sottoscrizioni.add(
+      this.tipoContenuto.cambioTipoAvviato$.subscribe(({ id }) => {
+        this.paginazione.incrementaCicloTrackBy();
+        this.spinner.avviaCopertura('tipo', id);
+      }),
+    );
 
- this.sottoscrizioni.add(
- this.tipoContenuto.cambioTipoAvviato$.subscribe(({ id }) => {
- this.avviaCopertura('tipo', id);
- }),
- );
+    this.sottoscrizioni.add(
+      this.tipoContenuto.cambioTipoApplicato$.subscribe(({ id }) =>
+        this.spinner.fineCoperturaDopoMinimo(id)
+      ),
+    );
 
- this.sottoscrizioni.add(
- this.tipoContenuto.cambioTipoApplicato$.subscribe(({ id }) => {
- this.fineCoperturaDopoMinimo(id);
- }),
- );
-
-
-  this.sottoscrizioni.add(
-    this.audioGlobaleService.soloBlocca$.subscribe((v) => {
-      this.solo_brawser_blocca = !!v;
-      try { this.riferitore.detectChanges(); } catch {}
-    }),
-  );
+    this.sottoscrizioni.add(
+      this.audioGlobaleService.soloBlocca$.subscribe((v) => {
+        this.solo_brawser_blocca = !!v;
+        try { this.riferitore.detectChanges(); } catch {}
+      }),
+    );
   }
 
   ngOnDestroy(): void {
     this.sottoscrizioni.unsubscribe();
-    this.azzeraTimer();
-      if (this.timerEntrata) clearTimeout(this.timerEntrata);
-  if (this.timerUscita) clearTimeout(this.timerUscita);
-  try { this.servizioHoverLocandina.emettiUscita(); } catch {}
+    this.spinner.destroy();
+    this.hover.destroy();
   }
 
-  calcolaNumeroMassimoPagine(): void {
-    const totale = this.locandine.length;
-    this.numeroMassimoPagine = Math.max(
-      Math.ceil(totale / this.locandineVisibili) - 1,
-      0,
+  // ── Template API ──────────────────────────────────────────────────────────
+  paginaSuccessiva(): void {
+    this.paginazione.paginaSuccessiva(() =>
+      this.paginazione.registraClickScrollCategoria(this.idCategoria, this.abilitaSalvataggiSessionStorage)
     );
   }
 
-  aggiornaTrasformazioneWrapper(): void {
-    this.trasformazioneWrapper = `translateX(${-this.indicePagina * 100}%)`;
+  paginaPrecedente(): void {
+    this.paginazione.paginaPrecedente(() =>
+      this.paginazione.registraClickScrollCategoria(this.idCategoria, this.abilitaSalvataggiSessionStorage)
+    );
   }
-impostaPaginaIniziale(pagina: number): void {
-  const p = Number.isFinite(pagina) ? Math.floor(pagina) : 0;
-  const clamped = Math.max(0, Math.min(p, this.numeroMassimoPagine));
-  this.indicePagina = clamped;
-  this.aggiornaTrasformazioneWrapper();
-}
 
-registraClickScrollCategoria(): void {
-  if (!this.abilitaSalvataggiSessionStorage) return;
-  try {
-    const chiave = 'storico_scroll_categorie';
-    const raw = sessionStorage.getItem(chiave);
-    const storico = raw ? JSON.parse(raw) : [];
-
-    storico.push({
-      idCategoria: String(this.idCategoria || '').trim(),
-      pagina: this.indicePagina,
-    });
-
-    sessionStorage.setItem(chiave, JSON.stringify(storico));
-  } catch {}
-}
-
-paginaSuccessiva(): void {
-  if (this.indicePagina < this.numeroMassimoPagine) {
-    this.indicePagina++;
-    this.aggiornaTrasformazioneWrapper();
-    this.registraClickScrollCategoria();
+  impostaPaginaIniziale(pagina: number): void {
+    this.paginazione.impostaPaginaIniziale(pagina);
   }
-}
 
-paginaPrecedente(): void {
-  if (this.indicePagina > 0) {
-    this.indicePagina--;
-    this.aggiornaTrasformazioneWrapper();
-    this.registraClickScrollCategoria();
-  }
-}
+  tracciaLocandina = (indice: number, loc: { src: string }): string => {
+    return this.paginazione.tracciaLocandina(indice, loc, this.spinner.mostraSpinner, this.spinner.motivoCopertura);
+};
+
+  immagineStabilizzata = (): void => { this.spinner.immagineStabilizzata(); };
 
   onMouseEnterLocandina(loc: { src: string; titolo: string; sottotitolo: string }): void {
-    if (this.timerUscita) clearTimeout(this.timerUscita);
-    if (this.timerEntrata) clearTimeout(this.timerEntrata);
-
-    this.timerEntrata = setTimeout(() => {
-  const slug = slugDaLocandina(loc.src);
-const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
-
-const lang = this.cambioLingua.leggiCodiceLingua(); // 'it' | 'en'
-const urlTrailer = this.urlTrailerHover(lang, slug);
-
-const descrizione = `film.${slug}`;
-
- this.servizioHoverLocandina.emettiEntrata(
-   urlSfondo,
-   urlTrailer,
-   descrizione,
-   String(loc?.titolo || ''),
-   String(loc?.sottotitolo || ''),
- );
-}, this.ritardoHoverMs);
+    this.hover.onMouseEnterLocandina(loc);
   }
 
-  onMouseLeaveLocandina(): void {
-    if (this.timerEntrata) clearTimeout(this.timerEntrata);
-    if (this.timerUscita) clearTimeout(this.timerUscita);
+  onMouseLeaveLocandina(): void  { this.hover.onMouseLeaveLocandina(); }
 
-    this.timerUscita = setTimeout(() => {
-
- const ancoraSuLocandina = !!document.querySelector('.locandina:hover');
- if (ancoraSuLocandina) return;
- this.servizioHoverLocandina.emettiUscita();
-    }, this.ritardoUscitaHoverMs);
+  async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Promise<void> {
+    await this.click.onClickLocandina(loc, {
+      ritardoClickLocandinaMs:                    this.ritardoClickLocandinaMs,
+      ritardoNavigazioneStessaTipologiaMs:        this.ritardoNavigazioneStessaTipologiaMs,
+      attendiChiusuraPlayerSchedaPrimaDiNavigare: this.attendiChiusuraPlayerSchedaPrimaDiNavigare,
+      abilitaSalvataggiSessionStorage:            this.abilitaSalvataggiSessionStorage,
+      idCategoria:                                this.idCategoria,
+    }, () => this.hover.clearTimers());
   }
 
-  tracciaLocandina(indice: number, loc: { src: string }): string {
- const base = String(loc?.src || '');
- if (this.mostraSpinner && this.motivoCopertura === 'tipo') {
- return this.cicloTrackBy + '|' + indice + '|' + base;
- }
- return base;
-}
-
-  avviaCopertura(motivo: string, idForzato: number = 0): void {
- this.idCiclo = idForzato ? idForzato : (this.idCiclo + 1);
-    this.motivoCopertura = motivo;
-    if (motivo === 'tipo') this.cicloTrackBy += 1;
-    this.azzeraTimer();
-
-    this.inAttesaImmagini = false;
-    this.totaleAtteso = 0;
-    this.conteggioCaricate = 0;
-
-    this.mostraSpinner = true;
-    this.avvioSpinnerAt = Date.now();
-
-    try {
-      this.riferitore.detectChanges();
-    } catch {}
-
-
- requestAnimationFrame(() => {
- try { this.riferitore.detectChanges(); } catch {}
- if (motivo === 'tipo') this.assicuraCoperturaCompleta(this.idCiclo, 0);
- });
-  }
-
-  avviaAttesaImmaginiLingua(id: number): void {
-    if (id !== this.idCiclo) return;
-    if (!this.mostraSpinner) return;
-
-    // se le locandine non sono ancora arrivate, esco: mi ri-attiva ngOnChanges
-    if (this.attendoAggiornamentoLocandine) return;
-
-    this.inAttesaImmagini = true;
-    this.totaleAtteso = (this.locandine || []).length;
-    this.conteggioCaricate = 0;
-
- if (this.totaleAtteso === 0) {
- this.fineSePronto(true, id);
- return;
- }
-    if (this.timerFallback) clearTimeout(this.timerFallback);
-    this.timerFallback = setTimeout(
-      () => this.fineSePronto(true, id),
-      this.fallbackMaxMs,
-    );
-  }
-
-  immagineStabilizzata(): void {
-    if (!this.inAttesaImmagini) return;
-    this.conteggioCaricate += 1;
-    this.fineSePronto(false, this.idCiclo);
-  }
-
-  fineSePronto(forzatura: boolean, id: number): void {
-    if (id !== this.idCiclo) return;
-    const pronto = forzatura || this.conteggioCaricate >= this.totaleAtteso;
-    if (!pronto) return;
-
-    this.inAttesaImmagini = false;
-    if (this.timerNascondi) clearTimeout(this.timerNascondi);
-
-    const elapsed = Date.now() - (this.avvioSpinnerAt || 0);
-    const manca = Math.max(0, this.permanenzaMinimaMs - elapsed);
-
-    this.timerNascondi = setTimeout(() => {
-      if (id !== this.idCiclo) return;
-      this.mostraSpinner = false;
-      this.motivoCopertura = '';
-      try {
-        this.riferitore.detectChanges();
-      } catch {}
-    }, manca);
-  }
-
-  azzeraTimer(): void {
-    if (this.timerFallback) {
-      clearTimeout(this.timerFallback);
-      this.timerFallback = 0;
-    }
-    if (this.timerNascondi) {
-      clearTimeout(this.timerNascondi);
-      this.timerNascondi = 0;
-    }
-  }
-
-
-  assicuraCoperturaCompleta(id: number, tentativi: number): void {
-  if (id !== this.idCiclo) return;
-  if (!this.mostraSpinner) return;
-
-  const lista = this.elementiLocandina ? this.elementiLocandina.toArray() : [];
-  if (!lista.length) {
-    if (tentativi >= 10) return;
-   requestAnimationFrame(() => this.assicuraCoperturaCompleta(id, tentativi + 1));
-    return;
-  }
-
-  let ok = true;
-  for (const ref of lista) {
-    const host = ref?.nativeElement;
-    const cover = host ? host.querySelector('.carica_img') : null;
-    if (!cover || !cover.classList || !cover.classList.contains('visibile')) {
-      ok = false;
-      break;
-    }
-  }
-
-  if (ok) return;
-  if (tentativi >= 10) return;
-
-  try { this.riferitore.detectChanges(); } catch {}
-  requestAnimationFrame(() => this.assicuraCoperturaCompleta(id, tentativi + 1));
-}
-
-fineCoperturaDopoMinimo(id: number): void {
-  if (id !== this.idCiclo) return;
-  if (this.timerNascondi) clearTimeout(this.timerNascondi);
-
-  // stesso feeling del vecchio: tipo piu' "snappy"
-  const manca = 100;
-
-  this.timerNascondi = setTimeout(() => {
-    if (id !== this.idCiclo) return;
-    this.mostraSpinner = false;
-    this.motivoCopertura = '';
-    try { this.riferitore.detectChanges(); } catch {}
-  }, manca);
-}
-
-
-
- urlTrailerHover(lang: string, slug: string): string {
-  const l = String(lang || '').toLowerCase() === 'en' ? 'en' : 'it';
-  const folder = l === 'it' ? 'mp4-trailer-it' : 'mp4-trailer-en';
-  const prefix = l === 'it' ? 'trailer_ita_' : 'trailer_en_';
-  return `https://d2kd3i5q9rl184.cloudfront.net/${folder}/${prefix}${slug}.mp4`;
-}
-
-titoloPulitoPerTooltip(testoTradotto: string): string {
-  return String(testoTradotto || '')
-    .replace('{{titolo}}', '')
-    .replace(/"/g, '')
-    .trim();
-}
-
-baseCatalogoDaLingua(): string {
-  const codice = this.cambioLingua.leggiCodiceLingua();
-  const pref = codice === 'it' ? '/it' : '/en';
-  const base = codice === 'it' ? '/catalogo' : '/catalog';
-  return pref + base;
-}
-
-fogliaDaTipo(tipo: string): string {
-  const codice = this.cambioLingua.leggiCodiceLingua();
-  const en = codice === 'en';
-  const t = String(tipo || '').toLowerCase() === 'serie' ? 'serie' : 'film';
-  if (en) return t === 'film' ? '/movies' : '/series';
-  return t === 'film' ? '/film' : '/serie';
-}
-
-tipoDaClick(loc: { tipo: string }): string {
-  const tipoLoc = String(loc?.tipo || '').toLowerCase();
-  if (tipoLoc === 'film' || tipoLoc === 'serie') return tipoLoc;
-  // fallback solo per locandine demo senza tipo esplicito
-  const selezionato = this.tipoContenuto.leggiTipo();
-  return selezionato === 'serie' ? 'serie' : 'film';
-}
-
-private precaricaRisorseScheda(loc: { src: string; tipo: string; id_media: string }): Promise<void> {
-  const slug = slugDaLocandina(loc.src);
-  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
-
-  const caricaImmagine = (src: string): Promise<void> =>
-    new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve(); // fallback: navigo comunque
-      img.src = src;
-    });
-
-  const timeout = new Promise<void>((resolve) => setTimeout(resolve, 3000));
-
-  // Promise.all con timeout: se entro 3s non è pronta, navigo comunque
-  return Promise.race([
-    Promise.all([
-      caricaImmagine(urlSfondo),
-      // in futuro aggiungi qui altre promesse (es. chiamate API)
-    ]).then(() => {}),
-    timeout,
-  ]);
-}
-
-async onClickLocandina(loc: { tipo: string; id_media: string; src: string }): Promise<void> {
-  const id = String(loc?.id_media || '').trim();
-  if (!id) return;
-
-  const ritardoClick = Math.max(0, this.ritardoClickLocandinaMs || 0);
-  if (ritardoClick > 0) {
-    await new Promise<void>((resolve) => setTimeout(resolve, ritardoClick));
-  }
-
-  try {
-  if (this.abilitaSalvataggiSessionStorage) {
-    sessionStorage.setItem('ultima_categoria_click', String(this.idCategoria || '').trim());
-  }
-} catch {}
-
-  const tipo = this.tipoDaClick(loc);
-  const url = this.baseCatalogoDaLingua() + this.fogliaDaTipo(tipo) + '/' + id;
-  const tipoCorrente = this.tipoContenuto.leggiTipo();
-  const stessaTipologia = tipoCorrente === tipo;
-  if (this.timerEntrata) clearTimeout(this.timerEntrata);
-  if (this.timerUscita) clearTimeout(this.timerUscita);
-     const slug = slugDaLocandina(loc.src);
-  const urlSfondo = `assets/carosello_locandine/carosello_${slug}.webp`;
-  const lingua = this.cambioLingua.leggiCodiceLingua();
-  const urlImgTitolo = `assets/titoli_${lingua}/titolo_${lingua}_${slug}.webp`;
-
-  const caricaImmagine = (src: string): Promise<void> =>
-    new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve();
-      img.src = src;
-    });
-
-  const traduzioni$ = tipo === 'film'
-    ? this.api.getFilmTraduzioni(id, lingua)
-    : this.api.getSerieTraduzioni(id, lingua);
-
-  const tabella$ = tipo === 'film'
-    ? this.api.getFilm(id)
-    : this.api.getSerie(id);
-
-  if (this.attendiChiusuraPlayerSchedaPrimaDiNavigare) {
-    await this.stopVideoGlobale
-      .richiediChiusuraCompletaPlayerScheda(400)
-      .catch(() => {});
-  }
-
-  const [_, __, tradRes, tabellaRes] = await Promise.all([
-    caricaImmagine(urlSfondo),
-    caricaImmagine(urlImgTitolo),
-    firstValueFrom(traduzioni$.pipe(take(1))).catch(() => null),
-    firstValueFrom(tabella$.pipe(take(1))).catch(() => null),
-  ]);
-
-  const descrizioneTestuale = String((tradRes as any)?.data?.descrizione || '');
-  const tabellaDati = (tabellaRes as any)?.data ?? null;
-
-  if (!this.attendiChiusuraPlayerSchedaPrimaDiNavigare) {
-    await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
-  }
-
-   if (this.ritardoNavigazioneStessaTipologiaMs > 0) {
-    await new Promise<void>((resolve) =>
-      setTimeout(resolve, this.ritardoNavigazioneStessaTipologiaMs)
-    );
-  }
-
-  this.router.navigateByUrl(url, {
-    state: { urlSfondo, urlImgTitolo, descrizioneTestuale, tabellaDati }
-  });
-}
+  // Usata nel template via pipe diretta
+  titoloPulitoPerTooltip = titoloPulitoPerTooltip;
 }
