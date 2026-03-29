@@ -4,7 +4,7 @@
 
 import {
   Component, OnInit, OnDestroy, AfterViewInit,
-  ViewChild, ElementRef, HostListener,
+  ViewChild, ElementRef, HostListener, ChangeDetectorRef,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location }               from '@angular/common';
@@ -122,7 +122,7 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly correlateHelper: SchedaCorrelateHelper;
   private readonly subs = new Subscription();
 
-  constructor(
+    constructor(
     private route:            ActivatedRoute,
     private router:           Router,
     private location:         Location,
@@ -135,6 +135,7 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
     private stopVideoGlobale: StopVideoGlobaleService,
     private transizioneTitolo: SchedaPlayerTransizioneTitoloService,
     private titoloPagina:     TitoloPaginaService,
+    private cdr:              ChangeDetectorRef,
   ) {
     this.ctx = new SchedaStateContext();
 
@@ -467,6 +468,14 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
       const id    = idRaw ? Number(idRaw) : NaN;
       if (!idRaw || Number.isNaN(id)) return;
 
+      // Leggi i nuovi valori PRIMA del reset — così li sostituiamo subito
+      // senza passare per lo stato vuoto (zero frame neri)
+      const ns    = history.state;
+      const urlS  = String(ns?.['urlSfondo']           || '').trim();
+      const imgS  = String(ns?.['urlImgTitolo']        || '').trim();
+      const descS = String(ns?.['descrizioneTestuale'] || '').trim();
+      const tabS  = ns?.['tabellaDati'] ?? null;
+
       this.schedaPronta.reset();
       this.resetStatoScheda();
 
@@ -478,19 +487,26 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       this._primaNavigazione = false;
 
-      // Rileggi state
-      const ns       = history.state;
-      const urlS     = String(ns?.['urlSfondo']          || '').trim();
-      const imgS     = String(ns?.['urlImgTitolo']       || '').trim();
-      const descS    = String(ns?.['descrizioneTestuale']|| '').trim();
-      const tabS     = ns?.['tabellaDati'] ?? null;
+      // Imposta subito i nuovi valori — il vecchio sfondo rimane visibile
+      // finché non viene sostituito, e startAnim=true riavvia l'animazione ingresso
       if (urlS)  { this.urlSfondoScheda  = urlS; this._sfondoPronto = true; }
       if (imgS)  { this.imgTitoloScheda  = imgS; this._titoloPronto = true; }
       if (descS) { this.descrizioneTestuale = descS; this._descPronta = true; }
       if (tabS)  this.applicaTabellaDaState(tabS);
 
-      this.ctx.idContenuto  = id;
+      this.ctx.idContenuto   = id;
       this.ctx.tipoContenuto = this.leggiTipoDaUrl();
+
+      // Cross-browser animation restart (funziona anche su Firefox):
+      // detectChanges applica startAnim=false al DOM sincrono,
+      // offsetWidth forza il reflow (il browser "registra" la rimozione di .anim),
+      // startAnim=true viene processato nello stesso macrotask —
+      // il browser non pinta mai il frame con opacity:0.
+      this.cdr.detectChanges();
+      const sfondoEl = document.querySelector('.sfondo_scheda') as HTMLElement | null;
+      if (sfondoEl) void sfondoEl.offsetWidth;
+      this.startAnim = true;
+
       this.verificaEAvviaAnimazioni();
 
       // Cache
@@ -665,15 +681,18 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ctx.stagioneSelezionata = cached.stagioneSelezionata;
     this.ctx.serieData       = cached.serieData;
     for (const k of Object.keys(cached.serieData)) this.ctx.stagioneCachata.add(k);
-    this._sfondoPronto = this._titoloPronto = this._descPronta = this._tabellaPronta = true;
-    this.labelsHelper.aggiornaAltSfondo();
-    if (this.ctx.tipoContenuto === 'serie' && this.ctx.stagioneSelezionata)
-      this.stagioniHelper.aggiornaUrlStagione(this.ctx.stagioneSelezionata);
     this.correlateHelper.righeCorrelate = cached.righeCorrelate ?? [];
     this.correlateHelper.righeCorrelateInCaricamento = false;
-    this.verificaEAvviaAnimazioni();
-    if (this.ctx.slugCorrente && !this._paramRiproduzioneInAttesa)
-      this.trailerHelper.programmaInserimento();
+
+    requestAnimationFrame(() => {
+      this._sfondoPronto = this._titoloPronto = this._descPronta = this._tabellaPronta = true;
+      this.labelsHelper.aggiornaAltSfondo();
+      if (this.ctx.tipoContenuto === 'serie' && this.ctx.stagioneSelezionata)
+        this.stagioniHelper.aggiornaUrlStagione(this.ctx.stagioneSelezionata);
+      this.verificaEAvviaAnimazioni();
+      if (this.ctx.slugCorrente && !this._paramRiproduzioneInAttesa)
+        this.trailerHelper.programmaInserimento();
+    });
   }
 
   private applicaTabellaDaState(t: any): void {
@@ -689,7 +708,10 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ctx.avvioTrailerSchedaRichiesto = false;
     this.ctx.trailerInRiproduzione = true;
     this._sfondoPronto = this._titoloPronto = this._descPronta = this._tabellaPronto = this._labelPronte = false;
-    this.urlSfondoScheda = this.imgTitoloScheda = this.descrizioneTestuale = '';
+    // urlSfondoScheda e imgTitoloScheda NON vengono azzerati qui:
+    // vengono sovrascritti subito dopo con i nuovi valori dallo state
+    // così il vecchio sfondo rimane visibile durante la transizione → zero frame neri
+    this.descrizioneTestuale = '';
     this.titoloScheda    = this.descrizione     = this.ctx.slugCorrente    = '';
     this.labelsHelper.altSfondoScheda = this.labelsHelper.altTitoloScheda = '';
     this.labelsHelper.labelRiprendiTitle = this.labelsHelper.labelRiproduciTitle = this.labelsHelper.labelTrailerTitle = '';
