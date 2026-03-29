@@ -1,7 +1,7 @@
 // Componente di login che gestisce form reattivo, validazioni, chiamata di autenticazione, ci sono riferimenti a toast di feedback e animazioni di ingresso/uscita (GSAP), con navigazione al catalogo in caso di successo.
-import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef} from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { BehaviorSubject, Observable, Observer, Subject, take, takeUntil} from 'rxjs';
+import { BehaviorSubject, Observable, Observer, Subject, take, takeUntil } from 'rxjs';
 import { Authservice } from './_login_service/auth.service';
 import { Auth } from 'src/app/_type/auth.type';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
@@ -20,7 +20,6 @@ import { LoginUscitaService } from './_login_service/login_uscita.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-/* DOPO */
 export class LoginComponent implements OnDestroy, AfterViewInit {
   @ViewChild('loginContenuto', { static: true }) // prendo il riferimento all'elemento del template con #loginContenuto già in fase di inizializzazione
   loginContenuto!: ElementRef<HTMLElement>; // mi conservo l'elemento HTML per usarlo nelle animazioni
@@ -43,12 +42,12 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     private toastService: ToastService,
     private saturnoService: SaturnoService,
     private translate: TranslateService,
-    private loginUscitaService: LoginUscitaService
+    private loginUscitaService: LoginUscitaService,
   ) {
-            const nav = this.router.getCurrentNavigation();
+    const nav = this.router.getCurrentNavigation(); // recupero le informazioni sulla navigazione corrente per capire come sono arrivato su questa pagina
     this.saltaAnimazioniIngresso =
-      nav?.trigger === 'imperative' &&
-      !!nav?.extras?.state?.['saltaAnimazioniLogin'];
+      nav?.trigger === 'imperative' && // controllo che la navigazione sia stata avviata in modo programmatico dal router (imperative) è un valore angular che significa che la navigazione è stata fatta via codice
+      !!nav?.extras?.state?.['saltaAnimazioniLogin']; // verifico se nello state della navigazione e' presente il flag che mi chiede di saltare le animazioni di ingresso
 
     this.reactiveForm = this.fb.group({
       // costruisco il reactive form raggruppando i controlli e le loro regole di validazione
@@ -58,10 +57,10 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
         [
           // elenco le validazioni da applicare al campo utente
           Validators.required,
-  Validators.email,
-  Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/),
-  Validators.minLength(5),
-  Validators.maxLength(40),
+          Validators.email,
+          Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/),
+          Validators.minLength(5),
+          Validators.maxLength(40),
         ],
       ],
       password: [
@@ -80,19 +79,19 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     this.auth = this.authService.leggiObsAuth(); // mi aggancio allo stato di autenticazione esposto dal servizio per avere sempre il valore aggiornato
   }
 
-/* DOPO */
-/**
- * Metodo chiamato automaticamente da Angular dopo che il template è stato renderizzato
- * e gli elementi della pagina sono disponibili nel DOM.
- * - avvia l’animazione di ingresso del pannello login tramite LoginAnimazioniService
- * - anima il footer e il testo del footer con GSAP
- * - nasconde sottotitolo e indicatore di scorrimento tramite UtilityService
- *
- * @returns void
- */
- ngAfterViewInit(): void {
-    sessionStorage.setItem('vengo_da_login', 'true');
+  /**
+   * Metodo chiamato automaticamente da Angular dopo che il template è stato renderizzato
+   * e gli elementi della pagina sono disponibili nel DOM.
+   * - avvia l'animazione di ingresso del pannello login tramite LoginAnimazioniService
+   * - anima il footer e il testo del footer con GSAP
+   * - nasconde sottotitolo e indicatore di scorrimento tramite UtilityService
+   *
+   * @returns void
+   */
+  ngAfterViewInit(): void {
+    sessionStorage.setItem('vengo_da_login', 'true'); // metto valore per salvare il mio passagio in questa pagina per animazioni
     if (this.saltaAnimazioniIngresso) {
+      // nel caso ricarico salto le animazioni e faccio scomparire il sottotitolo
       UtilityService.nascondiSottotitoloEScrol();
       return;
     }
@@ -102,7 +101,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
       // controllo di avere davvero l'elemento del pannello login
       this.loginAnimazioniService.animaIngresso(
         // avvio l'animazione di ingresso del pannello tramite il servizio
-        this.loginContenuto.nativeElement // passo l'elemento reale su cui applicare l'animazione
+        this.loginContenuto.nativeElement, // passo l'elemento reale su cui applicare l'animazione
       );
     }
 
@@ -142,31 +141,31 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
   }
 
   /**
- * Avvia (o salta) l’animazione di uscita del pannello login.
- * Tipicamente usato da un guard di routing che aspetta la fine dell’animazione
- * prima di cambiare pagina.
- * La logica effettiva è delegata a LoginUscitaService.
- *
- * @returns Promise<void> Promise risolta quando l’uscita è terminata (o è stata saltata).
- */
+   * Avvia (o salta) l'animazione di uscita del pannello login.
+   * Tipicamente usato da un guard di routing che aspetta la fine dell'animazione
+   * prima di cambiare pagina.
+   * La logica effettiva è delegata a LoginUscitaService.
+   *
+   * @returns Promise<void> Promise risolta quando l'uscita è terminata (o è stata saltata).
+   */
   animaUscita(): Promise<void> {
     // preparo un'uscita animata che il guard può aspettare prima di cambiare rotta
     return this.loginUscitaService.animaUscita(
       // delego la logica di uscita al servizio dedicato
       this.loginContenuto, // passo il riferimento all'elemento reale del pannello login
-      this.saltaAnimazioneUscita // passo il flag per decidere se saltare l'animazione (dopo login riuscito)
+      this.saltaAnimazioneUscita, // passo il flag per decidere se saltare l'animazione (dopo login riuscito)
     );
   }
 
   /**
- * Gestisce l’invio del form di accesso.
- * - Imposta il flag formInviato per attivare la visualizzazione degli errori
- * - Se il form è invalido: marca tutti i campi come “toccati” per mostrare le validazioni
- * - Se il form è valido: legge utente/password/restaCollegato, attiva lo stato di caricamento
- *   e avvia la richiesta di login sottoscrivendosi con un gestore dedicato.
- *
- * @returns void
- */
+   * Gestisce l'invio del form di accesso.
+   * - Imposta il flag formInviato per attivare la visualizzazione degli errori
+   * - Se il form è invalido: marca tutti i campi come “toccati” per mostrare le validazioni
+   * - Se il form è valido: legge utente/password/restaCollegato, attiva lo stato di caricamento
+   *   e avvia la richiesta di login sottoscrivendosi con un gestore dedicato.
+   *
+   * @returns void
+   */
   accedi(): void {
     // gestisco l'invio del form di accesso
     this.formInviato = true; // segno che ho provato a inviare il form così posso mostrare gli errori
@@ -181,29 +180,30 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
         !!this.reactiveForm.controls['restaCollegato'].value; // trasformo il valore in booleano sicuro
 
       this.stoControllando = true; // attivo lo stato di caricamento mentre faccio la chiamata di login
-      this.obsLogin(utente, password, restaCollegato).subscribe( // avvio la chiamata di login e mi sottoscrivo alla risposta
-        this.osservoLogin(restaCollegato) // passo la scelta per decidere dove salvare il token
+      this.obsLogin(utente, password, restaCollegato).subscribe(
+        // avvio la chiamata di login e mi sottoscrivo alla risposta
+        this.osservoLogin(restaCollegato), // passo la scelta per decidere dove salvare il token
       );
     }
   }
 
   /**
- * Crea e restituisce il flusso della richiesta di login verso il backend.
- * Usa ApiService.login(...) e applica:
- * - take(1): prende solo la prima risposta utile
- * - takeUntil(distruggi$): interrompe la richiesta se il componente viene distrutto
- *
- * @param utente string Email/username da inviare al backend.
- * @param password string Password da inviare al backend.
- * @param restaCollegato boolean Se true richiede persistenza (es. sessione più lunga).
- *
- * @returns Observable<IRispostaServer> Flusso che emette la risposta del server.
- */
+   * Crea e restituisce il flusso della richiesta di login verso il backend.
+   * Usa ApiService.login(...) e applica:
+   * - take(1): prende solo la prima risposta utile
+   * - takeUntil(distruggi$): interrompe la richiesta se il componente viene distrutto
+   *
+   * @param utente string Email/username da inviare al backend.
+   * @param password string Password da inviare al backend.
+   * @param restaCollegato boolean Se true richiede persistenza (es. sessione più lunga).
+   *
+   * @returns Observable<IRispostaServer> Flusso che emette la risposta del server.
+   */
   private obsLogin(
     // costruisco l'observable che esegue la chiamata di login
     utente: string, // ricevo l'utente da inviare al backend
     password: string, // ricevo la password
-    restaCollegato: boolean // ricevo la scelta 'resta collegato'
+    restaCollegato: boolean, // ricevo la scelta 'resta collegato'
   ): Observable<IRispostaServer> {
     // dichiaro che la chiamata restituisce una risposta del server nel formato previsto
     return this.api // uso il servizio API per fare la richiesta
@@ -211,30 +211,29 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
       .pipe(take(1), takeUntil(this.distruggi$)); // prendo solo la prima risposta e mi fermo se il componente viene distrutto
   }
 
-
   /**
- * Prepara e restituisce un gestore della risposta della richiesta di login
- * (con gestione di successo, errore e completamento).
- *
- * - In caso di successo (next):
- *   - valida presenza di data e message
- *   - estrae tk, decodifica token, costruisce l’oggetto Auth
- *   - aggiorna lo stato globale (Authservice) e salva su localStorage
- *   - mostra toast di successo e chiude eventuali toast precedenti
- *   - imposta saltaAnimazioneUscita = true e naviga a /catalogo
- *   - se la risposta non è nel formato atteso: lampeggia luce di errore (SaturnoService)
- *
- * - In caso di errore (error):
- *   - ricava la chiave di errore dal backend, traduce e mostra un toast (caso speciale max accessi)
- *   - lampeggia luce di errore
- *   - resetta Auth a “non autenticato”
- *   - disattiva lo stato di caricamento
- *
- * - In chiusura (complete):
- *   - disattiva lo stato di caricamento
- *
- * @returns Observer<any> Gestore pronto da passare a subscribe(...)
- */
+   * Prepara e restituisce un gestore della risposta della richiesta di login
+   * (con gestione di successo, errore e completamento).
+   *
+   * - In caso di successo (next):
+   *   - valida presenza di data e message
+   *   - estrae tk, decodifica token, costruisce l'oggetto Auth
+   *   - aggiorna lo stato globale (Authservice) e salva su localStorage
+   *   - mostra toast di successo e chiude eventuali toast precedenti
+   *   - imposta saltaAnimazioneUscita = true e naviga a /catalogo
+   *   - se la risposta non è nel formato atteso: lampeggia luce di errore (SaturnoService)
+   *
+   * - In caso di errore (error):
+   *   - ricava la chiave di errore dal backend, traduce e mostra un toast (caso speciale max accessi)
+   *   - lampeggia luce di errore
+   *   - resetta Auth a 'non autenticato'
+   *   - disattiva lo stato di caricamento
+   *
+   * - In chiusura (complete):
+   *   - disattiva lo stato di caricamento
+   *
+   * @returns Observer<any> Gestore pronto da passare a subscribe(...)
+   */
   private osservoLogin(restaCollegato: boolean) {
     // preparo un osservatore  per gestire la risposta della chiamata di login
     const osservatore: Observer<any> = {
@@ -258,7 +257,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
           this.authService.scriviAuthSuStorage(auth, restaCollegato); // local se collegato, altrimenti session
 
           const testo = this.translate.instant(
-            'ui.menu_utente.collegati.riuscito'
+            'ui.menu_utente.collegati.riuscito',
           ); // preparo il testo del toast di successo traducendolo subito
           this.toastService.chiudi('login_errore'); // chiudo eventuali toast di errore login rimasti aperti
           this.toastService.chiudi('accesso_ok'); // chiudo un eventuale toast di successo precedente con la stessa chiave
@@ -268,9 +267,9 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
 
           setTimeout(() => {
             // rimando la navigazione al prossimo giro di esecuzione per non incastrarmi con aggiornamenti in corso
-             this.router.navigateByUrl(this.pathCatalogoDopoLogin(), {
-   state: { saltaAnimazioniLogin: true },
- }); // porto l'utente al catalogo dopo il login
+            this.router.navigateByUrl(this.pathCatalogoDopoLogin(), {
+              state: { saltaAnimazioniLogin: true },
+            }); // porto l'utente al catalogo dopo il login
           }, 0);
         } else {
           // entro qui se la risposta non contiene i dati attesi
@@ -292,7 +291,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
             'allarm',
             false,
             undefined,
-            'login_errore'
+            'login_errore',
           );
         } else {
           // entro qui per tutti gli altri errori di login
@@ -301,7 +300,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
             'error',
             false,
             undefined,
-            'login_errore'
+            'login_errore',
           ); // mostro un toast di errore standard con chiave fissa di errore login
         }
 
@@ -327,38 +326,59 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
     return osservatore; // restituisco l'osservatore pronto da passare alla subscribe
   }
 
-
-
   /**
- * Metodo chiamato automaticamente da Angular quando il componente viene distrutto.
- * Serve a chiudere in modo pulito le sottoscrizioni: emette su distruggi$ così che
- * i flussi con takeUntil(distruggi$) terminino.
- *
- * @returns void
- */
+   * Metodo chiamato automaticamente da Angular quando il componente viene distrutto.
+   * Serve a chiudere in modo pulito le sottoscrizioni: emette su distruggi$ così che
+   * i flussi con takeUntil(distruggi$) terminino.
+   *
+   * @returns void
+   */
   ngOnDestroy(): void {
     // gestisco la distruzione del componente per chiudere le sottoscrizioni collegate
     this.distruggi$.next(); // emetto il segnale di chiusura per far terminare tutte le pipe
   }
 
-   pathCatalogoDopoLogin(): string {
-   const url = (this.router.url || '').split('?')[0].split('#')[0];
-   const m = url.match(/^\/(it|en)(?=\/|$)/);
-   const codice = m?.[1] ? m[1] : (this.translate.currentLang === 'en' ? 'en' : 'it');
+  /**
+   * Costruisce dinamicamente l'URL di destinazione dopo il login.
+   *
+   * - Determina la lingua corrente leggendo prima dall'URL (es. /it o /en),
+   *   altrimenti usa la lingua attuale del TranslateService.
+   * - Costruisce il prefisso lingua (es. /it o /en) e il path base del catalogo
+   *   (catalogo in IT, catalog in EN).
+   * - Legge da localStorage il tipo di contenuto selezionato (film, serie, o entrambi)
+   *   per indirizzare l'utente direttamente alla sezione corretta.
+   * - Restituisce l'URL completo finale pronto per la navigazione.
+   *
+   * @returns string URL completo verso la sezione corretta del catalogo.
+   */
+  pathCatalogoDopoLogin(): string {
+    const url = (this.router.url || '').split('?')[0].split('#')[0]; // prendo l'URL corrente e rimuovo eventuali query params e hash
+    const m = url.match(/^\/(it|en)(?=\/|$)/); // cerco di estrarre il codice lingua (it o en) dall'inizio dell'URL
+    const codice = m?.[1] // se ho trovato la lingua nell'URL uso quella
+      ? m[1]
+      : this.translate.currentLang === 'en' // altrimenti mi baso sulla lingua corrente del servizio di traduzione
+        ? 'en'
+        : 'it';
 
-   const pref = '/' + codice;
-   const base = codice === 'en' ? '/catalog' : '/catalogo';
+    const pref = '/' + codice; // costruisco il prefisso lingua da anteporre all'URL
+    const base = codice === 'en' ? '/catalog' : '/catalogo'; // scelgo il path base del catalogo in base alla lingua
 
-   // se vuoi andare direttamente al tipo corrente (consigliato)
-   // se non hai TipoContenutoService qui, togli tutto e ritorna prefbase
-   // e poi ci pensera' CatalogoComponent a riallineare l'URL.
-   const tipo = (localStorage.getItem('tipo_contenuto') as any) || 'film_serie'; // oppure leggi da tuo service se lo inietti
-   const sotto =
-     tipo === 'film' ? (codice === 'en' ? '/movies' : '/film') :
-     tipo === 'serie' ? (codice === 'en' ? '/series' : '/serie') :
-     (codice === 'en' ? '/movies-series' : '/film-serie');
+    const tipo =
+      (localStorage.getItem('tipo_contenuto') as any) || 'film_serie'; // leggo da localStorage il tipo di contenuto scelto (fallback: film_serie)
 
-   return pref + base + sotto;
- }
+    const sotto =
+      tipo === 'film' // se l'utente ha selezionato solo film
+        ? codice === 'en'
+          ? '/movies'
+          : '/film'
+        : tipo === 'serie' // se ha selezionato solo serie
+          ? codice === 'en'
+            ? '/series'
+            : '/serie'
+          : codice === 'en' // altrimenti (film_serie) porto alla sezione combinata
+            ? '/movies-series'
+            : '/film-serie';
 
+    return pref + base + sotto; // compongo e restituisco l'URL finale completo
+  }
 }

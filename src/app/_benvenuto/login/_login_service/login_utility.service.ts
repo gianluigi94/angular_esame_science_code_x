@@ -6,7 +6,6 @@ import gsap from 'gsap';
 
 @Injectable({ providedIn: 'root' }) // Registro il servizio nel root injector
 export class UtilityService {
-
   /**
    * Decodifica un token JWT e restituisce il contenuto interno.
    * Se il token non è valido o la decodifica fallisce, restituisce null.
@@ -24,13 +23,12 @@ export class UtilityService {
     }
   }
 
-
-    /**
+  /**
    * Trasforma una password in un hash SHA-512 utilizzando un sale.
-   * Il sale viene concatenato alla password prima del calcolo dell’hash.
+   * Il sale viene concatenato alla password prima del calcolo dell'hash.
    *
    * @param password string Password in chiaro.
-   * @param sale string Sale da usare per rendere l’hash più sicuro.
+   * @param sale string Sale da usare per rendere l'hash più sicuro.
    * @returns string Hash SHA-512 risultante.
    */
   static nascondiPassword(password: string, sale: string): string {
@@ -39,7 +37,7 @@ export class UtilityService {
     return hash;
   }
 
-   /**
+  /**
    * Calcola un hash SHA-512 generico a partire da una stringa.
    *
    * @param str string Testo da convertire in hash.
@@ -50,11 +48,10 @@ export class UtilityService {
     return tmp; // restituisco l'hash calcolato
   }
 
-
   /**
    * Traduce un errore restituito dal backend in una chiave testuale
    * utilizzabile dal sistema di toast del front-end.
-   * Analizza il contenuto dell’errore per riconoscere casi specifici
+   * Analizza il contenuto dell'errore per riconoscere casi specifici
    * (utente bannato, credenziali errate, tentativi massimi, password scaduta).
    *
    * @param err any Oggetto di errore restituito dal backend.
@@ -108,9 +105,8 @@ export class UtilityService {
     return 'ui.toast.error.login.mancante'; // restituisco una chiave generica come ripiego
   }
 
-
   /**
-   * Nasconde il sottotitolo e l’indicatore di scorrimento dalla pagina.
+   * Nasconde il sottotitolo e l'indicatore di scorrimento dalla pagina.
    * Ferma eventuali animazioni in corso e imposta gli elementi come invisibili
    * usando GSAP.
    *
