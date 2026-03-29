@@ -183,6 +183,15 @@ export class SchedaTrailerHelper {
       if (!this.ctx.playerScheda) { this.smontaSubito(); resolve(); return; }
       if (!eraVisibile)           { this.resettaPerNuovoAvvio(); this.smontaSubito(); resolve(); return; }
 
+               if (this.ctx.audioBloccatoDaUtente) {
+        setTimeout(() => {
+          this.resettaPerNuovoAvvio();
+          this.smontaSubito();
+          resolve();
+        }, attesaVisiva);
+        return;
+      }
+
       try { this.ctx.playerScheda?.muted?.(false); } catch {}
       this.audio.sfumaGuadagnoVerso(0, attesaVisiva).finally(() => {
         this.resettaPerNuovoAvvio();
