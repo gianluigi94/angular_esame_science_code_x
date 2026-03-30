@@ -32,9 +32,6 @@ constructor(
   public isLowPerf: boolean = false; // espongo un flag pubblico per sapere se devo usare modalità “low performance”
 
   /**
-   * Hook del ciclo di vita che viene eseguito dopo il rendering della view.
-   *
-   * Logica applicata:
    * - recupera gli elementi DOM necessari alle animazioni
    * - determina se il dispositivo è a basse prestazioni o mobile
    * - avvia le animazioni del titolo e degli elementi collegati
@@ -77,48 +74,81 @@ constructor(
     });
   }
 
-   get isNotFoundRoute(): boolean {
-  const url = this.router.url.split('?')[0].split('#')[0];
-  return /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url);
-}
+    /**
+   * Verifica se la route corrente corrisponde alla pagina 404.
+   *
+   * Rimuove eventuali query string e fragment prima del controllo.
+   *
+   * @returns boolean True se la route corrente e' la pagina 404, false altrimenti.
+   */
+  get isNotFoundRoute(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0]; // pulisco la route corrente da query string e fragment
+    return /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url); // verifico se la route punta alla pagina 404
+  }
 
-async onLogoClick(ev: MouseEvent): Promise<void> {
-  ev.preventDefault();
-  ev.stopPropagation();
+  /**
+   * Gestisce il click sul logo principale.
+   *
+   * Intercetta il click e decide se tornare indietro,
+   * chiudere la 404 oppure navigare alla home
+   * dopo un eventuale fade dell'audio video attivo.
+   *
+   * @param ev Evento del click da intercettare.
+   * @returns Promise<void>
+   */
+  async onLogoClick(ev: MouseEvent): Promise<void> {
+    ev.preventDefault(); // blocco il comportamento predefinito del click
+    ev.stopPropagation(); // blocco la propagazione del click
 
-  if (this.isContactRoute) {
-    if (sessionStorage.getItem('vengo_da_registrazione')) {
-      this.router.navigate(['/']);
-    } else {
-      window.history.back();
+    if (this.isContactRoute) { // controllo se mi trovo nella pagina contatti
+      if (sessionStorage.getItem('vengo_da_registrazione')) { // controllo se arrivo dalla registrazione
+        this.router.navigate(['/']); // torno alla home se provengo dalla registrazione
+      } else {
+        window.history.back(); // torno indietro nella cronologia del browser
+      }
+      return; // interrompo il flusso dopo la gestione della pagina contatti
     }
-    return;
+
+    if (this.isNotFoundRoute) { // controllo se mi trovo nella pagina 404
+      const auth = this.authService.leggiObsAuth().value; // leggo lo stato auth corrente
+      const autenticato = auth && auth.tk !== null; // verifico se l'utente risulta autenticato
+      this.notFoundClose.requestClose(!autenticato); // richiedo la chiusura della 404 passando se devo ricaricare
+      return; // interrompo il flusso dopo la gestione della pagina 404
+    }
+
+    const videoAttivo = Array.from(document.querySelectorAll('video')) // raccolgo tutti gli elementi video presenti nella pagina
+      .some(v => !v.paused && !v.ended && v.readyState > 2); // verifico se esiste almeno un video realmente attivo
+    if (videoAttivo) { // controllo se ho trovato un video attivo
+      await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {}); // richiedo il fade del solo audio prima di navigare
+    }
+    this.router.navigate(['/']); // navigo alla home
   }
 
-  if (this.isNotFoundRoute) {
-    const auth = this.authService.leggiObsAuth().value;
-    const autenticato = auth && auth.tk !== null;
-    this.notFoundClose.requestClose(!autenticato);
-    return;
+  /**
+   * Verifica se la route corrente corrisponde alla pagina contatti.
+   * é un getter
+   * Rimuove eventuali query string e fragment prima del controllo.
+   *
+   * @returns boolean True se la route corrente e' la pagina contatti, false altrimenti.
+   */
+  get isContactRoute(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0]; // pulisco la route corrente da query string e fragment
+    return /^\/(it\/contatti|en\/contact)(\/|$)/.test(url); // verifico se la route punta alla pagina contatti
   }
 
-  const videoAttivo = Array.from(document.querySelectorAll('video'))
-  .some(v => !v.paused && !v.ended && v.readyState > 2);
-if (videoAttivo) {
-  await this.stopVideoGlobale.richiediSoloFadeAudio(350).catch(() => {});
-}
-this.router.navigate(['/']);
-}
-get isContactRoute(): boolean {
-  const url = this.router.url.split('?')[0].split('#')[0];
-  return /^\/(it\/contatti|en\/contact)(\/|$)/.test(url);
-}
-
-get isWelcomeRoute(): boolean {
-  const url = this.router.url.split('?')[0].split('#')[0];
-  return (
-    /^\/(it|en)\/(benvenuto|welcome)(\/|$)/.test(url) &&
-    !/^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url)
-  );
-}
+  /**
+   * Verifica se la route corrente corrisponde alla welcome.
+   * è un getter
+   * Rimuove eventuali query string e fragment prima del controllo
+   * ed esclude esplicitamente la pagina login.
+   *
+   * @returns boolean True se la route corrente e' la welcome, false altrimenti.
+   */
+  get isWelcomeRoute(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0]; // pulisco la route corrente da query string e fragment
+    return (
+      /^\/(it|en)\/(benvenuto|welcome)(\/|$)/.test(url) && // verifico se la route punta alla welcome
+      !/^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url) // escludo il caso in cui la route sia la login
+    );
+  }
 }

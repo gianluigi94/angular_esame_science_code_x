@@ -1,3 +1,4 @@
+<!-- codice html della barra di avanzamento dei video usata (con stili diversi) sia per i trailer nel catalogo e sia per le publicità nel player principale, IL CLICK ATTUALMENTE NON FUNZIONA -->
 <div
   class="barra-avanzamento"
   [class.barra-avanzamento--ad]="modalitaAd"
@@ -9,9 +10,15 @@
   [attr.aria-label]="ariaLabel"
   (click)="onClickBarra($event)"
 >
+<!-- righe avanzamento e di 'contenitore spesso nascosto' -->
   <div class="riempimento-buffer" [style.width.%]="percentualeBuffer"></div>
-  <div class="riempimento-progresso" [style.width.%]="percentualeAvanzamento"></div>
-
-  <span class="tempo-corrente" aria-hidden="true">{{ tempoCorrenteTesto }}</span>
+  <div
+    class="riempimento-progresso"
+    [style.width.%]="percentualeAvanzamento"
+  ></div>
+  <!-- tempi, spesso nascosti -->
+  <span class="tempo-corrente" aria-hidden="true">{{
+    tempoCorrenteTesto
+  }}</span>
   <span class="tempo-totale" aria-hidden="true">{{ durataTotaleTesto }}</span>
 </div>

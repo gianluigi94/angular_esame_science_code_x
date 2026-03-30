@@ -1,14 +1,7 @@
 // Interceptor HTTP che aggiunge automaticamente il token alle richieste e centralizza la gestione degli errori di autenticazione, aggiornando lo stato di sessione e forzando logout/reload quando necessario.
 
 import { Injectable } from '@angular/core';
-import {
-  HttpInterceptor,
-  HttpRequest,
-  HttpHandler,
-  HttpEvent,
-  HttpErrorResponse,
-  HttpResponse,
-} from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse, HttpResponse} from '@angular/common/http';
 import { Observable, catchError, throwError, tap } from 'rxjs';
 import { Authservice } from '../_benvenuto/login/_login_service/auth.service';
 import { Router } from '@angular/router';
@@ -21,7 +14,7 @@ export class AuthInterceptor implements HttpInterceptor {
     private authService: Authservice,
     private router: Router,
     private erroreGlobale: ErroreGlobaleService,
-    private statoSessione: StatoSessioneClientService
+    private statoSessione: StatoSessioneClientService,
   ) {}
 
   /**
@@ -42,19 +35,19 @@ export class AuthInterceptor implements HttpInterceptor {
    */
   intercept(
     req: HttpRequest<any>,
-    next: HttpHandler
+    next: HttpHandler,
   ): Observable<HttpEvent<any>> {
     // intercetto ogni richiesta in uscita e restituisco un flusso di eventi HTTP
 
     let reqDaUsare = req; // parto dalla richiesta originale e preparo una variabile che eventualmente modificherò
 
     // niente bearer sulle chiamate /accedi e /traduzioni-lingua
-     if (
- !req.url.includes('/accedi') &&
- !req.url.includes('/traduzioni-lingua') &&
- !req.url.match(/\/categorie(\/|$|\?)/) &&
- !req.url.match(/\/categorie-traduzioni(\/|$|\?)/)
- ) {
+    if (
+      !req.url.includes('/accedi') &&
+      !req.url.includes('/traduzioni-lingua') &&
+      !req.url.match(/\/categorie(\/|$|\?)/) &&
+      !req.url.match(/\/categorie-traduzioni(\/|$|\?)/)
+    ) {
       // applico il token solo se la chiamata non è di accesso e non è per le traduzioni
       const auth = this.authService.leggiAuthDaStorage(); // leggo auth da localStorage (collegato) o sessionStorage (non collegato)
       const tk = auth?.tk; // estraggo il token se presente
@@ -87,7 +80,7 @@ export class AuthInterceptor implements HttpInterceptor {
                 event.status +
                 ') alle ' +
                 now +
-                ' ms'
+                ' ms',
             );
 
             const haTokenIniziale = this.statoSessione.haTokenIniziale; // verifico se all'avvio avevo già un token salvato
@@ -179,7 +172,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
         // gli errori server 500 / rete / ecc. li gestisce ErroreHttpInterceptor
         return throwError(() => err); // rilancio comunque l'errore perché altri interceptor o chiamanti possano gestirlo
-      })
+      }),
     );
   }
 }

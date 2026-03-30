@@ -1,7 +1,13 @@
 // Interceptor HTTP che intercetta gli errori 'generici' delle chiamate e li inoltra al gestore globale, lasciando fuori login/logout e gli errori di autorizzazione gestiti altrove.
 
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpErrorResponse,
+} from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ErroreGlobaleService } from 'src/app/_servizi_globali/errore-globale.service';
@@ -9,13 +15,13 @@ import { Router } from '@angular/router';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 @Injectable() // dichiaro che può essere gestita dalle iniezioni
 export class ErroreHttpInterceptor implements HttpInterceptor {
-    constructor(
+  constructor(
     private erroreGlobaleService: ErroreGlobaleService,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
   ) {}
 
-    /**
+  /**
    * Intercetta ogni richiesta HTTP in uscita per gestire in modo centralizzato
    * gli errori generici di backend o di rete.
    *
@@ -30,14 +36,15 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
   intercept(
     // intercetto ogni richiesta in uscita per poter gestire gli errori in modo uniforme
     req: HttpRequest<any>, // ricevo la richiesta originale così posso leggerne URL e dettagli
-    next: HttpHandler // ricevo il gestore successivo a cui inoltrare la richiesta
+    next: HttpHandler, // ricevo il gestore successivo a cui inoltrare la richiesta
   ): Observable<HttpEvent<any>> {
     // dichiaro che restituisco un flusso di eventi HTTP
     return next.handle(req).pipe(
       // inoltro la richiesta e aggancio la gestione degli errori alla risposta
       catchError((err: HttpErrorResponse) => {
         // catturo eventuali errori HTTP generati dalla chiamata
-        if (req.url.includes('/accedi') || req.url.includes('/logout')) { // evito di intervenire sulle chiamate di accesso e uscita
+        if (req.url.includes('/accedi') || req.url.includes('/logout')) {
+          // evito di intervenire sulle chiamate di accesso e uscita
           return throwError(() => err); // rilancio l'errore senza modificarlo
         }
 
@@ -46,11 +53,11 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
           return throwError(() => err); // rilancio l'errore così com'è
         }
 
-
         // 404 su dettaglio film/serie -> pagina non trovato (NO errore fatale)
-       const e404 = err.status === 404;
-        const eDettaglioFilmSerie =
-          /\/api\/v1\/(film|serie)(\/|$|-)/i.test(req.url);
+        const e404 = err.status === 404;
+        const eDettaglioFilmSerie = /\/api\/v1\/(film|serie)(\/|$|-)/i.test(
+          req.url,
+        );
 
         if (e404 && eDettaglioFilmSerie) {
           const m = (this.router.url || '').match(/^\/(it|en)(\/|$)/i);
@@ -72,7 +79,7 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
         this.erroreGlobaleService.segnalaErroreServer(msgBackend); // segnalo l'errore come bloccante al gestore globale
 
         return throwError(() => err); // rilancio l'errore per non interrompere il flusso standard
-      })
+      }),
     );
   }
 }

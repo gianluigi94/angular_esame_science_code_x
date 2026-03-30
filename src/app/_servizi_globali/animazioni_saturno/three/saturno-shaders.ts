@@ -1,3 +1,5 @@
+// in questo file creo li shader per creare il bagliore degli anelli di saturno
+
 export const vertexShader = /* glsl */ `
   varying vec3 vPosition;
   void main() {

@@ -1,21 +1,26 @@
-// Utility che rende 'affidabile' la gestione dell’audio del carosello, incapsulando le limitazioni dei browser.
+// Utility che rende 'affidabile' la gestione dell'audio del carosello, incapsulando le limitazioni dei browser.
 
 export class CaroselloAudioUtility {
   /**
- * Esegue una sfumatura del guadagno WebAudio verso un valore target
- * utilizzando il GainNode e una durata espressa in millisecondi.
- *
- * @param ctx Contesto del carosello
- * @param target Valore finale del guadagno
- * @param durataMs Durata della sfumatura in millisecondi
- * @returns Promise risolta al termine della sfumatura
- */
-  static sfumaGuadagnoVerso( ctx: any, target: number,  durataMs: number ): Promise<void> {
+   * Esegue una sfumatura del guadagno WebAudio verso un valore target
+   * utilizzando il GainNode e una durata espressa in millisecondi.
+   *
+   * @param ctx Contesto del carosello
+   * @param target Valore finale del guadagno
+   * @param durataMs Durata della sfumatura in millisecondi
+   * @returns Promise risolta al termine della sfumatura
+   */
+  static sfumaGuadagnoVerso(
+    ctx: any,
+    target: number,
+    durataMs: number,
+  ): Promise<void> {
     return new Promise((resolve) => {
       // Incapsulo la sfumatura in una Promise
       try {
         // Provo a usare WebAudio se disponibile
-        if (!ctx.contestoAudio || !ctx.nodoGuadagno) {  // Se non ho contesto o nodo guadagno, non posso sfumare
+        if (!ctx.contestoAudio || !ctx.nodoGuadagno) {
+          // Se non ho contesto o nodo guadagno, non posso sfumare
           return resolve(); // Risolvo subito senza fare nulla
         }
 
@@ -28,7 +33,7 @@ export class CaroselloAudioUtility {
         try {
           ctx.nodoGuadagno.gain.setValueAtTime(
             ctx.nodoGuadagno.gain.value ?? 0,
-            t0
+            t0,
           );
         } catch {} // Metto un valore base al tempo corrente
         try {
@@ -36,8 +41,9 @@ export class CaroselloAudioUtility {
         } catch {} // Rampo linearmente verso il target
 
         if (durataSec === 0) return resolve(); // Se e' istantaneo, posso risolvere subito
-const nativeTimeout = (window as any).__zone_symbol__setTimeout ?? setTimeout;
-nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' trascorsa (fuori zone Angular)
+        const nativeTimeout =
+          (window as any).__zone_symbol__setTimeout ?? setTimeout;
+        nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' trascorsa (fuori zone Angular)
       } catch {
         // Se WebAudio fallisce, non blocco l'app
         resolve(); // Risolvo comunque
@@ -46,12 +52,12 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
   }
 
   /**
- * Inizializza il sistema WebAudio collegandolo
- * all'elemento video reale del player.
- *
- * @param ctx Contesto del carosello
- * @returns void
- */
+   * Inizializza il sistema WebAudio collegandolo
+   * all'elemento video reale del player.
+   *
+   * @param ctx Contesto del carosello
+   * @returns void
+   */
   static inizializzaWebAudioSuVideoReale(ctx: any): void {
     try {
       // Avvolgo in try/catch per non rompere su browser/permessi
@@ -62,15 +68,16 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
     } catch {} // Ignoro errori per non bloccare la riproduzione
   }
 
-/**
- * Imposta o rimuove il mute direttamente
- * sul tag video reale del player.
- *
- * @param ctx Contesto del carosello
- * @param mute Indica se attivare o disattivare il mute
- * @returns void
- */
-  static impostaMuteReale(ctx: any, mute: boolean): void {  // Imposto il mute sul tag video reale
+  /**
+   * Imposta o rimuove il mute direttamente
+   * sul tag video reale del player.
+   *
+   * @param ctx Contesto del carosello
+   * @param mute Indica se attivare o disattivare il mute
+   * @returns void
+   */
+  static impostaMuteReale(ctx: any, mute: boolean): void {
+    // Imposto il mute sul tag video reale
     try {
       // Provo in modo safe
       const elVideo = CaroselloAudioUtility.ottieniElementoVideoReale(ctx); // Recupero il video reale
@@ -79,15 +86,19 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
     } catch {} // Ignoro errori
   }
 
-/**
- * Avvia la riproduzione in modalità muta e,
- * se richiesto, prepara lo sblocco audio su interazione utente.
- *
- * @param ctx Contesto del carosello
- * @param consentiSblocco Abilita lo sblocco audio su interazione
- * @returns void
- */
-  static avviaMutatoConOpzioneSblocco( ctx: any, consentiSblocco: boolean ): void {// Ripiego su play mutato e preparo (se richiesto) lo sblocco audio su interazione
+  /**
+   * Avvia la riproduzione in modalità muta e,
+   * se richiesto, prepara lo sblocco audio su interazione utente.
+   *
+   * @param ctx Contesto del carosello
+   * @param consentiSblocco Abilita lo sblocco audio su interazione
+   * @returns void
+   */
+  static avviaMutatoConOpzioneSblocco(
+    ctx: any,
+    consentiSblocco: boolean,
+  ): void {
+    // Ripiego su play mutato e preparo (se richiesto) lo sblocco audio su interazione
     try {
       // Provo in modo safe
       CaroselloAudioUtility.impostaMuteReale(ctx, true); // Attivo il mute reale prima di partire
@@ -102,82 +113,93 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
       }
     } catch {} // Ignoro errori di play
 
-    if (consentiSblocco) {      // Se mi e' consentito preparare lo sblocco audio
+    if (consentiSblocco) {
+      // Se mi e' consentito preparare lo sblocco audio
       CaroselloAudioUtility.preparaSbloccoAudioSuInterazione(ctx); // Preparo L'azione di sblocco
     }
   }
 
-/**
- * Prepara un listener che tenta di sbloccare l'audio
- * alla prima interazione valida dell'utente.
- *
- * @param ctx Contesto del carosello
- * @returns void
- */
+  /**
+   * Prepara un listener che tenta di sbloccare l'audio
+   * alla prima interazione valida dell'utente.
+   *
+   * @param ctx Contesto del carosello
+   * @returns void
+   */
   static preparaSbloccoAudioSuInterazione(ctx: any): void {
     if (ctx.audioBloccatoDaUtente) return;
     if (ctx.handlerSbloccoAudio) return; // Esco se ho gia' un azione
 
     const handler = () => {
-  // Definisco l'handler che prova lo sblocco
-  CaroselloAudioUtility.rimuoviAscoltoSbloccoAudio(ctx); // Rimuovo subito i listener per non ripetere tentativi
+      // Definisco l'handler che prova lo sblocco
+      CaroselloAudioUtility.rimuoviAscoltoSbloccoAudio(ctx); // Rimuovo subito i listener per non ripetere tentativi
 
-  ctx.audioConsentito = true; // Considero l'audio 'consentito' dopo un click valido
+      ctx.audioConsentito = true; // Considero l'audio 'consentito' dopo un click valido
 
-  // NON spengo subito il video: in hover mi serve mantenerlo visibile
-  const sonoInHover = !!ctx.pausaPerHover;
+      // NON spengo subito il video: in hover mi serve mantenerlo visibile
+      const sonoInHover = !!ctx.pausaPerHover;
 
-  try {
-    // Provo a fermare avvii pendenti prima del riavvio
-    ctx.fermaAvvioPendete(); // Annullo eventuali avvii trailer pendenti (e invalido eventuali sequenze vecchie)
-  } catch {}
+      try {
+        // Provo a fermare avvii pendenti prima del riavvio
+        ctx.fermaAvvioPendete(); // Annullo eventuali avvii trailer pendenti (e invalido eventuali sequenze vecchie)
+      } catch {}
 
-  try {
-    // Provo a fare resume del contesto audio se sospeso
-    if (ctx.contestoAudio && ctx.contestoAudio.state === 'suspended') {
-      // Controllo se l'AudioContext e' sospeso
-      ctx.contestoAudio.resume().catch(() => {}); // Provo resume senza bloccare
-    }
-  } catch {} // Ignoro errori
+      try {
+        // Provo a fare resume del contesto audio se sospeso
+        if (ctx.contestoAudio && ctx.contestoAudio.state === 'suspended') {
+          // Controllo se l'AudioContext e' sospeso
+          ctx.contestoAudio.resume().catch(() => {}); // Provo resume senza bloccare
+        }
+      } catch {} // Ignoro errori
 
-  try {
-    // Provo a impostare subito il gain a 0 per ripartire pulito
-    CaroselloAudioUtility.sfumaGuadagnoVerso(ctx, 0, 0); // Porto il guadagno a zero in modo immediato
-  } catch {} // Ignoro errori
+      try {
+        // Provo a impostare subito il gain a 0 per ripartire pulito
+        CaroselloAudioUtility.sfumaGuadagnoVerso(ctx, 0, 0); // Porto il guadagno a zero in modo immediato
+      } catch {} // Ignoro errori
 
-  try {
-    // Provo a fermare e resettare il player prima di riavviare (REWIND SEMPRE)
-    try { ctx.player?.pause?.(); } catch {}
-    try { ctx.player?.currentTime?.(0); } catch {}
-  } catch {} // Ignoro errori
+      try {
+        // Provo a fermare e resettare il player prima di riavviare
+        try {
+          ctx.player?.pause?.();
+        } catch {}
+        try {
+          ctx.player?.currentTime?.(0);
+        } catch {}
+      } catch {} // Ignoro errori
 
-  try {
-    // Provo a togliere il mute reale prima del riavvio
-    CaroselloAudioUtility.impostaMuteReale(ctx, false); // Tolgo il mute reale
-  } catch {} // Ignoro errori
+      try {
+        // Provo a togliere il mute reale prima del riavvio
+        CaroselloAudioUtility.impostaMuteReale(ctx, false); // Tolgo il mute reale
+      } catch {} // Ignoro errori
 
-  if (sonoInHover) {
-       // CASO HOVER: nascondo il player per evitare "nero", e rimetto la cover mentre riavvio
-    try { ctx.mostraVideo = false; } catch {}
-    try { ctx.mostraImmagineHover = true; } catch {}
-    try { ctx.inizioImmagineHoverMs = Date.now(); } catch {}
+      if (sonoInHover) {
+        // CASO HOVER: nascondo il player per evitare "nero", e rimetto la cover mentre riavvio
+        try {
+          ctx.mostraVideo = false;
+        } catch {}
+        try {
+          ctx.mostraImmagineHover = true;
+        } catch {}
+        try {
+          ctx.inizioImmagineHoverMs = Date.now();
+        } catch {}
 
-    try {
-      // riavvio il trailer hover da 0, ora con audio
-      ctx.preparaTrailerHoverDopoImmaginePronta();
-    } catch {}
+        try {
+          // riavvio il trailer hover da 0, ora con audio
+          ctx.preparaTrailerHoverDopoImmaginePronta();
+        } catch {}
 
-    return;
-  }
+        return;
+      }
 
-  // CASO NORMALE: comportamento attuale
-  ctx.mostraVideo = false; // Nascondo il video mentre faccio reset e riavvio con audio
+      // CASO NORMALE: comportamento attuale
+      ctx.mostraVideo = false; // Nascondo il video mentre faccio reset e riavvio con audio
 
-  try {
-    // Riavvio il trailer corrente ora che ho un click valido (gesture utente)
-    ctx.avviaTrailerCorrenteDopo(0); // Riavvio subito il trailer corrente con audio (se le condizioni lo consentono)
-  } catch {} // Ignoro errori per non bloccare
-};
+      try {
+        // Riavvio il trailer corrente ora che ho un click valido (gesture utente)
+        ctx.avviaTrailerCorrenteDopo(0); // Riavvio subito il trailer corrente con audio (se le condizioni lo consentono)
+      } catch {} // Ignoro errori per non bloccare
+    };
 
     ctx.handlerSbloccoAudio = handler; // Salvo il riferimento per poter rimuovere dopo
 
@@ -188,13 +210,13 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
     }); // Aggancio solo su click (unico evento valido)
   }
 
- /**
- * Rimuove eventuali listener registrati
- * per lo sblocco audio su interazione utente.
- *
- * @param ctx Contesto del carosello
- * @returns void
- */
+  /**
+   * Rimuove eventuali listener registrati
+   * per lo sblocco audio su interazione utente.
+   *
+   * @param ctx Contesto del carosello
+   * @returns void
+   */
   static rimuoviAscoltoSbloccoAudio(ctx: any): void {
     // Rimuovo eventuali listener di sblocco audio registrati
     const h = ctx.handlerSbloccoAudio; // Leggo l'handler salvato
@@ -207,41 +229,41 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
     ctx.handlerSbloccoAudio = null; // Azzero il riferimento per consentire nuovi agganci
   }
 
-/**
- * Restituisce pubblicamente l'elemento video reale attualmente usato dal player.
- *
- * @param ctx Contesto del carosello
- * @returns Elemento video reale oppure null se non presente
- */
+  /**
+   * Restituisce pubblicamente l'elemento video reale attualmente usato dal player.
+   *
+   * @param ctx Contesto del carosello
+   * @returns Elemento video reale oppure null se non presente
+   */
   static ottieniElementoVideoRealePubblico(ctx: any): HTMLVideoElement | null {
     // Trovo e ritorno l'elemento <video> reale dentro il player
     return CaroselloAudioUtility.ottieniElementoVideoReale(ctx); // Delego all'helper interno
   }
 
-/**
- * Collega pubblicamente un elemento video reale al sistema WebAudio
- * creando o riutilizzando i nodi necessari (sorgente e GainNode).
- *
- * @param ctx Contesto del carosello
- * @param elVideo Elemento video reale da collegare
- * @returns void
- */
+  /**
+   * Collega pubblicamente un elemento video reale al sistema WebAudio
+   * creando o riutilizzando i nodi necessari (sorgente e GainNode).
+   *
+   * @param ctx Contesto del carosello
+   * @param elVideo Elemento video reale da collegare
+   * @returns void
+   */
   static collegaWebAudioAlVideoPubblico(ctx: any, elVideo: any): void {
     // Collego l'elemento video al WebAudio (con GainNode per fade)
     if (!elVideo) return; // Esco se non ho un elemento video valido
     CaroselloAudioUtility.collegaWebAudioAlVideo(
       ctx,
-      elVideo as HTMLVideoElement
+      elVideo as HTMLVideoElement,
     ); // Delego all'helper interno
   }
 
-/**
- * Verifica se il player ha sostituito il tag video reale e, se necessario,
- * ricollega correttamente WebAudio al nuovo elemento.
- *
- * @param ctx Contesto del carosello
- * @returns void
- */
+  /**
+   * Verifica se il player ha sostituito il tag video reale e, se necessario,
+   * ricollega correttamente WebAudio al nuovo elemento.
+   *
+   * @param ctx Contesto del carosello
+   * @returns void
+   */
   static verificaRicollegamentoVideo(ctx: any): void {
     // Verifico se il player ha sostituito il tag <video> e, se si', ricollego il WebAudio
     const el = CaroselloAudioUtility.ottieniElementoVideoReale(ctx); // Recupero il video reale attuale dal DOM
@@ -252,14 +274,13 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
     }
   }
 
-
-/**
- * Applica attributi necessari direttamente sul tag video reale del player
- * per garantire compatibilita' e uso con WebAudio.
- *
- * @param ctx Contesto del carosello
- * @returns void
- */
+  /**
+   * Applica attributi necessari direttamente sul tag video reale del player
+   * per garantire compatibilita' e uso con WebAudio.
+   *
+   * @param ctx Contesto del carosello
+   * @returns void
+   */
   static applicaAttributiVideoReale(ctx: any): void {
     // Applico attributi necessari direttamente sul tag <video> reale del player
     try {
@@ -271,13 +292,12 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
     } catch {} // Ignoro errori per non bloccare
   }
 
-
- /**
- * Recupera internamente il tag video reale dal DOM del player.
- *
- * @param ctx Contesto del carosello
- * @returns Elemento HTMLVideoElement trovato oppure null se non disponibile
- */
+  /**
+   * Recupera internamente il tag video reale dal DOM del player.
+   *
+   * @param ctx Contesto del carosello
+   * @returns Elemento HTMLVideoElement trovato oppure null se non disponibile
+   */
   private static ottieniElementoVideoReale(ctx: any): HTMLVideoElement | null {
     // Recupero il tag <video> reale dal player/DOM
     try {
@@ -292,20 +312,19 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
     }
   }
 
-
-/**
- * Collega internamente l'elemento video reale al grafo WebAudio (sorgente + GainNode).
- *
- * Disconnette eventuali nodi precedenti, crea AudioContext se mancante e collega:
- * sorgente -> gain -> destinazione.
- *
- * @param ctx Contesto del carosello
- * @param elVideo Elemento video reale da collegare
- * @returns void
- */
+  /**
+   * Collega internamente l'elemento video reale al grafo WebAudio (sorgente + GainNode).
+   *
+   * Disconnette eventuali nodi precedenti, crea AudioContext se mancante e collega:
+   * sorgente -> gain -> destinazione.
+   *
+   * @param ctx Contesto del carosello
+   * @param elVideo Elemento video reale da collegare
+   * @returns void
+   */
   private static collegaWebAudioAlVideo(
     ctx: any,
-    elVideo: HTMLVideoElement
+    elVideo: HTMLVideoElement,
   ): void {
     // Collego l'elemento video al WebAudio (con GainNode per fade)
     if (!elVideo) return; // Esco se non ho un elemento video valido
@@ -342,7 +361,7 @@ nativeTimeout(resolve, Math.max(0, durataMs)); // Risolvo quando la durata e' tr
 
       ctx.elementoVideoReale = elVideo; // Salvo il riferimento al video reale attuale
       ctx.nodoSorgente = ctx.contestoAudio.createMediaElementSource(
-        ctx.elementoVideoReale
+        ctx.elementoVideoReale,
       ); // Creo una sorgente WebAudio dal media element
       ctx.nodoGuadagno = ctx.contestoAudio.createGain(); // Creo un GainNode per controllare il volume e fare fade
       try {

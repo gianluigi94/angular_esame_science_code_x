@@ -1,26 +1,37 @@
+<!-- html del foorer, gli elementi e gli attributi si traducono in base alla lingua -->
 <footer id="main_footer">
   <p id="footer-p">
-
-    <a routerLink="/privacy"
-       [innerHTML]="'ui.footer.privacy.label' | translate"
-       [title]="'ui.footer.privacy.title' | translate"></a>
+    <a
+      routerLink="/privacy"
+      [innerHTML]="'ui.footer.privacy.label' | translate"
+      [title]="'ui.footer.privacy.title' | translate"
+    ></a>
 
     © 2026 Science&nbsp;Code<span>X</span>
-
+    <!-- voce per andare ai contatti -->
     <ng-container *ngIf="!isContactRoute && !is404Route; else tornaTemplate">
-      <a class="link_cont"
-         (click)="onContattiClick($event)"
-         [innerHTML]="'ui.footer.contatti.label' | translate"
-         [title]="'ui.footer.contatti.title' | translate"></a>
+      <a
+        class="link_cont"
+        (click)="onContattiClick($event)"
+        [innerHTML]="'ui.footer.contatti.label' | translate"
+        [title]="'ui.footer.contatti.title' | translate"
+      ></a>
     </ng-container>
-
+    <!-- voce per uscire dai contatti -->
     <ng-template #tornaTemplate>
-      <a class="link_cont"
-         (click)="tornaIndietro($event)"
-         [title]="(sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti') | translate">
-        {{ (sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti') | translate }}
+      <a
+        class="link_cont"
+        (click)="tornaIndietro($event)"
+        [title]="
+          (sonoLoggato ? 'ui.torna.log.contatti' : 'ui.torna.contatti')
+            | translate
+        "
+      >
+        {{
+          (sonoLoggato ? "ui.torna.log.contatti" : "ui.torna.contatti")
+            | translate
+        }}
       </a>
     </ng-template>
-
   </p>
 </footer>

@@ -6,25 +6,28 @@
 <!-- carosello 'hero' delle novita -->
 <app-carosello-novita></app-carosello-novita>
 
-
 <div class="catalogo-contenuto">
   <section id="locandine_container">
-   <ng-container *ngFor="let riga of righeDemo; trackBy: tracciaRigaCategoria">
-    <app-riga-categoria
-  #rigaCatalogo
-  [attr.id]="'cat_' + riga.idCategoria"
-  [idCategoria]="riga.idCategoria"
-  [categoria]="riga.category"
-  [locandine]="riga.locandine"
-  [tickResetPagine]="tickResetPagine"
->
-</app-riga-categoria>
-   </ng-container>
-   <div *ngIf="haAltreRighe && !hoFinitoTutto" #sentinella class="sentinella">
-    <ng-container *ngFor="let indice of cinqueElementi">
-      <app-spinner></app-spinner>
+    <!-- ciclo delle righe categoria, trackBy per evitare re-render inutili -->
+    <ng-container *ngFor="let riga of righeDemo; trackBy: tracciaRigaCategoria">
+      <!-- richiamo il componente della riga singola: id per lo scroll programmatico, tickResetPagine resetta la paginazione orizzontale al cambio tipo, si possono appunto cambiare per tipologia -->
+      <app-riga-categoria
+        #rigaCatalogo
+        [attr.id]="'cat_' + riga.idCategoria"
+        [idCategoria]="riga.idCategoria"
+        [categoria]="riga.category"
+        [locandine]="riga.locandine"
+        [tickResetPagine]="tickResetPagine"
+      >
+      </app-riga-categoria>
     </ng-container>
-  </div>
- </section>
+    <!-- sentinella per l'infinite scroll, visibile finche ci sono altre righe da caricare, sono ciclati per un numero di 5 -->
+    <div *ngIf="haAltreRighe && !hoFinitoTutto" #sentinella class="sentinella">
+      <ng-container *ngFor="let indice of cinqueElementi">
+        <app-spinner></app-spinner>
+      </ng-container>
+    </div>
+  </section>
+  <!-- richiamo il footer -->
   <app-footer></app-footer>
 </div>

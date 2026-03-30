@@ -1,8 +1,12 @@
+<!-- html della pagina 404 di errore -->
+
+<!-- c'è un saturno senza animazioni -->
 <app-saturno
   [usaAnimazioniIngresso]="false"
   [usaAnimazioniScroll]="false">
 </app-saturno>
 
+<!-- un click su questo div permette di chiudere il componente con animazione e di tornare o indietro o al path /, dipende dove sono -->
 <div class="nf-bg" >
   <div class="flex" (click)="chiudi404DaClick()">
   <div class="nf-overlay"></div>
@@ -13,7 +17,9 @@
             [class.closing]="animazione404InCorso"
       (transitionend)="onMaskTransitionEnd($event)">
       <div class="nf-num">
+        <!-- numeri -->
   <span class="d">4</span><span class="d zero">0</span><span class="d">4</span>
+  <!-- le traduzioni non sono gestite dal db e compaiono con animazioni -->
  <p *ngIf="cambioLinguaService.leggiCodiceLingua() === 'it'"><span class="bigbig">Clicca</span> per tornare {{ autenticato ? 'al catalogo' : 'alla pagina iniziale' }}</p>
 <p *ngIf="cambioLinguaService.leggiCodiceLingua() !== 'it'"><span class="bigbig">Click</span> to go back to the {{ autenticato ? 'catalog' : 'home page' }}</p>
 </div>
@@ -21,6 +27,7 @@
     </div>
   </div>
   </div>
+  <!-- il footer deve aspettare che abbia cariche le traduzioni, visto che nella 404 non c'è il loader che  copre -->
   <app-footer *ngIf="traduzioniPronte"></app-footer>
 </div>
 

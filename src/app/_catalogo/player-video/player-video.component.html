@@ -1,33 +1,38 @@
+<!-- html del player video fatto in video js per film/serie, usando sia elementi custom, che elementi messi a disposizione della libreria -->
 <div class="video-wrapper">
   <div class="player-video-wrapper">
-<div class="vjs-cerchio-centrale" (click)="togglePlayPausa()">
-  <div class="vjs-cerchio-icona">
-  <span [class.icona-play]="playerInPausa">{{ playerInPausa ? '▶' : '⏸' }}</span>
-</div>
-</div>
-
-
-  <app-barra-avanzamento
-    #barraAd
-  *ngIf="adInCorso"
-  [visibile]="true"
-  [modalitaAd]="true"
-  [percentualeAvanzamento]="barraAvanzamentoService.percentualeAvanzamento"
-  [percentualeBuffer]="0"
-  [durataTotaleMs]="barraAvanzamentoService.durataTotaleMs"
-  [posizioneCorrenteMs]="barraAvanzamentoService.posizioneCorrenteMs"
-  [tempoCorrenteTesto]="barraAvanzamentoService.tempoCorrenteTesto"
-  [durataTotaleTesto]="barraAvanzamentoService.durataTotaleTesto"
-  [ariaLabel]="'Avanzamento pubblicita'"
-></app-barra-avanzamento>
-  <video-js
-  #target
-    id="vid1"
-    class="vjs-default-skin vjs-orange"
-    controls
-    preload="auto"
-    playsinline
-    data-setup='{}'
-  >
-  </video-js>
+    <!-- contenitore per icona di pausa e stoap che si alternano al click-->
+    <div class="vjs-cerchio-centrale" (click)="togglePlayPausa()">
+      <div class="vjs-cerchio-icona">
+        <span [class.icona-play]="playerInPausa">{{
+          playerInPausa ? "▶" : "⏸"
+        }}</span>
+      </div>
+    </div>
+<!-- barra avanzamento per la publicità, con le impostazioni delle publicità (differenziandosi da quella dei trailer) -->
+    <app-barra-avanzamento
+      #barraAd
+      *ngIf="adInCorso"
+      [visibile]="true"
+      [modalitaAd]="true"
+      [percentualeAvanzamento]="barraAvanzamentoService.percentualeAvanzamento"
+      [percentualeBuffer]="0"
+      [durataTotaleMs]="barraAvanzamentoService.durataTotaleMs"
+      [posizioneCorrenteMs]="barraAvanzamentoService.posizioneCorrenteMs"
+      [tempoCorrenteTesto]="barraAvanzamentoService.tempoCorrenteTesto"
+      [durataTotaleTesto]="barraAvanzamentoService.durataTotaleTesto"
+      [ariaLabel]="'Avanzamento pubblicita'"
+    ></app-barra-avanzamento>
+    <!-- player vero e proprio -->
+    <video-js
+      #target
+      id="vid1"
+      class="vjs-default-skin vjs-orange"
+      controls
+      preload="auto"
+      playsinline
+      data-setup="{}"
+    >
+    </video-js>
+  </div>
 </div>

@@ -23,6 +23,6 @@ import { PlayerVideoComponent } from './player-video/player-video.component';
     ComponentiComuniModule, // utilizzo dei componenti comunti
     SaturnoModule, // utilizzo di saturno
   ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA], //per usare <video-js> come tag
 })
 export class CatalogoModule {}

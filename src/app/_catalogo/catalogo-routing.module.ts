@@ -1,12 +1,18 @@
-// Modulo di routing che definisce le rotte del feature Catalogo e collega i path ai rispettivi componenti.
+// Modulo di routing che definisce le rotte del Catalogo e collega matcher, path e componenti corretti.
 
 import { NgModule } from '@angular/core';
 import { CatalogoComponent } from './catalogo/catalogo.component';
 import { SchedaComponent } from './scheda/scheda.component';
 import { RouterModule, Routes, UrlSegment, UrlMatchResult } from '@angular/router';
 import { CatalogoUscitaGuard } from 'src/app/_guard/catalogo-uscita.guard';
+
+/**
+ * Riconosce le rotte di dettaglio film con id numerico.
+ *
+ * @param segmenti Segmenti URL correnti da validare.
+ * @returns UrlMatchResult | null Match valido con id oppure null.
+ */
 export function matcherFilmDettaglio(segmenti: UrlSegment[]): UrlMatchResult | null {
-  // /film/:id oppure /movies/:id con id solo cifre e niente extra
   if (
     segmenti.length === 2 &&
     /^(film|movies)$/.test(segmenti[0].path) &&
@@ -15,21 +21,25 @@ export function matcherFilmDettaglio(segmenti: UrlSegment[]): UrlMatchResult | n
     return {
       consumed: segmenti,
       posParams: { id: segmenti[1] },
-    };
+    }; // consumo i segmenti e salvo l'id come parametro di route
   }
-  return null;
+  return null; // se i segmenti non corrispondono non faccio match
 }
 
+/**
+ * Riconosce le rotte di dettaglio serie con id numerico e stagione opzionale.
+ *
+ * @param segmenti Segmenti URL correnti da validare.
+ * @returns UrlMatchResult | null Match valido con id e stagione opzionale oppure null.
+ */
 export function matcherSerieDettaglio(segmenti: UrlSegment[]): UrlMatchResult | null {
   if (
     /^(serie|series)$/.test(segmenti[0]?.path) &&
     /^\d+$/.test(segmenti[1]?.path)
   ) {
-    // /serie/13
     if (segmenti.length === 2) {
-      return { consumed: segmenti, posParams: { id: segmenti[1] } };
+      return { consumed: segmenti, posParams: { id: segmenti[1] } }; // faccio match su una scheda serie senza stagione esplicita
     }
-    // /serie/13/stagione/2 oppure /series/13/season/2
     if (
       segmenti.length === 4 &&
       /^(stagione|season)$/.test(segmenti[2]?.path) &&
@@ -38,10 +48,10 @@ export function matcherSerieDettaglio(segmenti: UrlSegment[]): UrlMatchResult | 
       return {
         consumed: segmenti,
         posParams: { id: segmenti[1], stagione: segmenti[3] },
-      };
+      }; // faccio match su una scheda serie con stagione esplicita
     }
   }
-  return null;
+  return null; // se i segmenti non corrispondono non faccio match
 }
 
 const routes: Routes = [
@@ -57,17 +67,16 @@ const routes: Routes = [
     canDeactivate: [CatalogoUscitaGuard],
   },
   {
-
     path: 'serie',
     component: CatalogoComponent,
     canDeactivate: [CatalogoUscitaGuard],
   },
-    {
+  {
     path: 'film-serie',
     component: CatalogoComponent,
     canDeactivate: [CatalogoUscitaGuard],
-   },
-     {
+  },
+  {
     path: 'movies',
     component: CatalogoComponent,
     canDeactivate: [CatalogoUscitaGuard],
@@ -82,17 +91,16 @@ const routes: Routes = [
     component: CatalogoComponent,
     canDeactivate: [CatalogoUscitaGuard],
   },
-{
-  matcher: matcherFilmDettaglio,
-  component: SchedaComponent,
-  canDeactivate: [CatalogoUscitaGuard],
-},
-{
-  matcher: matcherSerieDettaglio,
-  component: SchedaComponent,
-  canDeactivate: [CatalogoUscitaGuard],
-},
-
+  {
+    matcher: matcherFilmDettaglio,
+    component: SchedaComponent,
+    canDeactivate: [CatalogoUscitaGuard],
+  },
+  {
+    matcher: matcherSerieDettaglio,
+    component: SchedaComponent,
+    canDeactivate: [CatalogoUscitaGuard],
+  },
 ];
 
 @NgModule({

@@ -1,15 +1,14 @@
 // Utility che evita 'corse' tra caricamento e interazione, permettendo di capire (o attendere) quando gli overlay che coprono la pagina sono davvero spariti.
 
 export class CaroselloCopertureUtility {
-
   /**
- * Controlla se esistono ancora coperture/overlay visibili sopra la pagina.
- *
- * Verifica la presenza e la visibilita' reale di una lista di selettori
- * (componenti e overlay) usando display, visibility e opacity.
- *
- * @returns true se almeno una copertura risulta visibile, false altrimenti
- */
+   * Controlla se esistono ancora coperture/overlay visibili sopra la pagina.
+   *
+   * Verifica la presenza e la visibilita' reale di una lista di selettori
+   * (componenti e overlay) usando display, visibility e opacity.
+   *
+   * @returns true se almeno una copertura risulta visibile, false altrimenti
+   */
   static copertureAncoraVisibili(): boolean {
     // Controllo se ci sono ancora coperture/overlay visibili sopra la pagina
     const selettori = [
@@ -39,14 +38,14 @@ export class CaroselloCopertureUtility {
   }
 
   /**
- * Attende che le coperture/overlay non siano piu' visibili oppure che scada il timeout massimo.
- *
- * Usa un controllo a frame (requestAnimationFrame) e un MutationObserver per reagire
- * a cambiamenti del DOM e risolvere appena le coperture spariscono.
- *
- * @param timeoutMs Tempo massimo di attesa in millisecondi (default: 8000)
- * @returns Promise risolta quando le coperture non sono piu' visibili o al timeout
- */
+   * Attende che le coperture/overlay non siano piu' visibili oppure che scada il timeout massimo.
+   *
+   * Usa un controllo a frame (requestAnimationFrame) e un MutationObserver per reagire
+   * a cambiamenti del DOM e risolvere appena le coperture spariscono.
+   *
+   * @param timeoutMs Tempo massimo di attesa in millisecondi (default: 8000)
+   * @returns Promise risolta quando le coperture non sono piu' visibili o al timeout
+   */
   static attendiCopertureNonVisibili(timeoutMs: number = 8000): Promise<void> {
     // Attendo che le coperture spariscano o scada un timeout
     return new Promise((resolve) => {

@@ -1,4 +1,4 @@
-// in questo servizio gestisco il codice principale della scena di saturno in three.js
+// Service che gestisce il codice principale della scena di Saturno in Three.js.
 
 import { Injectable, NgZone } from '@angular/core';
 import * as THREE from 'three';
@@ -15,69 +15,64 @@ import { CaricamentoCaroselloService } from 'src/app/_catalogo/carosello-novita/
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { SaturnoStatoService } from '../saturno-stato.service';
 import { ScorrimentoCatalogoService } from 'src/app/_catalogo/riga-categoria/categoria_services/scorrimento-catalogo.service';
-import { leggiPathDaSessionStorage, isAreaCatalogo } from 'src/app/_helpers_globali/helpers';
+import { leggiPathDaSessionStorage, isAreaCatalogo} from 'src/app/_helpers_globali/helpers';
 import gsap from 'gsap';
 import { GRUPPI_CONFIG } from './saturno-gruppi-config';
 import { SaturnoDischiService } from './saturno-dischi.service';
 import { SaturnoMouseHelper } from './saturno_helpers/saturno-mouse.helper';
 import { SaturnoLoopHelper } from './saturno_helpers/saturno-loop.helper';
-import {
-  eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione,
-  eRottaNotFound, eRottaContatti, eSchedaCatalogo, leggiUrlAttuale,
-} from './saturno-url.utils';
+import { eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione, eRottaNotFound, eRottaContatti, eSchedaCatalogo,leggiUrlAttuale } from './saturno-url.utils';
 
 @Injectable({ providedIn: 'root' })
 export class SaturnoService {
-  private pathPrecedenteSessioneAllAvvio: string = '';
-  saturnoPronto$ = this.saturnoStatoService.saturnoPronto$;
-  transizioneDa404ACatalogo: boolean = false;
-  private scenaInizializzata: boolean = false;
+  private pathPrecedenteSessioneAllAvvio: string = ''; // conservo il path precedente letto dalla sessione all'avvio del service
+  saturnoPronto$ = this.saturnoStatoService.saturnoPronto$; // espongo lo stream che segnala quando Saturno e' pronto
+  transizioneDa404ACatalogo: boolean = false; // tengo traccia se devo gestire la transizione dalla 404 al catalogo
+  private scenaInizializzata: boolean = false; // tengo traccia se la scena e' gia' stata inizializzata almeno una volta
 
-  // 🔹 serve per non rifare l'animazione di /catalogo ad ogni rientro
-  private catalogoGiaAnimato: boolean = false;
+  private catalogoGiaAnimato: boolean = false; // tengo traccia se il catalogo ha gia' fatto la sua animazione di ingresso
 
-  // Configurazioni per i gruppi di particelle (asteroidi)
-  private groupsConfig = [...GRUPPI_CONFIG];
+  private groupsConfig = [...GRUPPI_CONFIG]; // preparo la configurazione dei gruppi particellari partendo dalla costante condivisa
+
+  private scene: THREE.Scene | null = null; // conservo il riferimento alla scena Three.js
+  private camera: THREE.Camera | null = null; // conservo il riferimento alla camera Three.js
+  private renderer: THREE.WebGLRenderer | null = null; // conservo il riferimento al renderer Three.js
+
+  private planetMesh: THREE.Mesh | null = null; // conservo il riferimento alla mesh principale di Saturno
+  private particleGroups: THREE.Group[] = []; // conservo i gruppi di particelle creati attorno a Saturno
+
+  private directionalLight: THREE.DirectionalLight | null = null; // conservo il riferimento alla luce direzionale principale
+  private skipLoginIntroOnce: boolean = false; // tengo traccia se devo saltare una volta l'intro del login
+  private skipRegistrazioneIntroOnce: boolean = false; // tengo traccia se devo saltare una volta l'intro della registrazione
+
+  private readonly mouseHelper = new SaturnoMouseHelper(); // creo l'helper dedicato al mouse e all'hover delle particelle
+  private loopHelper!: SaturnoLoopHelper; // conservo l'helper che gestisce il loop di rendering
 
   /**
-   * Riferimenti memorizzati per poterne fare l'update continuo.
+   * Verifica se il dispositivo corrente e' mobile o tablet.
+   *
+   * @returns boolean
    */
-  private scene: THREE.Scene | null = null;
-  private camera: THREE.Camera | null = null;
-  private renderer: THREE.WebGLRenderer | null = null;
-
-  // Riferimenti per pianeta, particelle e quant'altro ci serve animare
-  private planetMesh: THREE.Mesh | null = null;
-  private particleGroups: THREE.Group[] = [];
-
-  // Luce direzionale
-  private directionalLight: THREE.DirectionalLight | null = null;
-  private skipLoginIntroOnce: boolean = false;
-  private skipRegistrazioneIntroOnce: boolean = false;
-
-  // Helper per mouse e loop
-  private readonly mouseHelper = new SaturnoMouseHelper();
-  private loopHelper!: SaturnoLoopHelper;
-
-  // capire se è un dispositivo mobile
   private isMobileOrTablet(): boolean {
-    const userAgent = navigator.userAgent.toLowerCase();
+    const userAgent = navigator.userAgent.toLowerCase(); // leggo la user agent corrente in minuscolo
     return /android|iphone|ipad|ipod|blackberry|opera mini|iemobile|wpdesktop/.test(
       userAgent,
-    );
+    ); // verifico se la user agent appartiene a un dispositivo mobile o tablet
   }
 
-  // se sono su un dispositivo mobile semplifico la scena con meno particelle
-  //   ...group = copia tutte le proprietà del gruppo
-  // particleCount: ... = cambia solo quella che mi interessa
+  /**
+   * Riduce il numero di particelle per alleggerire la scena su device meno performanti.
+   *
+   * @returns void
+   */
   private reduceParticles(): void {
     this.groupsConfig = this.groupsConfig.map((group) => ({
-      ...group,
-      particleCount: Math.max(group.particleCount - 200, 30), // Evita che diventi negativo
+      // ricreo tutte le configurazioni dei gruppi
+      ...group, // mantengo tutte le proprieta' originali del gruppo
+      particleCount: Math.max(group.particleCount - 200, 30), // riduco le particelle senza scendere sotto la soglia minima
     }));
   }
 
-  // mi servono gli altri servizzi threeJs
   constructor(
     private sceneService: SceneService,
     private diskService: DiskService,
@@ -95,533 +90,711 @@ export class SaturnoService {
     private scorrimentoCatalogo: ScorrimentoCatalogoService,
     private ngZone: NgZone,
   ) {
-    this.loopHelper = new SaturnoLoopHelper(
-      ngZone,
-      diskService,
-      saturnoStatoService,
-      this.mouseHelper,
-      () => this.planetMesh,
-      () => this.particleGroups,
-      () => this.camera,
+    this.loopHelper = new SaturnoLoopHelper( // inizializzo l'helper del loop passando tutti i riferimenti necessari
+      ngZone, // passo la NgZone per eseguire il loop fuori da Angular
+      diskService, // passo il service dei dischi per animare gli anelli
+      saturnoStatoService, // passo il service di stato per segnalare quando Saturno e' pronto
+      this.mouseHelper, // passo l'helper del mouse per animare i gruppi particellari
+      () => this.planetMesh, // passo la funzione che restituisce la mesh del pianeta
+      () => this.particleGroups, // passo la funzione che restituisce i gruppi di particelle
+      () => this.camera, // passo la funzione che restituisce la camera corrente
     );
     this.performanceService.isLowEndPC$.subscribe((isLowEnd) => {
+      // mi sottoscrivo al flag che indica macchine poco performanti
       if (isLowEnd || this.isMobileOrTablet()) {
-        this.reduceParticles();
+        // controllo se la macchina e' low-end oppure se il device e' mobile/tablet
+        this.reduceParticles(); // riduco il numero di particelle per alleggerire la scena
       }
     });
-    this.transizioneDa404ACatalogo = this.leggiFlagTransizione404Catalogo();
+    this.transizioneDa404ACatalogo = this.leggiFlagTransizione404Catalogo(); // leggo subito l'eventuale flag di transizione 404 -> catalogo
 
-    this.skipLoginIntroOnce = this.isPageReload() && eRottaLogin(window.location.pathname);
-    this.skipRegistrazioneIntroOnce = this.isPageReload() && eRottaRegistrazione(window.location.pathname);
-    this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage();
+    this.skipLoginIntroOnce =
+      this.isPageReload() && eRottaLogin(window.location.pathname); // preparo il flag per saltare una volta l'intro login in caso di reload
+    this.skipRegistrazioneIntroOnce =
+      this.isPageReload() && eRottaRegistrazione(window.location.pathname); // preparo il flag per saltare una volta l'intro registrazione in caso di reload
+    this.pathPrecedenteSessioneAllAvvio = leggiPathDaSessionStorage(); // salvo il path precedente disponibile in session storage all'avvio
   }
 
+  /**
+   * Distrugge completamente la scena di Saturno, le animazioni e i riferimenti associati.
+   *
+   * @returns void
+   */
   private distruggiSaturno(): void {
-    // Stop animazioni GSAP e spegni la luce direzionale
-    this.animateService.resetAnimations?.();
+    this.animateService.resetAnimations?.(); // fermo e resetto le animazioni GSAP se il metodo e' disponibile
 
-    // Ferma il loop
-    this.loopHelper.stop();
+    this.loopHelper.stop(); // fermo il loop di rendering
 
-    // Rimuovi il listener del mouse
-    this.mouseHelper.rimuoviHoverMouse();
+    this.mouseHelper.rimuoviHoverMouse(); // rimuovo il listener del mouse
 
-    // Rimuovi gli oggetti dalla scena
     if (this.scene) {
+      // controllo se la scena esiste
       if (this.planetMesh) {
-        this.scene.remove(this.planetMesh);
+        // controllo se la mesh del pianeta esiste
+        this.scene.remove(this.planetMesh); // rimuovo la mesh del pianeta dalla scena
       }
 
       this.particleGroups.forEach((group) => {
-        this.scene!.remove(group);
+        // scorro tutti i gruppi di particelle
+        this.scene!.remove(group); // rimuovo ogni gruppo dalla scena
       });
 
       if (this.directionalLight) {
-        this.scene.remove(this.directionalLight);
+        // controllo se la luce direzionale esiste
+        this.scene.remove(this.directionalLight); // rimuovo la luce dalla scena
       }
 
       this.diskService.getDisks().forEach(({ mesh }) => {
-        this.scene!.remove(mesh);
+        // scorro tutti i dischi registrati nel service
+        this.scene!.remove(mesh); // rimuovo ciascun disco dalla scena
       });
     }
 
-    this.planetMesh = null;
-    this.particleGroups = [];
-    this.directionalLight = null;
-    this.diskService.clearDisks();
+    this.planetMesh = null; // azzero il riferimento alla mesh del pianeta
+    this.particleGroups = []; // svuoto l'array dei gruppi di particelle
+    this.directionalLight = null; // azzero il riferimento alla luce direzionale
+    this.diskService.clearDisks(); // pulisco l'archivio dei dischi nel service dedicato
 
-    // Rimuovi il canvas dal DOM
     if (this.renderer) {
-      const canvas = this.renderer.domElement;
+      // controllo se il renderer esiste
+      const canvas = this.renderer.domElement; // recupero il canvas del renderer
       if (canvas.parentElement) {
-        canvas.parentElement.removeChild(canvas);
+        // controllo se il canvas e' montato nel DOM
+        canvas.parentElement.removeChild(canvas); // rimuovo il canvas dal DOM
       }
     }
 
-    // Azzeriamo tutto così alla prossima volta ricostruiamo da zero
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
+    this.scene = null; // azzero il riferimento alla scena
+    this.camera = null; // azzero il riferimento alla camera
+    this.renderer = null; // azzero il riferimento al renderer
 
-    this.loopHelper.resetFirstRender();
-    this.saturnoStatoService.reset();
-    this.catalogoGiaAnimato = false;
+    this.loopHelper.resetFirstRender(); // resetto il flag del primo render nel loop helper
+    this.saturnoStatoService.reset(); // resetto lo stato globale di Saturno
+    this.catalogoGiaAnimato = false; // resetto il flag che indica se il catalogo e' gia' stato animato
   }
 
+  /**
+   * Spegne Saturno fermando loop e hover senza distruggere la scena.
+   *
+   * @returns void
+   */
   public spegniSaturno(): void {
-    // Stoppa il loop ma NON distrugge la scena
-    this.loopHelper.stop();
-    this.mouseHelper.rimuoviHoverMouse();
+    this.loopHelper.stop(); // fermo il loop di rendering ma mantengo la scena viva
+    this.mouseHelper.rimuoviHoverMouse(); // rimuovo il listener del mouse
   }
 
+  /**
+   * Avvia il loop di rendering a FPS fissi usando i riferimenti correnti.
+   *
+   * @returns void
+   */
   private startFixedFPSLoop(): void {
-    this.loopHelper.start(this.scene!, this.camera!, this.renderer!);
+    this.loopHelper.start(this.scene!, this.camera!, this.renderer!); // avvio il loop passando scena, camera e renderer attuali
   }
 
   /**
    * Carica la texture del pianeta Saturno in una Promise.
+   *
+   * @returns Promise<THREE.Texture>
    */
   private loadPlanetTexture(): Promise<THREE.Texture> {
-    const textureLoader = new THREE.TextureLoader();
+    const textureLoader = new THREE.TextureLoader(); // creo il loader delle texture Three.js
     return new Promise((resolve, reject) => {
-      const textureCacheHit = localStorage.getItem('saturnoTextureLoaded');
+      // creo una promise che si risolve quando la texture e' pronta
+      const textureCacheHit = localStorage.getItem('saturnoTextureLoaded'); // verifico se ho gia' un flag locale che indica il caricamento texture
 
       if (textureCacheHit) {
-        console.log('NON PRIMA VOLTA: La texture di Saturno è stata caricata dalla cache.');
+        // controllo se il flag locale esiste gia'
+        console.log(
+          'NON PRIMA VOLTA: La texture di Saturno è stata caricata dalla cache.',
+        ); // loggo che la texture era gia' stata caricata in precedenza
       } else {
-        console.log('PRIMA VOLTA: Caricamento texture di Saturno per la prima volta.');
-        localStorage.setItem('saturnoTextureLoaded', 'true');
+        console.log(
+          'PRIMA VOLTA: Caricamento texture di Saturno per la prima volta.',
+        ); // loggo che questa e' la prima volta che carico la texture
+        localStorage.setItem('saturnoTextureLoaded', 'true'); // salvo il flag locale per i caricamenti successivi
       }
 
       textureLoader.load(
-        'assets/texture/saturno.webp',
-        (texture) => resolve(texture),
-        undefined,
-        (error) => reject(error),
+        'assets/texture/saturno.webp', // indico il path della texture di Saturno
+        (texture) => resolve(texture), // risolvo la promise quando la texture e' stata caricata
+        undefined, // non uso un callback di progress
+        (error) => reject(error), // rigetto la promise se il caricamento fallisce
       );
     });
   }
 
+  /**
+   * Attende che il carosello sia pronto oppure che scada il timeout.
+   *
+   * @param timeoutMs Timeout massimo di attesa in millisecondi.
+   * @returns Promise<void>
+   */
   private attendiCaroselloPronto(timeoutMs: number = 12000): Promise<void> {
     return new Promise((resolve) => {
+      // creo una promise che si risolve quando il carosello e' pronto o scade il timeout
       if (this.caricamentoCaroselloService.caroselloPronto$.value)
-        return resolve();
+        // controllo se il carosello e' gia' pronto
+        return resolve(); // risolvo subito se il carosello e' gia' disponibile
 
       const sub = this.caricamentoCaroselloService.caroselloPronto$.subscribe(
         (ok) => {
-          if (!ok) return;
-          try { sub.unsubscribe(); } catch {}
-          resolve();
+          // mi sottoscrivo allo stream di prontezza del carosello
+          if (!ok) return; // esco se il valore emesso non e' ancora true
+          try {
+            sub.unsubscribe();
+          } catch {} // provo a rimuovere la sottoscrizione
+          resolve(); // risolvo la promise quando il carosello diventa pronto
         },
       );
 
       setTimeout(() => {
-        try { sub.unsubscribe(); } catch {}
-        resolve();
+        // preparo il timeout di sicurezza
+        try {
+          sub.unsubscribe();
+        } catch {} // provo a rimuovere la sottoscrizione anche allo scadere del timeout
+        resolve(); // risolvo comunque la promise allo scadere del tempo massimo
       }, timeoutMs);
     });
   }
 
+  /**
+   * Inizializza Saturno oppure riusa la scena esistente in base alla rotta corrente.
+   *
+   * @param usaAnimazioniWelcome Flag che decide se usare le animazioni di ingresso della welcome.
+   * @returns Promise<void>
+   */
   public initializeSaturn(usaAnimazioniWelcome: boolean = true): Promise<void> {
     return new Promise((resolve, reject) => {
+      // creo la promise principale di inizializzazione di Saturno
 
-      // ✅ se vengo da contatti verso catalogo/scheda, faccio sparire sfondo subito
-      const urlSubito = leggiUrlAttuale();
-      const vengoDaContattiFlag = sessionStorage.getItem('vengo_da_contatti') === 'true';
+      const urlSubito = leggiUrlAttuale(); // leggo subito l'URL completo attuale
+      const vengoDaContattiFlag =
+        sessionStorage.getItem('vengo_da_contatti') === 'true'; // verifico se arrivo dai contatti tramite flag di sessione
       if (
-        vengoDaContattiFlag &&
-        this.scenaInizializzata &&
-        (eRottaCatalogo(urlSubito) || eSchedaCatalogo(urlSubito)) &&
-        !this.catalogoGiaAnimato
+        vengoDaContattiFlag && // controllo se arrivo dai contatti
+        this.scenaInizializzata && // controllo se la scena era gia' stata inizializzata
+        (eRottaCatalogo(urlSubito) || eSchedaCatalogo(urlSubito)) && // controllo se sono in catalogo o in una scheda catalogo
+        !this.catalogoGiaAnimato // controllo che il catalogo non risulti gia' animato
       ) {
-        try { sessionStorage.removeItem('vengo_da_contatti'); } catch {}
-        const saturno = document.querySelector('app-saturno') as HTMLElement | null;
-        const sfondo  = document.querySelector('app-sfondo')  as HTMLElement | null;
-        if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
-        if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
+        try {
+          sessionStorage.removeItem('vengo_da_contatti');
+        } catch {} // provo a consumare il flag di provenienza dai contatti
+        const saturno = document.querySelector(
+          'app-saturno',
+        ) as HTMLElement | null; // recupero il contenitore di Saturno dal DOM
+        const sfondo = document.querySelector(
+          'app-sfondo',
+        ) as HTMLElement | null; // recupero il contenitore dello sfondo dal DOM
+        if (saturno) {
+          gsap.killTweensOf(saturno);
+          gsap.set(saturno, { opacity: 1 });
+        } // fermo i tween e rendo visibile Saturno se esiste
+        if (sfondo) {
+          gsap.killTweensOf(sfondo);
+          gsap.set(sfondo, { opacity: 1 });
+        } // fermo i tween e rendo visibile lo sfondo se esiste
         this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-          this.animateService.enablePageScroll();
+          // faccio partire il fade out di Saturno e sfondo
+          this.animateService.enablePageScroll(); // riabilito lo scroll pagina al termine del fade
         });
       }
 
       if (
-        this.scenaInizializzata &&
-        this.scene &&
-        this.camera &&
-        this.renderer
+        this.scenaInizializzata && // controllo se la scena e' gia' stata inizializzata in precedenza
+        this.scene && // controllo se la scena Three.js esiste ancora
+        this.camera && // controllo se la camera esiste ancora
+        this.renderer // controllo se il renderer esiste ancora
       ) {
-        const url  = leggiUrlAttuale();
-        const da404 = this.leggiFlagTransizione404Catalogo();
+        const url = leggiUrlAttuale(); // leggo l'URL corrente completo
+        const da404 = this.leggiFlagTransizione404Catalogo(); // leggo l'eventuale flag di transizione 404 -> catalogo
 
         if (eRottaCatalogo(url) && this.catalogoGiaAnimato && !da404) {
-          // Riattacco il canvas al nuovo container (es. scheda ha un suo app-saturno)
-          const container = document.getElementById('three-container');
-          if (container && this.renderer.domElement.parentElement !== container) {
-            container.appendChild(this.renderer.domElement);
+          // controllo se sono in catalogo gia' animato e non provengo da 404
+          const container = document.getElementById('three-container'); // recupero il contenitore attuale del canvas Three.js
+          if (
+            container &&
+            this.renderer.domElement.parentElement !== container
+          ) {
+            // verifico se devo riattaccare il canvas a un nuovo contenitore
+            container.appendChild(this.renderer.domElement); // riattacco il canvas al contenitore corretto
           }
 
-          const vengoDaContatti = (sessionStorage.getItem('vengo_da_contatti') || '') === 'true';
+          const vengoDaContatti =
+            (sessionStorage.getItem('vengo_da_contatti') || '') === 'true'; // verifico di nuovo se arrivo dai contatti
 
           if (vengoDaContatti) {
-            try { sessionStorage.removeItem('vengo_da_contatti'); } catch {}
+            // controllo se devo fare il fade out partendo dai contatti
+            try {
+              sessionStorage.removeItem('vengo_da_contatti');
+            } catch {} // provo a consumare il flag di provenienza dai contatti
 
-            const saturno = document.querySelector('app-saturno') as HTMLElement | null;
-            const sfondo  = document.querySelector('app-sfondo')  as HTMLElement | null;
+            const saturno = document.querySelector(
+              'app-saturno',
+            ) as HTMLElement | null; // recupero il contenitore di Saturno dal DOM
+            const sfondo = document.querySelector(
+              'app-sfondo',
+            ) as HTMLElement | null; // recupero il contenitore dello sfondo dal DOM
 
-            if (saturno) { gsap.killTweensOf(saturno); gsap.set(saturno, { opacity: 1 }); }
-            if (sfondo)  { gsap.killTweensOf(sfondo);  gsap.set(sfondo,  { opacity: 1 }); }
+            if (saturno) {
+              gsap.killTweensOf(saturno);
+              gsap.set(saturno, { opacity: 1 });
+            } // fermo i tween e rendo visibile Saturno se esiste
+            if (sfondo) {
+              gsap.killTweensOf(sfondo);
+              gsap.set(sfondo, { opacity: 1 });
+            } // fermo i tween e rendo visibile lo sfondo se esiste
 
             requestAnimationFrame(() => {
+              // aspetto il frame successivo prima di lanciare il fade
               this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-                this.animateService.enablePageScroll();
+                // faccio partire il fade out di Saturno e sfondo
+                this.animateService.enablePageScroll(); // riabilito lo scroll al termine del fade
               });
             });
           } else {
-            this.animateService.fadeOutSaturnoESfondo(0);
-            this.animateService.enablePageScroll();
+            this.animateService.fadeOutSaturnoESfondo(0); // porto subito Saturno e sfondo nello stato finale di fade out
+            this.animateService.enablePageScroll(); // abilito subito lo scroll pagina
           }
 
-          this.spegniSaturno();
-          this.animateService.pauseClearcoat();
+          this.spegniSaturno(); // spengo Saturno senza distruggere la scena
+          this.animateService.pauseClearcoat(); // metto in pausa l'animazione del clearcoat
 
-          resolve();
-          return;
+          resolve(); // risolvo la promise perche' il riuso e' completato
+          return; // esco dalla funzione
         }
 
-        const container = document.getElementById('three-container');
+        const container = document.getElementById('three-container'); // recupero il contenitore del canvas Three.js
         if (!container) {
-          console.error('Contenitore non trovato: three-container');
-          resolve();
-          return;
+          // controllo se il contenitore non esiste
+          console.error('Contenitore non trovato: three-container'); // loggo l'errore di contenitore mancante
+          resolve(); // risolvo comunque la promise per non bloccare il flusso
+          return; // esco dalla funzione
         }
 
         if (this.renderer.domElement.parentElement !== container) {
-          container.appendChild(this.renderer.domElement);
+          // controllo se il canvas e' montato in un contenitore diverso
+          container.appendChild(this.renderer.domElement); // riattacco il canvas al contenitore corretto
         }
 
-        const durata = 0.85;
-        const durataCatalogo = 1.6;
+        const durata = 0.85; // preparo la durata standard delle transizioni principali
+        const durataCatalogo = 1.6; // preparo la durata standard della transizione verso il catalogo
 
         if (eRottaLogin(url)) {
+          // controllo se la rotta corrente e' login
           if (this.skipLoginIntroOnce) {
-            this.animateService.setXNormale();
-            this.animateService.setTitoloAltoGlobal();
-            this.skipLoginIntroOnce = false;
+            // controllo se devo saltare una volta l'intro del login
+            this.animateService.setXNormale(); // porto la X nello stato normale
+            this.animateService.setTitoloAltoGlobal(); // porto subito il titolo nella posizione alta
+            this.skipLoginIntroOnce = false; // consumo il flag di skip dell'intro login
           } else {
-            this.animateService.animateTitoloVersoAltoGlobal();
-            this.animateService.setXNormale();
+            this.animateService.animateTitoloVersoAltoGlobal(); // animo il titolo verso l'alto
+            this.animateService.setXNormale(); // porto la X nello stato normale
           }
           this.saturnoRouteAnimazioniService.animaVerso(
-            this.scene, 'LOGIN_LATERALE', durata, this.directionalLight || undefined
-          );
+            this.scene,
+            'LOGIN_LATERALE',
+            durata,
+            this.directionalLight || undefined,
+          ); // animo Saturno verso la posa laterale del login
         } else if (eRottaNotFound(url)) {
-          const scenaCorrente = this.scene;
-          if (!scenaCorrente) { resolve(); return; }
-          this.ensureRingsAndParticlesIfMissing(scenaCorrente);
-          this.saturnoPosizioniService.applicaPoseAScena(scenaCorrente, 'CATALOGO_NASCOSTO');
-          this.animateService.setXNormale();
-          this.animateService.setTitoloAltoGlobal();
-          this.animateService.enablePageScroll();
+          // controllo se la rotta corrente e' not found
+          const scenaCorrente = this.scene; // salvo un riferimento locale alla scena corrente
+          if (!scenaCorrente) {
+            resolve();
+            return;
+          } // esco se per qualche motivo la scena non esiste
+          this.ensureRingsAndParticlesIfMissing(scenaCorrente); // ricreo anelli e particelle se mancanti
+          this.saturnoPosizioniService.applicaPoseAScena(
+            scenaCorrente,
+            'CATALOGO_NASCOSTO',
+          ); // applico subito la posa catalogo nascosto
+          this.animateService.setXNormale(); // porto la X nello stato normale
+          this.animateService.setTitoloAltoGlobal(); // porto il titolo nella posizione alta
+          this.animateService.enablePageScroll(); // abilito lo scroll pagina
           requestAnimationFrame(() => {
+            // aspetto il frame successivo prima di avviare l'ingresso della 404
             this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
-              scenaCorrente, 1.45, this.directionalLight || undefined
-            );
+              scenaCorrente,
+              1.45,
+              this.directionalLight || undefined,
+            ); // animo l'ingresso della 404 con Saturno e scritte
           });
         } else if (eRottaWelcome(url)) {
-          this.animateService.setTitoloCentraleGlobal();
-          this.animateService.setXGif();
+          // controllo se la rotta corrente e' welcome
+          this.animateService.setTitoloCentraleGlobal(); // porto il titolo al centro
+          this.animateService.setXGif(); // porto la X nello stato GIF
         } else if (eRottaCatalogo(url)) {
-          const da404 = this.leggiFlagTransizione404Catalogo();
+          // controllo se la rotta corrente e' catalogo
+          const da404 = this.leggiFlagTransizione404Catalogo(); // leggo di nuovo il flag di transizione 404 -> catalogo
 
           if (da404) {
-            const durataCatalogo = 1.6;
-            const anticipoMs = 400;
-            this.scorrimentoCatalogo.impostaSpinnerScroll(true);
+            // controllo se devo gestire il caso speciale da 404 verso catalogo
+            const durataCatalogo = 1.6; // preparo la durata del passaggio verso catalogo
+            const anticipoMs = 400; // preparo l'anticipo del fade finale rispetto alla fine animazione
+            this.scorrimentoCatalogo.impostaSpinnerScroll(true); // attivo lo spinner di scroll del catalogo
             this.attendiCaroselloPronto().finally(() => {
-              setTimeout(() => {
-                this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-                  this.animateService.enablePageScroll();
-                });
-              }, durataCatalogo * 1000 - anticipoMs);
+              // aspetto che il carosello sia pronto prima di completare la transizione
+              setTimeout(
+                () => {
+                  // preparo il fade in anticipo rispetto alla fine del movimento di Saturno
+                  this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+                    // faccio partire il fade out di Saturno e sfondo
+                    this.animateService.enablePageScroll(); // riabilito lo scroll al termine del fade
+                  });
+                },
+                durataCatalogo * 1000 - anticipoMs,
+              );
               this.saturnoRouteAnimazioniService.animaVerso(
-                this.scene!, 'CATALOGO_NASCOSTO', durataCatalogo,
+                this.scene!,
+                'CATALOGO_NASCOSTO',
+                durataCatalogo,
                 this.directionalLight || undefined,
                 () => {
-                  this.spegniSaturno();
-                  this.animateService.pauseClearcoat();
-                  this.catalogoGiaAnimato = true;
-                  this.consumaFlagTransizione404Catalogo();
-                  this.scorrimentoCatalogo.impostaSpinnerScroll(false);
+                  this.spegniSaturno(); // spengo Saturno al termine della transizione
+                  this.animateService.pauseClearcoat(); // metto in pausa il clearcoat
+                  this.catalogoGiaAnimato = true; // segno che il catalogo ha gia' completato l'animazione
+                  this.consumaFlagTransizione404Catalogo(); // consumo il flag di transizione 404 -> catalogo
+                  this.scorrimentoCatalogo.impostaSpinnerScroll(false); // disattivo lo spinner di scroll del catalogo
                 },
               );
             });
-            this.attivaHoverMouse();
-            this.startFixedFPSLoop();
-            resolve();
-            return;
+            this.attivaHoverMouse(); // riattivo l'hover del mouse sulle particelle
+            this.startFixedFPSLoop(); // riavvio il loop di rendering
+            resolve(); // risolvo la promise subito dopo avere innescato il flusso
+            return; // esco dalla funzione
           }
 
-          const anticipoMs = 400;
+          const anticipoMs = 400; // preparo l'anticipo del fade finale rispetto alla fine animazione
 
           if (this.animateService.isTitoloInPosizioneAlta()) {
-            const durataCatalogo = 1.6;
+            // controllo se il titolo e' gia' in posizione alta
+            const durataCatalogo = 1.6; // preparo la durata della transizione catalogo
             this.attendiCaroselloPronto().finally(() => {
-              this.toastService.chiudi('accesso_ok');
-              setTimeout(() => {
-                this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-                  this.animateService.enablePageScroll();
-                });
-                this.animateService.enablePageScroll();
-                this.animateService.fadeOutSaturnoESfondo(1.25);
-              }, durataCatalogo * 1000 - anticipoMs);
+              // aspetto che il carosello sia pronto prima della transizione
+              this.toastService.chiudi('accesso_ok'); // chiudo l'eventuale toast di accesso riuscito
+              setTimeout(
+                () => {
+                  // preparo il fade out verso il catalogo
+                  this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+                    // faccio partire il fade out di Saturno e sfondo
+                    this.animateService.enablePageScroll(); // riabilito lo scroll al termine del fade
+                  });
+                  this.animateService.enablePageScroll(); // abilito comunque lo scroll
+                  this.animateService.fadeOutSaturnoESfondo(1.25); // rilancio anche il fade out come nel codice originale
+                },
+                durataCatalogo * 1000 - anticipoMs,
+              );
               this.saturnoRouteAnimazioniService.animaVerso(
-                this.scene!, 'CATALOGO_NASCOSTO', durataCatalogo,
+                this.scene!,
+                'CATALOGO_NASCOSTO',
+                durataCatalogo,
                 this.directionalLight || undefined,
                 () => {
-                  this.spegniSaturno();
-                  this.animateService.pauseClearcoat();
-                  this.catalogoGiaAnimato = true;
+                  this.spegniSaturno(); // spengo Saturno al termine della transizione
+                  this.animateService.pauseClearcoat(); // metto in pausa il clearcoat
+                  this.catalogoGiaAnimato = true; // segno che il catalogo ha gia' completato l'animazione
                 },
               );
             });
           } else {
-            this.animateService.setTitoloCentraleGlobal();
-            const durataCatalogo = 1.6;
+            this.animateService.setTitoloCentraleGlobal(); // porto il titolo al centro prima della transizione verso catalogo
+            const durataCatalogo = 1.6; // preparo la durata della transizione catalogo
             this.attendiCaroselloPronto().finally(() => {
-              setTimeout(() => {
-                this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-                  this.animateService.enablePageScroll();
-                });
-              }, durataCatalogo * 1000 - anticipoMs);
+              // aspetto che il carosello sia pronto prima della transizione
+              setTimeout(
+                () => {
+                  // preparo il fade out verso il catalogo
+                  this.animateService.fadeOutSaturnoESfondo(1.25, () => {
+                    // faccio partire il fade out di Saturno e sfondo
+                    this.animateService.enablePageScroll(); // riabilito lo scroll al termine del fade
+                  });
+                },
+                durataCatalogo * 1000 - anticipoMs,
+              );
               this.saturnoRouteAnimazioniService.animaVerso(
-                this.scene!, 'CATALOGO_NASCOSTO', durataCatalogo,
+                this.scene!,
+                'CATALOGO_NASCOSTO',
+                durataCatalogo,
                 this.directionalLight || undefined,
                 () => {
-                  this.spegniSaturno();
-                  this.animateService.pauseClearcoat();
-                  this.animateService.setXNormale();
-                  this.animateService.animateTitoloVersoAltoGlobal();
-                  this.catalogoGiaAnimato = true;
+                  this.spegniSaturno(); // spengo Saturno al termine della transizione
+                  this.animateService.pauseClearcoat(); // metto in pausa il clearcoat
+                  this.animateService.setXNormale(); // riporto la X nello stato normale
+                  this.animateService.animateTitoloVersoAltoGlobal(); // animo il titolo verso l'alto a fine transizione
+                  this.catalogoGiaAnimato = true; // segno che il catalogo ha gia' completato l'animazione
                 },
               );
             });
           }
         } else if (eRottaRegistrazione(url)) {
-          const giaInBasso   = this.scene.scale.x > 3;
-          const titoloGiaAlto = this.animateService.isTitoloInPosizioneAlta();
+          // controllo se la rotta corrente e' registrazione
+          const giaInBasso = this.scene.scale.x > 3; // verifico se Saturno e' gia' in posa bassa
+          const titoloGiaAlto = this.animateService.isTitoloInPosizioneAlta(); // verifico se il titolo e' gia' alto
           if (!titoloGiaAlto) {
-            this.animateService.setXNormale();
-            this.animateService.animateTitoloVersoAltoGlobal();
+            // controllo se il titolo non e' ancora alto
+            this.animateService.setXNormale(); // porto la X nello stato normale
+            this.animateService.animateTitoloVersoAltoGlobal(); // animo il titolo verso l'alto
           } else {
-            this.animateService.setXNormale();
+            this.animateService.setXNormale(); // porto comunque la X nello stato normale
           }
           if (!giaInBasso) {
+            // controllo se Saturno non e' gia' nella posa bassa
             this.saturnoRouteAnimazioniService.animaVerso(
-              this.scene, 'REGISTRAZIONE_BASSO', durata, this.directionalLight || undefined
-            );
+              this.scene,
+              'REGISTRAZIONE_BASSO',
+              durata,
+              this.directionalLight || undefined,
+            ); // animo Saturno verso la posa bassa della registrazione
           }
         }
 
-        this.attivaHoverMouse();
-        this.startFixedFPSLoop();
-        resolve();
-        return;
+        this.attivaHoverMouse(); // riattivo l'hover del mouse sulle particelle
+        this.startFixedFPSLoop(); // riavvio il loop di rendering
+        resolve(); // risolvo la promise dopo il riuso della scena
+        return; // esco dalla funzione
       }
 
-      // 👇 Prima inizializzazione: carica texture in parallelo
       Promise.all([
-        this.loadPlanetTexture(),
-        this.asteroidiMaterialService.loadAllTextures(),
+        this.loadPlanetTexture(), // carico la texture del pianeta in parallelo
+        this.asteroidiMaterialService.loadAllTextures(), // carico in parallelo tutte le texture dei materiali degli asteroidi
       ])
         .then(([planetTexture, _]) => {
-          const { scene, camera, renderer } = this.sceneService;
+          // entro qui quando entrambe le promesse di caricamento sono risolte
+          const { scene, camera, renderer } = this.sceneService; // recupero scena, camera e renderer dal scene service
 
-          this.scene    = scene;
-          this.camera   = camera;
-          this.renderer = renderer;
+          this.scene = scene; // salvo il riferimento alla scena appena creata
+          this.camera = camera; // salvo il riferimento alla camera appena creata
+          this.renderer = renderer; // salvo il riferimento al renderer appena creato
 
-          const container = document.getElementById('three-container');
+          const container = document.getElementById('three-container'); // recupero il contenitore del canvas Three.js
           if (!container) {
-            console.error('Contenitore non trovato: three-container');
-            return;
+            // controllo se il contenitore non esiste
+            console.error('Contenitore non trovato: three-container'); // loggo l'errore di contenitore mancante
+            return; // esco dal then mantenendo il comportamento del codice originale
           }
 
-          renderer.setSize(window.innerWidth, window.innerHeight);
-          container.appendChild(renderer.domElement);
+          renderer.setSize(window.innerWidth, window.innerHeight); // imposto la dimensione del renderer sulla viewport corrente
+          container.appendChild(renderer.domElement); // aggiungo il canvas del renderer al contenitore DOM
 
-          // Luce direzionale
-          // - su WELCOME: parte spenta e dietro al pianeta (verrà animata da AnimateService)
-          // - su LOGIN (e altre pagine): subito accesa e in posizione finale, senza animazione
-          let lightIntensity = 0;
-          let lightZ = -13.1001;
+          let lightIntensity = 0; // preparo l'intensita' iniziale della luce
+          let lightZ = -13.1001; // preparo la posizione z iniziale della luce dietro al pianeta
 
           if (!usaAnimazioniWelcome) {
-            lightIntensity = 2.8;
-            const url = this.router.url;
-            if (eRottaLogin(url))        lightZ = 0.1001;  // LOGIN_LATERALE
-            else if (eRottaWelcome(url)) lightZ = 10.1001; // WELCOME_ALTO
-            else                         lightZ = 5.1001;  // WELCOME_BASSO / fallback
+            // controllo se non devo usare le animazioni di ingresso della welcome
+            lightIntensity = 2.8; // imposto subito la luce accesa
+            const url = this.router.url; // leggo la rotta corrente dal router
+            if (eRottaLogin(url))
+              lightZ = 0.1001; // imposto la z della luce per la posa login laterale
+            else if (eRottaWelcome(url))
+              lightZ = 10.1001; // imposto la z della luce per la posa welcome alta
+            else lightZ = 5.1001; // imposto la z della luce per la posa bassa o fallback
           }
 
-          const directionalLight = new THREE.DirectionalLight(0xffffff, lightIntensity);
-          directionalLight.position.set(-5.95, 0.051, lightZ);
-          scene.add(directionalLight);
-          this.directionalLight = directionalLight;
+          const directionalLight = new THREE.DirectionalLight(
+            0xffffff,
+            lightIntensity,
+          ); // creo la luce direzionale principale
+          directionalLight.position.set(-5.95, 0.051, lightZ); // imposto la posizione iniziale della luce
+          scene.add(directionalLight); // aggiungo la luce alla scena
+          this.directionalLight = directionalLight; // salvo il riferimento alla luce direzionale
 
-          // Creazione sfera (Saturno) con la texture caricata
-          const geometry = new THREE.SphereGeometry(0.84, 82, 82);
+          const geometry = new THREE.SphereGeometry(0.84, 82, 82); // creo la geometria sferica del pianeta
           const material = new THREE.MeshPhysicalMaterial({
-            map: planetTexture,
-            roughness: 2.5,
-            emissive: new THREE.Color(0xddddaa),
-            emissiveIntensity: 0.00051,
-            clearcoat: 0.0,
-            clearcoatRoughness: 0.27,
+            map: planetTexture, // applico la texture del pianeta caricata
+            roughness: 2.5, // imposto la roughness del materiale
+            emissive: new THREE.Color(0xddddaa), // imposto il colore emissivo del materiale
+            emissiveIntensity: 0.00051, // imposto l'intensita' emissiva del materiale
+            clearcoat: 0.0, // imposto il clearcoat iniziale a zero
+            clearcoatRoughness: 0.27, // imposto la roughness del clearcoat
           });
 
-          const planetMesh = new THREE.Mesh(geometry, material); //geometria + materiale
-          planetMesh.position.y = 0.4;                          //posizione saturno sull asse y
-          planetMesh.rotation.x = THREE.MathUtils.degToRad(7);  //rotazione saturno
+          const planetMesh = new THREE.Mesh(geometry, material); // creo la mesh finale del pianeta con geometria e materiale
+          planetMesh.position.y = 0.4; // imposto la posizione verticale iniziale del pianeta
+          planetMesh.rotation.x = THREE.MathUtils.degToRad(7); // imposto la rotazione iniziale del pianeta
 
-          scene.add(planetMesh);
-          this.planetMesh = planetMesh;
+          scene.add(planetMesh); // aggiungo la mesh del pianeta alla scena
+          this.planetMesh = planetMesh; // salvo il riferimento alla mesh del pianeta
 
-          // ✅ 1) Parto SEMPRE da WELCOME_ALTO come pose di base
-          this.saturnoPosizioniService.applicaPoseAScena(scene, 'WELCOME_ALTO');
+          this.saturnoPosizioniService.applicaPoseAScena(scene, 'WELCOME_ALTO'); // applico sempre come base la posa WELCOME_ALTO
 
-          const url = this.router.url;
+          const url = this.router.url; // leggo la rotta corrente dal router
 
-          // ✅ SE sono in scheda catalogo e NON voglio animazioni di ingresso
           if (!usaAnimazioniWelcome && eSchedaCatalogo(url)) {
-            this.ensureRingsAndParticlesIfMissing(scene);
-            this.animateService.setXNormale();
-            this.animateService.setTitoloAltoGlobal();
-            this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
-            this.animateService.fadeOutSaturnoESfondo(0);
-            this.animateService.enablePageScroll();
-            this.loopHelper.resetFirstRender();
-            this.saturnoStatoService.setPronto();
-            this.spegniSaturno();
-            this.animateService.pauseClearcoat();
-            this.catalogoGiaAnimato = true;
-            this.scenaInizializzata = true;
-            resolve();
-            return;
+            // controllo se sono in scheda catalogo senza volere animazioni di ingresso
+            this.ensureRingsAndParticlesIfMissing(scene); // ricreo anelli e particelle se mancanti
+            this.animateService.setXNormale(); // porto la X nello stato normale
+            this.animateService.setTitoloAltoGlobal(); // porto il titolo nella posizione alta
+            this.saturnoPosizioniService.applicaPoseAScena(
+              scene,
+              'CATALOGO_NASCOSTO',
+            ); // applico subito la posa catalogo nascosto
+            this.animateService.fadeOutSaturnoESfondo(0); // porto subito Saturno e sfondo nello stato finale di fade out
+            this.animateService.enablePageScroll(); // abilito lo scroll pagina
+            this.loopHelper.resetFirstRender(); // resetto il flag del primo render
+            this.saturnoStatoService.setPronto(); // segnalo che Saturno e' pronto
+            this.spegniSaturno(); // spengo Saturno senza distruggere la scena
+            this.animateService.pauseClearcoat(); // metto in pausa l'animazione del clearcoat
+            this.catalogoGiaAnimato = true; // segno che il catalogo risulta gia' animato
+            this.scenaInizializzata = true; // segno che la scena e' stata inizializzata
+            resolve(); // risolvo la promise
+            return; // esco dalla funzione
           }
 
-          const isLoginRoute    = eRottaLogin(url);
-          const isWelcomeRoute  = usaAnimazioniWelcome && eRottaWelcome(url) && !isLoginRoute;
-          const isCatalogRoute  = usaAnimazioniWelcome && eRottaCatalogo(url);
-          const isNotFoundRoute = eRottaNotFound(url);
-          const ricaricaCatalogo = usaAnimazioniWelcome && this.isReloadCatalogo();
+          const isLoginRoute = eRottaLogin(url); // verifico se la rotta corrente e' login
+          const isWelcomeRoute =
+            usaAnimazioniWelcome && eRottaWelcome(url) && !isLoginRoute; // verifico se la rotta corrente e' welcome con animazioni attive e non login
+          const isCatalogRoute = usaAnimazioniWelcome && eRottaCatalogo(url); // verifico se la rotta corrente e' catalogo con animazioni attive
+          const isNotFoundRoute = eRottaNotFound(url); // verifico se la rotta corrente e' not found
+          const ricaricaCatalogo =
+            usaAnimazioniWelcome && this.isReloadCatalogo(); // verifico se sto ricaricando direttamente il catalogo
 
           if (eRottaLogin(url)) {
-            const durata = 0.9;
+            // controllo se la rotta corrente e' login
+            const durata = 0.9; // preparo la durata dell'animazione login
             if (this.skipLoginIntroOnce) {
-              this.animateService.setXNormale();
-              this.animateService.setTitoloAltoGlobal();
-              this.skipLoginIntroOnce = false;
+              // controllo se devo saltare una volta l'intro login
+              this.animateService.setXNormale(); // porto la X nello stato normale
+              this.animateService.setTitoloAltoGlobal(); // porto il titolo subito in alto
+              this.skipLoginIntroOnce = false; // consumo il flag di skip intro login
             } else {
-              this.animateService.animateTitoloVersoAltoGlobal();
-              this.animateService.setXNormale();
+              this.animateService.animateTitoloVersoAltoGlobal(); // animo il titolo verso l'alto
+              this.animateService.setXNormale(); // porto la X nello stato normale
             }
             this.saturnoRouteAnimazioniService.animaVerso(
-              scene, 'LOGIN_LATERALE', durata, this.directionalLight || undefined
-            );
+              scene,
+              'LOGIN_LATERALE',
+              durata,
+              this.directionalLight || undefined,
+            ); // animo Saturno verso la posa del login laterale
           }
 
           if (eRottaRegistrazione(url)) {
+            // controllo se la rotta corrente e' registrazione
             if (this.skipRegistrazioneIntroOnce) {
-              this.animateService.setXNormale();
-              this.animateService.setTitoloAltoGlobal();
-              this.skipRegistrazioneIntroOnce = false;
+              // controllo se devo saltare una volta l'intro registrazione
+              this.animateService.setXNormale(); // porto la X nello stato normale
+              this.animateService.setTitoloAltoGlobal(); // porto il titolo subito in alto
+              this.skipRegistrazioneIntroOnce = false; // consumo il flag di skip intro registrazione
             } else {
-              this.animateService.setXNormale();
-              this.animateService.animateTitoloVersoAltoGlobal();
+              this.animateService.setXNormale(); // porto la X nello stato normale
+              this.animateService.animateTitoloVersoAltoGlobal(); // animo il titolo verso l'alto
             }
             this.saturnoRouteAnimazioniService.animaVerso(
-              scene, 'REGISTRAZIONE_BASSO', 0.9, this.directionalLight || undefined
-            );
+              scene,
+              'REGISTRAZIONE_BASSO',
+              0.9,
+              this.directionalLight || undefined,
+            ); // animo Saturno verso la posa bassa della registrazione
           }
 
           if (isNotFoundRoute) {
-            this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
-            this.animateService.setXNormale();
-            this.animateService.setTitoloAltoGlobal();
-            this.animateService.enablePageScroll();
+            // controllo se la rotta corrente e' not found
+            this.saturnoPosizioniService.applicaPoseAScena(
+              scene,
+              'CATALOGO_NASCOSTO',
+            ); // applico subito la posa catalogo nascosto
+            this.animateService.setXNormale(); // porto la X nello stato normale
+            this.animateService.setTitoloAltoGlobal(); // porto il titolo nella posizione alta
+            this.animateService.enablePageScroll(); // abilito lo scroll pagina
             setTimeout(() => {
+              // attendo un piccolo ritardo prima di avviare l'ingresso 404
               this.saturnoRouteAnimazioniService.animaIngresso404ConScritte(
-                scene, 1.05, this.directionalLight || undefined
-              );
+                scene,
+                1.05,
+                this.directionalLight || undefined,
+              ); // animo Saturno e le scritte della 404
             }, 300);
           }
 
-          // Creazione dei dischi (anelli di Saturno)
-          this.saturnoDischiService.creaDischi(scene);
+          this.saturnoDischiService.creaDischi(scene); // creo tutti i dischi di Saturno nella scena
 
-          // Creazione dei gruppi di particelle (asteroidi) attorno a Saturno
-          const particleGroups: THREE.Group[] = [];
+          const particleGroups: THREE.Group[] = []; // preparo l'array locale dei gruppi di particelle
           this.groupsConfig.forEach((config) => {
-            const group = this.particleGroupService.createParticleGroup(config);
-            scene.add(group);
-            particleGroups.push(group);
+            // scorro tutte le configurazioni dei gruppi particellari
+            const group = this.particleGroupService.createParticleGroup(config); // creo un gruppo di particelle con la configurazione corrente
+            scene.add(group); // aggiungo il gruppo alla scena
+            particleGroups.push(group); // salvo il gruppo nell'array locale
           });
-          this.particleGroups = particleGroups;
+          this.particleGroups = particleGroups; // salvo tutti i gruppi particellari creati nel riferimento del service
 
           if (eRottaContatti(url)) {
-            this.ensureRingsAndParticlesIfMissing(scene);
-            this.animateService.setXNormale();
-            this.animateService.setTitoloAltoGlobal();
-            this.saturnoPosizioniService.applicaPoseAScena(scene, 'LOGIN_LATERALE');
+            // controllo se la rotta corrente e' contatti
+            this.ensureRingsAndParticlesIfMissing(scene); // ricreo anelli e particelle se mancanti
+            this.animateService.setXNormale(); // porto la X nello stato normale
+            this.animateService.setTitoloAltoGlobal(); // porto il titolo nella posizione alta
+            this.saturnoPosizioniService.applicaPoseAScena(
+              scene,
+              'LOGIN_LATERALE',
+            ); // applico subito la posa login laterale
             if (this.directionalLight) {
-              this.directionalLight.intensity = 2.8;
-              this.directionalLight.position.z = 0.1001;
+              // controllo se la luce direzionale esiste
+              this.directionalLight.intensity = 2.8; // imposto l'intensita' finale della luce
+              this.directionalLight.position.z = 0.1001; // imposto la posizione z finale della luce
             }
           }
 
-          // ✅ Ora che i gruppi di particelle ESISTONO, posso lanciare la timeline unica
-          const firstElement = document.querySelector('[data-titolo-first]') as HTMLElement | null;
-          const xElement     = document.querySelector('[data-titolo-x]')     as HTMLElement | null;
+          const firstElement = document.querySelector(
+            '[data-titolo-first]',
+          ) as HTMLElement | null; // recupero il primo elemento del titolo dal DOM
+          const xElement = document.querySelector(
+            '[data-titolo-x]',
+          ) as HTMLElement | null; // recupero l'elemento X del titolo dal DOM
 
           if (isWelcomeRoute) {
-            // pagina di benvenuto: luce + accelerazione particelle + collisione titolo
+            // controllo se sono nella welcome con animazioni attive
             this.animateService.animateAll(
-              firstElement, xElement, this.directionalLight, this.particleGroups,
-            );
+              firstElement,
+              xElement,
+              this.directionalLight,
+              this.particleGroups,
+            ); // avvio l'animazione completa della welcome
           } else if (isCatalogRoute) {
-            /* ✅ CASO 1: reload su /catalogo -> stato finale subito (niente animazione) */
+            // controllo se sono nel catalogo con animazioni attive
             if (ricaricaCatalogo) {
-              this.animateService.setXNormale();
-              this.animateService.setTitoloAltoGlobal();
-              this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
-              this.animateService.fadeOutSaturnoESfondo(0);
-              this.animateService.enablePageScroll();
-              this.loopHelper.resetFirstRender();
-              this.saturnoStatoService.setPronto();
-              this.spegniSaturno();
-              this.animateService.pauseClearcoat();
-              this.catalogoGiaAnimato = true;
+              // controllo se questo accesso al catalogo e' un reload diretto
+              this.animateService.setXNormale(); // porto la X nello stato normale
+              this.animateService.setTitoloAltoGlobal(); // porto il titolo nella posizione alta
+              this.saturnoPosizioniService.applicaPoseAScena(
+                scene,
+                'CATALOGO_NASCOSTO',
+              ); // applico subito la posa catalogo nascosto
+              this.animateService.fadeOutSaturnoESfondo(0); // porto subito Saturno e sfondo nello stato finale di fade out
+              this.animateService.enablePageScroll(); // abilito lo scroll pagina
+              this.loopHelper.resetFirstRender(); // resetto il flag del primo render
+              this.saturnoStatoService.setPronto(); // segnalo che Saturno e' pronto
+              this.spegniSaturno(); // spengo Saturno senza distruggere la scena
+              this.animateService.pauseClearcoat(); // metto in pausa il clearcoat
+              this.catalogoGiaAnimato = true; // segno che il catalogo risulta gia' animato
             } else {
-              /* ✅ CASO 2: / -> (dirottamento) -> /catalogo (navigate) */
-              this.animateService.setTitoloCentraleGlobal();
-              const durataCatalogo = 1.6;
-              const anticipoMs = 500;
+              this.animateService.setTitoloCentraleGlobal(); // porto il titolo al centro prima della transizione catalogo
+              const durataCatalogo = 1.6; // preparo la durata dell'animazione verso il catalogo
+              const anticipoMs = 500; // preparo l'anticipo del fade finale
               this.animateService.animateAll(
-                firstElement, xElement, this.directionalLight, this.particleGroups,
+                firstElement,
+                xElement,
+                this.directionalLight,
+                this.particleGroups,
                 () => {
-                  this.animateService.setXNormale();
-                  this.animateService.animateTitoloVersoAltoGlobal();
-                  setTimeout(() => {
-                    this.animateService.fadeOutSaturnoESfondo(1.2);
-                    this.animateService.enablePageScroll();
-                  }, durataCatalogo * 1000 - anticipoMs);
+                  this.animateService.setXNormale(); // porto la X nello stato normale alla fine dell'animazione iniziale
+                  this.animateService.animateTitoloVersoAltoGlobal(); // animo il titolo verso l'alto
+                  setTimeout(
+                    () => {
+                      // preparo il fade out in anticipo rispetto alla fine della transizione catalogo
+                      this.animateService.fadeOutSaturnoESfondo(1.2); // faccio partire il fade out di Saturno e sfondo
+                      this.animateService.enablePageScroll(); // riabilito lo scroll pagina
+                    },
+                    durataCatalogo * 1000 - anticipoMs,
+                  );
                   this.saturnoRouteAnimazioniService.animaVerso(
-                    scene, 'CATALOGO_NASCOSTO', durataCatalogo,
+                    scene,
+                    'CATALOGO_NASCOSTO',
+                    durataCatalogo,
                     this.directionalLight || undefined,
                     () => {
-                      this.spegniSaturno();
-                      this.animateService.pauseClearcoat();
-                      this.catalogoGiaAnimato = true;
+                      this.spegniSaturno(); // spengo Saturno al termine della transizione
+                      this.animateService.pauseClearcoat(); // metto in pausa il clearcoat
+                      this.catalogoGiaAnimato = true; // segno che il catalogo ha gia' completato l'animazione
                     },
                   );
                 },
@@ -629,185 +802,260 @@ export class SaturnoService {
             }
           }
 
-          // Gestione mouse e raycaster per spostamento particelle (hover sempre attivo)
-          this.attivaHoverMouse();
+          this.attivaHoverMouse(); // attivo l'hover del mouse sulle particelle
 
-          // animazione disco luminoso
-          this.animateService.animateClearcoat(material);
+          this.animateService.animateClearcoat(material); // avvio l'animazione del clearcoat del materiale del pianeta
 
-          // Avvio il loop di animazione dopo che la scena è pronta
-          this.startFixedFPSLoop();
+          this.startFixedFPSLoop(); // avvio il loop di animazione dopo che la scena e' pronta
 
-          // segno che la scena è stata inizializzata una volta
-          this.scenaInizializzata = true;
+          this.scenaInizializzata = true; // segno che la scena e' stata inizializzata almeno una volta
 
-          resolve();
+          resolve(); // risolvo la promise al termine dell'inizializzazione
         })
         .catch((error) => {
-          console.error('Errore durante il caricamento delle texture:', error);
-          reject(error);
+          // entro qui se una delle promesse di caricamento fallisce
+          console.error('Errore durante il caricamento delle texture:', error); // loggo l'errore di caricamento
+          reject(error); // rigetto la promise di inizializzazione
         });
     });
   }
 
+  /**
+   * Restituisce la camera Three.js corrente.
+   *
+   * @returns THREE.Camera | null
+   */
   public getCamera(): THREE.Camera | null {
-    return this.camera;
+    return this.camera; // restituisco il riferimento corrente alla camera
   }
 
+  /**
+   * Restituisce la scena Three.js corrente.
+   *
+   * @returns THREE.Scene | null
+   */
   public getScene(): THREE.Scene | null {
-    return this.scene;
+    return this.scene; // restituisco il riferimento corrente alla scena
   }
 
+  /**
+   * Restituisce i gruppi di particelle correnti.
+   *
+   * @returns THREE.Group[]
+   */
   public getParticleGroups(): THREE.Group[] {
-    return this.particleGroups;
+    return this.particleGroups; // restituisco l'array corrente dei gruppi di particelle
   }
 
+  /**
+   * Restituisce la luce direzionale corrente.
+   *
+   * @returns THREE.DirectionalLight | null
+   */
   public getDirectionalLight(): THREE.DirectionalLight | null {
-    return this.directionalLight;
+    return this.directionalLight; // restituisco il riferimento corrente alla luce direzionale
   }
 
+  /**
+   * Attiva il listener del mouse tramite l'helper dedicato.
+   *
+   * @returns void
+   */
   private attivaHoverMouse(): void {
-    this.mouseHelper.attivaHoverMouse();
+    this.mouseHelper.attivaHoverMouse(); // delego l'attivazione dell'hover mouse all'helper dedicato
   }
 
+  /**
+   * Applica un flash di errore rosso alla luce, agli anelli e alla posizione della scena.
+   *
+   * @returns void
+   */
   public flashErrorLight(): void {
-    if (!this.scene || !this.directionalLight) return;
+    if (!this.scene || !this.directionalLight) return; // esco subito se scena o luce non esistono
 
-    const scene = this.scene;
-    const light = this.directionalLight;
+    const scene = this.scene; // salvo un riferimento locale alla scena
+    const light = this.directionalLight; // salvo un riferimento locale alla luce direzionale
 
-    const originalColor = light.color.clone();
-    const originalX     = scene.position.x;
+    const originalColor = light.color.clone(); // salvo il colore originale della luce
+    const originalX = scene.position.x; // salvo la posizione x originale della scena
 
-    const durata        = 400;
-    const jitterOffsets = [-0.12, 0.18, -0.25, 0.3, -0.18, 0.12, -0.08, 0.06];
-    const step          = durata / jitterOffsets.length;
+    const durata = 400; // definisco la durata totale del flash in millisecondi
+    const jitterOffsets = [-0.12, 0.18, -0.25, 0.3, -0.18, 0.12, -0.08, 0.06]; // preparo gli offset di jitter della scena
+    const step = durata / jitterOffsets.length; // calcolo il passo temporale tra i jitter
 
-    // luce rossa per tutta la durata
-    light.color.set(0xb42f14);
+    light.color.set(0xb42f14); // imposto la luce su un rosso di errore per tutta la durata del flash
 
-    // salvo i colori originali degli anelli e li imposto rossi
-    const disks             = this.diskService.getDisks();
+    const disks = this.diskService.getDisks(); // recupero tutti i dischi attualmente registrati
     const originalDiskColors = disks.map(({ mesh }) => {
-      const mat = mesh.material as THREE.ShaderMaterial;
-      return (mat.uniforms['uColor'].value as THREE.Color).clone();
+      // salvo il colore originale di ogni disco
+      const mat = mesh.material as THREE.ShaderMaterial; // recupero il materiale shader del disco corrente
+      return (mat.uniforms['uColor'].value as THREE.Color).clone(); // clono il colore originale del disco
     });
     disks.forEach(({ mesh }) => {
-      const mat = mesh.material as THREE.ShaderMaterial;
-      (mat.uniforms['uColor'].value as THREE.Color).set(0xb41447);
+      // scorro tutti i dischi
+      const mat = mesh.material as THREE.ShaderMaterial; // recupero il materiale shader del disco corrente
+      (mat.uniforms['uColor'].value as THREE.Color).set(0xb41447); // imposto il colore rosso del flash sugli anelli
     });
 
-    // scatti sull'asse X
     jitterOffsets.forEach((offset, index) => {
+      // scorro tutti gli offset di jitter con il relativo indice
       setTimeout(() => {
-        if (!this.scene) return;
-        this.scene.position.x = originalX + offset;
+        // preparo ciascun micro spostamento nel tempo
+        if (!this.scene) return; // esco se nel frattempo la scena non esiste piu'
+        this.scene.position.x = originalX + offset; // applico lo spostamento temporaneo della scena sull'asse x
       }, step * index);
     });
 
-    // ripristino posizione, colore luce e colori anelli dopo i 400 ms
     setTimeout(() => {
-      if (this.scene)            this.scene.position.x = originalX;
-      if (this.directionalLight) this.directionalLight.color.copy(originalColor);
+      // preparo il ripristino finale allo scadere del flash
+      if (this.scene) this.scene.position.x = originalX; // ripristino la posizione x originale della scena
+      if (this.directionalLight)
+        this.directionalLight.color.copy(originalColor); // ripristino il colore originale della luce
       this.diskService.getDisks().forEach(({ mesh }, i) => {
-        const mat = mesh.material as THREE.ShaderMaterial;
-        (mat.uniforms['uColor'].value as THREE.Color).copy(originalDiskColors[i]);
+        // scorro di nuovo tutti i dischi con il loro indice
+        const mat = mesh.material as THREE.ShaderMaterial; // recupero il materiale shader del disco corrente
+        (mat.uniforms['uColor'].value as THREE.Color).copy(
+          originalDiskColors[i],
+        ); // ripristino il colore originale del disco
       });
     }, durata);
   }
 
+  /**
+   * Verifica se l'accesso corrente al catalogo corrisponde a un reload o a un ingresso diretto con storico catalogo.
+   *
+   * @returns boolean
+   */
   private isReloadCatalogo(): boolean {
     try {
-      const nav  = performance.getEntriesByType('navigation') as any[];
-      const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
-      const raw  = (window.location.pathname || '').split('?')[0].split('#')[0];
-      const pathIntero = raw.replace(/\/+$/, '') || '/';
-      const path = pathIntero.replace(/^\/(it|en)(?=\/|$)/, '');
+      const nav = performance.getEntriesByType('navigation') as any[]; // leggo le entry di navigazione dal Performance API
+      const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : ''; // ricavo il tipo di navigazione se disponibile
+      const raw = (window.location.pathname || '').split('?')[0].split('#')[0]; // ripulisco il pathname da query e hash
+      const pathIntero = raw.replace(/\/+$/, '') || '/'; // normalizzo il path rimuovendo gli slash finali
+      const path = pathIntero.replace(/^\/(it|en)(?=\/|$)/, ''); // rimuovo il prefisso lingua dal path
 
       const eCatalogoHome =
-        path === '/catalogo'              || path === '/catalogo/film'         ||
-        path === '/catalogo/serie'        || path === '/catalogo/film-serie'   ||
-        path === '/catalog'               || path === '/catalog/movies'        ||
-        path === '/catalog/series'        || path === '/catalog/movies-series' ||
-        path === '/catalog/film'          || path === '/catalog/serie'         ||
-        path === '/catalog/film-serie';
+        path === '/catalogo' ||
+        path === '/catalogo/film' ||
+        path === '/catalogo/serie' ||
+        path === '/catalogo/film-serie' ||
+        path === '/catalog' ||
+        path === '/catalog/movies' ||
+        path === '/catalog/series' ||
+        path === '/catalog/movies-series' ||
+        path === '/catalog/film' ||
+        path === '/catalog/serie' ||
+        path === '/catalog/film-serie'; // verifico se il path appartiene alle home principali del catalogo
 
       const ingressoDirettoConStoricoCatalogo =
-        tipo !== 'reload' &&
-        eCatalogoHome &&
-        isAreaCatalogo(this.pathPrecedenteSessioneAllAvvio);
+        tipo !== 'reload' && // controllo che non sia formalmente un reload
+        eCatalogoHome && // controllo che il path appartenga al catalogo home
+        isAreaCatalogo(this.pathPrecedenteSessioneAllAvvio); // controllo che il path precedente salvato appartenesse all'area catalogo
 
-      return (tipo === 'reload' && eCatalogoHome) || ingressoDirettoConStoricoCatalogo;
+      return (
+        (tipo === 'reload' && eCatalogoHome) ||
+        ingressoDirettoConStoricoCatalogo
+      ); // restituisco true se e' reload catalogo o ingresso diretto con storico catalogo
     } catch {
-      return false;
+      return false; // restituisco false se qualcosa va storto nel rilevamento
     }
   }
 
+  /**
+   * Verifica se la pagina corrente e' stata caricata tramite reload del browser.
+   *
+   * @returns boolean
+   */
   private isPageReload(): boolean {
     try {
-      const nav  = performance.getEntriesByType('navigation') as any[];
-      const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : '';
-      return tipo === 'reload';
+      const nav = performance.getEntriesByType('navigation') as any[]; // leggo le entry di navigazione dal Performance API
+      const tipo = nav && nav[0] && nav[0].type ? String(nav[0].type) : ''; // ricavo il tipo di navigazione se disponibile
+      return tipo === 'reload'; // verifico se il tipo di navigazione e' reload
     } catch {
-      return false;
+      return false; // restituisco false se qualcosa va storto nel rilevamento
     }
   }
 
+  /**
+   * Ricrea anelli e particelle se risultano assenti nella scena corrente.
+   *
+   * @param scene Scena Three.js in cui verificare e ricreare gli elementi mancanti.
+   * @returns void
+   */
   private ensureRingsAndParticlesIfMissing(scene: THREE.Scene): void {
     if (this.diskService.getDisks().length === 0) {
-      this.saturnoDischiService.creaDischi(scene);
+      // controllo se non esistono dischi registrati
+      this.saturnoDischiService.creaDischi(scene); // ricreo i dischi di Saturno nella scena
     }
     if (this.particleGroups.length === 0) {
-      const particleGroups: THREE.Group[] = [];
+      // controllo se non esistono gruppi di particelle
+      const particleGroups: THREE.Group[] = []; // preparo l'array locale dei gruppi di particelle
       this.groupsConfig.forEach((config) => {
-        const group = this.particleGroupService.createParticleGroup(config);
-        scene.add(group);
-        particleGroups.push(group);
+        // scorro tutte le configurazioni dei gruppi particellari
+        const group = this.particleGroupService.createParticleGroup(config); // creo un gruppo di particelle con la configurazione corrente
+        scene.add(group); // aggiungo il gruppo alla scena
+        particleGroups.push(group); // salvo il gruppo nell'array locale
       });
-      this.particleGroups = particleGroups;
+      this.particleGroups = particleGroups; // aggiorno il riferimento del service ai gruppi ricreati
     }
   }
 
+  /**
+   * Legge il flag di transizione dalla 404 al catalogo dal session storage.
+   *
+   * @returns boolean
+   */
   leggiFlagTransizione404Catalogo(): boolean {
     try {
-      return sessionStorage.getItem('transizione_404_catalogo') === '1';
+      return sessionStorage.getItem('transizione_404_catalogo') === '1'; // restituisco true se il flag di sessione e' impostato a 1
     } catch {
-      return false;
+      return false; // restituisco false se non riesco a leggere il session storage
     }
   }
 
+  /**
+   * Consuma il flag di transizione dalla 404 al catalogo rimuovendolo dal session storage.
+   *
+   * @returns void
+   */
   consumaFlagTransizione404Catalogo(): void {
     try {
-      sessionStorage.removeItem('transizione_404_catalogo');
+      sessionStorage.removeItem('transizione_404_catalogo'); // rimuovo il flag di sessione della transizione 404 -> catalogo
     } catch {}
   }
 
+  /**
+   * Riaccende Saturno ripristinando canvas, luce, loop, hover e clearcoat.
+   *
+   * @returns void
+   */
   public riaccendiSaturno(): void {
-    if (!this.scene || !this.renderer) return;
+    if (!this.scene || !this.renderer) return; // esco subito se scena o renderer non esistono
 
-    // FIX 1: se la luce è spenta (es. F5 su catalogo → intensity rimasta a 0)
     if (this.directionalLight && this.directionalLight.intensity < 0.1) {
-      this.directionalLight.intensity = 2.8;
+      // controllo se la luce esiste ed e' quasi spenta
+      this.directionalLight.intensity = 2.8; // ripristino l'intensita' della luce a un valore visibile
     }
 
-    // FIX 2: se il canvas è staccato dal DOM (es. scheda catalogo → app-saturno distrutto)
-    const canvas = this.renderer.domElement;
+    const canvas = this.renderer.domElement; // recupero il canvas del renderer
     if (!canvas.parentElement) {
-      let overlay = document.getElementById('saturno-overlay-temp');
+      // controllo se il canvas non e' attualmente montato nel DOM
+      let overlay = document.getElementById('saturno-overlay-temp'); // provo a recuperare un overlay temporaneo esistente
       if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'saturno-overlay-temp';
+        // controllo se l'overlay temporaneo non esiste ancora
+        overlay = document.createElement('div'); // creo il nuovo overlay temporaneo
+        overlay.id = 'saturno-overlay-temp'; // imposto l'id dell'overlay temporaneo
         overlay.style.cssText =
           'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
-          'z-index:0;pointer-events:none;overflow:hidden;';
-        document.body.appendChild(overlay);
+          'z-index:0;pointer-events:none;overflow:hidden;'; // imposto gli stili inline dell'overlay temporaneo
+        document.body.appendChild(overlay); // aggiungo l'overlay temporaneo al body
       }
-      overlay.appendChild(canvas);
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      overlay.appendChild(canvas); // aggancio il canvas all'overlay temporaneo
+      this.renderer.setSize(window.innerWidth, window.innerHeight); // aggiorno la dimensione del renderer alla viewport corrente
     }
 
-    this.startFixedFPSLoop();
-    this.attivaHoverMouse();
-    this.animateService.resumeClearcoat();
+    this.startFixedFPSLoop(); // riavvio il loop di rendering
+    this.attivaHoverMouse(); // riattivo l'hover del mouse sulle particelle
+    this.animateService.resumeClearcoat(); // riattivo l'animazione del clearcoat
   }
 }

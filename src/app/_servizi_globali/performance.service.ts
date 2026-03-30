@@ -14,24 +14,24 @@ export class PerformanceService {
     this.ngZone.runOutsideAngular(() => this.detectGPU());
   }
 
- /**
- * Rileva il livello di performance della GPU dell'utente tramite la libreria 'detect-gpu'.
- *
- * Carica dinamicamente 'detect-gpu', calcola il tier stimato (fps) usando i benchmark locali e:
- * - aggiorna lo stream 'performanceLevel$' con una descrizione testuale (es. 'Alta', 'Bassa', ecc.)
- * - aggiorna lo stream 'isLowEndPC$' a true se il dispositivo è un PC e la stima fps è sotto soglia
- *
- * Nota: il risultato può variare tra browser per differenze di fingerprinting, driver e API disponibili.
- *
- * @link https://github.com/pmndrs/detect-gpu
- * @returns Promise che si risolve quando il rilevamento è completato e gli stream sono stati aggiornati.
- */
-private async detectGPU(): Promise<void> {
-  const { getGPUTier } = await import('detect-gpu'); // Importo in modo dinamico la funzione getGPUTier
-  const gpuTier = await getGPUTier({ // Chiamo getGPUTier per ottenere stima e info della GPU
-    benchmarksURL: '/assets/detect-gpu/benchmarks' // Indico dove trovare i file benchmark nel progetto
-  });
-
+  /**
+   * Rileva il livello di performance della GPU dell'utente tramite la libreria 'detect-gpu'.
+   *
+   * Carica dinamicamente 'detect-gpu', calcola il tier stimato (fps) usando i benchmark locali e:
+   * - aggiorna lo stream 'performanceLevel$' con una descrizione testuale (es. 'Alta', 'Bassa', ecc.)
+   * - aggiorna lo stream 'isLowEndPC$' a true se il dispositivo è un PC e la stima fps è sotto soglia
+   *
+   * Nota: il risultato può variare tra browser per differenze di fingerprinting, driver e API disponibili.
+   *
+   * @link https://github.com/pmndrs/detect-gpu
+   * @returns Promise che si risolve quando il rilevamento è completato e gli stream sono stati aggiornati.
+   */
+  private async detectGPU(): Promise<void> {
+    const { getGPUTier } = await import('detect-gpu'); // Importo in modo dinamico la funzione getGPUTier
+    const gpuTier = await getGPUTier({
+      // Chiamo getGPUTier per ottenere stima e info della GPU
+      benchmarksURL: '/assets/detect-gpu/benchmarks', // Indico dove trovare i file benchmark nel progetto
+    });
 
     const fps = gpuTier.fps ?? 0; //ottengo fps stimati
 
@@ -66,14 +66,18 @@ private async detectGPU(): Promise<void> {
   }
 
   /**
- * Determina se il dispositivo corrente è un PC basandosi sullo user agent.
- *
- * Controlla la presenza di stringhe tipiche dei sistemi desktop ('Win', 'Mac', 'Linux').
- *
- * @returns True se sembra un sistema desktop, altrimenti false.
- */
-private isPC(): boolean {
+   * Determina se il dispositivo corrente è un PC basandosi sullo user agent.
+   *
+   * Controlla la presenza di stringhe tipiche dei sistemi desktop ('Win', 'Mac', 'Linux').
+   *
+   * @returns True se sembra un sistema desktop, altrimenti false.
+   */
+  private isPC(): boolean {
     const userAgent = window.navigator.userAgent; // controlla se è un pc e ritorna il sistema operativo
-    return userAgent.includes('Win') || userAgent.includes('Mac') || userAgent.includes('Linux');
+    return (
+      userAgent.includes('Win') ||
+      userAgent.includes('Mac') ||
+      userAgent.includes('Linux')
+    );
   }
 }

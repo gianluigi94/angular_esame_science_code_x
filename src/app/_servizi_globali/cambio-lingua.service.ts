@@ -1,4 +1,5 @@
-// service che centralizza cosa accade quando l'utente preme il pulsante per cambiare lingua (mi affianco il traduzioni.services)
+// Service che centralizza il cambio lingua dell'app, sincronizza traduzioni, percorsi correnti e dati collegati.
+
 import { Injectable, Injector } from '@angular/core';
 import { BehaviorSubject, Subject, forkJoin, of, take, switchMap, map, tap, catchError} from 'rxjs';
 import { TraduzioniService } from './traduzioni.service';
@@ -11,387 +12,420 @@ import { Location } from '@angular/common';
 import { traduciSegmentiUrl } from '../_helpers_globali/helpers';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import gsap from 'gsap';
-gsap.registerPlugin(ScrollTrigger);
-@Injectable({ providedIn: 'root' }) // Rendo questo servizio disponibile in tutta l'app
-export class CambioLinguaService {
-  linguaUtente = 'inglese'; // Salvo la lingua scelta dall'utente in formato testuale, inglese default
-  iconaLingua = 'assets/en.svg'; // Salvo il percorso dell'icona della lingua corrente, inglese default
-  iconaLingua$ = new BehaviorSubject<string>(''); // Espongo l'icona corrente come stream per aggiornare la UI
 
-  cambioLinguaAvviato$ = new Subject<string>(); // Notifico che ho iniziato il cambio lingua passando il codice 'it'/
-  cambioLinguaApplicata$ = new Subject<{
-    codice: string;
-    mappaNovita: Record<string, NovitaInfo>;
-  }>(); // Notifico che ho applicato la lingua e passo anche la mappa novità pronta
+gsap.registerPlugin(ScrollTrigger);
+
+@Injectable({ providedIn: 'root' })
+export class CambioLinguaService {
+  linguaUtente = 'inglese'; // conservo la lingua scelta dall'utente in formato testuale
+  iconaLingua = 'assets/en.svg'; // conservo il percorso dell'icona della lingua corrente
+  iconaLingua$ = new BehaviorSubject<string>(''); // espongo l'icona corrente come stream per aggiornare la UI
+
+  cambioLinguaAvviato$ = new Subject<string>(); // notifico che ho iniziato il cambio lingua passando il codice lingua
+  cambioLinguaApplicata$ = new Subject<{ // notifico che ho applicato la lingua e passo anche la mappa novita' pronta
+    codice: string; // conservo il codice lingua applicato
+    mappaNovita: Record<string, NovitaInfo>; // conservo la mappa novita' pronta per gli altri flussi
+  }>();
 
   constructor(
     private traduzioniService: TraduzioniService,
     private injector: Injector,
     private authService: Authservice,
     private router: Router,
-
-     private location: Location,
+    private location: Location,
     private toastService: ToastService
   ) {
-    this.impostaLinguaIniziale(); // Imposto subito la lingua e icona iniziali leggendo localStorage o lingua del browser
+    this.impostaLinguaIniziale(); // imposto subito lingua e icona iniziali leggendo storage o browser
+    this.iconaLingua$.next(this.iconaLingua); // pubblico subito l'icona iniziale cosi' la UI si aggiorna
+    const codiceLingua = this.leggiCodiceLingua(); // ricavo il codice lingua corrente dalla lingua testuale
 
-    this.iconaLingua$.next(this.iconaLingua); // Pubblico l'icona iniziale così la UI si aggiorna subito
-
-    const codiceLingua = this.leggiCodiceLingua(); // Ricavo il codice 'it' o 'en' dalla linguaUtente
     this.traduzioniService
-      .assicuraTraduzioni$(codiceLingua) // Chiedo al servizio traduzioni di avere pronte le traduzioni per quella lingua
-      .pipe(take(1)) // Prendo solo il primo completamento e poi chiudo
-      .subscribe(() => {  // Quando le traduzioni sono disponibili
-        this.traduzioniService.usaLingua(codiceLingua); // Applico la lingua così la UI usa le traduzioni corrette
+      .assicuraTraduzioni$(codiceLingua) // chiedo al servizio traduzioni di avere pronte le traduzioni iniziali
+      .pipe(take(1)) // prendo solo il primo completamento e poi chiudo
+      .subscribe(() => { // aspetto che le traduzioni siano disponibili
+        this.traduzioniService.usaLingua(codiceLingua); // applico la lingua cosi' la UI usa le traduzioni corrette
       });
   }
 
   /**
- * Esegue il toggle della lingua dell'app e applica il cambio in modo coordinato.
- *
- * Flusso:
- * - Alterna 'linguaUtente' e aggiorna 'iconaLingua' + localStorage.
- * - Chiude eventuali toast aperti per evitare messaggi nella lingua sbagliata.
- * - Notifica l'inizio del cambio con 'cambioLinguaAvviato$'.
- * - In parallelo:
- *   - assicura il caricamento delle traduzioni tramite 'TraduzioniService'
- *   - se l'utente è autenticato e il servizio è disponibile, carica la mappa novità del carosello
- * - Precarica le immagini dei titoli  e poi applica la lingua.
- * - Notifica il completamento con 'cambioLinguaApplicata$' passando anche 'mappaNovita'.
- *
- * @returns void
- */
+   * Esegue il toggle della lingua dell'app e applica il cambio in modo coordinato.
+   *
+   * @returns void
+   */
   cambiaLingua(): void {
-
-    if (this.linguaUtente === 'inglese') { // Controllo se la lingua attuale è inglese
-      this.linguaUtente = 'italiano'; // Imposto la nuova lingua a italiano
-      this.iconaLingua = 'assets/it.svg'; // Imposto l'icona italiana
-    } else {
-      this.linguaUtente = 'inglese'; // Al contrario imposto la nuova lingua a inglese
-      this.iconaLingua = 'assets/en.svg'; // Imposto l'icona inglese
+    if (this.linguaUtente === 'inglese') { // controllo se la lingua attuale e' inglese
+      this.linguaUtente = 'italiano'; // imposto la nuova lingua a italiano
+      this.iconaLingua = 'assets/it.svg'; // imposto l'icona italiana
+    } else { // entro qui se la lingua attuale non e' inglese
+      this.linguaUtente = 'inglese'; // imposto la nuova lingua a inglese
+      this.iconaLingua = 'assets/en.svg'; // imposto l'icona inglese
     }
 
-    localStorage.setItem('lingua_utente', this.linguaUtente); // Salvo la lingua scelta così resta anche al prossimo avvio
-    localStorage.setItem('video_lingua', this.linguaUtente);
-    this.iconaLingua$.next(this.iconaLingua); // Notifico subito la nuova icona
+    localStorage.setItem('lingua_utente', this.linguaUtente); // salvo la lingua scelta cosi' resta anche al prossimo avvio
+    localStorage.setItem('video_lingua', this.linguaUtente); // salvo anche la lingua video coerente con la lingua utente
+    this.iconaLingua$.next(this.iconaLingua); // notifico subito la nuova icona
 
-    const codice = this.leggiCodiceLingua(); // Calcolo il codice lingua 'it' o 'en'
-    // ✅ salva scroll della main-scroll (welcome) prima di cambiare lingua
-const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
-if (scroller) {
-  sessionStorage.setItem('welcome_scrollTop', String(scroller.scrollTop));
-  sessionStorage.setItem('welcome_restore', '1'); // 👈 flag: ripristina SOLO dopo cambio lingua
-}
-    this.sincBenvenutoPathConLingua(codice);
-this.sincCatalogoPathConLingua(codice);
-this.sincNotFoundPathConLingua(codice);
-this.sincContattiPathConLingua(codice);
-this.sincIscrizionePathConLingua(codice);
-    this.toastService.chiudiTutti();
-    this.cambioLinguaAvviato$.next(codice); // Notifico che ho iniziato il cambio lingua con quel codice
+    const codice = this.leggiCodiceLingua(); // calcolo il codice lingua 'it' o 'en'
+    const scroller = document.querySelector('.main-scroll') as HTMLElement | null; // recupero lo scroller principale se presente
 
-    const srv = this.prendiCaroselloNovitaService(); // Recupero il servizio del carosello
-    const possoCaricareNovita = this.utenteAutenticato() && !!srv; // Decido se posso caricare le novità solo se sono autenticato e il servizio esiste
+    if (scroller) { // controllo se lo scroller esiste
+      sessionStorage.setItem('welcome_scrollTop', String(scroller.scrollTop)); // salvo la posizione di scroll corrente
+      sessionStorage.setItem('welcome_restore', '1'); // segno che lo scroll dovra' essere ripristinato
+    }
 
-    const novita$ = possoCaricareNovita // Scelgo quale observable usare per la mappa novità
-      ? srv!.getInfoNovitaMap(codice).pipe( // Se posso, chiedo al server le info novità per la lingua
-          take(1), // Prendo una sola risposta e poi chiudo
-          catchError(() => of({} as Record<string, NovitaInfo>)) // Se fallisce, continuo con una mappa vuota
+    this.sincBenvenutoPathConLingua(codice); // sincronizzo il path dell'area benvenuto con la nuova lingua
+    this.sincCatalogoPathConLingua(codice); // sincronizzo il path dell'area catalogo con la nuova lingua
+    this.sincNotFoundPathConLingua(codice); // sincronizzo il path della pagina not found con la nuova lingua
+    this.sincContattiPathConLingua(codice); // sincronizzo il path della pagina contatti con la nuova lingua
+    this.sincIscrizionePathConLingua(codice); // sincronizzo il path della pagina iscrizione con la nuova lingua
+    this.toastService.chiudiTutti(); // chiudo eventuali toast aperti per evitare messaggi nella lingua sbagliata
+    this.cambioLinguaAvviato$.next(codice); // notifico che ho iniziato il cambio lingua con quel codice
+
+    const srv = this.prendiCaroselloNovitaService(); // recupero il servizio del carosello
+    const possoCaricareNovita = this.utenteAutenticato() && !!srv; // decido se posso caricare le novita' solo se sono autenticato e il servizio esiste
+
+    const novita$ = possoCaricareNovita // scelgo quale observable usare per la mappa novita'
+      ? srv!.getInfoNovitaMap(codice).pipe( // se posso chiedo al server le info novita' per la lingua
+          take(1), // prendo una sola risposta e poi chiudo
+          catchError(() => of({} as Record<string, NovitaInfo>)) // se fallisce continuo con una mappa vuota
         )
-      : of({} as Record<string, NovitaInfo>); // Se non posso caricare, uso direttamente una mappa vuota
+      : of({} as Record<string, NovitaInfo>); // se non posso caricare uso direttamente una mappa vuota
 
-    forkJoin({ // Aspetto che finiscano più operazioni in parallelo
-      // t = traduzioni / m= mappa novità
-      t: this.traduzioniService.assicuraTraduzioni$(codice).pipe(take(1)), // Carico/assicuro le traduzioni per la lingua scelta
-      m: novita$, // Carico (se posso) la mappa delle novità
+    forkJoin({ // aspetto che finiscano piu' operazioni in parallelo
+      t: this.traduzioniService.assicuraTraduzioni$(codice).pipe(take(1)), // assicuro le traduzioni per la lingua scelta
+      m: novita$, // carico se possibile la mappa delle novita'
     })
-      .pipe( // Compongo i passaggi successivi
-        switchMap(({ m }) =>
-          this.precaricaImmaginiTitolo$(m).pipe(map(() => m))
-        ), // Precarico le immagini dei titoli e poi ritorno la mappa novità
-        tap((mappaNovita) => {     // Quando è tutto pronto applico i cambi
-          this.traduzioniService.usaLingua(codice); // Applico davvero la lingua alle traduzioni
+      .pipe( // compongo i passaggi successivi
+        switchMap(({ m }) => // prendo la mappa novita' prodotta dallo step precedente
+          this.precaricaImmaginiTitolo$(m).pipe(map(() => m)) // precarico le immagini dei titoli e poi ritorno la mappa novita'
+        ),
+        tap((mappaNovita) => { // quando e' tutto pronto applico i cambi finali
+          this.traduzioniService.usaLingua(codice); // applico davvero la lingua alle traduzioni
+          this.cambioLinguaApplicata$.next({ codice, mappaNovita }); // notifico che la lingua e' stata applicata e passo anche i dati del carosello
 
-          this.cambioLinguaApplicata$.next({ codice, mappaNovita }); // Notifico che la lingua è stata applicata e passo anche i dati del carosello
-
-  // ✅ TEST: dopo cambio lingua, il DOM cambia (testi/altezze) => ricalcolo ScrollTrigger
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      try {
-        ScrollTrigger.refresh();
-        ScrollTrigger.update();
-        console.log('[LANG] ScrollTrigger refresh after language apply');
-      } catch {}
-    });
-  });
+          requestAnimationFrame(() => { // aspetto un frame prima di riallineare gli ScrollTrigger
+            requestAnimationFrame(() => { // aspetto un secondo frame per dare tempo al layout di aggiornarsi
+              try { // provo a forzare il refresh degli ScrollTrigger
+                ScrollTrigger.refresh(); // ricalcolo start e end dei trigger
+                ScrollTrigger.update(); // aggiorno subito lo stato corrente dei trigger
+                console.log('[LANG] ScrollTrigger refresh after language apply'); // scrivo un log diagnostico del refresh lingua
+              } catch {} // ignoro eventuali errori di refresh
+            });
+          });
         })
       )
-      .subscribe(); // Avvio la pipeline
+      .subscribe(); // avvio la pipeline
   }
 
   /**
- * Converte la lingua testuale salvata in 'linguaUtente' nel codice lingua usato dall'app.
- *
- * @returns 'it' se 'linguaUtente' è 'italiano', altrimenti 'en'.
- */
+   * Converte la lingua testuale salvata nel codice lingua usato dall'app.
+   *
+   * @returns string
+   */
   leggiCodiceLingua(): string {
-    return this.linguaUtente === 'italiano' ? 'it' : 'en'; // Ritorno 'it' se la lingua è italiano, altrimenti 'en'
-  }
-    prefissoDaCodice(codice: string): string {
-    return String(codice || '').toLowerCase() === 'it' ? '/it' : '/en';
+    return this.linguaUtente === 'italiano' ? 'it' : 'en'; // ritorno 'it' se la lingua e' italiano altrimenti 'en'
   }
 
+  /**
+   * Restituisce il prefisso URL coerente con il codice lingua ricevuto.
+   *
+   * @param codice Codice lingua da convertire in prefisso URL.
+   * @returns string
+   */
+  prefissoDaCodice(codice: string): string {
+    return String(codice || '').toLowerCase() === 'it' ? '/it' : '/en'; // ritorno il prefisso URL corretto in base al codice lingua
+  }
+
+  /**
+   * Restituisce il path base dell'area benvenuto coerente con la lingua ricevuta.
+   *
+   * @param codice Codice lingua da usare per costruire il path.
+   * @returns string
+   */
   baseBenvenutoDaLingua(codice: string): string {
-        const pref = this.prefissoDaCodice(codice);
-    const base = String(codice || '').toLowerCase() === 'it' ? '/benvenuto' : '/welcome';
-    return pref + base;
+    const pref = this.prefissoDaCodice(codice); // ricavo il prefisso lingua da usare nell'URL
+    const base = String(codice || '').toLowerCase() === 'it' ? '/benvenuto' : '/welcome'; // ricavo il segmento base coerente con la lingua
+    return pref + base; // ritorno il path base completo
   }
 
+  /**
+   * Restituisce il segmento login coerente con la lingua ricevuta.
+   *
+   * @param codice Codice lingua da usare per il segmento login.
+   * @returns string
+   */
   sottoPathLoginDaLingua(codice: string): string {
-    return String(codice || '').toLowerCase() === 'it' ? 'accedi' : 'login';
-  }
-  /**
- * Precarica le immagini 'img_titolo' presenti nella mappa delle novità.
- *
- * Estrae gli URL dalla mappa e avvia il preload in parallelo; completa quando tutte le immagini
- * risultano caricate/decodificate (o comunque non bloccanti in caso di errore).
- *
- * @param mappa Mappa delle novità indicizzata per chiave, contenente i dati (incluso 'img_titolo').
- * @returns Observable che completa quando il preload è terminato (o subito se non ci sono URL).
- */
-  private precaricaImmaginiTitolo$(mappa: Record<string, NovitaInfo>) { // Creo una funzione che precarica le immagini dei titoli delle novità
-    const urls = Object.values(mappa)
-      .map((x) => x.img_titolo)
-      .filter(Boolean); // Estraggo tutte le img_titolo e tengo solo quelle non vuote
-
-    if (!urls.length) return of(void 0); // Se non ho url, ritorno subito un observable 'vuoto' che completa
-
-    return forkJoin(urls.map((u) => this.precaricaImmagine$(u))).pipe(
-      map(() => void 0)
-    ); // Precarico tutte le immagini e poi ritorno void quando ho finito
+    return String(codice || '').toLowerCase() === 'it' ? 'accedi' : 'login'; // ritorno il segmento login corretto per la lingua
   }
 
   /**
- * Precarica una singola immagine e completa quando è pronta (caricata o decodificata).
- *
- * Usa 'HTMLImageElement.decode()' se disponibile per aspettare la decodifica; in alternativa
- * completa su 'load' o anche su 'error' per non bloccare il flusso.
- *
- * @param url URL dell'immagine da precaricare.
- * @returns Promise/observable che si risolve quando l'immagine è pronta (o comunque non bloccante).
- */
-  private precaricaImmagine$(url: string) {
-    return new (class { // Creo una classe solo per incapsulare la Promise
-      asObservable() { // Creo un metodo che ritorna qualcosa di osservabile
-        return new Promise<void>((ok) => {  // Creo una Promise che risolve quando l'immagine è caricata/decodificata
-          const img = new Image(); // Creo un oggetto Image del browser
-          img.src = url; // Imposto l'URL per far partire il download
-          if ((img as any).decode) {  // Controllo se il browser supporta decode()
-            (img as any)
-              .decode()
-              .then(() => ok())
-              .catch(() => ok()); // Aspetto decode e in ogni caso risolvo per non bloccare il flusso
-          } else if (img.complete)
-            ok(); // Se l'immagine è già completa, risolvo subito
-          else img.onload = img.onerror = () => ok(); // Altrimenti risolvo quando carica o anche se va in errore
+   * Precarica le immagini 'img_titolo' presenti nella mappa delle novita'.
+   *
+   * @param mappa Mappa delle novita' contenente anche gli URL dei titoli da precaricare.
+   * @returns any
+   */
+  private precaricaImmaginiTitolo$(mappa: Record<string, NovitaInfo>) { // creo una funzione che precarica le immagini dei titoli delle novita'
+    const urls = Object.values(mappa) // trasformo la mappa in una lista di valori
+      .map((x) => x.img_titolo) // estraggo da ogni elemento l'URL dell'immagine titolo
+      .filter(Boolean); // tengo solo gli URL non vuoti
+
+    if (!urls.length) return of(void 0); // se non ho URL ritorno subito un observable che completa
+
+    return forkJoin(urls.map((u) => this.precaricaImmagine$(u))).pipe( // precarico tutte le immagini in parallelo
+      map(() => void 0) // trasformo il risultato finale in void
+    );
+  }
+
+  /**
+   * Precarica una singola immagine e completa quando e' pronta.
+   *
+   * @param url URL dell'immagine da precaricare.
+   * @returns any
+   */
+  private precaricaImmagine$(url: string) { // creo una funzione che precarica una singola immagine
+    return new (class { // creo una classe solo per incapsulare la Promise
+      asObservable() { // creo un metodo che ritorna qualcosa di osservabile
+        return new Promise<void>((ok) => { // creo una Promise che risolve quando l'immagine e' caricata o decodificata
+          const img = new Image(); // creo un oggetto Image del browser
+          img.src = url; // imposto l'URL per far partire il download
+
+          if ((img as any).decode) { // controllo se il browser supporta decode()
+            (img as any) // uso l'immagine castata per accedere a decode
+              .decode() // provo a decodificare l'immagine
+              .then(() => ok()) // risolvo se la decodifica va a buon fine
+              .catch(() => ok()); // risolvo comunque anche se la decodifica fallisce
+          } else if (img.complete) { // controllo se l'immagine risulta gia' completa
+            ok(); // risolvo subito se l'immagine e' gia' pronta
+          } else {
+            img.onload = img.onerror = () => ok(); // risolvo quando carica o anche se va in errore
+          }
         });
       }
-    })().asObservable(); // Istanzio la classe e chiamo subito asObservable() per ottenere la Promise
+    })().asObservable(); // istanzio la classe e chiamo subito asObservable per ottenere la Promise
   }
-/**
- * Verifica se le traduzioni della prossima lingua (quella che verrebbe selezionata al prossimo toggle)
- * sono già presenti in cache nel 'TraduzioniService'.
- *
- * @returns True se le traduzioni della prossima lingua risultano già caricate, altrimenti false.
- */
+
+  /**
+   * Verifica se le traduzioni della prossima lingua sono gia' presenti in cache.
+   *
+   * @returns boolean
+   */
   haInCacheProssimaLingua(): boolean {
-    const prossimaLingua =
-      this.linguaUtente === 'italiano' ? 'inglese' : 'italiano'; // Calcolo quale sarebbe la lingua dopo il toggle
-    const codiceProssima = prossimaLingua === 'italiano' ? 'it' : 'en'; // Converto la prossima lingua nel suo codice
-    return this.traduzioniService.haTraduzioniInCache(codiceProssima); // Controllo nel servizio traduzioni se quel codice è già in cache
+    const prossimaLingua = this.linguaUtente === 'italiano' ? 'inglese' : 'italiano'; // calcolo quale sarebbe la lingua dopo il toggle
+    const codiceProssima = prossimaLingua === 'italiano' ? 'it' : 'en'; // converto la prossima lingua nel suo codice
+    return this.traduzioniService.haTraduzioniInCache(codiceProssima); // controllo nel servizio traduzioni se quel codice e' gia' in cache
   }
 
   /**
- * Determina la lingua iniziale all'avvio del servizio.
- *
- * Priorità:
- * - Se presente e valida, usa 'lingua_utente' da localStorage ('italiano'/'inglese').
- * - Altrimenti usa la lingua primaria del browser e imposta 'italiano' se è 'it' o inizia con 'it-'.
- * Aggiorna anche 'iconaLingua' coerentemente.
- *
- * @link https://developer.mozilla.org/en-US/docs/Web/API/Navigator/languages
- * @returns void
- */
+   * Determina la lingua iniziale all'avvio del servizio.
+   *
+   * @returns void
+   */
   private impostaLinguaIniziale(): void {
-    const salvata = localStorage.getItem('lingua_utente'); // Leggo se l'utente aveva salvato una lingua
+    const salvata = localStorage.getItem('lingua_utente'); // leggo se l'utente aveva salvato una lingua
 
-    if (salvata === 'italiano' || salvata === 'inglese') { // Controllo se il valore salvato è valido
-      this.linguaUtente = salvata; // Uso la lingua salvata
-  } else {
-  const primaria = (navigator.languages?.[0] || navigator.language || '')
-    .toLowerCase()
-    .trim();
+    if (salvata === 'italiano' || salvata === 'inglese') { // controllo se il valore salvato e' valido
+      this.linguaUtente = salvata; // uso la lingua salvata
+    } else { // entro qui se non c'e' una lingua valida salvata
+      const primaria = (navigator.languages?.[0] || navigator.language || '') // ricavo la lingua primaria dal browser
+        .toLowerCase() // normalizzo in minuscolo
+        .trim(); // rimuovo eventuali spazi superflui
 
-  const eItaliano = primaria === 'it' || primaria.startsWith('it-');
-  this.linguaUtente = eItaliano ? 'italiano' : 'inglese';
+      const eItaliano = primaria === 'it' || primaria.startsWith('it-'); // controllo se la lingua primaria del browser e' italiana
+      this.linguaUtente = eItaliano ? 'italiano' : 'inglese'; // imposto la lingua iniziale in base al browser
+      localStorage.setItem('lingua_utente', this.linguaUtente); // salvo subito la preferenza rilevata dal browser
+      localStorage.setItem('video_lingua', this.linguaUtente); // salvo anche la lingua video coerente
+    }
 
-  // ✅ salvo subito la preferenza rilevata dal browser
-  localStorage.setItem('lingua_utente', this.linguaUtente);
-  localStorage.setItem('video_lingua', this.linguaUtente);
-}
-    this.iconaLingua =
-      this.linguaUtente === 'italiano' ? 'assets/it.svg' : 'assets/en.svg'; // Imposto l'icona coerente con la lingua scelta
+    this.iconaLingua = this.linguaUtente === 'italiano' ? 'assets/it.svg' : 'assets/en.svg'; // imposto l'icona coerente con la lingua scelta
   }
 
   /**
- * Indica se l'utente risulta autenticato leggendo lo stato auth corrente.
- *
- * @returns True se esiste un token 'tk', altrimenti false.
- */
+   * Indica se l'utente risulta autenticato leggendo lo stato auth corrente.
+   *
+   * @returns boolean
+   */
   private utenteAutenticato(): boolean {
-    const auth = this.authService.leggiObsAuth().getValue(); // Leggo lo stato auth corrente dall'observable dell'autenticazione
-    return !!auth?.tk; // Ritorno true se esiste un token (tk)
+    const auth = this.authService.leggiObsAuth().getValue(); // leggo lo stato auth corrente dall'observable dell'autenticazione
+    return !!auth?.tk; // ritorno true se esiste un token
   }
 
   /**
- * Recupera in modo sicuro il servizio 'CaroselloNovitaService' tramite 'Injector'.
- *
- * Serve per evitare errori quando il servizio non è disponibile nel contesto corrente.
- *
- * @returns Istanza di 'CaroselloNovitaService' se disponibile, altrimenti null.
- */
+   * Recupera in modo sicuro il servizio del carosello novita' tramite injector.
+   *
+   * @returns CaroselloNovitaService | null
+   */
   private prendiCaroselloNovitaService(): CaroselloNovitaService | null {
-    return this.injector.get(CaroselloNovitaService, null); // Chiedo all'injector il servizio e ritorno null se non è disponibile
+    return this.injector.get(CaroselloNovitaService, null); // chiedo all'injector il servizio e ritorno null se non e' disponibile
   }
 
-      private sincBenvenutoPathConLingua(codice: string): void {
-        const full =
-      this.location.path(true) ||
-      (window.location.pathname + window.location.search + window.location.hash) ||
-      '';
-    const path = full.split('?')[0].split('#')[0];
+  /**
+   * Sincronizza il path dell'area benvenuto con la lingua ricevuta senza navigare.
+   *
+   * @param codice Codice lingua da applicare al path corrente.
+   * @returns void
+   */
+  private sincBenvenutoPathConLingua(codice: string): void {
+    const full = // preparo il path completo attuale con eventuali query e hash
+      this.location.path(true) || // provo a leggere il path tramite Location
+      (window.location.pathname + window.location.search + window.location.hash) || // ripiego sul path nativo del browser
+      ''; // uso stringa vuota come fallback finale
+    const path = full.split('?')[0].split('#')[0]; // isolo il solo path senza query e hash
+    const m = path.match(/^\/(it|en)\/(benvenuto|welcome)(\/.*)?$/); // verifico se mi trovo nell'area benvenuto
 
-        const m = path.match(/^\/(it|en)\/(benvenuto|welcome)(\/.*)?$/);
-    if (!m) return;
+    if (!m) return; // esco subito se il path non appartiene all'area benvenuto
 
-    const base = this.baseBenvenutoDaLingua(codice);
-        let tail = m[3] || '';
-    // normalizzo la foglia login/accedi se presente
-    tail = tail.replace(/^\/(login|accedi)(\/|$)/, (match, _leaf, slash) => {
-      const leaf = this.sottoPathLoginDaLingua(codice);
-      return '/' + leaf + (slash || '');
+    const base = this.baseBenvenutoDaLingua(codice); // ricavo la base benvenuto corretta per la lingua
+    let tail = m[3] || ''; // ricavo l'eventuale coda del path dopo la base
+
+    tail = tail.replace(/^\/(login|accedi)(\/|$)/, (match, _leaf, slash) => { // normalizzo la foglia login o accedi se presente
+      const leaf = this.sottoPathLoginDaLingua(codice); // ricavo il segmento login corretto per la lingua
+      return '/' + leaf + (slash || ''); // ricompongo la foglia con l'eventuale slash finale
     });
-    const target = (base + tail).replace(/\/+$/,'');
-    const current = String(path || '').replace(/\/+$/,'');
-    if (target === current) return;
-    // ✅ cambia URL senza navigare: non ricrei componenti e NON resetti lo scroll della .main-scroll
-    // preservo query/hash se presenti
-    const soloPath = full.split('?')[0].split('#')[0];
-    const tailQh = full.substring(soloPath.length); // ?query/#hash
 
-    this.location.replaceState(target + tailQh);
+    const target = (base + tail).replace(/\/+$/,''); // costruisco il path di destinazione pulito
+    const current = String(path || '').replace(/\/+$/,''); // normalizzo il path corrente per il confronto
+
+    if (target === current) return; // esco se il target coincide gia' con il path corrente
+
+    const soloPath = full.split('?')[0].split('#')[0]; // ricavo di nuovo il solo path senza query e hash
+    const tailQh = full.substring(soloPath.length); // ricavo la parte finale con query e hash se presenti
+    this.location.replaceState(target + tailQh); // cambio URL senza navigare e senza ricreare componenti
   }
 
-    impostaLinguaDaCodice(codice: string, salva: boolean = false): void {
-    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
-    this.linguaUtente = c === 'it' ? 'italiano' : 'inglese';
-    this.iconaLingua = c === 'it' ? 'assets/it.svg' : 'assets/en.svg';
-    if (salva) localStorage.setItem('lingua_utente', this.linguaUtente);
-    this.iconaLingua$.next(this.iconaLingua);
+  /**
+   * Imposta la lingua a partire da un codice e applica traduzioni e icona coerenti.
+   *
+   * @param codice Codice lingua da applicare.
+   * @param salva Indica se salvare la lingua anche nel localStorage.
+   * @returns void
+   */
+  impostaLinguaDaCodice(codice: string, salva: boolean = false): void {
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en'; // normalizzo il codice lingua ricevuto
+    this.linguaUtente = c === 'it' ? 'italiano' : 'inglese'; // aggiorno la lingua utente testuale
+    this.iconaLingua = c === 'it' ? 'assets/it.svg' : 'assets/en.svg'; // aggiorno l'icona coerente con la lingua
 
-    this.traduzioniService.assicuraTraduzioni$(c).pipe(take(1)).subscribe(() => {
-      this.traduzioniService.usaLingua(c);
+    if (salva) localStorage.setItem('lingua_utente', this.linguaUtente); // salvo la lingua se richiesto
+
+    this.iconaLingua$.next(this.iconaLingua); // notifico la nuova icona alla UI
+
+    this.traduzioniService.assicuraTraduzioni$(c).pipe(take(1)).subscribe(() => { // assicuro le traduzioni della lingua richiesta
+      this.traduzioniService.usaLingua(c); // applico la lingua appena le traduzioni sono pronte
     });
   }
 
-    private sincCatalogoPathConLingua(codice: string): void {
-        const full =
-      this.location.path(true) ||
-      (window.location.pathname + window.location.search + window.location.hash) ||
-      '';
-    const soloPath = full.split('?')[0].split('#')[0];
-    const tail = full.substring(soloPath.length); // ?query/#hash
+  /**
+   * Sincronizza il path dell'area catalogo con la lingua ricevuta senza navigare.
+   *
+   * @param codice Codice lingua da applicare al path corrente.
+   * @returns void
+   */
+  private sincCatalogoPathConLingua(codice: string): void {
+    const full = // preparo il path completo attuale con eventuali query e hash
+      this.location.path(true) || // provo a leggere il path tramite Location
+      (window.location.pathname + window.location.search + window.location.hash) || // ripiego sul path nativo del browser
+      ''; // uso stringa vuota come fallback finale
+    const soloPath = full.split('?')[0].split('#')[0]; // isolo il solo path senza query e hash
+    const tail = full.substring(soloPath.length); // ricavo la parte finale con query e hash
 
-    // solo area catalogo (include anche scheda)
-    const m = soloPath.match(/^\/(it|en)\/(catalogo|catalog)(\/.*)?$/);
-    if (!m) return;
+    const m = soloPath.match(/^\/(it|en)\/(catalogo|catalog)(\/.*)?$/); // verifico se mi trovo nell'area catalogo
 
-    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
-    const base = '/' + c + (c === 'it' ? '/catalogo' : '/catalog');
+    if (!m) return; // esco subito se il path non appartiene all'area catalogo
 
-    // resto dopo /it/catalogo oppure /en/catalog
-    let resto = (m[3] || '');
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en'; // normalizzo il codice lingua richiesto
+    const base = '/' + c + (c === 'it' ? '/catalogo' : '/catalog'); // costruisco la base catalogo corretta per la lingua
+    let resto = (m[3] || ''); // ricavo il resto del path dopo la base catalogo
 
-    resto = traduciSegmentiUrl(resto, c as 'it' | 'en');
+    resto = traduciSegmentiUrl(resto, c as 'it' | 'en'); // traduco gli eventuali segmenti secondari del path
+    const target = (base + resto).replace(/\/+$/, ''); // costruisco il path di destinazione pulito
+    const current = soloPath.replace(/\/+$/, ''); // normalizzo il path corrente per il confronto
 
-    const target = (base + resto).replace(/\/+$/, '');
-    const current = soloPath.replace(/\/+$/, '');
-    if (target === current) return;
+    if (target === current) return; // esco se il target coincide gia' con il path corrente
 
-    // IMPORTANTISSIMO: cambia URL senza navigare, quindi non ricrei componenti
-    this.location.replaceState(target + tail);
+    this.location.replaceState(target + tail); // cambio URL senza navigare e senza ricreare componenti
   }
 
+  /**
+   * Sincronizza il path della pagina not found con la lingua ricevuta senza navigare.
+   *
+   * @param codice Codice lingua da applicare al path corrente.
+   * @returns void
+   */
   private sincNotFoundPathConLingua(codice: string): void {
-    const full =
-      this.location.path(true) ||
-      (window.location.pathname + window.location.search + window.location.hash) ||
-      '';
-    const soloPath = full.split('?')[0].split('#')[0];
-    const tail = full.substring(soloPath.length);
+    const full = // preparo il path completo attuale con eventuali query e hash
+      this.location.path(true) || // provo a leggere il path tramite Location
+      (window.location.pathname + window.location.search + window.location.hash) || // ripiego sul path nativo del browser
+      ''; // uso stringa vuota come fallback finale
+    const soloPath = full.split('?')[0].split('#')[0]; // isolo il solo path senza query e hash
+    const tail = full.substring(soloPath.length); // ricavo la parte finale con query e hash
+    const m = soloPath.match(/^\/(it|en)\/(non-trovato|not-found)(\/.*)?$/); // verifico se mi trovo nella pagina not found
 
-    const m = soloPath.match(/^\/(it|en)\/(non-trovato|not-found)(\/.*)?$/);
-    if (!m) return;
+    if (!m) return; // esco subito se il path non appartiene alla pagina not found
 
-    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
-    const segmento404 = c === 'it' ? 'non-trovato' : 'not-found';
-    const resto = m[3] || '';
-    const target = ('/' + c + '/' + segmento404 + resto).replace(/\/+$/, '');
-    const current = soloPath.replace(/\/+$/, '');
-    if (target === current) return;
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en'; // normalizzo il codice lingua richiesto
+    const segmento404 = c === 'it' ? 'non-trovato' : 'not-found'; // ricavo il segmento corretto della pagina 404
+    const resto = m[3] || ''; // ricavo l'eventuale coda del path
+    const target = ('/' + c + '/' + segmento404 + resto).replace(/\/+$/, ''); // costruisco il path di destinazione pulito
+    const current = soloPath.replace(/\/+$/, ''); // normalizzo il path corrente per il confronto
 
-    this.location.replaceState(target + tail);
+    if (target === current) return; // esco se il target coincide gia' con il path corrente
+
+    this.location.replaceState(target + tail); // cambio URL senza navigare e senza ricreare componenti
   }
 
-    private sincContattiPathConLingua(codice: string): void {
-    const full =
-      this.location.path(true) ||
-      (window.location.pathname + window.location.search + window.location.hash) ||
-      '';
-    const soloPath = full.split('?')[0].split('#')[0];
-    const tail = full.substring(soloPath.length);
+  /**
+   * Sincronizza il path della pagina contatti con la lingua ricevuta senza navigare.
+   *
+   * @param codice Codice lingua da applicare al path corrente.
+   * @returns void
+   */
+  private sincContattiPathConLingua(codice: string): void {
+    const full = // preparo il path completo attuale con eventuali query e hash
+      this.location.path(true) || // provo a leggere il path tramite Location
+      (window.location.pathname + window.location.search + window.location.hash) || // ripiego sul path nativo del browser
+      ''; // uso stringa vuota come fallback finale
+    const soloPath = full.split('?')[0].split('#')[0]; // isolo il solo path senza query e hash
+    const tail = full.substring(soloPath.length); // ricavo la parte finale con query e hash
+    const m = soloPath.match(/^\/(it|en)\/(contatti|contact)(\/.*)?$/); // verifico se mi trovo nella pagina contatti
 
-    const m = soloPath.match(/^\/(it|en)\/(contatti|contact)(\/.*)?$/);
-    if (!m) return;
+    if (!m) return; // esco subito se il path non appartiene alla pagina contatti
 
-    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
-    const segmento = c === 'it' ? 'contatti' : 'contact';
-    const resto = m[3] || '';
-    const target = ('/' + c + '/' + segmento + resto).replace(/\/+$/, '');
-    const current = soloPath.replace(/\/+$/, '');
-    if (target === current) return;
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en'; // normalizzo il codice lingua richiesto
+    const segmento = c === 'it' ? 'contatti' : 'contact'; // ricavo il segmento corretto della pagina contatti
+    const resto = m[3] || ''; // ricavo l'eventuale coda del path
+    const target = ('/' + c + '/' + segmento + resto).replace(/\/+$/, ''); // costruisco il path di destinazione pulito
+    const current = soloPath.replace(/\/+$/, ''); // normalizzo il path corrente per il confronto
 
-    this.location.replaceState(target + tail);
+    if (target === current) return; // esco se il target coincide gia' con il path corrente
+
+    this.location.replaceState(target + tail); // cambio URL senza navigare e senza ricreare componenti
   }
-private sincIscrizionePathConLingua(codice: string): void {
-  const full =
-    this.location.path(true) ||
-    (window.location.pathname + window.location.search + window.location.hash) ||
-    '';
-  const soloPath = full.split('?')[0].split('#')[0];
-  const tail = full.substring(soloPath.length);
 
-  const m = soloPath.match(/^\/(it|en)\/(benvenuto|welcome)\/(registrazione|registration)(\/.*)?$/);
-  if (!m) return;
+  /**
+   * Sincronizza il path della pagina iscrizione con la lingua ricevuta senza navigare.
+   *
+   * @param codice Codice lingua da applicare al path corrente.
+   * @returns void
+   */
+  private sincIscrizionePathConLingua(codice: string): void {
+    const full = // preparo il path completo attuale con eventuali query e hash
+      this.location.path(true) || // provo a leggere il path tramite Location
+      (window.location.pathname + window.location.search + window.location.hash) || // ripiego sul path nativo del browser
+      ''; // uso stringa vuota come fallback finale
+    const soloPath = full.split('?')[0].split('#')[0]; // isolo il solo path senza query e hash
+    const tail = full.substring(soloPath.length); // ricavo la parte finale con query e hash
+    const m = soloPath.match(/^\/(it|en)\/(benvenuto|welcome)\/(registrazione|registration)(\/.*)?$/); // verifico se mi trovo nella pagina iscrizione
 
-  const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
-  const base = this.baseBenvenutoDaLingua(c);
-  const sottoPath = c === 'it' ? 'registrazione' : 'registration';
-  const resto = m[4] || '';
-  const target = (base + '/' + sottoPath + resto).replace(/\/+$/, '');
-  const current = soloPath.replace(/\/+$/, '');
-  if (target === current) return;
+    if (!m) return; // esco subito se il path non appartiene alla pagina iscrizione
 
-  this.location.replaceState(target + tail);
-}
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en'; // normalizzo il codice lingua richiesto
+    const base = this.baseBenvenutoDaLingua(c); // ricavo la base benvenuto coerente con la lingua
+    const sottoPath = c === 'it' ? 'registrazione' : 'registration'; // ricavo il segmento iscrizione corretto per la lingua
+    const resto = m[4] || ''; // ricavo l'eventuale coda del path
+    const target = (base + '/' + sottoPath + resto).replace(/\/+$/, ''); // costruisco il path di destinazione pulito
+    const current = soloPath.replace(/\/+$/, ''); // normalizzo il path corrente per il confronto
+
+    if (target === current) return; // esco se il target coincide gia' con il path corrente
+
+    this.location.replaceState(target + tail); // cambio URL senza navigare e senza ricreare componenti
+  }
 }

@@ -1,44 +1,35 @@
-// ─── scheda-state.context.ts ─────────────────────────────────────────────────
-// Oggetto di stato condiviso (passato per riferimento) tra il componente e tutti
-// gli helper. Nessuna logica: solo campi.
+// Oggetto di stato condiviso tra componente e helper della scheda, senza logica.
 
 export class SchedaStateContext {
-  // ── Contenuto corrente ────────────────────────────────────────────────────
-  slugCorrente         = '';
-  tipoContenuto:       'film' | 'serie' | null = null;
-  idContenuto:         number | null = null;
+  slugCorrente = ''; // lo slug del contenuto corrente
+  tipoContenuto: 'film' | 'serie' | null = null; // il tipo del contenuto corrente
+  idContenuto: number | null = null; // l'id del contenuto corrente
 
-  // ── Player trailer scheda ─────────────────────────────────────────────────
-  playerScheda:        any   = null;
-  playerSchedaPronto         = false;
-  mostraPlayerSchedaNelDom   = false;
-  mostraVideoScheda          = false;
-  trailerInRiproduzione      = true;
-  avvioTrailerSchedaRichiesto = false;
-  durataFadeSchedaMs         = 400;
+  playerScheda: any = null; // l'istanza del player trailer della scheda
+  playerSchedaPronto = false; // segno se il player scheda e' pronto
+  mostraPlayerSchedaNelDom = false; // segno se il player deve stare nel DOM
+  mostraVideoScheda = false; // segno se il video della scheda deve essere visibile
+  trailerInRiproduzione = true; // segno se il trailer e' considerato in riproduzione
+  avvioTrailerSchedaRichiesto = false; // segno se e' stato richiesto l'avvio del trailer
+  durataFadeSchedaMs = 400; // la durata del fade della scheda
 
-  // Timer handles
-  timerInserisciPlayerSchedaNelDom: any = null;
-  timerMostraVideoScheda:           any = null;
-  timerResetPlayerScheda:           any = null;
+  timerInserisciPlayerSchedaNelDom: any = null; // il timer che inserisce il player nel DOM
+  timerMostraVideoScheda: any = null; // il timer che mostra il video scheda
+  timerResetPlayerScheda: any = null; // il timer che resetta il player scheda
 
-  // ── WebAudio ─────────────────────────────────────────────────────────────
-  contestoAudio:       any   = null;
-  nodoSorgente:        any   = null;
-  nodoGuadagno:        any   = null;
-  elementoVideoReale:  HTMLVideoElement | null = null;
+  contestoAudio: any = null; // l'AudioContext della scheda
+  nodoSorgente: any = null; // il nodo sorgente WebAudio
+  nodoGuadagno: any = null; // il GainNode WebAudio
+  elementoVideoReale: HTMLVideoElement | null = null; // il riferimento al video reale
 
-  // ── Stato audio utente ────────────────────────────────────────────────────
-  audioBloccatoDaUtente = false;
-  soloBrowserBlocca     = false;
-  handlerSbloccoAudioScheda: any = null;
+  audioBloccatoDaUtente = false; // segno se l'audio e' bloccato dall'utente
+  soloBrowserBlocca = false; // segno se il blocco audio dipende solo dal browser
+  handlerSbloccoAudioScheda: any = null; // il listener di sblocco audio della scheda
 
-  // ── Stagioni (solo serie) ─────────────────────────────────────────────────
-  stagioneSelezionata: string | null = null;
-  stagioni: Array<{ id_stagione: number; numero_stagione: number; numero_episodi: number }> = [];
-  serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }>> = {};
-  stagioneCachata = new Set<string>();
+  stagioneSelezionata: string | null = null; // la stagione selezionata
+  stagioni: Array<{ id_stagione: number; numero_stagione: number; numero_episodi: number }> = []; // la lista delle stagioni
+  serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }>> = {}; // i dati episodi raggruppati per stagione
+  stagioneCachata = new Set<string>(); // l'elenco delle stagioni gia' caricate
 
-  // ── Ciclo di vita ─────────────────────────────────────────────────────────
-  distrutto = false;
+  distrutto = false; // segno se il contesto e' stato distrutto
 }

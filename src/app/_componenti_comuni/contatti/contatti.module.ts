@@ -8,6 +8,13 @@ import { SaturnoModule } from '../saturno/saturno.module';
 import { TranslateModule } from '@ngx-translate/core';
 @NgModule({
   declarations: [ContattiComponent],
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, ContattiRoutingModule, ComponentiComuniModule, SaturnoModule ],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ContattiRoutingModule,
+    ComponentiComuniModule,
+    SaturnoModule,
+  ],
 })
 export class ContattiModule {}

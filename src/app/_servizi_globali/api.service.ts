@@ -244,100 +244,186 @@ export class ApiService {
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
 
-   public getCatalogoRighe(
- lingua: string,
- tipo: string,
- limit: number = 4,
- offset: number = 0
- ): Observable<IRispostaServer> {
- const risorsa: string[] = ['catalogo-righe'];
- const parametri = {
- lingua: String(lingua),
- tipo: String(tipo),
- limit: String(limit),
- offset: String(offset),
- };
- return this.richiestaGenerica(risorsa, 'GET', parametri);
- }
+   /**
+   * Recupera le righe del catalogo filtrate per lingua e tipo con paginazione.
+   *
+   * @param lingua Codice lingua da usare nella richiesta.
+   * @param tipo Tipo di contenuto da richiedere.
+   * @param limit Numero massimo di elementi da recuperare.
+   * @param offset Offset iniziale della paginazione.
+   * @returns Observable<IRispostaServer>
+   */
+  public getCatalogoRighe(
+    lingua: string,
+    tipo: string,
+    limit: number = 4,
+    offset: number = 0
+  ): Observable<IRispostaServer> {
+    const risorsa: string[] = ['catalogo-righe']; // imposto l'endpoint dedicato alle righe catalogo
+    const parametri = {
+      lingua: String(lingua), // converto la lingua in stringa per i parametri query
+      tipo: String(tipo), // converto il tipo in stringa per i parametri query
+      limit: String(limit), // converto il limite in stringa per i parametri query
+      offset: String(offset), // converto l'offset in stringa per i parametri query
+    };
+    return this.richiestaGenerica(risorsa, 'GET', parametri); // faccio la GET delle righe catalogo con i parametri richiesti
+  }
 
-public getFilm(id: number | string): Observable<IRispostaServer> {
-  const risorsa: (string | number)[] = ['film', id];
-  return this.richiestaGenerica(risorsa, 'GET');
-}
+  /**
+   * Recupera i dettagli di un film tramite id.
+   *
+   * @param id Identificativo del film.
+   * @returns Observable<IRispostaServer>
+   */
+  public getFilm(id: number | string): Observable<IRispostaServer> {
+    const risorsa: (string | number)[] = ['film', id]; // imposto l'endpoint del film includendo l'id richiesto
+    return this.richiestaGenerica(risorsa, 'GET'); // faccio la GET del film richiesto
+  }
 
-public getSerie(id: number | string): Observable<IRispostaServer> {
-  const risorsa: (string | number)[] = ['serie', id];
-  return this.richiestaGenerica(risorsa, 'GET');
-}
+  /**
+   * Recupera i dettagli di una serie tramite id.
+   *
+   * @param id Identificativo della serie.
+   * @returns Observable<IRispostaServer>
+   */
+  public getSerie(id: number | string): Observable<IRispostaServer> {
+    const risorsa: (string | number)[] = ['serie', id]; // imposto l'endpoint della serie includendo l'id richiesto
+    return this.richiestaGenerica(risorsa, 'GET'); // faccio la GET della serie richiesta
+  }
 
-public getFilmTraduzioni(idFilm: number | string, lingua: string): Observable<IRispostaServer> {
-  const risorsa: string[] = ['film-traduzioni'];
-  return this.richiestaGenerica(risorsa, 'GET', { id_film: String(idFilm), lingua });
-}
+  /**
+   * Recupera le traduzioni di un film per una lingua specifica.
+   *
+   * @param idFilm Identificativo del film.
+   * @param lingua Codice lingua da richiedere.
+   * @returns Observable<IRispostaServer>
+   */
+  public getFilmTraduzioni(idFilm: number | string, lingua: string): Observable<IRispostaServer> {
+    const risorsa: string[] = ['film-traduzioni']; // imposto l'endpoint delle traduzioni film
+    return this.richiestaGenerica(risorsa, 'GET', { id_film: String(idFilm), lingua }); // faccio la GET delle traduzioni film passando id e lingua
+  }
 
-public getSerieTraduzioni(idSerie: number | string, lingua: string): Observable<IRispostaServer> {
-  const risorsa: string[] = ['serie-traduzioni'];
-  return this.richiestaGenerica(risorsa, 'GET', { id_serie: String(idSerie), lingua });
-}
+  /**
+   * Recupera le traduzioni di una serie per una lingua specifica.
+   *
+   * @param idSerie Identificativo della serie.
+   * @param lingua Codice lingua da richiedere.
+   * @returns Observable<IRispostaServer>
+   */
+  public getSerieTraduzioni(idSerie: number | string, lingua: string): Observable<IRispostaServer> {
+    const risorsa: string[] = ['serie-traduzioni']; // imposto l'endpoint delle traduzioni serie
+    return this.richiestaGenerica(risorsa, 'GET', { id_serie: String(idSerie), lingua }); // faccio la GET delle traduzioni serie passando id e lingua
+  }
 
-/**
- * Recupera l'elenco dei dati personali.
- *
- * @returns Observable con la risposta del server contenente i dati personali.
- */
+  /**
+   * Recupera l'elenco dei dati personali.
+   *
+   * @returns Observable<IRispostaServer>
+   */
   public getDatiPersonali(): Observable<IRispostaServer> {
-    const risorsa: string[] = ['dati-personali']; // Imposto l'endpoint /dati-personali
-    return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
+    const risorsa: string[] = ['dati-personali']; // imposto l'endpoint dei dati personali
+    return this.richiestaGenerica(risorsa, 'GET'); // faccio la GET dei dati personali
   }
 
-
+  /**
+   * Recupera l'elenco delle stagioni di una serie.
+   *
+   * @param idSerie Identificativo della serie.
+   * @returns Observable<IRispostaServer>
+   */
   public getStagioni(idSerie: number | string): Observable<IRispostaServer> {
-  return this.richiestaGenerica(['stagioni'], 'GET', { id_serie: String(idSerie) });
-}
-
-public getEpisodi(idStagione: number | string): Observable<IRispostaServer> {
-  return this.richiestaGenerica(['episodi'], 'GET', { id_stagione: String(idStagione) });
-}
-
-public getEpisodiTraduzioni(idStagione: number | string, lingua: string): Observable<IRispostaServer> {
-  return this.richiestaGenerica(['episodi-traduzioni'], 'GET', {
-    id_stagione: String(idStagione),
-    lingua
-  });
-}
-
-
-public getCategoriePerContenuto(
-  lingua: string,
-  tipo: string,
-  id: number | string
-): Observable<IRispostaServer> {
-  const risorsa: string[] = ['categorie-per-contenuto'];  // ← endpoint dedicato
-  const parametri = {
-    lingua: String(lingua),
-    tipo: String(tipo),
-    id_contenuto: String(id),
-  };
-  return this.richiestaGenerica(risorsa, 'GET', parametri);
-}
-
-public getIntervalloPublicita(): Observable<IRispostaServer> {
-  return this.richiestaGenerica(['configurazione', 'intervallo-pubblicita'], 'GET');
-}
-
-public getProssimaPublicita(): Observable<IRispostaServer> {
-  return this.richiestaGenerica(['pubblicita', 'prossima'], 'GET');
-}
-
- public getNazioni(): Observable<IRispostaServer> {
-    return this.richiestaGenerica(['nazioni'], 'GET');
+    return this.richiestaGenerica(['stagioni'], 'GET', { id_serie: String(idSerie) }); // faccio la GET delle stagioni filtrando per id serie
   }
 
+  /**
+   * Recupera l'elenco degli episodi di una stagione.
+   *
+   * @param idStagione Identificativo della stagione.
+   * @returns Observable<IRispostaServer>
+   */
+  public getEpisodi(idStagione: number | string): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['episodi'], 'GET', { id_stagione: String(idStagione) }); // faccio la GET degli episodi filtrando per id stagione
+  }
+
+  /**
+   * Recupera le traduzioni degli episodi di una stagione per una lingua specifica.
+   *
+   * @param idStagione Identificativo della stagione.
+   * @param lingua Codice lingua da richiedere.
+   * @returns Observable<IRispostaServer>
+   */
+  public getEpisodiTraduzioni(idStagione: number | string, lingua: string): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['episodi-traduzioni'], 'GET', {
+      id_stagione: String(idStagione), // passo l'id della stagione come parametro query
+      lingua // passo la lingua richiesta come parametro query
+    }); // faccio la GET delle traduzioni episodi
+  }
+
+  /**
+   * Recupera le categorie associate a un contenuto specifico.
+   *
+   * @param lingua Codice lingua da usare nella richiesta.
+   * @param tipo Tipo del contenuto.
+   * @param id Identificativo del contenuto.
+   * @returns Observable<IRispostaServer>
+   */
+  public getCategoriePerContenuto(
+    lingua: string,
+    tipo: string,
+    id: number | string
+  ): Observable<IRispostaServer> {
+    const risorsa: string[] = ['categorie-per-contenuto']; // imposto l'endpoint dedicato alle categorie per contenuto
+    const parametri = {
+      lingua: String(lingua), // converto la lingua in stringa per i parametri query
+      tipo: String(tipo), // converto il tipo in stringa per i parametri query
+      id_contenuto: String(id), // converto l'id contenuto in stringa per i parametri query
+    };
+    return this.richiestaGenerica(risorsa, 'GET', parametri); // faccio la GET delle categorie del contenuto richiesto
+  }
+
+  /**
+   * Recupera l'intervallo configurato per la pubblicita'.
+   *
+   * @returns Observable<IRispostaServer>
+   */
+  public getIntervalloPublicita(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['configurazione', 'intervallo-pubblicita'], 'GET'); // faccio la GET della configurazione intervallo pubblicita'
+  }
+
+  /**
+   * Recupera la prossima pubblicita' disponibile.
+   *
+   * @returns Observable<IRispostaServer>
+   */
+  public getProssimaPublicita(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['pubblicita', 'prossima'], 'GET'); // faccio la GET della prossima pubblicita'
+  }
+
+  /**
+   * Recupera l'elenco delle nazioni.
+   *
+   * @returns Observable<IRispostaServer>
+   */
+  public getNazioni(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['nazioni'], 'GET'); // faccio la GET dell'elenco nazioni
+  }
+
+  /**
+   * Recupera l'elenco dei comuni.
+   *
+   * @returns Observable<IRispostaServer>
+   */
   public getComuni(): Observable<IRispostaServer> {
-    return this.richiestaGenerica(['comuni'], 'GET');
+    return this.richiestaGenerica(['comuni'], 'GET'); // faccio la GET dell'elenco comuni
   }
 
+  /**
+   * Recupera i prezzi associati a una nazione tramite codice ISO.
+   *
+   * @param iso Codice ISO della nazione.
+   * @returns Observable<IRispostaServer>
+   */
   public getPrezziNazione(iso: string): Observable<IRispostaServer> {
-    return this.richiestaGenerica(['prezzi-nazione', iso], 'GET');
+    return this.richiestaGenerica(['prezzi-nazione', iso], 'GET'); // faccio la GET dei prezzi associati alla nazione richiesta
   }
 }

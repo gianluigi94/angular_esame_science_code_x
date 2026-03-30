@@ -1,8 +1,11 @@
-<!-- saturno esiste anche in scheda, ma senza animazioni (stand-by) -->
+<!-- html della scheda di un media -->
+
+<!-- saturno si crea anche se non lo si vede, ovviamente seza animazioni, ma pronto a comparire se si va in 'contatti' -->
 <app-saturno
   [usaAnimazioniIngresso]="false"
   [usaAnimazioniScroll]="false"
 ></app-saturno>
+<!-- imagine sfondo animata con parametri e attributi che cambiano dinamicamente in base al media e alla lingua -->
 <img
   *ngIf="urlSfondoScheda"
   [src]="urlSfondoScheda"
@@ -11,89 +14,106 @@
   [class.anim]="startAnim"
   [class.zoom-out]="transitioneVersoPLayer"
 />
+<!-- sfumatura che ha animazioni nel caso si passasse al player video del film -->
 <span class="sfumatura" [class.verso-player]="transitioneVersoPLayer"></span>
 
-<div class="scheda" [class.verso-player]="transitioneVersoPLayer" [class.player-aperto]="transitioneVersoPLayer">
-   <video-js
-  *ngIf="mostraPlayerSchedaNelDom"
-  #playerSchedaRef
-  id="player-scheda-trailer"
-  class="video-js senza-controlli"
-  [class.visibile]="mostraVideoScheda"
-  [style.--durata-fade-visivo]="durataFadeSchedaMs + 'ms'"
-  playsinline
-  preload="auto"
-></video-js>
+<!-- contenitore principale della scheda ha animazioni e classi se vado verso il player del film -->
+<div
+  class="scheda"
+  [class.verso-player]="transitioneVersoPLayer"
+  [class.player-aperto]="transitioneVersoPLayer"
+>
+  <!-- questo è il player del trailer, NON DEL MEDIA PRINCIPALE -->
+  <video-js
+    *ngIf="mostraPlayerSchedaNelDom"
+    #playerSchedaRef
+    id="player-scheda-trailer"
+    class="video-js senza-controlli"
+    [class.visibile]="mostraVideoScheda"
+    [style.--durata-fade-visivo]="durataFadeSchedaMs + 'ms'"
+    playsinline
+    preload="auto"
+  ></video-js>
 
+  <!-- immagine del titolo del media, attributi e parameri cambiano a seconda della lingua e del media -->
+  <div class="titolo-scheda" *ngIf="imgTitoloScheda">
+    <img
+      [attr.src]="imgTitoloScheda"
+      [alt]="altTitoloScheda"
+      class="titolo-scheda__immagine"
+      [class.anim]="startAnimTitolo"
+    />
+  </div>
 
-
-
-
-<!-- ////////////////////////// -->
-
-
-<div class="titolo-scheda" *ngIf="imgTitoloScheda">
-  <img
-    [attr.src]="imgTitoloScheda"
-    [alt]="altTitoloScheda"
-    class="titolo-scheda__immagine"
-    [class.anim]="startAnimTitolo"
-  />
-</div>
-
-
-
-  <!-- /////////////// -->
+  <!-- contenitore dei bottoni -->
   <div class="bottoni_film">
+    <!-- bottone riprendi ANCORA FUORI USO, cambia title dinamicamente -->
     <button type="button" class="riprendi" [title]="labelRiprendiTitle">
-  {{ labelRiprendi }}
-  <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
-</button>
-    <button *ngIf="tipoContenuto === 'film'" type="button" class="riproduci" [title]="labelRiproduciTitle" (click)="onRiproduci()">
-  {{ labelRiproduci }}
-  <span class="icon play" aria-hidden="true">&#9658;</span>
-</button>
+      {{ labelRiprendi }}
+      <span class="icon play ptwo" aria-hidden="true">&#9658;</span>
+    </button>
+    <!-- il bottone per la ripriduzione è solo per le schede dei film e al click fa partire animazioni, comparire player e partire il media -->
+    <button
+      *ngIf="tipoContenuto === 'film'"
+      type="button"
+      class="riproduci"
+      [title]="labelRiproduciTitle"
+      (click)="onRiproduci()"
+    >
+      {{ labelRiproduci }}
+      <span class="icon play" aria-hidden="true">&#9658;</span>
+    </button>
 
-<button type="button" class="riproduci" (click)="toggleTrailer()" [title]="labelTrailerTitle">
-  Trailer
-  <span class="icon-wrapper" aria-hidden="true">
-    <span *ngIf="!trailerInRiproduzione" class="icon play">&#9658;</span>
-    <span *ngIf="trailerInRiproduzione"  class="icon pausa"></span>
-  </span>
-</button>
+    <!-- bottone per far partire/sospendere il trailer -->
+    <button
+      type="button"
+      class="riproduci"
+      (click)="toggleTrailer()"
+      [title]="labelTrailerTitle"
+    >
+      Trailer
+      <span class="icon-wrapper" aria-hidden="true">
+        <span *ngIf="!trailerInRiproduzione" class="icon play">&#9658;</span>
+        <span *ngIf="trailerInRiproduzione" class="icon pausa"></span>
+      </span>
+    </button>
 
+    <!-- richiamo il bottone dei preferiti passo il titolo della scheda per il title dinamico che cambia in base a lingua e scheda -->
     <app-bottone-preferiti [titolo]="titoloScheda"></app-bottone-preferiti>
   </div>
   <div class="contenuto_info">
+    <!-- descrizione del media -->
     <p class="descrizione" [class.anim]="startAnimDescrizione">
       {{ descrizioneTestuale || "..." }}
     </p>
   </div>
-
+  <!-- informazioni del media che cambiano se è un film o serie -->
   <div class="tabella">
-  <p *ngIf="anno">
-    <span class="cubo">{{ labelAnno }}:</span>
-    {{ anno }}
-  </p>
+    <p *ngIf="anno">
+      <span class="cubo">{{ labelAnno }}:</span>
+      {{ anno }}
+    </p>
 
-  <p *ngIf="tipoContenuto === 'film' && durata">
-    <span class="cubo">{{ labelDurata }}:</span>
-    {{ secondiInLeggibile(durata) }}
-  </p>
+    <p *ngIf="tipoContenuto === 'film' && durata">
+      <span class="cubo">{{ labelDurata }}:</span>
+      {{ secondiInLeggibile(durata) }}
+    </p>
 
-  <p *ngIf="regista">
-    <span class="cubo">{{ labelRegista }}:</span>
-    {{ regista }}
-  </p>
+    <p *ngIf="regista">
+      <span class="cubo">{{ labelRegista }}:</span>
+      {{ regista }}
+    </p>
 
-  <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
-    <span class="cubo">{{ labelEpisodiTotali }}:</span>
-    {{ episodiTotali }}
-  </p>
-</div>
+    <p *ngIf="tipoContenuto === 'serie' && episodiTotali">
+      <span class="cubo">{{ labelEpisodiTotali }}:</span>
+      {{ episodiTotali }}
+    </p>
+  </div>
 
+  <!-- div che contiene per le solo serie la lista di episodi divisa in stagioni -->
   <div class="episodi" *ngIf="tipoContenuto === 'serie'">
     <nav class="menu-stagioni" aria-label="Seleziona stagione">
+      <!-- bottone per selezionare la stagione, ha title e aria che cambia in base a linugua e media, se selezionato prende una classe -->
       <button
         type="button"
         class="voce_stagione"
@@ -105,13 +125,18 @@
         [attr.aria-pressed]="
           (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
           toString(stag.numero_stagione)
-        "[title]="('ui.scheda.stagione.tittle.button' | translate) + ': ' + stag.numero_stagione"
+        "
+        [title]="
+          ('ui.scheda.stagione.tittle.button' | translate) +
+          ': ' +
+          stag.numero_stagione
+        "
         (click)="selezionaStagione(toString(stag.numero_stagione))"
       >
         {{ labelStagione }} {{ stag.numero_stagione }}
       </button>
     </nav>
-
+    <!-- placeholder quando gli episodi non sono ancora caricati -->
     <div *ngIf="!stagioneSelezionata" class="episodi-spinner">
       <app-spinner></app-spinner>
     </div>
@@ -121,6 +146,7 @@
       *ngIf="stagioneSelezionata"
       [attr.aria-busy]="caricamentoStagioneInCorso"
     >
+      <!-- indico che stagione sto vedendo -->
       <h3 class="titolo-stagione-corrente">
         {{ labelStagione }} {{ stagioneSelezionata }}
       </h3>
@@ -130,6 +156,7 @@
         *ngIf="caricamentoStagioneInCorso"
         aria-live="polite"
       >
+        <!-- lista placeholder -->
         <li *ngFor="let _ of [0, 1, 2, 3]">
           <span class="placeholder_img">
             <app-spinner class="spinner--categoria"></app-spinner>
@@ -139,26 +166,34 @@
           </span>
         </li>
       </ul>
-
+      <!-- lista episodi veri -->
       <ul
         *ngIf="
           !caricamentoStagioneInCorso &&
           serieData[stagioneSelezionata || getChiavi(serieData)[0]]
         "
       >
+      <!-- episodio cliccabile che farà partire il vero episodio -->
         <li
-  *ngFor="
-    let episodio of getChiavi(
-      serieData[stagioneSelezionata || getChiavi(serieData)[0]]
-    );
-    let i = index
-  "
-  [title]="('ui.scheda.episodio.tittle.button' | translate) + ': ' + serieData[stagioneSelezionata || getChiavi(serieData)[0]][episodio].titolo"
-  (click)="onClicEpisodio(i + 1)"
->
+          *ngFor="
+            let episodio of getChiavi(
+              serieData[stagioneSelezionata || getChiavi(serieData)[0]]
+            );
+            let i = index
+          "
+          [title]="
+            ('ui.scheda.episodio.tittle.button' | translate) +
+            ': ' +
+            serieData[stagioneSelezionata || getChiavi(serieData)[0]][episodio]
+              .titolo
+          "
+          (click)="onClicEpisodio(i + 1)"
+        >
           <div class="img_contenitore_scritta">
             <div class="ritaglio">
+              <!-- icona del play che compare con animazioni -->
               <span class="on_play" aria-hidden="true">&#9658;</span>
+              <!-- div con sfondo immagine di sfondo -->
               <div
                 class="img_anteprima"
                 [style.background-image]="
@@ -169,11 +204,13 @@
                   ')'
                 "
               >
+              <!-- sfumatura del img dell'episodio -->
                 <span class="sfumatura_piccola"></span>
               </div>
             </div>
           </div>
 
+          <!-- contenitore con info sul singolo episodio: titolo, descrizione, durata -->
           <div class="titolo_durata">
             {{ labelEpisodio }} {{ i + 1 }}
             <span class="titolo_ep">{{
@@ -195,6 +232,7 @@
         </li>
       </ul>
 
+      <!-- ripeto in basso il menu per selezionare la stagione -->
       <nav class="menu-stagioni" aria-label="Seleziona stagione">
         <button
           type="button"
@@ -207,7 +245,12 @@
           [attr.aria-pressed]="
             (stagioneSelezionata || toString(stagioni[0].numero_stagione)) ===
             toString(stag.numero_stagione)
-          "[title]="('ui.scheda.stagione.tittle.button' | translate) + ': ' + stag.numero_stagione"
+          "
+          [title]="
+            ('ui.scheda.stagione.tittle.button' | translate) +
+            ': ' +
+            stag.numero_stagione
+          "
           (click)="selezionaStagione(toString(stag.numero_stagione))"
         >
           Stagione {{ stag.numero_stagione }}
@@ -215,11 +258,12 @@
       </nav>
     </div>
   </div>
-
+<!-- locandine cliccabili correlate -->
   <div
     class="righe-correlate"
     *ngIf="righeCorrelate.length > 0 || righeCorrelateInCaricamento"
   >
+  <!-- spinner se non è carico -->
     <ng-container *ngIf="righeCorrelateInCaricamento">
       <app-spinner></app-spinner>
     </ng-container>
@@ -227,20 +271,27 @@
     <ng-container
       *ngFor="let riga of righeCorrelate; trackBy: tracciaRigaCorrelata"
     >
+    <!-- richiamo il componente delle righe, passando i parametri della scheda e non del catalogo -->
       <app-riga-categoria
-  [idCategoria]="riga.idCategoria"
-  [abilitaSalvataggiSessionStorage]="false"
-  [categoria]="riga.category"
-  [locandine]="riga.locandine"
-  [tickResetPagine]="0"
-  [locandineVisibili]="6"
-  [ritardoNavigazioneStessaTipologiaMs]="100"
-     [ritardoClickLocandinaMs]="200"
-   [attendiChiusuraPlayerSchedaPrimaDiNavigare]="true"
-></app-riga-categoria>
+        [idCategoria]="riga.idCategoria"
+        [abilitaSalvataggiSessionStorage]="false"
+        [categoria]="riga.category"
+        [locandine]="riga.locandine"
+        [tickResetPagine]="0"
+        [locandineVisibili]="6"
+        [ritardoNavigazioneStessaTipologiaMs]="100"
+        [ritardoClickLocandinaMs]="200"
+        [attendiChiusuraPlayerSchedaPrimaDiNavigare]="true"
+      ></app-riga-categoria>
     </ng-container>
   </div>
-
+<!-- richiamo il footer -->
   <app-footer></app-footer>
 </div>
-<app-player-video *ngIf="mostraPlayerVideo" [risorse]="risorsePLayerVideo" [sottotitoli]="sottotitoliPlayerVideo" [infoEpisodio]="infoEpisodioPlayer"></app-player-video>
+<!-- richiamo il player principale del media NON è IL TRAILER, cpassandoli le info dell' film o episodio -->
+<app-player-video
+  *ngIf="mostraPlayerVideo"
+  [risorse]="risorsePLayerVideo"
+  [sottotitoli]="sottotitoliPlayerVideo"
+  [infoEpisodio]="infoEpisodioPlayer"
+></app-player-video>

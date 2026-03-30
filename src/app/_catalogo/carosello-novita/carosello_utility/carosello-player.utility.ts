@@ -3,76 +3,84 @@
 import videojs from 'video.js';
 
 export class CaroselloPlayerUtility {
+  /**
+   * Collega la gestione dell'evento di fine trailer del player.
+   *
+   * Rimuove eventuali listener precedenti per evitare duplicati e, quando il trailer termina:
+   * - nasconde il video
+   * - annulla avvii pendenti
+   * - sfuma l'audio a zero
+   * - mette in pausa e resetta il player
+   * - avanza alla slide successiva
+   *
+   * @param ctx Contesto del componente/carousel
+   * @returns void
+   */
+  static collegaFineTrailer(ctx: any): void {
+    try {
+      if (!ctx.player) return;
+      ctx.player.off('ended');
+    } catch {}
 
-/**
- * Collega la gestione dell'evento di fine trailer del player.
- *
- * Rimuove eventuali listener precedenti per evitare duplicati e, quando il trailer termina:
- * - nasconde il video
- * - annulla avvii pendenti
- * - sfuma l'audio a zero
- * - mette in pausa e resetta il player
- * - avanza alla slide successiva
- *
- * @param ctx Contesto del componente/carousel
- * @returns void
- */
- static collegaFineTrailer(ctx: any): void {
-  try {
-    if (!ctx.player) return;
-    ctx.player.off('ended');
-  } catch {}
+    try {
+      ctx.player.on('ended', () => {
+        // Se il trailer finisce mentre sono in hover locandina:
+        // - non devo scrollare
+        // - devo far ricomparire la cover immagine
+        if (ctx.pausaPerHover) {
+          // blocco qualunque roba hover pendente (timer/token)
+          ctx.tokenHoverTrailer += 1;
+          if (ctx.timerMostraTrailerHover)
+            clearTimeout(ctx.timerMostraTrailerHover);
+          ctx.timerMostraTrailerHover = null;
 
-  try {
-    ctx.player.on('ended', () => {
-      // Se il trailer finisce mentre sono in hover locandina:
-      // - non devo scrollare
-      // - devo far ricomparire la cover immagine
-      if (ctx.pausaPerHover) {
-        // blocco qualunque roba hover pendente (timer/token)
-        ctx.tokenHoverTrailer += 1;
-        if (ctx.timerMostraTrailerHover) clearTimeout(ctx.timerMostraTrailerHover);
-        ctx.timerMostraTrailerHover = null;
+          // mostro la cover e nascondo il video
+          ctx.mostraImmagineHover = true;
+          ctx.mostraVideo = false;
 
-        // mostro la cover e nascondo il video
-        ctx.mostraImmagineHover = true;
+          // stop dolce + reset (senza vaiAvanti)
+          ctx.fermaAvvioPendete();
+          ctx.sfumaGuadagnoVerso(0, ctx.durataFadeAudioMs).finally(() => {
+            try {
+              ctx.player.pause();
+            } catch {}
+            try {
+              ctx.player.currentTime(0);
+            } catch {}
+          });
+
+          return;
+        }
+
+        // Comportamento normale (trailer del carosello)
         ctx.mostraVideo = false;
-
-        // stop dolce + reset (senza vaiAvanti)
         ctx.fermaAvvioPendete();
+
         ctx.sfumaGuadagnoVerso(0, ctx.durataFadeAudioMs).finally(() => {
-          try { ctx.player.pause(); } catch {}
-          try { ctx.player.currentTime(0); } catch {}
+          try {
+            ctx.player.pause();
+          } catch {}
+          try {
+            ctx.player.currentTime(0);
+          } catch {}
+          ctx.vaiAvantiDaFineTrailer();
         });
-
-        return;
-      }
-
-      // Comportamento normale (trailer del carosello)
-      ctx.mostraVideo = false;
-      ctx.fermaAvvioPendete();
-
-      ctx.sfumaGuadagnoVerso(0, ctx.durataFadeAudioMs).finally(() => {
-        try { ctx.player.pause(); } catch {}
-        try { ctx.player.currentTime(0); } catch {}
-        ctx.vaiAvantiDaFineTrailer();
       });
-    });
-  } catch {}
-}
+    } catch {}
+  }
 
   /**
- * Inizializza il player video quando il riferimento DOM e' disponibile e non e' gia' stato inizializzato.
- *
- * Crea l'istanza video.js, forza autoplay disabilitato, mantiene il video nascosto
- * finche' non viene avviato esplicitamente e collega gli eventi principali:
- * - techready e loadstart per riallineare il video reale e WebAudio
- * - stalled, waiting ed error per pianificare controlli di stallo e retry soft
- * Infine collega la gestione di fine trailer e prova l'avvio iniziale.
- *
- * @param ctx Contesto del componente/carousel
- * @returns void
- */
+   * Inizializza il player video quando il riferimento DOM e' disponibile e non e' gia' stato inizializzato.
+   *
+   * Crea l'istanza video.js, forza autoplay disabilitato, mantiene il video nascosto
+   * finche' non viene avviato esplicitamente e collega gli eventi principali:
+   * - techready e loadstart per riallineare il video reale e WebAudio
+   * - stalled, waiting ed error per pianificare controlli di stallo e retry soft
+   * Infine collega la gestione di fine trailer e prova l'avvio iniziale.
+   *
+   * @param ctx Contesto del componente/carousel
+   * @returns void
+   */
   static inizializzaPlayerSePronto(ctx: any): void {
     if (ctx.playerInizializzato) return; // Esco se ho gia' inizializzato il player
     if (!ctx.riproduttore || !ctx.riproduttore.nativeElement) return; // Esco se il riferimento al DOM non e' ancora pronto
@@ -104,13 +112,13 @@ export class CaroselloPlayerUtility {
     });
 
     ctx.player.on('stalled', () =>
-      ctx.pianificaControlloStallo(ctx.numeroSequenzaAvvio)
+      ctx.pianificaControlloStallo(ctx.numeroSequenzaAvvio),
     ); // Se va in stalled, pianifico un controllo/riprova soft
     ctx.player.on('waiting', () =>
-      ctx.pianificaControlloStallo(ctx.numeroSequenzaAvvio)
+      ctx.pianificaControlloStallo(ctx.numeroSequenzaAvvio),
     ); // Se resta in waiting, pianifico un controllo/riprova soft
     ctx.player.on('error', () =>
-      ctx.pianificaControlloStallo(ctx.numeroSequenzaAvvio)
+      ctx.pianificaControlloStallo(ctx.numeroSequenzaAvvio),
     ); // Se c'e' errore, pianifico un controllo/riprova soft
 
     // Ogni volta che il video parte davvero (anche hover), intercetto il tipo di blocco audio
@@ -121,33 +129,33 @@ export class CaroselloPlayerUtility {
     });
     CaroselloPlayerUtility.collegaFineTrailer(ctx); // Collego la gestione di fine trailer
 
- // Se l'utente era gia' in hover prima che il player fosse pronto, riprovo ora
- try {
- if (ctx.mostraImmagineHover && ctx.immagineHoverPronta) {
- ctx.preparaTrailerHoverDopoImmaginePronta();
- return;
- }
- } catch {}
+    // Se l'utente era gia' in hover prima che il player fosse pronto, riprovo ora
+    try {
+      if (ctx.mostraImmagineHover && ctx.immagineHoverPronta) {
+        ctx.preparaTrailerHoverDopoImmaginePronta();
+        return;
+      }
+    } catch {}
 
     ctx.provaAvvioInizialeTrailer(); // Provo ad avviare il trailer iniziale se le condizioni sono pronte
   }
 
-/**
- * Attende un singolo evento del player con timeout e ritorna se l'evento e' arrivato in tempo.
- *
- * Registra un listener one-shot e risolve:
- * - true se l'evento arriva entro il timeout
- * - false se scade il timeout o se il player non e' disponibile
- *
- * @param ctx Contesto del componente/carousel
- * @param evento Nome dell'evento del player da attendere
- * @param timeoutMs Tempo massimo di attesa in millisecondi
- * @returns Promise che risolve a true se l'evento arriva entro il timeout, false altrimenti
- */
+  /**
+   * Attende un singolo evento del player con timeout e ritorna se l'evento e' arrivato in tempo.
+   *
+   * Registra un listener one-shot e risolve:
+   * - true se l'evento arriva entro il timeout
+   * - false se scade il timeout o se il player non e' disponibile
+   *
+   * @param ctx Contesto del componente/carousel
+   * @param evento Nome dell'evento del player da attendere
+   * @param timeoutMs Tempo massimo di attesa in millisecondi
+   * @returns Promise che risolve a true se l'evento arriva entro il timeout, false altrimenti
+   */
   static attendiEventoPlayer(
     ctx: any,
     evento: string,
-    timeoutMs: number
+    timeoutMs: number,
   ): Promise<boolean> {
     // Attendo un singolo evento del player con timeout e ritorno se e' arrivato
     return new Promise((resolve) => {
@@ -179,18 +187,18 @@ export class CaroselloPlayerUtility {
   }
 
   /**
- * Pianifica un controllo ritardato per gestire stall, waiting o error del player con un retry soft.
- *
- * Dopo un breve ritardo verifica:
- * - che la sequenza sia ancora valida tramite token
- * - che il player esista e lo stato consenta la riproduzione (in cima, non in pausa)
- * Se rileva errore o probabile blocco (readyState basso mentre risulta in riproduzione),
- * attiva il retry del trailer corrente.
- *
- * @param ctx Contesto del componente/carousel
- * @param token Token di coerenza della sequenza di avvio corrente
- * @returns void
- */
+   * Pianifica un controllo ritardato per gestire stall, waiting o error del player con un retry soft.
+   *
+   * Dopo un breve ritardo verifica:
+   * - che la sequenza sia ancora valida tramite token
+   * - che il player esista e lo stato consenta la riproduzione (in cima, non in pausa)
+   * Se rileva errore o probabile blocco (readyState basso mentre risulta in riproduzione),
+   * attiva il retry del trailer corrente.
+   *
+   * @param ctx Contesto del componente/carousel
+   * @param token Token di coerenza della sequenza di avvio corrente
+   * @returns void
+   */
   static pianificaControlloStallo(ctx: any, token: number): void {
     setTimeout(() => {
       // Rimando il controllo per dare tempo al player di riprendersi da solo

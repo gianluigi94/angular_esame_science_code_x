@@ -1,150 +1,228 @@
-// ─── scheda.component.ts ─────────────────────────────────────────────────────
-// Orchestratore puro: inizializza gli helper, gestisce il lifecycle Angular,
-// delega tutta la logica di business agli helper.
+// Componente orchestratore della scheda che inizializza gli helper, gestisce il lifecycle Angular e delega la logica operativa.
 
-import {
-  Component, OnInit, OnDestroy, AfterViewInit,
-  ViewChild, ElementRef, HostListener, ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Location }               from '@angular/common';
+import { Location } from '@angular/common';
 import { Subscription, forkJoin } from 'rxjs';
-import { take }                   from 'rxjs/operators';
-import { TranslateService }       from '@ngx-translate/core';
-import { ApiService }             from 'src/app/_servizi_globali/api.service';
-import { CambioLinguaService }    from 'src/app/_servizi_globali/cambio-lingua.service';
-import { AudioGlobaleService }    from 'src/app/_servizi_globali/audio-globale.service';
-import { TitoloPaginaService }    from 'src/app/_servizi_globali/titolo-pagina.service';
-import { SchedaProntaService }    from './scheda_service/scheda-pronta.service';
-import { SchedaCacheService }     from './scheda_service/scheda-cache.service';
+import { take } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
+import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
+import { TitoloPaginaService } from 'src/app/_servizi_globali/titolo-pagina.service';
+import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
+import { SchedaCacheService } from './scheda_service/scheda-cache.service';
 import { StopVideoGlobaleService } from '../riga-categoria/categoria_services/stop-video-globale.service';
 import { SchedaPlayerTransizioneTitoloService } from 'src/app/_servizi_globali/animazioni_saturno/gsap/scheda-player-transizione-titolo.service';
 
-import { SchedaStateContext }    from './scheda_utility/scheda-state.context';
+import { SchedaStateContext } from './scheda_utility/scheda-state.context';
 import {
-  costruisciUrlTrailer, imgTitoloDaSlug, sfondoDaDescrizione,
-  slugDaDescrizione, secondiInLeggibile as secondiInLeggibileUtil,
+  costruisciUrlTrailer,
+  imgTitoloDaSlug,
+  sfondoDaDescrizione,
+  slugDaDescrizione,
+  secondiInLeggibile as secondiInLeggibileUtil,
 } from './scheda_utility/scheda-url.utils';
-import { SchedaAudioHelper }     from './scheda_helpers/scheda-audio.helper';
-import { SchedaTrailerHelper }   from './scheda_helpers/scheda-trailer.helper';
-import { SchedaStagioniHelper }  from './scheda_helpers/scheda-stagioni.helper';
-import { SchedaLabelsHelper }    from './scheda_helpers/scheda-labels.helper';
-import { SchedaCorrelateHelper, RigaCorrelata } from './scheda_helpers/scheda-correlate.helper';
+import { SchedaAudioHelper } from './scheda_helpers/scheda-audio.helper';
+import { SchedaTrailerHelper } from './scheda_helpers/scheda-trailer.helper';
+import { SchedaStagioniHelper } from './scheda_helpers/scheda-stagioni.helper';
+import { SchedaLabelsHelper } from './scheda_helpers/scheda-labels.helper';
+import {
+  SchedaCorrelateHelper,
+  RigaCorrelata,
+} from './scheda_helpers/scheda-correlate.helper';
 
 export interface Episodio {
-  titolo: string; descrizione: string; anteprima: string; durata: string;
+  titolo: string;
+  descrizione: string;
+  anteprima: string;
+  durata: string;
 }
 
 @Component({
-  selector:    'app-scheda',
+  selector: 'app-scheda',
   templateUrl: './scheda.component.html',
-  styleUrls:   ['./scheda.component.scss'],
+  styleUrls: ['./scheda.component.scss'],
 })
 export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
+  descrizione = ''; // la descrizione semantica del contenuto
+  descrizioneTestuale = ''; // la descrizione testuale da mostrare
+  titoloScheda = ''; // il titolo della scheda
+  urlSfondoScheda = ''; // l'URL dello sfondo della scheda
+  imgTitoloScheda = ''; // l'URL dell'immagine titolo della scheda
+  anno: number | null = null; // l'anno del contenuto
+  durata: number | null = null; // la durata del contenuto
+  episodiTotali: number | null = null; // il numero totale di episodi
+  regista = ''; // il nome del regista
 
-  // ── Dati del contenuto (letti dal template) ────────────────────────────────
-  descrizione          = '';
-  descrizioneTestuale  = '';
-  titoloScheda         = '';
-  urlSfondoScheda      = '';
-  imgTitoloScheda      = '';
-  anno:         number | null = null;
-  durata:       number | null = null;
-  episodiTotali: number | null = null;
-  regista       = '';
+  startAnim = false; // segno se devo avviare l'animazione generale
+  startAnimTitolo = false; // segno se devo avviare l'animazione del titolo
+  startAnimDescrizione = false; // segno se devo avviare l'animazione della descrizione
+  segnale_cambio = false; // segno se e' avvenuto un cambio da propagare alla UI
 
-  // ── Animazioni ────────────────────────────────────────────────────────────
-  startAnim            = false;
-  startAnimTitolo      = false;
-  startAnimDescrizione = false;
-  segnale_cambio       = false;
+  private _loaderNascosto = false; // segno se il loader globale e' gia' sparito
+  private _sfondoPronto = false; // segno se lo sfondo e' pronto
+  private _titoloPronto = false; // segno se il titolo grafico e' pronto
+  private _descPronta = false; // segno se la descrizione e' pronta
+  private _tabellaPronta = false; // segno se i dati tabellari sono pronti
+  private _labelPronte = false; // segno se le label UI sono pronte
+  private _primaNavigazione = true; // segno se sono ancora alla prima navigazione della scheda
 
-  // ── Flag di sincronizzazione loader ───────────────────────────────────────
-  private _loaderNascosto  = false;
-  private _sfondoPronto    = false;
-  private _titoloPronto    = false;
-  private _descPronta      = false;
-  private _tabellaPronta   = false;
-  private _labelPronte     = false;
-  private _primaNavigazione = true;
+  private _prefetchTitoloPromise: Promise<string> | null = null; // la promise del prefetch titolo tradotto
+  private _prefetchDescPromise: Promise<string> | null = null; // la promise del prefetch descrizione tradotta
+  private _preloadTitoloPromise: Promise<void> | null = null; // la promise del preload immagine titolo
+  private _nuovoTitoloPrecaricato = ''; // l'URL del nuovo titolo gia' precaricato
+  private _paramRiproduzioneInAttesa: string | null = null; // l'eventuale parametro play in attesa
+  private _stagioneRiproduzioneInAttesa: string | null = null; // l'eventuale stagione letta insieme al play
 
-  // ── Prefetch cambio lingua ────────────────────────────────────────────────
-  private _prefetchTitoloPromise: Promise<string> | null = null;
-  private _prefetchDescPromise:   Promise<string> | null = null;
-  private _preloadTitoloPromise:  Promise<void>   | null = null;
-  private _nuovoTitoloPrecaricato = '';
-  private _paramRiproduzioneInAttesa:  string | null = null;
-  private _stagioneRiproduzioneInAttesa: string | null = null;
+  mostraPlayerVideo = false; // segno se il player film o serie e' visibile
+  transitioneVersoPLayer = false; // segno se e' in corso la transizione verso il player
+  risorsePLayerVideo: {
+    auto: string;
+    '1080': string;
+    '720': string;
+    '360': string;
+  } | null = null; // le risorse HLS del player principale
+  sottotitoliPlayerVideo: { en: string; it: string } | null = null; // i sottotitoli del player principale
+  infoEpisodioPlayer: { stagione: number; episodio: number } | null = null; // le info episodio del player serie
 
-  // ── Player film/serie ─────────────────────────────────────────────────────
-  mostraPlayerVideo    = false;
-  transitioneVersoPLayer = false;
-  risorsePLayerVideo: { auto: string; '1080': string; '720': string; '360': string } | null = null;
-  sottotitoliPlayerVideo: { en: string; it: string } | null = null;
-  infoEpisodioPlayer: { stagione: number; episodio: number } | null = null;
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get mostraVideoScheda(): boolean {
+    return this.ctx.mostraVideoScheda;
+  } // espongo la visibilita' del video trailer
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get mostraPlayerSchedaNelDom(): boolean {
+    return this.ctx.mostraPlayerSchedaNelDom;
+  } // espongo la presenza del player trailer nel DOM
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get trailerInRiproduzione(): boolean {
+    return this.ctx.trailerInRiproduzione;
+  } // espongo lo stato del trailer
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get audioBloccatoDaUtente(): boolean {
+    return this.ctx.audioBloccatoDaUtente;
+  } // espongo il blocco audio scelto dall'utente
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get soloBrowserBlocca(): boolean {
+    return this.ctx.soloBrowserBlocca;
+  } // espongo il blocco audio dovuto solo al browser
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get stagioneSelezionata(): string | null {
+    return this.ctx.stagioneSelezionata;
+  } // espongo la stagione selezionata
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get stagioni() {
+    return this.ctx.stagioni;
+  } // espongo la lista stagioni
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get serieData() {
+    return this.ctx.serieData;
+  } // espongo i dati serie raggruppati per stagione
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get tipoContenuto() {
+    return this.ctx.tipoContenuto;
+  } // espongo il tipo contenuto corrente
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get durataFadeSchedaMs() {
+    return this.ctx.durataFadeSchedaMs;
+  } // espongo la durata fade della scheda
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get caricamentoStagioneInCorso(): boolean {
+    return this.stagioniHelper.caricamentoStagioneInCorso;
+  } // espongo lo stato di caricamento stagione
+  readonly secondiInLeggibile = secondiInLeggibileUtil; // espongo la utility di formattazione durata
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get righeCorrelate(): RigaCorrelata[] {
+    return this.correlateHelper.righeCorrelate;
+  } // espongo le righe correlate
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get righeCorrelateInCaricamento(): boolean {
+    return this.correlateHelper.righeCorrelateInCaricamento;
+  } // espongo lo stato di caricamento correlate
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelRiprendi() {
+    return this.labelsHelper.labelRiprendi;
+  } // espongo la label riprendi
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelRiproduci() {
+    return this.labelsHelper.labelRiproduci;
+  } // espongo la label riproduci
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelRiprendiTitle() {
+    return this.labelsHelper.labelRiprendiTitle;
+  } // espongo il title di riprendi
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelRiproduciTitle() {
+    return this.labelsHelper.labelRiproduciTitle;
+  } // espongo il title di riproduci
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelTrailerTitle() {
+    return this.labelsHelper.labelTrailerTitle;
+  } // espongo il title del trailer
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelAnno() {
+    return this.labelsHelper.labelAnno;
+  } // espongo la label anno
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelDurata() {
+    return this.labelsHelper.labelDurata;
+  } // espongo la label durata
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelRegista() {
+    return this.labelsHelper.labelRegista;
+  } // espongo la label regista
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelEpisodiTotali() {
+    return this.labelsHelper.labelEpisodiTotali;
+  } // espongo la label episodi totali
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelStagione() {
+    return this.labelsHelper.labelStagione;
+  } // espongo la label stagione
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get labelEpisodio() {
+    return this.labelsHelper.labelEpisodio;
+  } // espongo la label episodio
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get altSfondoScheda() {
+    return this.labelsHelper.altSfondoScheda;
+  } // espongo l'alt dello sfondo
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  get altTitoloScheda() {
+    return this.labelsHelper.altTitoloScheda;
+  } // espongo l'alt del titolo
 
-  // ── Stato helpers esposto al template via getter ───────────────────────────
-  get mostraVideoScheda():        boolean { return this.ctx.mostraVideoScheda; }
-  get mostraPlayerSchedaNelDom(): boolean { return this.ctx.mostraPlayerSchedaNelDom; }
-  get trailerInRiproduzione():    boolean { return this.ctx.trailerInRiproduzione; }
-  get audioBloccatoDaUtente():    boolean { return this.ctx.audioBloccatoDaUtente; }
-  get soloBrowserBlocca():        boolean { return this.ctx.soloBrowserBlocca; }
-  get stagioneSelezionata():      string | null { return this.ctx.stagioneSelezionata; }
-  get stagioni() { return this.ctx.stagioni; }
-  get serieData() { return this.ctx.serieData; }
-  get tipoContenuto() { return this.ctx.tipoContenuto; }
-  get durataFadeSchedaMs() { return this.ctx.durataFadeSchedaMs; }
-  get caricamentoStagioneInCorso(): boolean { return this.stagioniHelper.caricamentoStagioneInCorso; }
-  readonly secondiInLeggibile = secondiInLeggibileUtil;
-  get righeCorrelate():     RigaCorrelata[] { return this.correlateHelper.righeCorrelate; }
-  get righeCorrelateInCaricamento(): boolean { return this.correlateHelper.righeCorrelateInCaricamento; }
-  // Labels
-  get labelRiprendi()       { return this.labelsHelper.labelRiprendi; }
-  get labelRiproduci()      { return this.labelsHelper.labelRiproduci; }
-  get labelRiprendiTitle()  { return this.labelsHelper.labelRiprendiTitle; }
-  get labelRiproduciTitle() { return this.labelsHelper.labelRiproduciTitle; }
-  get labelTrailerTitle()   { return this.labelsHelper.labelTrailerTitle; }
-  get labelAnno()           { return this.labelsHelper.labelAnno; }
-  get labelDurata()         { return this.labelsHelper.labelDurata; }
-  get labelRegista()        { return this.labelsHelper.labelRegista; }
-  get labelEpisodiTotali()  { return this.labelsHelper.labelEpisodiTotali; }
-  get labelStagione()       { return this.labelsHelper.labelStagione; }
-  get labelEpisodio()       { return this.labelsHelper.labelEpisodio; }
-  get altSfondoScheda()     { return this.labelsHelper.altSfondoScheda; }
-  get altTitoloScheda()     { return this.labelsHelper.altTitoloScheda; }
+  private readonly ctx: SchedaStateContext; //il contesto condiviso tra helper e componente
+  private readonly audioHelper: SchedaAudioHelper; //l'helper audio della scheda
+  private readonly trailerHelper: SchedaTrailerHelper; //l'helper del trailer scheda
+  private readonly stagioniHelper: SchedaStagioniHelper; //l'helper stagioni
+  private readonly labelsHelper: SchedaLabelsHelper; //l'helper delle label UI
+  private readonly correlateHelper: SchedaCorrelateHelper; //l'helper delle correlate
+  private readonly subs = new Subscription(); // raccolgo le subscription da pulire in destroy
 
-  // ── Helper instances ──────────────────────────────────────────────────────
-  private readonly ctx:            SchedaStateContext;
-  private readonly audioHelper:    SchedaAudioHelper;
-  private readonly trailerHelper:  SchedaTrailerHelper;
-  private readonly stagioniHelper: SchedaStagioniHelper;
-  private readonly labelsHelper:   SchedaLabelsHelper;
-  private readonly correlateHelper: SchedaCorrelateHelper;
-  private readonly subs = new Subscription();
-
-    constructor(
-    private route:            ActivatedRoute,
-    private router:           Router,
-    private location:         Location,
-    private api:              ApiService,
-    private translate:        TranslateService,
-    private schedaCache:      SchedaCacheService,
-    private cambioLingua:     CambioLinguaService,
-    private schedaPronta:     SchedaProntaService,
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private location: Location,
+    private api: ApiService,
+    private translate: TranslateService,
+    private schedaCache: SchedaCacheService,
+    private cambioLingua: CambioLinguaService,
+    private schedaPronta: SchedaProntaService,
     private audioGlobaleService: AudioGlobaleService,
     private stopVideoGlobale: StopVideoGlobaleService,
     private transizioneTitolo: SchedaPlayerTransizioneTitoloService,
-    private titoloPagina:     TitoloPaginaService,
-    private cdr:              ChangeDetectorRef,
+    private titoloPagina: TitoloPaginaService,
+    private cdr: ChangeDetectorRef,
   ) {
-    this.ctx = new SchedaStateContext();
+    this.ctx = new SchedaStateContext(); // creo il contesto condiviso della scheda
 
     this.audioHelper = new SchedaAudioHelper(
       this.ctx,
       audioGlobaleService,
       () => this.trailerHelper.resettaPerNuovoAvvio(),
       () => {},
-    );
+    ); // inizializzo l'helper audio
 
     this.trailerHelper = new SchedaTrailerHelper(
       this.ctx,
@@ -152,11 +230,14 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
       audioGlobaleService,
       () => this.cambioLingua.leggiCodiceLingua(),
       () => this.labelsHelper.aggiornaTrailerTitle(),
-    );
+    ); // inizializzo l'helper trailer
 
     this.stagioniHelper = new SchedaStagioniHelper(
-      this.ctx, api, cambioLingua, location,
-    );
+      this.ctx,
+      api,
+      cambioLingua,
+      location,
+    ); // inizializzo l'helper stagioni
 
     this.labelsHelper = new SchedaLabelsHelper(
       translate,
@@ -165,618 +246,911 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
       () => this.titoloScheda,
       () => this.ctx.trailerInRiproduzione,
       () => this.ctx.distrutto,
-    );
+    ); // inizializzo l'helper delle label
 
     this.correlateHelper = new SchedaCorrelateHelper(
-      api, cambioLingua,
+      api,
+      cambioLingua,
       () => this.ctx.idContenuto,
       () => this.ctx.tipoContenuto,
-    );
+    ); // inizializzo l'helper delle correlate
   }
 
-  // ── ViewChild player trailer scheda ───────────────────────────────────────
-  private _playerSchedaRef: ElementRef | null = null;
+  private _playerSchedaRef: ElementRef | null = null; // tengo il riferimento al player trailer della scheda
+
   @ViewChild('playerSchedaRef')
   set playerSchedaRef(ref: ElementRef | undefined) {
-    this._playerSchedaRef = ref ?? null;
-    if (ref) this.trailerHelper.inizializzaDaRef(ref);
+    this._playerSchedaRef = ref ?? null; // salvo il riferimento attuale del player scheda
+    if (ref) this.trailerHelper.inizializzaDaRef(ref); // inizializzo il player quando il ref diventa disponibile
   }
 
+  /**
+   * Gestisce il post-render della view.
+   *
+   * @returns void
+   */
   ngAfterViewInit(): void {}
 
-  // ── HostListeners ─────────────────────────────────────────────────────────
+  /**
+   * Gestisce il popstate del browser chiudendo il player principale se aperto.
+   *
+   * @returns void
+   */
   @HostListener('window:popstate')
   gestisciPopState(): void {
     if (this.mostraPlayerVideo) {
-      this.mostraPlayerVideo       = false;
-      this.transitioneVersoPLayer  = false;
-      this.schedaPronta.impostaPlayerAperto(false);
-      this.transizioneTitolo.ripristinaTitoloOrigineScheda();
+      this.mostraPlayerVideo = false; // chiudo il player principale
+      this.transitioneVersoPLayer = false; // chiudo lo stato di transizione verso il player
+      this.schedaPronta.impostaPlayerAperto(false); // notifico che il player non e' piu' aperto
+      this.transizioneTitolo.ripristinaTitoloOrigineScheda(); // ripristino il titolo della scheda
     }
   }
 
+  /**
+   * Gestisce la perdita di focus fermando il trailer della scheda con fade audio.
+   *
+   * @returns void
+   */
   @HostListener('window:blur')
   gestisciBlurFinestra(): void {
-    if (!this.ctx.playerScheda || !this.ctx.mostraVideoScheda) return;
-    this.ctx.avvioTrailerSchedaRichiesto = false;
+    if (!this.ctx.playerScheda || !this.ctx.mostraVideoScheda) return; // esco se non ho un trailer visibile da fermare
+    this.ctx.avvioTrailerSchedaRichiesto = false; // annullo eventuali richieste di avvio trailer
     if (this.ctx.timerMostraVideoScheda) {
-      clearTimeout(this.ctx.timerMostraVideoScheda);
-      this.ctx.timerMostraVideoScheda = null;
+      clearTimeout(this.ctx.timerMostraVideoScheda); // annullo il timer che dovrebbe mostrare il video
+      this.ctx.timerMostraVideoScheda = null; // pulisco il timer di mostra video
     }
-    this.ctx.mostraVideoScheda = false;
-    this.audioHelper.sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs).finally(() => {
-      try { this.ctx.playerScheda?.pause?.(); } catch {}
-      try { this.ctx.playerScheda?.currentTime?.(0); } catch {}
-    });
+    this.ctx.mostraVideoScheda = false; // nascondo il video della scheda
+    this.audioHelper
+      .sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
+      .finally(() => {
+        try {
+          this.ctx.playerScheda?.pause?.();
+        } catch {} // provo a mettere in pausa il player
+        try {
+          this.ctx.playerScheda?.currentTime?.(0);
+        } catch {} // provo a riportare il trailer all'inizio
+      });
   }
 
+  /**
+   * Gestisce il ritorno del focus riprogrammando l'avvio del trailer se necessario.
+   *
+   * @returns void
+   */
   @HostListener('window:focus')
   gestisciFocusFinestra(): void {
-    if (!this.ctx.trailerInRiproduzione) return;
-    if (!this.ctx.playerScheda) return;
+    if (!this.ctx.trailerInRiproduzione) return; // esco se il trailer non dovrebbe essere attivo
+    if (!this.ctx.playerScheda) return; // esco se il player trailer non esiste
     if (this.ctx.mostraPlayerSchedaNelDom && this.ctx.playerSchedaPronto)
-      this.trailerHelper.richiediAvvio(true);
+      this.trailerHelper.richiediAvvio(true); // richiedo un nuovo avvio immediato del trailer
   }
 
-  // ── Template API ──────────────────────────────────────────────────────────
+  /**
+   * Attiva o disattiva il trailer della scheda.
+   *
+   * @returns void
+   */
   toggleTrailer(): void {
     if (this.ctx.trailerInRiproduzione) {
-      this.ctx.trailerInRiproduzione = false;
+      this.ctx.trailerInRiproduzione = false; // segno che il trailer non deve piu' riprodursi
       if (this.ctx.timerInserisciPlayerSchedaNelDom) {
-        clearTimeout(this.ctx.timerInserisciPlayerSchedaNelDom);
-        this.ctx.timerInserisciPlayerSchedaNelDom = null;
+        clearTimeout(this.ctx.timerInserisciPlayerSchedaNelDom); // annullo l'eventuale inserimento player nel DOM
+        this.ctx.timerInserisciPlayerSchedaNelDom = null; // pulisco il timer di inserimento
       }
       if (this.ctx.timerMostraVideoScheda) {
-        clearTimeout(this.ctx.timerMostraVideoScheda);
-        this.ctx.timerMostraVideoScheda = null;
+        clearTimeout(this.ctx.timerMostraVideoScheda); // annullo l'eventuale timer che mostra il video
+        this.ctx.timerMostraVideoScheda = null; // pulisco il timer di mostra video
       }
-      this.ctx.avvioTrailerSchedaRichiesto = false;
+      this.ctx.avvioTrailerSchedaRichiesto = false; // annullo la richiesta di avvio trailer
       if (this.ctx.mostraVideoScheda) {
-        this.ctx.mostraVideoScheda = false;
-        this.audioHelper.sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
-          .finally(() => this.trailerHelper.resettaPerNuovoAvvio());
+        this.ctx.mostraVideoScheda = false; // nascondo il video della scheda
+        this.audioHelper
+          .sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
+          .finally(() => this.trailerHelper.resettaPerNuovoAvvio()); // faccio fade audio e poi resetto il player
       }
-      this.labelsHelper.aggiornaTrailerTitle();
+      this.labelsHelper.aggiornaTrailerTitle(); // aggiorno il title del trailer
     } else {
-      this.ctx.trailerInRiproduzione = true;
+      this.ctx.trailerInRiproduzione = true; // segno che il trailer deve tornare attivo
       if (this.ctx.mostraPlayerSchedaNelDom && this.ctx.playerSchedaPronto) {
-        this.trailerHelper.richiediAvvio(true);
-        this.labelsHelper.aggiornaTrailerTitle();
+        this.trailerHelper.richiediAvvio(true); // se il player e' pronto richiedo un avvio immediato
+        this.labelsHelper.aggiornaTrailerTitle(); // aggiorno il title del trailer
       } else {
-        this.trailerHelper.programmaInserimento();
+        this.trailerHelper.programmaInserimento(); // altrimenti pianifico l'inserimento del player
       }
     }
   }
 
-  onRiproduci(): void    { this.avviaTransizionePlayer(); }
-  onClicEpisodio(n: number): void { this.avviaTransizionePlayer(n); }
+  /**
+   * Avvia la transizione verso il player principale.
+   *
+   * @returns void
+   */
+  onRiproduci(): void {
+    this.avviaTransizionePlayer();
+  } // delego l'avvio del player principale
 
+  /**
+   * Avvia la transizione verso il player principale per un episodio specifico.
+   *
+   * @param n Numero episodio selezionato.
+   * @returns void
+   */
+  onClicEpisodio(n: number): void {
+    this.avviaTransizionePlayer(n);
+  } // delego l'avvio del player episodio
+
+  /**
+   * Seleziona una stagione della serie.
+   *
+   * @param n Numero stagione da selezionare.
+   * @returns Promise<void> Promise risolta al termine della selezione.
+   */
   async selezionaStagione(n: string): Promise<void> {
-    await this.stagioniHelper.selezionaStagione(n);
+    await this.stagioniHelper.selezionaStagione(n); // delego all'helper il cambio stagione
   }
 
   tracciaRigaCorrelata = (_i: number, riga: { idCategoria: string }): string =>
-    this.correlateHelper.tracciaRigaCorrelata(_i, riga);
+    this.correlateHelper.tracciaRigaCorrelata(_i, riga); // delego la chiave trackBy delle correlate
 
-  getChiavi(obj: Record<string, any>): string[] { return Object.keys(obj); }
-  toString(val: any): string                    { return String(val); }
+  /**
+   * Restituisce le chiavi di un oggetto.
+   *
+   * @param obj Oggetto di cui leggere le chiavi.
+   * @returns string[] Lista delle chiavi.
+   */
+  getChiavi(obj: Record<string, any>): string[] {
+    return Object.keys(obj);
+  } // restituisco le chiavi dell'oggetto
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  /**
+   * Converte un valore in stringa.
+   *
+   * @param val Valore da convertire.
+   * @returns string Valore convertito in stringa.
+   */
+  toString(val: any): string {
+    return String(val);
+  } // converto il valore in stringa
+
+  /**
+   * Inizializza la scheda, collega le subscription e prepara il caricamento dati.
+   *
+   * @returns void
+   */
   ngOnInit(): void {
     if (this.schedaPronta.loaderGlobalmenteNascosto) {
-      this._loaderNascosto = true;
+      this._loaderNascosto = true; // segno subito il loader come gia' nascosto
     } else {
-      window.addEventListener('loader-hidden', this.onLoaderHidden, { once: true });
+      window.addEventListener('loader-hidden', this.onLoaderHidden, {
+        once: true,
+      }); // ascolto l'evento di fine loader globale
     }
 
     this.subs.add(
-      this.audioGlobaleService.statoAudio$.subscribe(consentito => {
-        this.ctx.audioBloccatoDaUtente = !consentito;
+      this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
+        this.ctx.audioBloccatoDaUtente = !consentito; // allineo il blocco audio locale allo stato globale
         if (this.ctx.audioBloccatoDaUtente) {
-          this.ctx.soloBrowserBlocca = false;
-          try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
-          this.audioHelper.rimuoviSbloccoAudioScheda();
-          try { this.audioHelper.inizializzaWebAudio(); } catch {}
-          this.audioHelper.sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
-            .finally(() => { try { this.ctx.playerScheda?.muted?.(true); } catch {} });
+          this.ctx.soloBrowserBlocca = false; // chiudo il fallback browser se l'utente blocca davvero l'audio
+          try {
+            this.audioGlobaleService.setSoloBrowserBlocca(false);
+          } catch {} // notifico la chiusura del fallback browser
+          this.audioHelper.rimuoviSbloccoAudioScheda(); // rimuovo il listener di sblocco audio
+          try {
+            this.audioHelper.inizializzaWebAudio();
+          } catch {} // provo a inizializzare il grafo WebAudio
+          this.audioHelper
+            .sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
+            .finally(() => {
+              try {
+                this.ctx.playerScheda?.muted?.(true);
+              } catch {}
+            }); // porto l'audio a zero e poi metto in muto il player
           return;
         }
-        try { this.audioHelper.inizializzaWebAudio(); } catch {}
+        try {
+          this.audioHelper.inizializzaWebAudio();
+        } catch {} // provo a inizializzare il grafo WebAudio
         try {
           if (this.ctx.contestoAudio?.state === 'suspended')
-            this.ctx.contestoAudio.resume().catch(() => {});
+            this.ctx.contestoAudio.resume().catch(() => {}); // provo a riattivare il contesto audio se sospeso
         } catch {}
-        try { this.audioHelper.sfumaGuadagnoVerso(1, 80); } catch {}
-        try { this.ctx.playerScheda?.muted?.(false); } catch {}
-        if (this.ctx.mostraVideoScheda) this.trailerHelper.proseguiAvvio();
-        else                            this.trailerHelper.sincronizzaAvvio();
+        try {
+          this.audioHelper.sfumaGuadagnoVerso(1, 80);
+        } catch {} // faccio rientrare velocemente l'audio
+        try {
+          this.ctx.playerScheda?.muted?.(false);
+        } catch {} // tolgo il mute reale dal player
+        if (this.ctx.mostraVideoScheda)
+          this.trailerHelper.proseguiAvvio(); // se il video e' visibile proseguo con l'avvio
+        else this.trailerHelper.sincronizzaAvvio(); // altrimenti risincronizzo la sorgente trailer
       }),
     );
 
-    // Leggi state router iniziale
-    const navState       = this.router.getCurrentNavigation()?.extras?.state ?? history.state;
-    const urlDaState     = String(navState?.['urlSfondo']           || '').trim();
-    const imgTitoloDaState = String(navState?.['urlImgTitolo']      || '').trim();
-    const descDaState    = String(navState?.['descrizioneTestuale']  || '').trim();
-    const tabellaDaState = navState?.['tabellaDati'] ?? null;
-    if (urlDaState)     { this.urlSfondoScheda = urlDaState;     this._sfondoPronto = true; }
-    if (imgTitoloDaState) { this.imgTitoloScheda = imgTitoloDaState; this._titoloPronto = true; }
-    if (descDaState)    { this.descrizioneTestuale = descDaState; this._descPronta = true; }
-    if (tabellaDaState) this.applicaTabellaDaState(tabellaDaState);
+    const navState =
+      this.router.getCurrentNavigation()?.extras?.state ?? history.state; // leggo lo state router iniziale
+    const urlDaState = String(navState?.['urlSfondo'] || '').trim(); // leggo lo sfondo passato via state
+    const imgTitoloDaState = String(navState?.['urlImgTitolo'] || '').trim(); // leggo l'immagine titolo passata via state
+    const descDaState = String(navState?.['descrizioneTestuale'] || '').trim(); // leggo la descrizione passata via state
+    const tabellaDaState = navState?.['tabellaDati'] ?? null; // leggo la tabella dati passata via state
+    if (urlDaState) {
+      this.urlSfondoScheda = urlDaState;
+      this._sfondoPronto = true;
+    } // applico subito lo sfondo ricevuto
+    if (imgTitoloDaState) {
+      this.imgTitoloScheda = imgTitoloDaState;
+      this._titoloPronto = true;
+    } // applico subito il titolo grafico ricevuto
+    if (descDaState) {
+      this.descrizioneTestuale = descDaState;
+      this._descPronta = true;
+    } // applico subito la descrizione ricevuta
+    if (tabellaDaState) this.applicaTabellaDaState(tabellaDaState); // applico subito i dati tabellari ricevuti
 
-    this.setupCambioLinguaSubscriptions();
-    this.setupParamMapSubscription();
+    this.setupCambioLinguaSubscriptions(); // collego le subscription del cambio lingua
+    this.setupParamMapSubscription(); // collego la subscription ai parametri route
 
     this.subs.add(
-      this.stopVideoGlobale.osservaRichiesteFadeAudio$().subscribe(({ durataMs, done }) => {
-        if (!this.ctx.playerScheda || !this.ctx.mostraVideoScheda) { done(); return; }
-        this.audioHelper.sfumaGuadagnoVerso(0, durataMs).finally(() => done());
-      }),
+      this.stopVideoGlobale
+        .osservaRichiesteFadeAudio$()
+        .subscribe(({ durataMs, done }) => {
+          if (!this.ctx.playerScheda || !this.ctx.mostraVideoScheda) {
+            done();
+            return;
+          } // se non ho player visibile confermo subito
+          this.audioHelper
+            .sfumaGuadagnoVerso(0, durataMs)
+            .finally(() => done()); // eseguo il fade audio richiesto e poi confermo
+        }),
     );
     this.subs.add(
-      this.stopVideoGlobale.osservaRichiesteChiusuraPlayerScheda$().subscribe(({ durataMs, done }) => {
-        this.trailerHelper.chiudiConFadeEReset(durataMs).finally(() => done());
-      }),
+      this.stopVideoGlobale
+        .osservaRichiesteChiusuraPlayerScheda$()
+        .subscribe(({ durataMs, done }) => {
+          this.trailerHelper
+            .chiudiConFadeEReset(durataMs)
+            .finally(() => done()); // chiudo il player trailer e poi confermo
+        }),
     );
     this.subs.add(
       this.schedaPronta.chiudiPlayer$.subscribe(() => {
-        this.mostraPlayerVideo      = false;
-        this.transitioneVersoPLayer = false;
-        this.schedaPronta.impostaPlayerAperto(false);
-        this.schedaPronta.impostaHeaderNascosto(false);
-        this.transizioneTitolo.ripristinaTitoloOrigineScheda();
-        const pathPulito = this.location.path(true).split('?')[0];
-        this.location.replaceState(pathPulito);
-        this.startAnim = false; this.startAnimTitolo = false; this.startAnimDescrizione = false;
+        this.mostraPlayerVideo = false; // chiudo il player principale
+        this.transitioneVersoPLayer = false; // chiudo la transizione verso il player
+        this.schedaPronta.impostaPlayerAperto(false); // notifico che il player non e' aperto
+        this.schedaPronta.impostaHeaderNascosto(false); // ripristino l'header visibile
+        this.transizioneTitolo.ripristinaTitoloOrigineScheda(); // ripristino il titolo originale
+        const pathPulito = this.location.path(true).split('?')[0]; // ricavo il path senza query string
+        this.location.replaceState(pathPulito); // ripulisco l'URL
+        this.startAnim = false;
+        this.startAnimTitolo = false;
+        this.startAnimDescrizione = false; // spengo le animazioni prima del restart
         requestAnimationFrame(() => {
-          this.startAnim = true; this.startAnimTitolo = true; this.startAnimDescrizione = true;
+          this.startAnim = true;
+          this.startAnimTitolo = true;
+          this.startAnimDescrizione = true; // riaccendo le animazioni al frame successivo
         });
       }),
     );
   }
 
+  /**
+   * Ripulisce lo stato della scheda, salva la cache e chiude tutte le risorse attive.
+   *
+   * @returns void
+   */
   ngOnDestroy(): void {
-    this.ctx.distrutto = true;
+    this.ctx.distrutto = true; // segno il contesto come distrutto
     if (this.ctx.tipoContenuto && this.ctx.idContenuto) {
-      const lingua = this.cambioLingua.leggiCodiceLingua();
-      this.schedaCache.set(this.ctx.tipoContenuto, this.ctx.idContenuto, lingua, {
-        descrizione: this.descrizione,
-        descrizioneTestuale: this.descrizioneTestuale,
-        urlSfondoScheda: this.urlSfondoScheda,
-        imgTitoloScheda: this.imgTitoloScheda,
-        anno: this.anno,
-        durata: this.durata,
-        titoloScheda: this.titoloScheda,
-        episodiTotali: this.episodiTotali,
-        regista: this.regista,
-        slugCorrente: this.ctx.slugCorrente,
-        stagioni: this.ctx.stagioni,
-        stagioneSelezionata: this.ctx.stagioneSelezionata,
-        serieData: this.ctx.serieData,
-        righeCorrelate: this.correlateHelper.righeCorrelate,
-      });
+      const lingua = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua corrente della cache
+      this.schedaCache.set(
+        this.ctx.tipoContenuto,
+        this.ctx.idContenuto,
+        lingua,
+        {
+          descrizione: this.descrizione,
+          descrizioneTestuale: this.descrizioneTestuale,
+          urlSfondoScheda: this.urlSfondoScheda,
+          imgTitoloScheda: this.imgTitoloScheda,
+          anno: this.anno,
+          durata: this.durata,
+          titoloScheda: this.titoloScheda,
+          episodiTotali: this.episodiTotali,
+          regista: this.regista,
+          slugCorrente: this.ctx.slugCorrente,
+          stagioni: this.ctx.stagioni,
+          stagioneSelezionata: this.ctx.stagioneSelezionata,
+          serieData: this.ctx.serieData,
+          righeCorrelate: this.correlateHelper.righeCorrelate,
+        },
+      ); // salvo lo snapshot corrente della scheda in cache
     }
-    this.subs.unsubscribe();
-    window.removeEventListener('loader-hidden', this.onLoaderHidden);
-    this.trailerHelper.clearAllTimers();
-    this.labelsHelper.clearRetryTimer();
-    this.audioHelper.rimuoviSbloccoAudioScheda();
-    try { this.audioGlobaleService.setSoloBrowserBlocca(false); } catch {}
-    const p = this.ctx.playerScheda;
-    this.audioHelper.sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
-      .finally(() => { try { if (p) p.dispose(); } catch {} });
+    this.subs.unsubscribe(); // chiudo tutte le subscription attive
+    window.removeEventListener('loader-hidden', this.onLoaderHidden); // rimuovo l'ascolto del loader globale
+    this.trailerHelper.clearAllTimers(); // pulisco i timer del trailer helper
+    this.labelsHelper.clearRetryTimer(); // pulisco gli eventuali retry delle label
+    this.audioHelper.rimuoviSbloccoAudioScheda(); // rimuovo il listener di sblocco audio
+    try {
+      this.audioGlobaleService.setSoloBrowserBlocca(false);
+    } catch {} // ripristino il flag browser blocca a false
+    const p = this.ctx.playerScheda; // mi salvo il player corrente prima della chiusura
+    this.audioHelper
+      .sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
+      .finally(() => {
+        try {
+          if (p) p.dispose();
+        } catch {}
+      }); // faccio fade audio e poi provo a distruggere il player
   }
 
-  // ── Setup subscriptions ───────────────────────────────────────────────────
+  /**
+   * Collega le subscription necessarie per il cambio lingua.
+   *
+   * @returns void
+   */
   private setupCambioLinguaSubscriptions(): void {
     this.subs.add(
       this.cambioLingua.cambioLinguaAvviato$.subscribe((codice: string) => {
         if (this.ctx.tipoContenuto === 'serie')
-          this.stagioniHelper.caricamentoStagioneInCorso = true;
+          this.stagioniHelper.caricamentoStagioneInCorso = true; // segno il caricamento stagione come attivo durante il cambio lingua
+
         if (this.ctx.slugCorrente) {
-          const url = imgTitoloDaSlug(this.ctx.slugCorrente, codice);
-          this._nuovoTitoloPrecaricato = url;
-          this._preloadTitoloPromise   = new Promise<void>(resolve => {
-            const img = new Image(); img.onload = img.onerror = () => resolve(); img.src = url;
+          const url = imgTitoloDaSlug(this.ctx.slugCorrente, codice); // costruisco l'URL del nuovo titolo grafico
+          this._nuovoTitoloPrecaricato = url; // salvo l'URL titolo da usare dopo il cambio lingua
+          this._preloadTitoloPromise = new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = img.onerror = () => resolve();
+            img.src = url; // precarico il nuovo titolo grafico
           });
         } else {
-          this._nuovoTitoloPrecaricato = '';
-          this._preloadTitoloPromise   = Promise.resolve();
+          this._nuovoTitoloPrecaricato = ''; // pulisco il titolo precaricato se non ho slug
+          this._preloadTitoloPromise = Promise.resolve(); // considero subito completato il preload titolo
         }
+
         if (this.ctx.idContenuto && this.ctx.tipoContenuto) {
-          const fetch$ = this.ctx.tipoContenuto === 'film'
-            ? this.api.getFilmTraduzioni(this.ctx.idContenuto, codice)
-            : this.api.getSerieTraduzioni(this.ctx.idContenuto, codice);
-          let resolveDesc!: (v: string) => void, resolveTitolo!: (v: string) => void;
-          this._prefetchDescPromise   = new Promise<string>(r => resolveDesc   = r);
-          this._prefetchTitoloPromise = new Promise<string>(r => resolveTitolo = r);
+          const fetch$ =
+            this.ctx.tipoContenuto === 'film'
+              ? this.api.getFilmTraduzioni(this.ctx.idContenuto, codice)
+              : this.api.getSerieTraduzioni(this.ctx.idContenuto, codice); // preparo la chiamata traduzioni coerente col tipo
+
+          let resolveDesc!: (v: string) => void;
+          let resolveTitolo!: (v: string) => void; // preparo i resolver delle promise di prefetch
+          this._prefetchDescPromise = new Promise<string>(
+            (r) => (resolveDesc = r),
+          ); // creo la promise della nuova descrizione
+          this._prefetchTitoloPromise = new Promise<string>(
+            (r) => (resolveTitolo = r),
+          ); // creo la promise del nuovo titolo testuale
+
           fetch$.pipe(take(1)).subscribe({
-            next:  res => { resolveDesc(String(res?.data?.descrizione || '')); resolveTitolo(String(res?.data?.titolo || '')); },
-            error: ()  => { resolveDesc(''); resolveTitolo(''); },
+            next: (res) => {
+              resolveDesc(String(res?.data?.descrizione || '')); // risolvo la nuova descrizione tradotta
+              resolveTitolo(String(res?.data?.titolo || '')); // risolvo il nuovo titolo tradotto
+            },
+            error: () => {
+              resolveDesc(''); // in errore risolvo la descrizione vuota
+              resolveTitolo(''); // in errore risolvo il titolo vuoto
+            },
           });
         } else {
-          this._prefetchDescPromise   = Promise.resolve('');
-          this._prefetchTitoloPromise = Promise.resolve('');
+          this._prefetchDescPromise = Promise.resolve(''); // se manca il contenuto considero vuota la nuova descrizione
+          this._prefetchTitoloPromise = Promise.resolve(''); // se manca il contenuto considero vuoto il nuovo titolo
         }
       }),
     );
 
     this.subs.add(
       this.cambioLingua.cambioLinguaApplicata$.subscribe(() => {
-        const lingua = this.cambioLingua.leggiCodiceLingua();
+        const lingua = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua appena applicata
         const nuovoTitolo = this.ctx.slugCorrente
           ? imgTitoloDaSlug(this.ctx.slugCorrente, lingua)
-          : this.imgTitoloScheda;
+          : this.imgTitoloScheda; // ricavo l'URL titolo coerente con la nuova lingua
+
         const trailerEraAttivo =
           this.ctx.trailerInRiproduzione &&
-          (this.ctx.mostraVideoScheda || this.ctx.mostraPlayerSchedaNelDom || !!this.ctx.timerMostraVideoScheda);
+          (this.ctx.mostraVideoScheda ||
+            this.ctx.mostraPlayerSchedaNelDom ||
+            !!this.ctx.timerMostraVideoScheda); // verifico se il trailer era da considerare ancora attivo
 
         const continuaDopoFade = () => {
           if (!this.ctx.idContenuto || !this.ctx.tipoContenuto) {
-            this.startAnimTitolo = false;
-            this.imgTitoloScheda = nuovoTitolo;
-            requestAnimationFrame(() => requestAnimationFrame(() => this.startAnimTitolo = true));
+            this.startAnimTitolo = false; // spengo l'animazione titolo
+            this.imgTitoloScheda = nuovoTitolo; // applico subito il nuovo titolo grafico
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => (this.startAnimTitolo = true)),
+            ); // riavvio l'animazione del titolo
             return;
           }
-          const descP   = this._prefetchDescPromise   ?? Promise.resolve('');
-          const titoloP = this._prefetchTitoloPromise ?? Promise.resolve('');
-          this._prefetchDescPromise = null; this._prefetchTitoloPromise = null;
-          Promise.all([descP, titoloP]).then(([nuovaDesc, nuovoTitoloScheda]) => {
-            this.titoloScheda = nuovoTitoloScheda;
-            this.labelsHelper.aggiornaAltSfondo();
-            const preP    = this._preloadTitoloPromise ?? Promise.resolve();
-            const urlTit  = this._nuovoTitoloPrecaricato || nuovoTitolo;
-            this._preloadTitoloPromise = null; this._nuovoTitoloPrecaricato = '';
-            preP.then(() => {
-              this.startAnimTitolo = false; this.startAnimDescrizione = false;
-              this.descrizioneTestuale = nuovaDesc;
-              const img2 = new Image();
-              img2.onload = img2.onerror = () => {
-                this.imgTitoloScheda = urlTit;
-                requestAnimationFrame(() => requestAnimationFrame(() => {
-                  this.segnale_cambio = true;
-                  this.labelsHelper.commitLabelUISincronizzate();
-                  this.schedaPronta.impostaLabelTorna(
-                    lingua === 'it' ? 'Ritorna al catalogo ⮨' : 'Back to catalog ⮨'
+
+          const descP = this._prefetchDescPromise ?? Promise.resolve(''); // recupero la promise descrizione prefetched
+          const titoloP = this._prefetchTitoloPromise ?? Promise.resolve(''); // recupero la promise titolo prefetched
+          this._prefetchDescPromise = null;
+          this._prefetchTitoloPromise = null; // pulisco i riferimenti di prefetch
+
+          Promise.all([descP, titoloP]).then(
+            ([nuovaDesc, nuovoTitoloScheda]) => {
+              this.titoloScheda = nuovoTitoloScheda; // applico il nuovo titolo testuale
+              this.labelsHelper.aggiornaAltSfondo(); // riallineo alt e title della scheda
+
+              const preP = this._preloadTitoloPromise ?? Promise.resolve(); // recupero la promise di preload del titolo grafico
+              const urlTit = this._nuovoTitoloPrecaricato || nuovoTitolo; // ricavo l'URL finale del titolo grafico
+              this._preloadTitoloPromise = null;
+              this._nuovoTitoloPrecaricato = ''; // pulisco i riferimenti del preload titolo
+
+              preP.then(() => {
+                this.startAnimTitolo = false;
+                this.startAnimDescrizione = false; // spengo le animazioni di titolo e descrizione
+                this.descrizioneTestuale = nuovaDesc; // applico la nuova descrizione tradotta
+                const img2 = new Image(); // creo un preload finale del titolo grafico da mostrare
+                img2.onload = img2.onerror = () => {
+                  this.imgTitoloScheda = urlTit; // applico il nuovo titolo grafico una volta pronto
+                  requestAnimationFrame(() =>
+                    requestAnimationFrame(() => {
+                      this.segnale_cambio = true; // segnalo che il cambio e' avvenuto
+                      this.labelsHelper.commitLabelUISincronizzate(); // riallineo le label UI alla nuova lingua
+                      this.schedaPronta.impostaLabelTorna(
+                        lingua === 'it'
+                          ? 'Ritorna al catalogo ⮨'
+                          : 'Back to catalog ⮨',
+                      ); // aggiorno la label torna catalogo
+                      this.startAnimTitolo = true;
+                      this.startAnimDescrizione = true; // riavvio le animazioni di titolo e descrizione
+                    }),
                   );
-                  this.startAnimTitolo = true; this.startAnimDescrizione = true;
-                }));
-              };
-              img2.src = urlTit;
-            });
-            this.correlateHelper.caricaRigheCorrelate(false);
-            if (this.ctx.tipoContenuto === 'serie' && this.ctx.stagioneSelezionata) {
-              this.ctx.stagioneCachata.clear(); this.ctx.serieData = {};
-              this.stagioniHelper.selezionaStagione(this.ctx.stagioneSelezionata);
-            }
-            if (trailerEraAttivo && this.ctx.slugCorrente)
-              this.trailerHelper.programmaInserimento();
-          });
+                };
+                img2.src = urlTit; // faccio partire il preload finale del titolo grafico
+              });
+
+              this.correlateHelper.caricaRigheCorrelate(false); // ricarico le correlate senza mostrare loading
+              if (
+                this.ctx.tipoContenuto === 'serie' &&
+                this.ctx.stagioneSelezionata
+              ) {
+                this.ctx.stagioneCachata.clear();
+                this.ctx.serieData = {}; // pulisco cache e dati stagioni prima del nuovo caricamento
+                this.stagioniHelper.selezionaStagione(
+                  this.ctx.stagioneSelezionata,
+                ); // ricarico la stagione selezionata nella nuova lingua
+              }
+              if (trailerEraAttivo && this.ctx.slugCorrente)
+                this.trailerHelper.programmaInserimento(); // se il trailer era attivo riprogrammo l'inserimento del player
+            },
+          );
         };
 
         if (trailerEraAttivo)
-          this.trailerHelper.chiudiConFadeEReset(350).finally(() => continuaDopoFade());
-        else
-          continuaDopoFade();
+          this.trailerHelper
+            .chiudiConFadeEReset(350)
+            .finally(() => continuaDopoFade()); // chiudo prima il trailer e poi continuo il cambio lingua
+        else continuaDopoFade(); // se il trailer non era attivo continuo subito il cambio lingua
       }),
     );
   }
 
+  /**
+   * Collega la subscription ai parametri di route e gestisce il caricamento del contenuto.
+   *
+   * @returns void
+   */
   private setupParamMapSubscription(): void {
     this.route.paramMap.subscribe((pm) => {
-      const idRaw = pm.get('id');
-      const id    = idRaw ? Number(idRaw) : NaN;
-      if (!idRaw || Number.isNaN(id)) return;
+      const idRaw = pm.get('id'); // leggo l'id grezzo dai parametri route
+      const id = idRaw ? Number(idRaw) : NaN; // provo a convertire l'id in numero
+      if (!idRaw || Number.isNaN(id)) return; // esco se l'id non e' valido
 
-      // Leggi i nuovi valori PRIMA del reset — così li sostituiamo subito
-      // senza passare per lo stato vuoto (zero frame neri)
-      const ns    = history.state;
-      const urlS  = String(ns?.['urlSfondo']           || '').trim();
-      const imgS  = String(ns?.['urlImgTitolo']        || '').trim();
-      const descS = String(ns?.['descrizioneTestuale'] || '').trim();
-      const tabS  = ns?.['tabellaDati'] ?? null;
+      const ns = history.state; // leggo lo state della navigazione corrente
+      const urlS = String(ns?.['urlSfondo'] || '').trim(); // leggo il nuovo sfondo dallo state
+      const imgS = String(ns?.['urlImgTitolo'] || '').trim(); // leggo il nuovo titolo grafico dallo state
+      const descS = String(ns?.['descrizioneTestuale'] || '').trim(); // leggo la nuova descrizione dallo state
+      const tabS = ns?.['tabellaDati'] ?? null; // leggo i nuovi dati tabellari dallo state
 
-      this.schedaPronta.reset();
-      this.resetStatoScheda();
+      this.schedaPronta.reset(); // segno la scheda come non pronta
+      this.resetStatoScheda(); // resetto lo stato interno prima del nuovo contenuto
 
       if (this._primaNavigazione) {
-        const sp = new URLSearchParams(window.location.search);
-        this._paramRiproduzioneInAttesa = sp.get('riproduzione') || sp.get('play') || null;
+        const sp = new URLSearchParams(window.location.search); // leggo gli eventuali parametri di riproduzione dall'URL
+        this._paramRiproduzioneInAttesa =
+          sp.get('riproduzione') || sp.get('play') || null; // salvo l'eventuale parametro play
         if (this._paramRiproduzioneInAttesa)
-          this._stagioneRiproduzioneInAttesa = pm.get('stagione') || null;
+          this._stagioneRiproduzioneInAttesa = pm.get('stagione') || null; // salvo l'eventuale stagione associata alla riproduzione
       }
-      this._primaNavigazione = false;
+      this._primaNavigazione = false; // segno che la prima navigazione e' stata gestita
 
-      // Imposta subito i nuovi valori — il vecchio sfondo rimane visibile
-      // finché non viene sostituito, e startAnim=true riavvia l'animazione ingresso
-      if (urlS)  { this.urlSfondoScheda  = urlS; this._sfondoPronto = true; }
-      if (imgS)  { this.imgTitoloScheda  = imgS; this._titoloPronto = true; }
-      if (descS) { this.descrizioneTestuale = descS; this._descPronta = true; }
-      if (tabS)  this.applicaTabellaDaState(tabS);
+      if (urlS) {
+        this.urlSfondoScheda = urlS;
+        this._sfondoPronto = true;
+      } // applico subito il nuovo sfondo se presente
+      if (imgS) {
+        this.imgTitoloScheda = imgS;
+        this._titoloPronto = true;
+      } // applico subito il nuovo titolo grafico se presente
+      if (descS) {
+        this.descrizioneTestuale = descS;
+        this._descPronta = true;
+      } // applico subito la nuova descrizione se presente
+      if (tabS) this.applicaTabellaDaState(tabS); // applico subito i nuovi dati tabellari se presenti
 
-      this.ctx.idContenuto   = id;
-      this.ctx.tipoContenuto = this.leggiTipoDaUrl();
+      this.ctx.idContenuto = id; // salvo l'id contenuto corrente nel contesto
+      this.ctx.tipoContenuto = this.leggiTipoDaUrl(); // ricavo e salvo il tipo contenuto dall'URL
 
-      // Cross-browser animation restart (funziona anche su Firefox):
-      // detectChanges applica startAnim=false al DOM sincrono,
-      // offsetWidth forza il reflow (il browser "registra" la rimozione di .anim),
-      // startAnim=true viene processato nello stesso macrotask —
-      // il browser non pinta mai il frame con opacity:0.
-      this.cdr.detectChanges();
-      const sfondoEl = document.querySelector('.sfondo_scheda') as HTMLElement | null;
-      if (sfondoEl) void sfondoEl.offsetWidth;
-      this.startAnim = true;
+      this.cdr.detectChanges(); // applico subito startAnim=false al DOM
+      const sfondoEl = document.querySelector(
+        '.sfondo_scheda',
+      ) as HTMLElement | null; // recupero l'elemento sfondo della scheda
+      if (sfondoEl) void sfondoEl.offsetWidth; // forzo il reflow per riavviare correttamente l'animazione
+      this.startAnim = true; // riattivo l'animazione generale
 
-      this.verificaEAvviaAnimazioni();
+      this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni se tutto e' pronto
 
-      // Cache
-      const lingua = this.cambioLingua.leggiCodiceLingua();
+      const lingua = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua corrente per la cache
       const cached = this.ctx.tipoContenuto
-        ? this.schedaCache.get(this.ctx.tipoContenuto, id, lingua) : null;
+        ? this.schedaCache.get(this.ctx.tipoContenuto, id, lingua)
+        : null; // provo a recuperare uno snapshot dalla cache
       if (cached) {
-        this.ripristinaDaCache(cached);
+        this.ripristinaDaCache(cached); // se esiste la cache ripristino tutto da li'
         return;
       }
 
-      if (this.ctx.tipoContenuto === 'film') this.caricaFilm(id);
-      if (this.ctx.tipoContenuto === 'serie') this.caricaSerie(id, pm);
+      if (this.ctx.tipoContenuto === 'film') this.caricaFilm(id); // avvio il caricamento film
+      if (this.ctx.tipoContenuto === 'serie') this.caricaSerie(id, pm); // avvio il caricamento serie
     });
   }
 
-  // ── Logica avvio player film/serie ────────────────────────────────────────
+  /**
+   * Avvia la transizione verso il player film o serie.
+   *
+   * @param episodio Numero episodio opzionale per le serie.
+   * @returns void
+   */
   private avviaTransizionePlayer(episodio?: number): void {
-    if (!this.ctx.slugCorrente) return;
-    const BASE = 'https://d2kd3i5q9rl184.cloudfront.net/streaming';
-    const slug = this.ctx.slugCorrente;
+    if (!this.ctx.slugCorrente) return; // esco se non ho lo slug del contenuto corrente
+    const BASE = 'https://d2kd3i5q9rl184.cloudfront.net/streaming'; // definisco la base degli stream HLS
+    const slug = this.ctx.slugCorrente; // mi salvo lo slug del contenuto
 
     if (this.ctx.tipoContenuto === 'film') {
       this.risorsePLayerVideo = {
-        auto:   `${BASE}/film/${slug}/master.m3u8`,
+        auto: `${BASE}/film/${slug}/master.m3u8`,
         '1080': `${BASE}/film/${slug}/1080/with-audio.m3u8`,
-        '720':  `${BASE}/film/${slug}/720/with-audio.m3u8`,
-        '360':  `${BASE}/film/${slug}/360/with-audio.m3u8`,
-      };
+        '720': `${BASE}/film/${slug}/720/with-audio.m3u8`,
+        '360': `${BASE}/film/${slug}/360/with-audio.m3u8`,
+      }; // preparo le risorse HLS del film
       this.sottotitoliPlayerVideo = {
         en: `assets/sottotitoli/en/film/${slug}.vtt`,
         it: `assets/sottotitoli/it/film/${slug}.vtt`,
-      };
+      }; // preparo i sottotitoli del film
     } else if (this.ctx.tipoContenuto === 'serie' && episodio != null) {
-      const stagione = this.ctx.stagioneSelezionata ?? '1';
+      const stagione = this.ctx.stagioneSelezionata ?? '1'; // ricavo la stagione da usare per lo stream episodio
       this.risorsePLayerVideo = {
-        auto:   `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/master.m3u8`,
+        auto: `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/master.m3u8`,
         '1080': `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/1080/with-audio.m3u8`,
-        '720':  `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/720/with-audio.m3u8`,
-        '360':  `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/360/with-audio.m3u8`,
-      };
+        '720': `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/720/with-audio.m3u8`,
+        '360': `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/360/with-audio.m3u8`,
+      }; // preparo le risorse HLS dell'episodio serie
       this.sottotitoliPlayerVideo = {
         en: `assets/sottotitoli/en/serie/${slug}.vtt`,
         it: `assets/sottotitoli/it/serie/${slug}.vtt`,
-      };
-      this.infoEpisodioPlayer = { stagione: Number(stagione), episodio };
+      }; // preparo i sottotitoli della serie
+      this.infoEpisodioPlayer = { stagione: Number(stagione), episodio }; // salvo le info episodio correnti
     }
 
     if (this.ctx.trailerInRiproduzione) {
-      this.ctx.avvioTrailerSchedaRichiesto = false;
-      this.ctx.trailerInRiproduzione       = false;
-      this.labelsHelper.aggiornaTrailerTitle();
+      this.ctx.avvioTrailerSchedaRichiesto = false; // annullo eventuali nuove richieste di avvio trailer
+      this.ctx.trailerInRiproduzione = false; // segno che il trailer non e' piu' il contenuto attivo
+      this.labelsHelper.aggiornaTrailerTitle(); // aggiorno il title del trailer
       if (this.ctx.mostraVideoScheda) {
-        this.ctx.mostraVideoScheda = false;
-        this.audioHelper.sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
-          .finally(() => this.trailerHelper.smontaSubito());
+        this.ctx.mostraVideoScheda = false; // nascondo il video trailer
+        this.audioHelper
+          .sfumaGuadagnoVerso(0, this.ctx.durataFadeSchedaMs)
+          .finally(() => this.trailerHelper.smontaSubito()); // faccio fade audio e poi smonto il player trailer
       } else {
-        this.trailerHelper.smontaSubito();
+        this.trailerHelper.smontaSubito(); // se il trailer non e' visibile lo smonto subito
       }
     }
 
-    const valore   = episodio ? `ep${episodio}` : 'true';
-    const lingua   = this.cambioLingua.leggiCodiceLingua();
-    const nomeP    = lingua === 'it' ? 'riproduzione' : 'play';
-    const pathC    = this.location.path(true).split('?')[0];
-    window.history.pushState(null, '', `${pathC}?${nomeP}=${valore}`);
-    this.schedaPronta.impostaUrlScheda(pathC);
-    this.schedaPronta.impostaPlayerAperto(true);
-    this.schedaPronta.impostaHeaderNascosto(true);
-    this.mostraPlayerVideo       = true;
-    this.transitioneVersoPLayer  = true;
-    this.transizioneTitolo.animaTitoloVersocentro();
+    const valore = episodio ? `ep${episodio}` : 'true'; // costruisco il valore del parametro play
+    const lingua = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua corrente
+    const nomeP = lingua === 'it' ? 'riproduzione' : 'play'; // scelgo il nome parametro coerente con la lingua
+    const pathC = this.location.path(true).split('?')[0]; // ricavo il path corrente senza query
+    window.history.pushState(null, '', `${pathC}?${nomeP}=${valore}`); // aggiorno l'URL con il parametro di riproduzione
+    this.schedaPronta.impostaUrlScheda(pathC); // notifico l'URL base della scheda
+    this.schedaPronta.impostaPlayerAperto(true); // notifico che il player principale e' aperto
+    this.schedaPronta.impostaHeaderNascosto(true); // notifico che l'header va nascosto
+    this.mostraPlayerVideo = true; // mostro il player principale
+    this.transitioneVersoPLayer = true; // attivo la transizione verso il player
+    this.transizioneTitolo.animaTitoloVersocentro(); // animo il titolo verso il centro
   }
 
-  // ── Helpers privati caricamento dati ──────────────────────────────────────
+  /**
+   * Carica i dati di una scheda film.
+   *
+   * @param id Id del film da caricare.
+   * @returns void
+   */
   private caricaFilm(id: number): void {
-    this.api.getFilm(id).subscribe(res => {
-      this.descrizione         = String(res?.data?.descrizione || '');
-      this.ctx.slugCorrente    = slugDaDescrizione(this.descrizione);
-      this.anno                = res?.data?.anno   ?? null;
-      this.durata              = res?.data?.durata ?? null;
-      this.regista             = String(res?.data?.regista || '');
-      this.episodiTotali       = null;
-      if (!this.urlSfondoScheda)  { this.urlSfondoScheda  = sfondoDaDescrizione(this.descrizione); }
-      if (!this.imgTitoloScheda)  { this.imgTitoloScheda  = imgTitoloDaSlug(this.ctx.slugCorrente, this.cambioLingua.leggiCodiceLingua()); }
-      this._sfondoPronto = this._titoloPronto = this._tabellaPronta = true;
-      this.verificaEAvviaAnimazioni();
-      this.correlateHelper.caricaRigheCorrelate();
+    this.api.getFilm(id).subscribe((res) => {
+      this.descrizione = String(res?.data?.descrizione || ''); // salvo la descrizione semantica del film
+      this.ctx.slugCorrente = slugDaDescrizione(this.descrizione); // ricavo lo slug del film
+      this.anno = res?.data?.anno ?? null; // salvo l'anno del film
+      this.durata = res?.data?.durata ?? null; // salvo la durata del film
+      this.regista = String(res?.data?.regista || ''); // salvo il regista del film
+      this.episodiTotali = null; // azzero gli episodi totali perche' non e' una serie
+      if (!this.urlSfondoScheda) {
+        this.urlSfondoScheda = sfondoDaDescrizione(this.descrizione);
+      } // costruisco lo sfondo se manca
+      if (!this.imgTitoloScheda) {
+        this.imgTitoloScheda = imgTitoloDaSlug(
+          this.ctx.slugCorrente,
+          this.cambioLingua.leggiCodiceLingua(),
+        );
+      } // costruisco il titolo grafico se manca
+      this._sfondoPronto = this._titoloPronto = this._tabellaPronta = true; // segno pronti sfondo, titolo e tabella
+      this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni
+      this.correlateHelper.caricaRigheCorrelate(); // carico le righe correlate
       if (this.ctx.slugCorrente && !this._paramRiproduzioneInAttesa)
-        this.trailerHelper.programmaInserimento();
+        this.trailerHelper.programmaInserimento(); // se posso, programmo il trailer della scheda
     });
-    this.api.getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua()).subscribe(res => {
-      this.descrizioneTestuale = String(res?.data?.descrizione || '');
-      this.titoloScheda        = String(res?.data?.titolo      || '');
-      this.labelsHelper.aggiornaAltSfondo();
-      this._descPronta = true;
-      this.verificaEAvviaAnimazioni();
-    });
+
+    this.api
+      .getFilmTraduzioni(id, this.cambioLingua.leggiCodiceLingua())
+      .subscribe((res) => {
+        this.descrizioneTestuale = String(res?.data?.descrizione || ''); // salvo la descrizione tradotta del film
+        this.titoloScheda = String(res?.data?.titolo || ''); // salvo il titolo tradotto del film
+        this.labelsHelper.aggiornaAltSfondo(); // aggiorno alt e title della scheda
+        this._descPronta = true; // segno pronta la descrizione
+        this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni
+      });
   }
 
+  /**
+   * Carica i dati di una scheda serie.
+   *
+   * @param id Id della serie da caricare.
+   * @param pm ParamMap corrente della route.
+   * @returns void
+   */
   private caricaSerie(id: number, pm: any): void {
-    const lingua       = this.cambioLingua.leggiCodiceLingua();
-    const stagioneDaUrl = pm.get('stagione') ? Number(pm.get('stagione')) : 1;
+    const lingua = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua corrente
+    const stagioneDaUrl = pm.get('stagione') ? Number(pm.get('stagione')) : 1; // leggo la stagione richiesta dall'URL
 
-    this.api.getSerieTraduzioni(id, lingua).subscribe(res => {
-      this.descrizioneTestuale = String(res?.data?.descrizione || '');
-      this.titoloScheda        = String(res?.data?.titolo      || '');
-      this.labelsHelper.aggiornaAltSfondo();
-      this._descPronta = true;
-      this.verificaEAvviaAnimazioni();
+    this.api.getSerieTraduzioni(id, lingua).subscribe((res) => {
+      this.descrizioneTestuale = String(res?.data?.descrizione || ''); // salvo la descrizione tradotta della serie
+      this.titoloScheda = String(res?.data?.titolo || ''); // salvo il titolo tradotto della serie
+      this.labelsHelper.aggiornaAltSfondo(); // aggiorno alt e title della scheda
+      this._descPronta = true; // segno pronta la descrizione
+      this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni
     });
 
-    forkJoin([this.api.getSerie(id), this.api.getStagioni(id)]).subscribe(([resSerie, resStagioni]: [any, any]) => {
-      this.descrizione         = String(resSerie?.data?.descrizione || '');
-      this.ctx.slugCorrente    = slugDaDescrizione(this.descrizione);
-      this.anno                = resSerie?.data?.anno           ?? null;
-      this.episodiTotali       = resSerie?.data?.numero_episodi ?? null;
-      this.regista             = String(resSerie?.data?.regista || '');
-      this.durata              = null;
-      if (!this.urlSfondoScheda) { this.urlSfondoScheda = sfondoDaDescrizione(this.descrizione); }
-      if (!this.imgTitoloScheda) { this.imgTitoloScheda = imgTitoloDaSlug(this.ctx.slugCorrente, lingua); }
-      this._sfondoPronto = this._titoloPronto = this._tabellaPronta = true;
+    forkJoin([this.api.getSerie(id), this.api.getStagioni(id)]).subscribe(
+      ([resSerie, resStagioni]: [any, any]) => {
+        this.descrizione = String(resSerie?.data?.descrizione || ''); // salvo la descrizione semantica della serie
+        this.ctx.slugCorrente = slugDaDescrizione(this.descrizione); // ricavo lo slug della serie
+        this.anno = resSerie?.data?.anno ?? null; // salvo l'anno della serie
+        this.episodiTotali = resSerie?.data?.numero_episodi ?? null; // salvo il totale episodi della serie
+        this.regista = String(resSerie?.data?.regista || ''); // salvo il regista della serie
+        this.durata = null; // azzero la durata perche' qui gestisco una serie
+        if (!this.urlSfondoScheda) {
+          this.urlSfondoScheda = sfondoDaDescrizione(this.descrizione);
+        } // costruisco lo sfondo se manca
+        if (!this.imgTitoloScheda) {
+          this.imgTitoloScheda = imgTitoloDaSlug(this.ctx.slugCorrente, lingua);
+        } // costruisco il titolo grafico se manca
+        this._sfondoPronto = this._titoloPronto = this._tabellaPronta = true; // segno pronti sfondo, titolo e tabella
 
-      const lista: any[] = Array.isArray(resStagioni?.data) ? resStagioni.data : [];
-      this.ctx.stagioni = lista.map(s => ({
-        id_stagione: s.id_stagione, numero_stagione: s.numero_stagione, numero_episodi: s.numero_episodi,
-      }));
+        const lista: any[] = Array.isArray(resStagioni?.data)
+          ? resStagioni.data
+          : []; // normalizzo la lista stagioni ricevuta
+        this.ctx.stagioni = lista.map((s) => ({
+          id_stagione: s.id_stagione,
+          numero_stagione: s.numero_stagione,
+          numero_episodi: s.numero_episodi,
+        })); // salvo le stagioni nel contesto
 
-      if (this._paramRiproduzioneInAttesa?.startsWith('ep')) {
-        const epR   = Number(this._paramRiproduzioneInAttesa.replace('ep', ''));
-        const stagN = Number(this._stagioneRiproduzioneInAttesa ?? '1');
-        const si    = this.ctx.stagioni.find(s => s.numero_stagione === stagN);
-        if (!si || epR < 1 || epR > si.numero_episodi) {
-          const c = this.cambioLingua.leggiCodiceLingua();
-          this.router.navigateByUrl(`/${c}/${c === 'it' ? 'non-trovato' : 'not-found'}`); return;
+        if (this._paramRiproduzioneInAttesa?.startsWith('ep')) {
+          const epR = Number(this._paramRiproduzioneInAttesa.replace('ep', '')); // ricavo il numero episodio richiesto
+          const stagN = Number(this._stagioneRiproduzioneInAttesa ?? '1'); // ricavo la stagione richiesta per la riproduzione
+          const si = this.ctx.stagioni.find((s) => s.numero_stagione === stagN); // cerco la stagione richiesta
+          if (!si || epR < 1 || epR > si.numero_episodi) {
+            const c = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua per la route not found
+            this.router.navigateByUrl(
+              `/${c}/${c === 'it' ? 'non-trovato' : 'not-found'}`,
+            );
+            return; // se episodio o stagione non sono validi mando alla not found
+          }
         }
-      }
 
-      this.verificaEAvviaAnimazioni();
-      this.correlateHelper.caricaRigheCorrelate();
-      if (this.ctx.slugCorrente && !this._paramRiproduzioneInAttesa)
-        this.trailerHelper.programmaInserimento();
+        this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni
+        this.correlateHelper.caricaRigheCorrelate(); // carico le correlate della serie
+        if (this.ctx.slugCorrente && !this._paramRiproduzioneInAttesa)
+          this.trailerHelper.programmaInserimento(); // se posso programmo il trailer della scheda
 
-      if (this.ctx.stagioni.length > 0) {
-        const explicit = !!pm.get('stagione');
-        const target   = this.ctx.stagioni.find(s => s.numero_stagione === stagioneDaUrl);
-        if (!target && explicit) {
-          const c = this.cambioLingua.leggiCodiceLingua();
-          this.router.navigateByUrl(`/${c}/${c === 'it' ? 'non-trovato' : 'not-found'}`); return;
+        if (this.ctx.stagioni.length > 0) {
+          const explicit = !!pm.get('stagione'); // verifico se la stagione era esplicitamente in URL
+          const target = this.ctx.stagioni.find(
+            (s) => s.numero_stagione === stagioneDaUrl,
+          ); // cerco la stagione richiesta
+          if (!target && explicit) {
+            const c = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua per la route not found
+            this.router.navigateByUrl(
+              `/${c}/${c === 'it' ? 'non-trovato' : 'not-found'}`,
+            );
+            return; // se la stagione esplicita non esiste mando alla not found
+          }
+          const stagione = target ?? this.ctx.stagioni[0]; // uso la stagione richiesta oppure la prima disponibile
+          const targetStr = String(stagione.numero_stagione); // converto il numero stagione in stringa
+          this.stagioniHelper.aggiornaUrlStagione(targetStr); // aggiorno l'URL con la stagione effettiva
+          this.stagioniHelper
+            .caricaEpisodiStagione(stagione.id_stagione, targetStr)
+            .then(() => {
+              this.ctx.stagioneSelezionata = targetStr;
+            }); // carico gli episodi e poi salvo la stagione selezionata
         }
-        const stagione  = target ?? this.ctx.stagioni[0];
-        const targetStr = String(stagione.numero_stagione);
-        this.stagioniHelper.aggiornaUrlStagione(targetStr);
-        this.stagioniHelper.caricaEpisodiStagione(stagione.id_stagione, targetStr)
-          .then(() => { this.ctx.stagioneSelezionata = targetStr; });
-      }
-    });
+      },
+    );
   }
 
+  /**
+   * Ripristina lo stato della scheda a partire da uno snapshot in cache.
+   *
+   * @param cached Snapshot cache da ripristinare.
+   * @returns void
+   */
   private ripristinaDaCache(cached: any): void {
-    this.descrizione         = cached.descrizione;
-    this.descrizioneTestuale = cached.descrizioneTestuale;
-    this.urlSfondoScheda     = cached.urlSfondoScheda;
-    this.imgTitoloScheda     = cached.imgTitoloScheda;
-    this.anno                = cached.anno;
-    this.durata              = cached.durata;
-    this.episodiTotali       = cached.episodiTotali;
-    this.regista             = cached.regista;
-    this.titoloScheda        = cached.titoloScheda ?? '';
-    this.ctx.slugCorrente    = cached.slugCorrente;
-    this.ctx.stagioni        = cached.stagioni;
-    this.ctx.stagioneSelezionata = cached.stagioneSelezionata;
-    this.ctx.serieData       = cached.serieData;
-    for (const k of Object.keys(cached.serieData)) this.ctx.stagioneCachata.add(k);
-    this.correlateHelper.righeCorrelate = cached.righeCorrelate ?? [];
-    this.correlateHelper.righeCorrelateInCaricamento = false;
+    this.descrizione = cached.descrizione; // ripristino la descrizione semantica
+    this.descrizioneTestuale = cached.descrizioneTestuale; // ripristino la descrizione testuale
+    this.urlSfondoScheda = cached.urlSfondoScheda; // ripristino lo sfondo della scheda
+    this.imgTitoloScheda = cached.imgTitoloScheda; // ripristino l'immagine titolo della scheda
+    this.anno = cached.anno; // ripristino l'anno del contenuto
+    this.durata = cached.durata; // ripristino la durata del contenuto
+    this.episodiTotali = cached.episodiTotali; // ripristino il totale episodi
+    this.regista = cached.regista; // ripristino il regista
+    this.titoloScheda = cached.titoloScheda ?? ''; // ripristino il titolo scheda
+    this.ctx.slugCorrente = cached.slugCorrente; // ripristino lo slug corrente
+    this.ctx.stagioni = cached.stagioni; // ripristino la lista stagioni
+    this.ctx.stagioneSelezionata = cached.stagioneSelezionata; // ripristino la stagione selezionata
+    this.ctx.serieData = cached.serieData; // ripristino i dati serie
+    for (const k of Object.keys(cached.serieData))
+      this.ctx.stagioneCachata.add(k); // ricostruisco la cache delle stagioni caricate
+    this.correlateHelper.righeCorrelate = cached.righeCorrelate ?? []; // ripristino le righe correlate
+    this.correlateHelper.righeCorrelateInCaricamento = false; // segno finite le correlate
 
     requestAnimationFrame(() => {
-      this._sfondoPronto = this._titoloPronto = this._descPronta = this._tabellaPronta = true;
-      this.labelsHelper.aggiornaAltSfondo();
+      this._sfondoPronto =
+        this._titoloPronto =
+        this._descPronta =
+        this._tabellaPronta =
+          true; // segno pronti tutti i blocchi principali
+      this.labelsHelper.aggiornaAltSfondo(); // aggiorno alt e title della scheda
       if (this.ctx.tipoContenuto === 'serie' && this.ctx.stagioneSelezionata)
-        this.stagioniHelper.aggiornaUrlStagione(this.ctx.stagioneSelezionata);
-      this.verificaEAvviaAnimazioni();
+        this.stagioniHelper.aggiornaUrlStagione(this.ctx.stagioneSelezionata); // riallineo l'URL stagione se sono su una serie
+      this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni
       if (this.ctx.slugCorrente && !this._paramRiproduzioneInAttesa)
-        this.trailerHelper.programmaInserimento();
+        this.trailerHelper.programmaInserimento(); // se posso programmo il trailer della scheda
     });
   }
 
+  /**
+   * Applica i dati tabellari ricevuti nello state di navigazione.
+   *
+   * @param t Oggetto tabellare ricevuto via state.
+   * @returns void
+   */
   private applicaTabellaDaState(t: any): void {
-    this.anno          = t.anno           ?? null;
-    this.durata        = t.durata         ?? null;
-    this.episodiTotali = t.numero_episodi ?? null;
-    this.regista       = String(t.regista || '');
-    this._tabellaPronta = true;
+    this.anno = t.anno ?? null; // applico l'anno ricevuto
+    this.durata = t.durata ?? null; // applico la durata ricevuta
+    this.episodiTotali = t.numero_episodi ?? null; // applico il numero episodi ricevuto
+    this.regista = String(t.regista || ''); // applico il regista ricevuto
+    this._tabellaPronta = true; // segno pronta la tabella
   }
 
+  /**
+   * Reimposta lo stato interno della scheda prima di caricare un nuovo contenuto.
+   *
+   * @returns void
+   */
   private resetStatoScheda(): void {
-    this.startAnim = this.startAnimTitolo = this.startAnimDescrizione = false;
-    this.ctx.avvioTrailerSchedaRichiesto = false;
-    this.ctx.trailerInRiproduzione = true;
-    this._sfondoPronto = this._titoloPronto = this._descPronta = this._tabellaPronto = this._labelPronte = false;
-    // urlSfondoScheda e imgTitoloScheda NON vengono azzerati qui:
-    // vengono sovrascritti subito dopo con i nuovi valori dallo state
-    // così il vecchio sfondo rimane visibile durante la transizione → zero frame neri
-    this.descrizioneTestuale = '';
-    this.titoloScheda    = this.descrizione     = this.ctx.slugCorrente    = '';
-    this.labelsHelper.altSfondoScheda = this.labelsHelper.altTitoloScheda = '';
-    this.labelsHelper.labelRiprendiTitle = this.labelsHelper.labelRiproduciTitle = this.labelsHelper.labelTrailerTitle = '';
-    this.anno = this.durata = this.episodiTotali = null; this.regista = '';
-    this.ctx.stagioni = []; this.ctx.serieData = {}; this.ctx.stagioneSelezionata = null; this.ctx.stagioneCachata.clear();
-    this.correlateHelper.reset();
-    window.scrollTo(0, 0);
+    this.startAnim = this.startAnimTitolo = this.startAnimDescrizione = false; // spengo tutte le animazioni iniziali
+    this.ctx.avvioTrailerSchedaRichiesto = false; // annullo eventuali richieste di avvio trailer
+    this.ctx.trailerInRiproduzione = true; // riporto il trailer allo stato iniziale
+    this._sfondoPronto =
+      this._titoloPronto =
+      this._descPronta =
+      this._tabellaPronto =
+      this._labelPronte =
+        false; // resetto tutti i flag di prontezza
+    this.descrizioneTestuale = ''; // pulisco la descrizione testuale
+    this.titoloScheda = this.descrizione = this.ctx.slugCorrente = ''; // pulisco titolo, descrizione semantica e slug
+    this.labelsHelper.altSfondoScheda = this.labelsHelper.altTitoloScheda = ''; // pulisco gli alt della scheda
+    this.labelsHelper.labelRiprendiTitle =
+      this.labelsHelper.labelRiproduciTitle =
+      this.labelsHelper.labelTrailerTitle =
+        ''; // pulisco i title dei controlli
+    this.anno = this.durata = this.episodiTotali = null;
+    this.regista = ''; // pulisco i dati tabellari
+    this.ctx.stagioni = [];
+    this.ctx.serieData = {};
+    this.ctx.stagioneSelezionata = null;
+    this.ctx.stagioneCachata.clear(); // pulisco i dati stagione
+    this.correlateHelper.reset(); // resetto le correlate
+    window.scrollTo(0, 0); // riporto la finestra in cima
   }
 
+  /**
+   * Verifica se tutti i blocchi necessari sono pronti e, quando lo sono, avvia le animazioni finali.
+   *
+   * @returns void
+   */
   private verificaEAvviaAnimazioni(): void {
     const tuttoPronto =
-      this._loaderNascosto && this._sfondoPronto && this._titoloPronto &&
-      this._descPronta && this._tabellaPronta;
-    if (!tuttoPronto) return;
+      this._loaderNascosto &&
+      this._sfondoPronto &&
+      this._titoloPronto &&
+      this._descPronta &&
+      this._tabellaPronta; // verifico se tutti i prerequisiti visivi sono pronti
+    if (!tuttoPronto) return; // esco se manca ancora qualcosa
 
-    const _param = this._paramRiproduzioneInAttesa;
-    this._paramRiproduzioneInAttesa = null;
+    const _param = this._paramRiproduzioneInAttesa; // mi salvo l'eventuale parametro play in attesa
+    this._paramRiproduzioneInAttesa = null; // consumo il parametro di riproduzione pendente
     if (_param && !this.mostraPlayerVideo) {
-      const ep = _param.startsWith('ep') ? Number(_param.replace('ep', '')) : undefined;
+      const ep = _param.startsWith('ep')
+        ? Number(_param.replace('ep', ''))
+        : undefined; // ricavo l'eventuale episodio da riprodurre
       if (this._stagioneRiproduzioneInAttesa) {
-        this.ctx.stagioneSelezionata = this._stagioneRiproduzioneInAttesa;
-        this._stagioneRiproduzioneInAttesa = null;
+        this.ctx.stagioneSelezionata = this._stagioneRiproduzioneInAttesa; // applico la stagione letta dall'URL prima di aprire il player
+        this._stagioneRiproduzioneInAttesa = null; // consumo la stagione di riproduzione pendente
       }
-      this.avviaTransizionePlayer(ep);
-      this.schedaPronta.segnaPronte();
+      this.avviaTransizionePlayer(ep); // apro direttamente il player principale
+      this.schedaPronta.segnaPronte(); // segno pronta la scheda
       if (!this._labelPronte) {
-        this._labelPronte = true;
-        this.labelsHelper.commitLabelUISincronizzate();
+        this._labelPronte = true; // segno che le label sono gia' state sincronizzate
+        this.labelsHelper.commitLabelUISincronizzate(); // avvio la sincronizzazione delle label
       }
       return;
     }
 
     if (!this._labelPronte) {
-      this._labelPronte = true;
+      this._labelPronte = true; // segno che sto sincronizzando le label
       this.labelsHelper.commitLabelUISincronizzate().then(() => {
-        if (this.ctx.distrutto) return;
-        this.schedaPronta.segnaPronte();
+        if (this.ctx.distrutto) return; // esco se nel frattempo la scheda e' stata distrutta
+        this.schedaPronta.segnaPronte(); // segno pronta la scheda dopo la sincronizzazione label
         requestAnimationFrame(() => {
-          this.startAnim = this.startAnimTitolo = this.startAnimDescrizione = true;
+          this.startAnim =
+            this.startAnimTitolo =
+            this.startAnimDescrizione =
+              true; // avvio tutte le animazioni della scheda
         });
       });
       return;
     }
 
-    this.schedaPronta.segnaPronte();
+    this.schedaPronta.segnaPronte(); // segno pronta la scheda se le label erano gia' allineate
     requestAnimationFrame(() => {
-      this.startAnim = this.startAnimTitolo = this.startAnimDescrizione = true;
+      this.startAnim = this.startAnimTitolo = this.startAnimDescrizione = true; // avvio tutte le animazioni della scheda
     });
   }
 
+  /**
+   * Legge il tipo contenuto corrente a partire dall'URL attivo.
+   *
+   * @returns 'film' | 'serie' | null Tipo contenuto rilevato oppure null.
+   */
   leggiTipoDaUrl(): 'film' | 'serie' | null {
-    const segs   = this.route.snapshot.url.map(s => s.path);
-    const parent = this.route.parent?.snapshot.url.map(s => s.path) || [];
-    const all    = [...parent, ...segs].join('/');
-    if (/(^|\/)(film|movies)(\/|$)/.test(all))  return 'film';
-    if (/(^|\/)(serie|series)(\/|$)/.test(all)) return 'serie';
-    return null;
+    const segs = this.route.snapshot.url.map((s) => s.path); // leggo i segmenti URL della route corrente
+    const parent = this.route.parent?.snapshot.url.map((s) => s.path) || []; // leggo gli eventuali segmenti parent
+    const all = [...parent, ...segs].join('/'); // compongo l'URL logico completo
+    if (/(^|\/)(film|movies)(\/|$)/.test(all)) return 'film'; // riconosco le route film
+    if (/(^|\/)(serie|series)(\/|$)/.test(all)) return 'serie'; // riconosco le route serie
+    return null; // se non riconosco nulla restituisco null
   }
 
   private onLoaderHidden = () => {
-    this._loaderNascosto = true;
-    this.verificaEAvviaAnimazioni();
+    this._loaderNascosto = true; // segno il loader globale come nascosto
+    this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni dopo il loader
   };
 
-  // Workaround TS strict: il getter _tabellaPronto usa il campo privato
-  private get _tabellaPronto(): boolean { return this._tabellaPronta; }
-  private set _tabellaPronto(v: boolean) { this._tabellaPronta = v; }
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  private get _tabellaPronto(): boolean {
+    return this._tabellaPronta;
+  } // espongo il flag tabella pronta tramite getter interno
+  // Getter che mi restituisce questo valore in modo comodo nel template.
+  private set _tabellaPronto(v: boolean) {
+    this._tabellaPronta = v;
+  } // aggiorno il flag tabella pronta tramite setter interno
 }

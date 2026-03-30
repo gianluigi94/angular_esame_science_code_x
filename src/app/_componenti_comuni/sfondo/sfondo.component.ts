@@ -8,7 +8,6 @@ import { Component } from '@angular/core';
 export class SfondoComponent {
 
   /**
-   * Hook di inizializzazione del componente.
    *
    * Calcola l'1% dell'altezza visibile della finestra
    * e lo salva come variabile CSS '--vh'.
@@ -16,6 +15,7 @@ export class SfondoComponent {
    * La variabile viene aggiornata anche al resize
    * per gestire correttamente cambi di orientamento
    * e variazioni della UI del browser.
+   * mi aiuta per il resize
    */
   ngOnInit(): void {
     // calcolo l'1% dell'altezza visibile del dispositivo e lo salva come variabile CSS

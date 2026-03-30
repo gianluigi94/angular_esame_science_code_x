@@ -1,123 +1,323 @@
+<!-- html del componente dei miei dati personali -->
+
 <section class="overlay" *ngIf="visibile">
-
-
   <div class="pagina">
     <div class="contenuto" #datiPersonaliContenuto>
-      <h2>{{ 'ui.h2.contatti' | translate }}</h2>
+      <!-- titolo diverso per lingua -->
+      <h2>{{ "ui.h2.contatti" | translate }}</h2>
 
+      <!-- copie chiave valore diverse per lingua e i dati li prende dal db  -->
       <dl class="contact-list">
         <div class="row">
+          <!-- nome -->
           <dt [innerHTML]="'ui.sviluppato.contatti' | translate"></dt>
           <dd>Gianluigi Abbracciavento</dd>
         </div>
-
+<!-- email -->
         <div class="row">
           <dt>Email</dt>
           <dd>
             <a [href]="'mailto:' + mail">{{ mail }}</a>
           </dd>
         </div>
-
+<!-- indirizzo -->
         <div class="row">
           <dt [innerHTML]="'ui.indirizzo.contatti' | translate"></dt>
           <dd>{{ indirizzo }}</dd>
-
         </div>
-       <div class="row">
-          <dt> </dt>
+        <div class="row">
+          <!-- chiave vuota, valore che fa aprire il form -->
+          <dt></dt>
           <dd class="special_dd" (click)="apriForm()">
-            {{ 'ui.contatti.invia_messaggio' | translate }}
+            {{ "ui.contatti.invia_messaggio" | translate }}
           </dd>
         </div>
         <div class="row">
-          <dt> </dt>
+          <!-- chiave vuota, valore che fa tornare indietro -->
+          <dt></dt>
           <dd class="special_dd special_dd--secondario" (click)="chiudi()">
-            {{ 'ui.torna.log.contatti' | translate }}
+            {{ "ui.torna.log.contatti" | translate }}
           </dd>
         </div>
       </dl>
     </div>
 
-    <!-- ═══ FORM MESSAGGIO ═══ -->
-    <form class="dati-form-contenuto" #formContenuto [formGroup]="messaggioForm" (ngSubmit)="inviaMessaggio()">
-      <h2>{{ 'ui.contatti.form.titolo' | translate }}</h2>
+    <!-- form i dati cambiano in base alla lingua -->
+    <form
+      class="dati-form-contenuto"
+      #formContenuto
+      [formGroup]="messaggioForm"
+      (ngSubmit)="inviaMessaggio()"
+    >
+    <!-- titolo che cambia in base alla lingua -->
+      <h2>{{ "ui.contatti.form.titolo" | translate }}</h2>
 
       <div class="form-riga-doppia">
         <div class="campo-wrapper">
-          <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['nome'].invalid && (messaggioForm.controls['nome'].touched || formInviatoMsg) }">
-            {{ 'ui.contatti.form.nome.label' | translate }} <span class="asterisco">*</span>
+          <!-- titolo nome, cambia classe se invalido -->
+          <p
+            class="form-label"
+            [ngClass]="{
+              'is-invalid':
+                messaggioForm.controls['nome'].invalid &&
+                (messaggioForm.controls['nome'].touched || formInviatoMsg),
+            }"
+          >
+            {{ "ui.contatti.form.nome.label" | translate }}
+            <span class="asterisco">*</span>
           </p>
           <div class="campo-form">
-            <input type="text" placeholder=" " id="dp_msg_nome" formControlName="nome"
-              [ngClass]="{ 'is-invalid': messaggioForm.controls['nome'].invalid && (messaggioForm.controls['nome'].touched || formInviatoMsg) }" />
-            <label for="dp_msg_nome">{{ 'ui.contatti.form.nome.label' | translate }}</label>
+            <input
+              type="text"
+              placeholder=" "
+              id="dp_msg_nome"
+              formControlName="nome"
+              [ngClass]="{
+                'is-invalid':
+                  messaggioForm.controls['nome'].invalid &&
+                  (messaggioForm.controls['nome'].touched || formInviatoMsg),
+              }"
+            />
+            <label for="dp_msg_nome">{{
+              "ui.contatti.form.nome.label" | translate
+            }}</label>
           </div>
-          <p class="form-errore" *ngIf="messaggioForm.controls['nome'].errors?.['required'] && (messaggioForm.controls['nome'].touched || formInviatoMsg)">{{ 'ui.contatti.form.nome.error.required' | translate }}</p>
-          <p class="form-errore" *ngIf="messaggioForm.controls['nome'].errors?.['minlength'] && (messaggioForm.controls['nome'].touched || formInviatoMsg)">{{ 'ui.registrazione.nome.error.minlength' | translate }}</p>
-          <p class="form-errore" *ngIf="messaggioForm.controls['nome'].errors?.['pattern'] && (messaggioForm.controls['nome'].touched || formInviatoMsg)">{{ 'ui.registrazione.nome.error.pattern' | translate }}</p>
+          <!-- messagi di errore -->
+          <p
+            class="form-errore"
+            *ngIf="
+              messaggioForm.controls['nome'].errors?.['required'] &&
+              (messaggioForm.controls['nome'].touched || formInviatoMsg)
+            "
+          >
+            {{ "ui.contatti.form.nome.error.required" | translate }}
+          </p>
+          <p
+            class="form-errore"
+            *ngIf="
+              messaggioForm.controls['nome'].errors?.['minlength'] &&
+              (messaggioForm.controls['nome'].touched || formInviatoMsg)
+            "
+          >
+            {{ "ui.registrazione.nome.error.minlength" | translate }}
+          </p>
+          <p
+            class="form-errore"
+            *ngIf="
+              messaggioForm.controls['nome'].errors?.['pattern'] &&
+              (messaggioForm.controls['nome'].touched || formInviatoMsg)
+            "
+          >
+            {{ "ui.registrazione.nome.error.pattern" | translate }}
+          </p>
         </div>
 
         <div class="campo-wrapper">
-          <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['cognome'].invalid && (messaggioForm.controls['cognome'].touched || formInviatoMsg) }">
-            {{ 'ui.contatti.form.cognome.label' | translate }} <span class="asterisco">*</span>
+          <!-- titolo cognome -->
+          <p
+            class="form-label"
+            [ngClass]="{
+              'is-invalid':
+                messaggioForm.controls['cognome'].invalid &&
+                (messaggioForm.controls['cognome'].touched || formInviatoMsg),
+            }"
+          >
+            {{ "ui.contatti.form.cognome.label" | translate }}
+            <span class="asterisco">*</span>
           </p>
           <div class="campo-form">
-            <input type="text" placeholder=" " id="dp_msg_cognome" formControlName="cognome"
-              [ngClass]="{ 'is-invalid': messaggioForm.controls['cognome'].invalid && (messaggioForm.controls['cognome'].touched || formInviatoMsg) }" />
-            <label for="dp_msg_cognome">{{ 'ui.contatti.form.cognome.label' | translate }}</label>
+            <input
+              type="text"
+              placeholder=" "
+              id="dp_msg_cognome"
+              formControlName="cognome"
+              [ngClass]="{
+                'is-invalid':
+                  messaggioForm.controls['cognome'].invalid &&
+                  (messaggioForm.controls['cognome'].touched || formInviatoMsg),
+              }"
+            />
+            <label for="dp_msg_cognome">{{
+              "ui.contatti.form.cognome.label" | translate
+            }}</label>
           </div>
-          <p class="form-errore" *ngIf="messaggioForm.controls['cognome'].errors?.['required'] && (messaggioForm.controls['cognome'].touched || formInviatoMsg)">{{ 'ui.contatti.form.cognome.error.required' | translate }}</p>
-          <p class="form-errore" *ngIf="messaggioForm.controls['cognome'].errors?.['minlength'] && (messaggioForm.controls['cognome'].touched || formInviatoMsg)">{{ 'ui.registrazione.cognome.error.minlength' | translate }}</p>
-          <p class="form-errore" *ngIf="messaggioForm.controls['cognome'].errors?.['pattern'] && (messaggioForm.controls['cognome'].touched || formInviatoMsg)">{{ 'ui.registrazione.cognome.error.pattern' | translate }}</p>
+          <!-- messaggi errore -->
+          <p
+            class="form-errore"
+            *ngIf="
+              messaggioForm.controls['cognome'].errors?.['required'] &&
+              (messaggioForm.controls['cognome'].touched || formInviatoMsg)
+            "
+          >
+            {{ "ui.contatti.form.cognome.error.required" | translate }}
+          </p>
+          <p
+            class="form-errore"
+            *ngIf="
+              messaggioForm.controls['cognome'].errors?.['minlength'] &&
+              (messaggioForm.controls['cognome'].touched || formInviatoMsg)
+            "
+          >
+            {{ "ui.registrazione.cognome.error.minlength" | translate }}
+          </p>
+          <p
+            class="form-errore"
+            *ngIf="
+              messaggioForm.controls['cognome'].errors?.['pattern'] &&
+              (messaggioForm.controls['cognome'].touched || formInviatoMsg)
+            "
+          >
+            {{ "ui.registrazione.cognome.error.pattern" | translate }}
+          </p>
         </div>
       </div>
 
       <div class="campo-wrapper">
-        <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['tipologia'].invalid && (messaggioForm.controls['tipologia'].touched || formInviatoMsg) }">
-          {{ 'ui.contatti.form.tipologia.label' | translate }} <span class="asterisco">*</span>
+        <!-- titolo tipologia -->
+        <p
+          class="form-label"
+          [ngClass]="{
+            'is-invalid':
+              messaggioForm.controls['tipologia'].invalid &&
+              (messaggioForm.controls['tipologia'].touched || formInviatoMsg),
+          }"
+        >
+          {{ "ui.contatti.form.tipologia.label" | translate }}
+          <span class="asterisco">*</span>
         </p>
+        <!-- campi per indicare la tipologia -->
         <div class="tipologia-wrapper">
-          <label class="tipologia-pill" [class.attiva]="messaggioForm.controls['tipologia'].value === 'assistenza'">
-            <input type="radio" formControlName="tipologia" value="assistenza" />
-            {{ 'ui.contatti.form.tipologia.assistenza' | translate }}
+          <label
+            class="tipologia-pill"
+            [class.attiva]="
+              messaggioForm.controls['tipologia'].value === 'assistenza'
+            "
+          >
+            <input
+              type="radio"
+              formControlName="tipologia"
+              value="assistenza"
+            />
+            {{ "ui.contatti.form.tipologia.assistenza" | translate }}
           </label>
-          <label class="tipologia-pill" [class.attiva]="messaggioForm.controls['tipologia'].value === 'collaborazioni'">
-            <input type="radio" formControlName="tipologia" value="collaborazioni" />
-            {{ 'ui.contatti.form.tipologia.collaborazioni' | translate }}
+          <label
+            class="tipologia-pill"
+            [class.attiva]="
+              messaggioForm.controls['tipologia'].value === 'collaborazioni'
+            "
+          >
+            <input
+              type="radio"
+              formControlName="tipologia"
+              value="collaborazioni"
+            />
+            {{ "ui.contatti.form.tipologia.collaborazioni" | translate }}
           </label>
-          <label class="tipologia-pill" [class.attiva]="messaggioForm.controls['tipologia'].value === 'informazioni'">
-            <input type="radio" formControlName="tipologia" value="informazioni" />
-            {{ 'ui.contatti.form.tipologia.informazioni' | translate }}
+          <label
+            class="tipologia-pill"
+            [class.attiva]="
+              messaggioForm.controls['tipologia'].value === 'informazioni'
+            "
+          >
+            <input
+              type="radio"
+              formControlName="tipologia"
+              value="informazioni"
+            />
+            {{ "ui.contatti.form.tipologia.informazioni" | translate }}
           </label>
         </div>
-        <p class="form-errore" *ngIf="messaggioForm.controls['tipologia'].errors?.['required'] && (messaggioForm.controls['tipologia'].touched || formInviatoMsg)">{{ 'ui.contatti.form.tipologia.error.required' | translate }}</p>
+        <!-- messaggi di errore -->
+        <p
+          class="form-errore"
+          *ngIf="
+            messaggioForm.controls['tipologia'].errors?.['required'] &&
+            (messaggioForm.controls['tipologia'].touched || formInviatoMsg)
+          "
+        >
+          {{ "ui.contatti.form.tipologia.error.required" | translate }}
+        </p>
       </div>
 
       <div class="campo-wrapper">
-        <p class="form-label" [ngClass]="{ 'is-invalid': messaggioForm.controls['messaggio'].invalid && (messaggioForm.controls['messaggio'].touched || formInviatoMsg) }">
-          {{ 'ui.contatti.form.messaggio.label' | translate }} <span class="asterisco">*</span>
+        <!-- titoli dei messaggi -->
+        <p
+          class="form-label"
+          [ngClass]="{
+            'is-invalid':
+              messaggioForm.controls['messaggio'].invalid &&
+              (messaggioForm.controls['messaggio'].touched || formInviatoMsg),
+          }"
+        >
+          {{ "ui.contatti.form.messaggio.label" | translate }}
+          <span class="asterisco">*</span>
         </p>
-        <textarea id="dp_msg_messaggio" formControlName="messaggio"
+        <!-- input per scrivere il testo -->
+        <textarea
+          id="dp_msg_messaggio"
+          formControlName="messaggio"
           [placeholder]="'ui.contatti.form.messaggio.placeholder' | translate"
-          [ngClass]="{ 'is-invalid': messaggioForm.controls['messaggio'].invalid && (messaggioForm.controls['messaggio'].touched || formInviatoMsg) }">
+          [ngClass]="{
+            'is-invalid':
+              messaggioForm.controls['messaggio'].invalid &&
+              (messaggioForm.controls['messaggio'].touched || formInviatoMsg),
+          }"
+        >
         </textarea>
-        <p class="form-errore" *ngIf="messaggioForm.controls['messaggio'].errors?.['required'] && (messaggioForm.controls['messaggio'].touched || formInviatoMsg)">{{ 'ui.contatti.form.messaggio.error.required' | translate }}</p>
-        <p class="form-errore" *ngIf="messaggioForm.controls['messaggio'].errors?.['minlength'] && (messaggioForm.controls['messaggio'].touched || formInviatoMsg)">{{ 'ui.contatti.form.messaggio.error.minlength' | translate }}</p>
-        <p class="form-errore" *ngIf="messaggioForm.controls['messaggio'].errors?.['maxlength'] && (messaggioForm.controls['messaggio'].touched || formInviatoMsg)">{{ 'ui.contatti.form.messaggio.error.maxlength' | translate }}</p>
+        <!-- messaggi di errore -->
+        <p
+          class="form-errore"
+          *ngIf="
+            messaggioForm.controls['messaggio'].errors?.['required'] &&
+            (messaggioForm.controls['messaggio'].touched || formInviatoMsg)
+          "
+        >
+          {{ "ui.contatti.form.messaggio.error.required" | translate }}
+        </p>
+        <p
+          class="form-errore"
+          *ngIf="
+            messaggioForm.controls['messaggio'].errors?.['minlength'] &&
+            (messaggioForm.controls['messaggio'].touched || formInviatoMsg)
+          "
+        >
+          {{ "ui.contatti.form.messaggio.error.minlength" | translate }}
+        </p>
+        <p
+          class="form-errore"
+          *ngIf="
+            messaggioForm.controls['messaggio'].errors?.['maxlength'] &&
+            (messaggioForm.controls['messaggio'].touched || formInviatoMsg)
+          "
+        >
+          {{ "ui.contatti.form.messaggio.error.maxlength" | translate }}
+        </p>
       </div>
 
       <div class="form-bottoni">
+        <!-- bottone per chiudere form e tornare ai contatti -->
         <button type="button" class="indietro-form-btn" (click)="chiudiForm()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
-            <path d="M15 18l-6-6 6-6"/>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="#c4c4c4"
+          >
+            <path d="M15 18l-6-6 6-6" />
           </svg>
-          {{ 'ui.contatti.form.indietro' | translate }}
+          {{ "ui.contatti.form.indietro" | translate }}
         </button>
-        <button type="button" class="invia-btn" [disabled]="messaggioForm.invalid" (click)="inviaMessaggio()">
-          {{ 'ui.contatti.form.invia' | translate }}
+        <!-- bottone non ancora funzionante per inviaremessaggio -->
+        <button
+          type="button"
+          class="invia-btn"
+          [disabled]="messaggioForm.invalid"
+          (click)="inviaMessaggio()"
+        >
+          {{ "ui.contatti.form.invia" | translate }}
         </button>
       </div>
     </form>
-
   </div>
 </section>

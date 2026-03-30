@@ -3,21 +3,21 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-@Injectable({ providedIn: 'root' })// Registro il servizio nel root injector
+@Injectable({ providedIn: 'root' }) // Registro il servizio nel root injector
 export class CaricamentoCaroselloService {
   caroselloPronto$ = new BehaviorSubject<boolean>(false); // espongo uno stato reattivo che dice se il carosello e' pronto
 
   sfondiPronti = false; // flag interno per sapere se gli sfondi sono stati caricati
   titoliPronti = false; // flag interno per sapere se i titoli sono stati caricati
 
-/**
- * Riporta il servizio allo stato iniziale di caricamento.
- *
- * Azzera i flag interni di readiness (sfondi e titoli) e notifica
- * che il carosello non e' pronto tramite 'caroselloPronto$'.
- *
- * @returns void
- */
+  /**
+   * Riporta il servizio allo stato iniziale di caricamento.
+   *
+   * Azzera i flag interni di readiness (sfondi e titoli) e notifica
+   * che il carosello non e' pronto tramite 'caroselloPronto$'.
+   *
+   * @returns void
+   */
   resetta(): void {
     // preparo una funzione per riportare il servizio allo stato iniziale
     this.sfondiPronti = false; // azzero lo stato degli sfondi
@@ -26,13 +26,13 @@ export class CaricamentoCaroselloService {
   }
 
   /**
- * Segnala che gli sfondi del carosello sono pronti.
- *
- * Imposta il flag interno e verifica se anche i titoli sono pronti
- * per poter notificare lo stato finale di prontezza.
- *
- * @returns void
- */
+   * Segnala che gli sfondi del carosello sono pronti.
+   *
+   * Imposta il flag interno e verifica se anche i titoli sono pronti
+   * per poter notificare lo stato finale di prontezza.
+   *
+   * @returns void
+   */
   segnalaSfondiPronti(): void {
     // funzione da chiamare quando gli sfondi hanno finito di caricarsi
     this.sfondiPronti = true; // segno che gli sfondi sono pronti
@@ -40,13 +40,13 @@ export class CaricamentoCaroselloService {
   }
 
   /**
- * Segnala che i titoli del carosello sono pronti.
- *
- * Imposta il flag interno e verifica se anche gli sfondi sono pronti
- * per poter notificare lo stato finale di prontezza.
- *
- * @returns void
- */
+   * Segnala che i titoli del carosello sono pronti.
+   *
+   * Imposta il flag interno e verifica se anche gli sfondi sono pronti
+   * per poter notificare lo stato finale di prontezza.
+   *
+   * @returns void
+   */
   segnalaTitoliPronti(): void {
     // funzione da chiamare quando i titoli hanno finito di caricarsi
     this.titoliPronti = true; // segno che i titoli sono pronti
@@ -54,12 +54,12 @@ export class CaricamentoCaroselloService {
   }
 
   /**
- * Verifica se il carosello puo' essere considerato pronto.
- *
- * Se sia sfondi che titoli risultano pronti, notifica 'true' su 'caroselloPronto$'.
- *
- * @returns void
- */
+   * Verifica se il carosello puo' essere considerato pronto.
+   *
+   * Se sia sfondi che titoli risultano pronti, notifica 'true' su 'caroselloPronto$'.
+   *
+   * @returns void
+   */
   verificaPronto(): void {
     // funzione che decide quando il carosello puo' essere considerato pronto
     if (this.sfondiPronti && this.titoliPronti) {

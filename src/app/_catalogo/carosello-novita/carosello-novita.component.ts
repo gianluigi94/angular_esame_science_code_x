@@ -1,14 +1,6 @@
 // Componente che funge da elemento principale del carosello novità, mantenendo lo stato centrale e delegando alle utility specializzate il comportamento di scorrimento, overlay, video, audio e reazioni a scroll, focus e cambio lingua.
 
-import {
-  Component,
-  OnDestroy,
-  OnInit,
-  AfterViewInit,
-  ViewChild,
-  ElementRef,
-  HostListener,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener} from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { CaroselloAudioDebugUtility } from './carosello_utility/carosello-audio-debug.utility';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
@@ -44,24 +36,24 @@ import { BarraAvanzamentoService } from 'src/app/_componenti_comuni/barra-avanza
 export class CaroselloNovitaComponent
   implements OnInit, OnDestroy, AfterViewInit
 {
-  pausaPerHover = false;
-  hoverLocandinaAttivo = false;
-  audioBloccatoDaUtente = false;
-  mostraImmagineHover = false;
-  immagineHoverFissa =
-    'assets/carosello_locandine/carosello_abbraccia_il_vento.webp';
-  chiaveHoverImg = 0;
-  immagineHoverPronta = true;
-  tokenHoverImg = 0;
+ pausaPerHover = false; // flag che mi dice se il carosello e' momentaneamente in pausa a causa di un hover esterno
+hoverLocandinaAttivo = false; // flag che mi dice se in questo momento c'e' una locandina esterna in hover attivo
+audioBloccatoDaUtente = false; // flag che mi dice se l'utente ha scelto esplicitamente di bloccare l'audio
+mostraImmagineHover = false; // flag che decide se devo mostrare l'immagine fissa legata all'hover invece del video
+immagineHoverFissa =
+  'assets/carosello_locandine/carosello_abbraccia_il_vento.webp'; // tengo l'URL dell'immagine hover fissa da mostrare come copertura
+chiaveHoverImg = 0; // chiave numerica per forzare il refresh dell'immagine hover quando cambia
+immagineHoverPronta = true; // flag che mi dice se l'immagine hover e' gia' pronta da mostrare
+tokenHoverImg = 0; // uso un token incrementale per invalidare caricamenti vecchi dell'immagine hover
 
-  trailerHoverProvvisorio =
-    'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_cavalli_contro_circuiti.mp4';
-  MIN_MS_IMMAGINE_HOVER = 200;
-  inizioImmagineHoverMs = 0;
-  tokenHoverTrailer = 0;
-  timerMostraTrailerHover: any = null;
-  hoverTrailerInAttesa = false;
-  stopDolceInCorso = false;
+trailerHoverProvvisorio =
+  'https://d2kd3i5q9rl184.cloudfront.net/mp4-trailer-it/trailer_ita_cavalli_contro_circuiti.mp4'; // tengo un URL provvisorio del trailer hover da usare come fallback o valore iniziale
+MIN_MS_IMMAGINE_HOVER = 200; // imposto il tempo minimo in ms per cui l'immagine hover deve restare visibile prima del trailer
+inizioImmagineHoverMs = 0; // salvo il timestamp di inizio visualizzazione dell'immagine hover
+tokenHoverTrailer = 0; // uso un token incrementale per invalidare avvii vecchi del trailer hover
+timerMostraTrailerHover: any = null; // tengo il riferimento al timer che ritarda la partenza del trailer hover
+hoverTrailerInAttesa = false; // flag che mi dice se il trailer hover e' stato richiesto ma sta ancora aspettando di partire
+stopDolceInCorso = false; // flag che mi dice se e' attualmente in corso uno stop dolce con fade di audio e video
   alTop = true; // Tengo traccia se sono 'in cima' alla pagina (stato iniziale: sì)
   pausaPerScroll = false; // Segno se devo mettere in pausa per via dello scroll (inizialmente no)
   SCROLL_THRESHOLD = 10; // Imposto la soglia (in px) entro cui considero la pagina 'in cima'
@@ -76,29 +68,22 @@ export class CaroselloNovitaComponent
   sottotitoli: string[] = []; // Memorizzo i sottotitoli per ogni slide
   indiciSfondiCritici: number[] = []; // Tengo la lista degli indici sfondo 'critici' che devono essere pronti subito
 
-    // ===== BARRA AVANZAMENTO (presa dal vecchio progetto) =====
 
 
-  titoloOverlay = ''; // Tengo il titolo attualmente mostrato nell'overlay
-  imgTitoloOverlay = ''; // Tengo l'immagine titolo attualmente mostrata nell'overlay
-  sottotitoloOverlay = ''; // Tengo il sottotitolo attualmente mostrato nell'overlay
+  titoloOverlay = ''; // il titolo attualmente mostrato nell'overlay
+  imgTitoloOverlay = ''; // l'immagine titolo attualmente mostrata nell'overlay
+  sottotitoloOverlay = ''; // il sottotitolo attualmente mostrato nell'overlay
   titoloHoverFisso = 'cavalli contro circuiti';
   imgTitoloHoverFisso =
-    'https://www.sciencecodex.net/assets/titoli_en/titolo_en_cavalli_contro_circuiti.webp';
-  sottotitoloHoverFisso = 'sottotitolo di prova';
+  'https://www.sciencecodex.net/assets/titoli_en/titolo_en_cavalli_contro_circuiti.webp'; // tengo l'URL dell'immagine titolo da mostrare durante l'hover fisso
+sottotitoloHoverFisso = 'sottotitolo di prova'; // tengo il sottotitolo da mostrare durante l'hover fisso
 
-  descrizioneHoverFissa = ''; // es: "film.cavalli_contro_circuiti"
+descrizioneHoverFissa = ''; // tengo la descrizione semantica associata all'hover fisso per ricostruire gli asset corretti
 
-  linguaCorrenteTitoli(): string {
-    try {
-      return this.translate.currentLang || 'it';
-    } catch {
-      return 'it';
-    }
-  }
 
-  titoloVisibile = true;
-  sottotitoloVisibile = true;
+
+titoloVisibile = true; // flag che mi dice se il titolo overlay deve essere visibile
+sottotitoloVisibile = true; // flag che mi dice se il sottotitolo overlay deve essere visibile
   durataFadeTitoliMs = 200; // Imposto la durata del fade dei titoli
   pausaNeroTitoliMs = 50; // Imposto la pausa di 'nero' tra fade out e nuovo contenuto
 
@@ -174,288 +159,319 @@ export class CaroselloNovitaComponent
   private api: ApiService,
 ) {}
 
-  /**
-   * Metodo eseguito all'inizializzazione del componente.
-   *
-   * Avvia il caricamento dei dati del carosello e registra le sottoscrizioni
-   * agli eventi di cambio lingua per aggiornare testi, overlay e trailer.
-   *
-   * @link https://docs.videojs.com/
-   * @returns void
-   */
-  ngOnInit(): void {
-      try { this.servizioHoverLocandina.emettiUscita(); } catch {}
-  this.pausaPerHover = false;
-  this.hoverLocandinaAttivo = false;
-  this.mostraImmagineHover = false;
-  this.hoverTrailerInAttesa = false;
-    this.caricaDati(); // Avvio il caricamento dati iniziali
-    this.subs.add(
-      this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
-        const eraBloccatoDaUtente = !!this.audioBloccatoDaUtente;
-        // Se l'utente ha scelto "senza audio", blocco TUTTO lo sblocco via click
-        this.audioBloccatoDaUtente = !consentito;
-        const audioAppenaRiattivato =
-          eraBloccatoDaUtente && !this.audioBloccatoDaUtente;
-        if (this.audioBloccatoDaUtente) {
-          this.audioConsentito = false;
-          try {
-            this.rimuoviAscoltoSbloccoAudio();
-          } catch {}
 
-          // mi assicuro che WebAudio sia agganciato cosi' il fade esiste davvero
-          try {
-            this.inizializzaWebAudioSuVideoReale();
-          } catch {}
+/**
+ * Metodo eseguito all'inizializzazione del componente.
+ * - Ripulisce subito eventuali stati hover rimasti aperti
+ * - Avvia il caricamento dati iniziali del carosello
+ * - Si sottoscrive allo stato audio globale per gestire mute, fade e riavvii
+ * - Si sottoscrive all'hover delle locandine esterne per mostrare cover, overlay e trailer dedicati
+ *
+  * @link https://docs.videojs.com/
+ *
+ * @returns void
+ */
+ngOnInit(): void {
+  try { this.servizioHoverLocandina.emettiUscita(); } catch {} // provo a forzare l'uscita da eventuali hover locandina rimasti attivi
+  this.pausaPerHover = false; // resetto lo stato di pausa dovuto a hover esterno
+  this.hoverLocandinaAttivo = false; // resetto il flag che indica hover locandina attivo
+  this.mostraImmagineHover = false; // mi assicuro di non mostrare l'immagine hover all'avvio
+  this.hoverTrailerInAttesa = false; // resetto il flag del trailer hover eventualmente in attesa
+  this.caricaDati(); // avvio il caricamento dati iniziali del carosello
 
-          // IMPORTANTISSIMO: prima fade-out, poi mute (muted=true taglia di colpo)
-          this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
-            try {
-              this.impostaMuteReale(true);
-            } catch {}
-          });
+  this.subs.add(
+    this.audioGlobaleService.statoAudio$.subscribe((consentito) => {
+      // mi sottoscrivo allo stato audio globale per reagire quando l'utente attiva o disattiva l'audio
+      const eraBloccatoDaUtente = !!this.audioBloccatoDaUtente; // mi salvo se prima l'audio era bloccato esplicitamente dall'utente
 
-          return; // stop qui: non fare altro in questa emissione
-        }
+      this.audioBloccatoDaUtente = !consentito; // aggiorno il flag locale invertendo il valore di consenso ricevuto
+      const audioAppenaRiattivato =
+        eraBloccatoDaUtente && !this.audioBloccatoDaUtente; // capisco se l'utente ha appena riattivato l'audio rispetto allo stato precedente
 
-        // audio riattivato: il click sul bottone e' una gesture valida
+      if (this.audioBloccatoDaUtente) {
+        // entro qui se l'utente ha scelto esplicitamente di avere l'audio disattivato
+        this.audioConsentito = false; // segno che l'audio non e' consentito in questo momento
+
+        try {
+          this.rimuoviAscoltoSbloccoAudio();
+        } catch {} // provo a rimuovere eventuali listener di sblocco audio senza rompere il flusso
+
         try {
           this.inizializzaWebAudioSuVideoReale();
-        } catch {}
-        try {
-          if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
-            this.contestoAudio.resume().catch(() => {});
-          }
-        } catch {}
+        } catch {} // provo ad assicurarmi che WebAudio sia collegato al video cosi' il fade funzioni davvero
 
-        // Se l'utente ha appena attivato l'audio col pulsante: RIAVVIO "click-style" PRIMA di togliere il mute
-        if (audioAppenaRiattivato) {
-          const sonoInHover = !!this.pausaPerHover;
-          let trailerInCorso = false;
+        this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
+          // faccio prima un fade-out dell'audio e solo dopo applico il mute reale
           try {
-            trailerInCorso =
-              !!this.player &&
-              typeof this.player.paused === 'function' &&
-              !this.player.paused();
-          } catch {}
+            this.impostaMuteReale(true);
+          } catch {} // provo a mettere in mute il video reale senza generare errori bloccanti
+        });
 
-          if (sonoInHover || trailerInCorso) {
-            // sicurezza: zero immediato per evitare qualunque "blip" audio
+        return; // mi fermo qui perche' quando l'audio e' bloccato dall'utente non devo fare altro in questa emissione
+      }
+
+      try {
+        this.inizializzaWebAudioSuVideoReale();
+      } catch {} // provo ad assicurarmi che il video reale sia collegato a WebAudio
+
+      try {
+        if (this.contestoAudio && this.contestoAudio.state === 'suspended') {
+          this.contestoAudio.resume().catch(() => {});
+        }
+      } catch {} // se il contesto audio e' sospeso provo a riattivarlo
+
+      if (audioAppenaRiattivato) {
+        // entro qui se l'utente ha appena riattivato l'audio dal controllo globale
+        const sonoInHover = !!this.pausaPerHover; // verifico se in questo momento il carosello e' in pausa per hover
+        let trailerInCorso = false; // preparo un flag che dira' se c'e' gia' un trailer in riproduzione
+
+        try {
+          trailerInCorso =
+            !!this.player &&
+            typeof this.player.paused === 'function' &&
+            !this.player.paused();
+        } catch {} // provo a capire se il player sta riproducendo un trailer in questo momento
+
+        if (sonoInHover || trailerInCorso) {
+          // se sono in hover oppure c'e' gia' un trailer in corso faccio un riavvio pulito con audio
+          try {
+            this.sfumaGuadagnoVerso(0, 0);
+          } catch {} // porto subito il guadagno a zero per evitare qualunque piccolo colpo audio
+
+          try {
+            this.fermaAvvioPendete();
+          } catch {} // provo a bloccare qualunque avvio trailer pendente
+
+          if (sonoInHover) {
+            // entro qui se sono nel caso di hover trailer
             try {
-              this.sfumaGuadagnoVerso(0, 0);
-            } catch {}
+              this.mostraVideo = false;
+            } catch {} // nascondo il player video per evitare nero durante il riavvio
 
             try {
-              this.fermaAvvioPendete();
-            } catch {}
+              this.mostraImmagineHover = true;
+            } catch {} // mostro l'immagine hover come copertura durante la ripartenza
+
+            try {
+              this.inizioImmagineHoverMs = Date.now();
+            } catch {} // salvo il momento in cui l'immagine hover torna visibile
+          } else {
+            // entro qui se sono nel caso di trailer normale del carosello
+            try {
+              this.mostraVideo = false;
+            } catch {} // nascondo il player per forzare una ripartenza pulita senza cover hover
+          }
+
+          this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
+            // faccio uno stop dolce dell'audio prima di riavviare il trailer con audio
+            try {
+              this.player?.pause?.();
+            } catch {} // provo a mettere in pausa il player corrente
+
+            try {
+              this.player?.currentTime?.(0);
+            } catch {} // provo a riportare il trailer all'inizio
+
+            try {
+              this.impostaMuteReale(false);
+            } catch {} // tolgo il mute reale subito prima della ripartenza
+
+            this.audioConsentito = true; // segno che adesso l'audio e' consentito
 
             if (sonoInHover) {
-              // CASO 2/3: hover trailer -> mostro cover, nascondo player (evito nero) e riavvio con audio
+              // se sono in hover riavvio la logica del trailer hover
               try {
-                this.mostraVideo = false;
-              } catch {}
-              try {
-                this.mostraImmagineHover = true;
-              } catch {}
-              try {
-                this.inizioImmagineHoverMs = Date.now();
-              } catch {}
+                this.preparaTrailerHoverDopoImmaginePronta();
+              } catch {} // provo a preparare la ripartenza del trailer hover
             } else {
-              // CASO 1: trailer default -> nessuna cover, solo restart pulito
+              // altrimenti riavvio subito il trailer corrente del carosello
               try {
-                this.mostraVideo = false;
-              } catch {}
+                this.avviaTrailerCorrenteDopo(0);
+              } catch {} // provo a far ripartire immediatamente il trailer corrente
+            }
+          });
+
+          return; // mi fermo qui perche' il fade-in verra' gestito direttamente dalla ripartenza del trailer
+        }
+      }
+
+      try {
+        this.impostaMuteReale(false);
+      } catch {} // nel caso normale posso togliere subito il mute reale
+
+      this.audioConsentito = true; // segno che l'audio ora e' consentito
+
+      this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs); // se c'e' gia' un trailer in corso faccio rientrare gradualmente l'audio
+    }),
+  );
+
+  this.subs.add(
+    this.servizioHoverLocandina
+      .osserva()
+      .subscribe(
+        ({
+          attivo,  urlSfondo,
+          urlTrailer,
+          descrizione,
+          titolo,
+          sottotitolo,
+        }) => {
+          // mi sottoscrivo agli eventi di hover sulle locandine esterne per gestire cover, overlay e trailer dedicati
+          this.hoverLocandinaAttivo = !!attivo; // aggiorno il flag che indica se una locandina esterna e' attiva in hover
+          const eraAttivo = this.mostraImmagineHover; // mi salvo se prima stavo gia' mostrando l'immagine hover
+          this.mostraImmagineHover = attivo; // allineo la visibilita' dell'immagine hover allo stato attivo ricevuto
+
+          if (attivo) {
+            // entro qui quando una locandina esterna entra in hover
+            if (urlTrailer) {
+              this.trailerHoverProvvisorio = urlTrailer;
+            } // se mi arriva un trailer hover valido lo salvo subito come trailer provvisorio corrente
+
+            if (urlSfondo) {
+              // se mi arriva anche uno sfondo hover dedicato preparo il preload dell'immagine
+              if (!eraAttivo) this.immagineHoverPronta = false; // se prima non ero attivo segno che la nuova immagine non e' ancora pronta
+              this.chiaveHoverImg += 1; // incremento la chiave cosi' posso forzare il refresh dell'immagine nel template
+
+              const token = ++this.tokenHoverImg; // genero un token nuovo per invalidare eventuali caricamenti immagine precedenti
+              const nuovaUrl = urlSfondo; // mi salvo l'URL della nuova immagine hover
+              const img = new Image(); // creo un oggetto Image per fare preload manuale
+
+              img.onload = () => {
+                // entro qui quando l'immagine hover si carica correttamente
+                if (token !== this.tokenHoverImg) return; // se il token non coincide piu' ignoro questo caricamento vecchio
+                this.immagineHoverFissa = nuovaUrl; // salvo la nuova immagine hover come immagine corrente
+                this.immagineHoverPronta = true; // segno che l'immagine e' pronta da mostrare
+                this.inizioImmagineHoverMs = Date.now(); // salvo il momento esatto in cui l'immagine diventa pronta
+
+                if (
+                  this.pausaPerHover &&
+                  this.mostraImmagineHover &&
+                  this.immagineHoverPronta
+                ) {
+                  this.preparaTrailerHoverDopoImmaginePronta();
+                } // se sono ancora in hover e l'immagine e' pronta provo a preparare il trailer hover
+              };
+
+              img.onerror = () => {
+                // entro qui se il preload dell'immagine fallisce ma voglio comunque continuare con l'URL previsto
+                if (token !== this.tokenHoverImg) return; // se il token non coincide piu' ignoro questo risultato vecchio
+
+                this.immagineHoverFissa = nuovaUrl; // salvo comunque l'URL come immagine hover corrente
+                this.immagineHoverPronta = true; // considero comunque l'immagine pronta per non bloccare il flusso
+                this.inizioImmagineHoverMs = Date.now(); // salvo il momento in cui considero pronta la cover hover
+
+                if (
+                  this.pausaPerHover &&
+                  this.mostraImmagineHover &&
+                  this.immagineHoverPronta
+                ) {
+                  this.preparaTrailerHoverDopoImmaginePronta();
+                } // se sono ancora in hover e tutto e' coerente provo comunque a preparare il trailer hover
+              };
+
+              img.src = nuovaUrl; // faccio partire il preload assegnando l'URL dell'immagine
+            }
+
+            this.pausaPerHover = true; // segno che da ora il carosello e' in pausa per hover esterno
+
+            if (descrizione) this.descrizioneHoverFissa = descrizione; // se mi arriva la descrizione semantica la salvo per ricostruire gli asset hover corretti
+
+            this.titoloHoverFisso = String(
+              titolo || this.titoloHoverFisso || '',
+            ); // aggiorno il titolo hover usando quello ricevuto oppure mantenendo quello gia' presente
+            this.sottotitoloHoverFisso = String(sottotitolo || ''); // aggiorno il sottotitolo hover usando quello ricevuto oppure stringa vuota
+
+            if (this.descrizioneHoverFissa) {
+              this.imgTitoloHoverFisso =
+                CaroselloDatiUtility.urlTitoloDaDescrizione(
+                  this.descrizioneHoverFissa,
+                  this.linguaCorrenteTitoli(),
+                );
+            } // se ho una descrizione hover ricostruisco l'immagine titolo corretta in base alla lingua corrente
+
+            CaroselloOverlayUtility.impostaOverlay(
+              this,
+              this.titoloHoverFisso,
+              this.imgTitoloHoverFisso,
+              this.sottotitoloHoverFisso,
+              true,
+            ); // aggiorno subito l'overlay del carosello con i contenuti dell'hover
+
+            this.fermaAutoscroll(); // fermo l'autoscroll del carosello mentre l'hover esterno e' attivo
+            this.fermaAvvioPendete(); // blocco eventuali avvii trailer pendenti
+            this.numeroSequenzaAvvio++; // incremento la sequenza per invalidare eventuali avvii vecchi gia' in corso
+
+            if (this.alTop && this.mostraVideo) {
+              // se sono al top e il video e' visibile preparo la sua scomparsa poco dopo
+              setTimeout(() => {
+                if (this.pausaPerHover) this.mostraVideo = false;
+              }, 200); // nascondo davvero il video solo se nel frattempo sono ancora in hover
             }
 
             this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
+              // faccio uno stop dolce del trailer corrente prima di passare a cover e trailer hover
               try {
-                this.player?.pause?.();
-              } catch {}
-              try {
-                this.player?.currentTime?.(0);
-              } catch {}
+                this.player.pause();
+              } catch {} // provo a mettere in pausa il player corrente
 
-              // ORA tolgo il mute e segno audio consentito, subito prima di ripartire
               try {
-                this.impostaMuteReale(false);
-              } catch {}
-              this.audioConsentito = true;
+                if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+                  this.player.currentTime(0);
+                }
+              } catch {} // se il player e' pronto provo a riportare il trailer all'inizio
 
-              if (sonoInHover) {
-                try {
-                  this.preparaTrailerHoverDopoImmaginePronta();
-                } catch {}
-              } else {
-                try {
-                  this.avviaTrailerCorrenteDopo(0);
-                } catch {}
-              }
+              if (this.mostraImmagineHover && this.immagineHoverPronta) {
+                this.preparaTrailerHoverDopoImmaginePronta();
+              } // se la cover hover e' pronta provo ad avviare la logica del trailer hover
             });
+          } else {
+            // entro qui quando l'hover sulla locandina esterna termina
+            this.pausaPerHover = false; // tolgo lo stato di pausa per hover
 
-            return; // importantissimo: niente fade-in qui, lo fa la ripartenza
+            this.aggiornaOverlayPerIndiceCorrente(this.indiceCorrente, true); // ripristino l'overlay normale della slide corrente
+
+            this.tokenHoverImg += 1; // invalido eventuali caricamenti immagine hover ancora pendenti
+
+            this.tokenHoverTrailer += 1; // invalido eventuali avvii trailer hover ancora pendenti
+            if (this.timerMostraTrailerHover)
+              clearTimeout(this.timerMostraTrailerHover); // se esiste un timer del trailer hover lo cancello
+            this.timerMostraTrailerHover = null; // azzero il riferimento al timer trailer hover
+            this.mostraVideo = false; // nascondo il player video durante lo stop dolce di uscita hover
+            this.stopDolceInCorso = true; // segno che e' in corso uno stop dolce
+
+            this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
+              // faccio sempre uno stop dolce del trailer hover in uscita
+              try {
+                this.player.pause();
+              } catch {} // provo a mettere in pausa il player corrente
+
+              try {
+                if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
+                  this.player.currentTime(0);
+                }
+              } catch {} // se il player e' pronto provo a riportare il trailer all'inizio
+
+              if (
+                this.alTop &&
+                !this.pausaPerScroll &&
+                !this.pausaPerBlur &&
+                !this.pausaPerHover
+              ) {
+                this.avviaTrailerCorrenteDopo(this.RITARDO_MOSTRA_PLAYER_MS);
+              } // se sono ancora nelle condizioni normali faccio ripartire il trailer corrente del carosello
+
+              if (!this.alTop && !this.pausaPerBlur && !this.pausaPerHover) {
+                this.avviaAutoscroll();
+              } // se non sono al top ma posso farlo riattivo l'autoscroll
+
+              this.stopDolceInCorso = false; // segno che lo stop dolce e' terminato
+            });
           }
-        }
+        },
+      ),
+  );
 
-        // Caso normale: non devo riavviare nulla, posso togliere il mute subito
-        try {
-          this.impostaMuteReale(false);
-        } catch {}
-        this.audioConsentito = true;
-
-        // se in questo momento c'e' un trailer in play, rientro graduale
-        this.sfumaGuadagnoVerso(1, this.durataFadeAudioMs);
-      }),
-    );
-    this.subs.add(
-      this.servizioHoverLocandina
-        .osserva()
-        .subscribe(
-          ({
-            attivo,
-            urlSfondo,
-            urlTrailer,
-            descrizione,
-            titolo,
-            sottotitolo,
-          }) => {
-            this.hoverLocandinaAttivo = !!attivo;
-            const eraAttivo = this.mostraImmagineHover;
-            this.mostraImmagineHover = attivo;
-
-            if (attivo) {
-              if (urlTrailer) {
-                this.trailerHoverProvvisorio = urlTrailer; // trailer hover corretto (lingua + slug)
-              }
-              if (urlSfondo) {
-                if (!eraAttivo) this.immagineHoverPronta = false;
-                this.chiaveHoverImg += 1;
-
-                const token = ++this.tokenHoverImg;
-                const nuovaUrl = urlSfondo;
-                const img = new Image();
-                img.onload = () => {
-                  if (token !== this.tokenHoverImg) return;
-                  this.immagineHoverFissa = nuovaUrl;
-                  this.immagineHoverPronta = true;
-                  this.inizioImmagineHoverMs = Date.now();
-                  if (
-                    this.pausaPerHover &&
-                    this.mostraImmagineHover &&
-                    this.immagineHoverPronta
-                  ) {
-                    this.preparaTrailerHoverDopoImmaginePronta();
-                  }
-                };
-                img.onerror = () => {
-                  if (token !== this.tokenHoverImg) return;
-
-                  this.immagineHoverFissa = nuovaUrl;
-                  this.immagineHoverPronta = true;
-                  this.inizioImmagineHoverMs = Date.now();
-                  if (
-                    this.pausaPerHover &&
-                    this.mostraImmagineHover &&
-                    this.immagineHoverPronta
-                  ) {
-                    this.preparaTrailerHoverDopoImmaginePronta();
-                  }
-                };
-                img.src = nuovaUrl;
-              }
-              this.pausaPerHover = true;
-
-              // ricostruisco l'immagine titolo in base a lingua + descrizione hover
-              // (serve che HoverLocandinaService mi passi anche 'descrizione')
-              if (descrizione) this.descrizioneHoverFissa = descrizione;
-
-              this.titoloHoverFisso = String(
-                titolo || this.titoloHoverFisso || '',
-              );
-              this.sottotitoloHoverFisso = String(sottotitolo || '');
-              if (this.descrizioneHoverFissa) {
-                this.imgTitoloHoverFisso =
-                  CaroselloDatiUtility.urlTitoloDaDescrizione(
-                    this.descrizioneHoverFissa,
-                    this.linguaCorrenteTitoli(),
-                  );
-              }
-
-              CaroselloOverlayUtility.impostaOverlay(
-                this,
-                this.titoloHoverFisso,
-                this.imgTitoloHoverFisso,
-                this.sottotitoloHoverFisso,
-                true,
-              );
-
-              this.fermaAutoscroll();
-              this.fermaAvvioPendete(); // blocco avvii trailer pendenti
-              this.numeroSequenzaAvvio++; // invalido eventuali avvii in corso
-
-              // se sono al top e il video e' visibile: lo nascondo 200ms dopo
-              if (this.alTop && this.mostraVideo) {
-                setTimeout(() => {
-                  // se nel frattempo sono ancora in hover, allora nascondo davvero
-                  if (this.pausaPerHover) this.mostraVideo = false;
-                }, 200);
-              }
-
-              this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
-                try {
-                  this.player.pause();
-                } catch {}
-                try {
-  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
-    this.player.currentTime(0);
-  }
-} catch {}
-                if (this.mostraImmagineHover && this.immagineHoverPronta) {
-                  this.preparaTrailerHoverDopoImmaginePronta();
-                }
-              });
-            } else {
-              this.pausaPerHover = false;
-
-              this.aggiornaOverlayPerIndiceCorrente(this.indiceCorrente, true);
-
-              this.tokenHoverImg += 1;
-
-              this.tokenHoverTrailer += 1;
-              if (this.timerMostraTrailerHover)
-                clearTimeout(this.timerMostraTrailerHover);
-              this.timerMostraTrailerHover = null;
-              this.mostraVideo = false;
-              this.stopDolceInCorso = true;
-              // uscita da hover: SEMPRE stop dolce del trailer hover (anche se non sono al top)
-              this.sfumaGuadagnoVerso(0, this.durataFadeAudioMs).finally(() => {
-                try {
-                  this.player.pause();
-                } catch {}
-                try {
-  if (this.player && typeof this.player.readyState === 'function' && this.player.readyState() >= 1) {
-    this.player.currentTime(0);
-  }
-} catch {}
-
-                // tolgo overlay e riparto con la logica normale (solo se posso)
-                if (
-                  this.alTop &&
-                  !this.pausaPerScroll &&
-                  !this.pausaPerBlur &&
-                  !this.pausaPerHover
-                ) {
-                  this.avviaTrailerCorrenteDopo(this.RITARDO_MOSTRA_PLAYER_MS);
-                }
-                if (!this.alTop && !this.pausaPerBlur && !this.pausaPerHover) {
-                  this.avviaAutoscroll();
-                }
-                this.stopDolceInCorso = false;
-              });
-            }
-          },
-        ),
-    );
-    this.subs.add(
+  this.subs.add(
       // Registro questa subscription per poterla disiscrivere in destroy
       this.cambioLinguaService.cambioLinguaAvviato$.subscribe(() => {
         // Reagisco all'avvio del cambio lingua
@@ -525,19 +541,18 @@ export class CaroselloNovitaComponent
         },
       ),
     );
-
-    // STOP DOLCE richiesto da click locandina (prima di navigare)
     this.subs.add(
       this.stopVideoGlobale.osservaRichiesteStop$().subscribe(({ durataMs, done }) => {
-        this.stopDolceImmediato(durataMs).finally(() => done());
+        // mi sottoscrivo alle richieste globali di stop dolce complete che arrivano prima di una navigazione
+        this.stopDolceImmediato(durataMs).finally(() => done()); // eseguo lo stop dolce completo con la durata richiesta e alla fine notifico che ho concluso
       }),
     );
 
     this.subs.add(
       this.stopVideoGlobale.osservaRichiesteFadeAudio$().subscribe(({ durataMs, done }) => {
-        // solo fade audio, video resta visibile fino alla navigazione
-        this.fermaAvvioPendete();
-        this.sfumaGuadagnoVerso(0, durataMs).finally(() => done());
+        // mi sottoscrivo alle richieste che chiedono solo il fade-out dell'audio lasciando il video visibile fino al cambio pagina
+        this.fermaAvvioPendete(); // blocco eventuali avvii trailer ancora pendenti per evitare ripartenze durante il fade audio
+        this.sfumaGuadagnoVerso(0, durataMs).finally(() => done()); // porto gradualmente l'audio a zero con la durata richiesta e poi notifico che ho finito
       }),
     );
   }
@@ -553,27 +568,41 @@ export class CaroselloNovitaComponent
   ngAfterViewInit(): void {
     this.inizializzaPlayerSePronto(); // Provo a inizializzare il player ora che la view dovrebbe essere pronta
   }
-
+/**
+ * Restituisce la lingua corrente da usare per titoli e asset del carosello.
+ * - Prova a leggere la lingua attuale dal servizio di traduzione
+ * - Se qualcosa va storto usa italiano come fallback
+ *
+ * @returns string Codice lingua corrente per i titoli.
+ */
+linguaCorrenteTitoli(): string {
+  try {
+    return this.translate.currentLang || 'it'; // restituisco la lingua corrente del servizio di traduzione oppure it come fallback
+  } catch {
+    return 'it'; // se la lettura fallisce restituisco it come valore sicuro di default
+  }
+}
   /**
-   * Metodo eseguito alla distruzione del componente.
-   *
-   * Interrompe timer e autoscroll, rimuove eventuali listener per lo sblocco audio,
-   * disconnette WebAudio, distrugge il player e chiude tutte le subscription.
-   *
-   * @returns void
-   */
-  ngOnDestroy(): void {
-    this.fermaAvvioPendete(); // Fermo eventuali avvii trailer pendenti (timer/sequence)
-    this.fermaAutoscroll(); // Fermo l'autoscroll e resetto il relativo timer
-      this.tokenHoverTrailer += 1;
-  this.tokenHoverImg += 1;
-  if (this.timerMostraTrailerHover) clearTimeout(this.timerMostraTrailerHover);
-  this.timerMostraTrailerHover = null;
-  this.pausaPerHover = false;
-  this.hoverLocandinaAttivo = false;
-  this.mostraImmagineHover = false;
-  this.hoverTrailerInAttesa = false;
-  try { this.servizioHoverLocandina.emettiUscita(); } catch {}
+ * Metodo eseguito alla distruzione del componente.
+ * - Ferma avvii trailer e autoscroll pendenti
+ * - Invalida token e timer legati all'hover
+ * - Ripulisce gli stati hover ancora attivi
+ * - Notifica l'uscita da eventuali hover locandina esterni
+ *
+ * @returns void
+ */
+ngOnDestroy(): void {
+  this.fermaAvvioPendete(); // fermo eventuali avvii trailer ancora pendenti prima della distruzione del componente
+  this.fermaAutoscroll(); // fermo l'autoscroll e pulisco il relativo timer
+  this.tokenHoverTrailer += 1; // incremento il token del trailer hover per invalidare eventuali avvii vecchi ancora in corso
+  this.tokenHoverImg += 1; // incremento il token dell'immagine hover per invalidare eventuali caricamenti vecchi ancora in corso
+  if (this.timerMostraTrailerHover) clearTimeout(this.timerMostraTrailerHover); // se esiste un timer del trailer hover lo cancello subito
+  this.timerMostraTrailerHover = null; // azzero il riferimento al timer del trailer hover
+  this.pausaPerHover = false; // resetto lo stato di pausa dovuto all'hover
+  this.hoverLocandinaAttivo = false; // resetto il flag che indica un hover locandina attivo
+  this.mostraImmagineHover = false; // mi assicuro di non mostrare piu' l'immagine hover
+  this.hoverTrailerInAttesa = false; // resetto il flag che indica un trailer hover ancora in attesa di partire
+  try { this.servizioHoverLocandina.emettiUscita(); } catch {} // provo a notificare l'uscita da eventuali hover esterni ancora attivi
     try {
       // Provo a rimuovere l'ascolto per lo sblocco audio senza rischiare errori
       this.rimuoviAscoltoSbloccoAudio(); // Tolgo l'event listener di click usato per sbloccare l'audio
@@ -1072,17 +1101,40 @@ inizializzaPlayerSePronto(): void {
   private riprovaTrailerCorrente(token: number): void {
     CaroselloVideoUtility.riprovaTrailerCorrente(this, token); // delego la logica di retry trailer alla utility passando il componente come contesto
   }
- preparaTrailerHoverDopoImmaginePronta(): void {
-   CaroselloHoverTrailerUtility.preparaTrailerHoverDopoImmaginePronta(this);
- }
-   intercetta_tipo_blocco_audio(): void {
-   CaroselloAudioDebugUtility.intercettaTipoBloccoAudio(this);
- }
-   stopDolceImmediato(durataMs: number): Promise<void> {
-   return CaroselloStopUtility.stopDolceImmediato(this, durataMs);
- }
+ /**
+ * Prepara l'avvio del trailer hover solo dopo che l'immagine hover risulta pronta.
+ *
+ * @returns void
+ */
+preparaTrailerHoverDopoImmaginePronta(): void {
+  CaroselloHoverTrailerUtility.preparaTrailerHoverDopoImmaginePronta(this); // delego alla utility la logica che aspetta l'immagine hover pronta prima di avviare il trailer
+}
 
- vaiAllaSchedaCorrente(): Promise<void> {
-   return CaroselloNavigazioneUtility.vaiAllaSchedaCorrente(this);
- }
+/**
+ * Intercetta e analizza il tipo di blocco audio rilevato nel contesto attuale.
+ *
+ * @returns void
+ */
+intercetta_tipo_blocco_audio(): void {
+  CaroselloAudioDebugUtility.intercettaTipoBloccoAudio(this); // delego alla utility di debug la rilevazione del tipo di blocco audio presente
+}
+
+/**
+ * Esegue uno stop dolce immediato del player con la durata richiesta.
+ *
+ * @param durataMs number Durata del fade e dello stop in millisecondi.
+ * @returns Promise<void> Promise risolta quando lo stop dolce e' terminato.
+ */
+stopDolceImmediato(durataMs: number): Promise<void> {
+  return CaroselloStopUtility.stopDolceImmediato(this, durataMs); // delego alla utility la logica completa di stop dolce immediato
+}
+
+/**
+ * Avvia la navigazione verso la scheda relativa al contenuto attualmente corrente nel carosello.
+ *
+ * @returns Promise<void> Promise risolta quando la navigazione richiesta e' stata completata.
+ */
+vaiAllaSchedaCorrente(): Promise<void> {
+  return CaroselloNavigazioneUtility.vaiAllaSchedaCorrente(this); // delego alla utility la navigazione verso la scheda del contenuto corrente
+}
 }

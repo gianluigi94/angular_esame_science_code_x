@@ -77,7 +77,6 @@
      * Ripulisce tutte le sottoscrizioni attive quando
      * il componente viene distrutto.
      *
-     * Evita memory leak e listener pendenti.
      */
     ngOnDestroy(): void {
       // ripulisco le risorse quando il componente viene distrutto da elementi (se presenti)

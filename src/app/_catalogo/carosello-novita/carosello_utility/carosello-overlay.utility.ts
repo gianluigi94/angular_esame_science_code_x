@@ -3,25 +3,24 @@
 import { CaroselloDatiUtility } from './carosello-dati.utility';
 
 export class CaroselloOverlayUtility {
-
   /**
- * Aggiorna i contenuti dell'overlay in base a un indice del carosello (1-based).
- *
- * Converte l'indice 1-based in indice reale 0-based con wrap e ricava:
- * - titolo
- * - immagine titolo
- * - sottotitolo
- * quindi delega l'applicazione dei valori a 'impostaOverlay'.
- *
- * @param ctx Contesto del componente/carousel
- * @param indiceCorrenteNuovo Indice 1-based del carosello
- * @param conTransizione Se true applica transizione (fade/blackout/preload), altrimenti aggiorna subito
- * @returns void
- */
+   * Aggiorna i contenuti dell'overlay in base a un indice del carosello (1-based).
+   *
+   * Converte l'indice 1-based in indice reale 0-based con wrap e ricava:
+   * - titolo
+   * - immagine titolo
+   * - sottotitolo
+   * quindi delega l'applicazione dei valori a 'impostaOverlay'.
+   *
+   * @param ctx Contesto del componente/carousel
+   * @param indiceCorrenteNuovo Indice 1-based del carosello
+   * @param conTransizione Se true applica transizione (fade/blackout/preload), altrimenti aggiorna subito
+   * @returns void
+   */
   static aggiornaOverlayPerIndiceCorrente(
     ctx: any, // Ricevo il componente come contesto per leggere/scrivere stato e chiamare servizi
     indiceCorrenteNuovo: number, // Ricevo l'indice del carosello nel formato interno 1-based
-    conTransizione: boolean // Decido se applicare la transizione (fade/blackout/preload) oppure aggiornare subito
+    conTransizione: boolean, // Decido se applicare la transizione (fade/blackout/preload) oppure aggiornare subito
   ): void {
     // Espongo una funzione che calcola l'indice reale e delega l'impostazione dell'overlay
     const len = ctx.immagini.length; // Leggo quante immagini reali ho a disposizione
@@ -39,36 +38,36 @@ export class CaroselloOverlayUtility {
       nuovoTitolo,
       nuovaImgTitolo,
       nuovoSottotitolo,
-      conTransizione
+      conTransizione,
     );
   }
 
   /**
- * Imposta lo stato dell'overlay aggiornando titolo, immagine titolo e sottotitolo.
- *
- * Se 'conTransizione' e' false:
- * - applica subito i nuovi valori
- * - gestisce visibilita' e segnala readiness dei titoli quando necessario
- *
- * Se 'conTransizione' e' true:
- * - invalida transizioni precedenti tramite token
- * - esegue fade-out e pausa in nero
- * - precarica l'immagine titolo
- * - applica i nuovi valori e riattiva la visibilita' in modo pulito
- *
- * @param ctx Contesto del componente/carousel
- * @param nuovoTitolo Titolo da impostare nell'overlay
- * @param nuovaImgTitolo URL dell'immagine titolo da impostare nell'overlay
- * @param nuovoSottotitolo Sottotitolo da impostare nell'overlay
- * @param conTransizione Se true applica transizione (fade/blackout/preload), altrimenti aggiorna subito
- * @returns void
- */
+   * Imposta lo stato dell'overlay aggiornando titolo, immagine titolo e sottotitolo.
+   *
+   * Se 'conTransizione' e' false:
+   * - applica subito i nuovi valori
+   * - gestisce visibilita' e segnala readiness dei titoli quando necessario
+   *
+   * Se 'conTransizione' e' true:
+   * - invalida transizioni precedenti tramite token
+   * - esegue fade-out e pausa in nero
+   * - precarica l'immagine titolo
+   * - applica i nuovi valori e riattiva la visibilita' in modo pulito
+   *
+   * @param ctx Contesto del componente/carousel
+   * @param nuovoTitolo Titolo da impostare nell'overlay
+   * @param nuovaImgTitolo URL dell'immagine titolo da impostare nell'overlay
+   * @param nuovoSottotitolo Sottotitolo da impostare nell'overlay
+   * @param conTransizione Se true applica transizione (fade/blackout/preload), altrimenti aggiorna subito
+   * @returns void
+   */
   static impostaOverlay(
     ctx: any, // Ricevo il componente come contesto per leggere/scrivere stato e chiamare servizi
     nuovoTitolo: string,
     nuovaImgTitolo: string,
     nuovoSottotitolo: string,
-    conTransizione: boolean
+    conTransizione: boolean,
   ): void {
     // Applico i nuovi valori all'overlay e gestisco visibilita' e readiness
     if (!conTransizione) {
@@ -108,40 +107,39 @@ export class CaroselloOverlayUtility {
 
     const attesaFineFade = new Promise<void>(
       (
-        res // Creo una promise che rappresenta l'attesa della durata del fade
-      ) => setTimeout(res, ctx.durataFadeTitoliMs) // Aspetto i ms del fade titoli prima di procedere
+        res, // Creo una promise che rappresenta l'attesa della durata del fade
+      ) => setTimeout(res, ctx.durataFadeTitoliMs), // Aspetto i ms del fade titoli prima di procedere
     );
     const attesaPausaNero = new Promise<void>(
       (
-        res // Creo una promise che rappresenta la pausa in nero tra i titoli
-      ) => setTimeout(res, ctx.pausaNeroTitoliMs) // Aspetto i ms di pausa nera prima di procedere
+        res, // Creo una promise che rappresenta la pausa in nero tra i titoli
+      ) => setTimeout(res, ctx.pausaNeroTitoliMs), // Aspetto i ms di pausa nera prima di procedere
     );
     const attesaPreload =
       CaroselloDatiUtility.precaricaImmagine(nuovaImgTitolo); // Avvio il preload dell'immagine titolo e ne uso la promise come attesa
 
-   Promise.all([attesaFineFade, attesaPausaNero, attesaPreload]).then(() => {
-  // Attendo che fade, pausa e preload siano tutti completati
-  if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
+    Promise.all([attesaFineFade, attesaPausaNero, attesaPreload]).then(() => {
+      // Attendo che fade, pausa e preload siano tutti completati
+      if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
 
-  ctx.titoloOverlay = nuovoTitolo; // Applico il nuovo titolo all'overlay
-  ctx.imgTitoloOverlay = nuovaImgTitolo; // Applico la nuova immagine titolo all'overlay
-  ctx.sottotitoloOverlay = nuovoSottotitolo; // Applico il nuovo sottotitolo all'overlay
+      ctx.titoloOverlay = nuovoTitolo; // Applico il nuovo titolo all'overlay
+      ctx.imgTitoloOverlay = nuovaImgTitolo; // Applico la nuova immagine titolo all'overlay
+      ctx.sottotitoloOverlay = nuovoSottotitolo; // Applico il nuovo sottotitolo all'overlay
 
-  // FIX: se il preload e' finito, considero il titolo pronto anche se il (load) non scatta
-  // (succede quando lo src resta identico, tipico passando velocemente tra locandine con dati "fittizi")
-  ctx.titoloPronto = true;
 
-  requestAnimationFrame(() => {
-    // Aspetto un frame per applicare la riaccensione della visibilita' in modo pulito
-    if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
-    ctx.inBlackoutTitoli = false; // Esco dal blackout ora che il contenuto e' pronto
+      ctx.titoloPronto = true;
 
-    if (ctx.titoloPronto) {
-      // Ora posso mostrare i testi anche se il load non e' ripartito
-      ctx.titoloVisibile = true; // Rendo di nuovo visibile il titolo
-      ctx.sottotitoloVisibile = true; // Rendo di nuovo visibile il sottotitolo
-    }
-  });
-});
+      requestAnimationFrame(() => {
+        // Aspetto un frame per applicare la riaccensione della visibilita' in modo pulito
+        if (token !== ctx.idCambioTitoli) return; // Esco se nel frattempo e' partita un'altra transizione titoli
+        ctx.inBlackoutTitoli = false; // Esco dal blackout ora che il contenuto e' pronto
+
+        if (ctx.titoloPronto) {
+          // Ora posso mostrare i testi anche se il load non e' ripartito
+          ctx.titoloVisibile = true; // Rendo di nuovo visibile il titolo
+          ctx.sottotitoloVisibile = true; // Rendo di nuovo visibile il sottotitolo
+        }
+      });
+    });
   }
 }

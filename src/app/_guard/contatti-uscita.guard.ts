@@ -1,5 +1,4 @@
-// src/app/_guard/contatti-uscita.guard.ts
-
+// Guard che gestisce l'uscita dalla pagina contatti coordinando animazioni HTML e scena Saturno.
 import { Injectable } from '@angular/core';
 import { CanDeactivate, Router } from '@angular/router';
 import { ContattiComponent } from '../_componenti_comuni/contatti/contatti.component';
@@ -8,6 +7,7 @@ import { SaturnoRouteAnimazioniService } from 'src/app/_servizi_globali/animazio
 import { AnimateService } from 'src/app/_servizi_globali/animazioni_saturno/animate.service';
 import gsap from 'gsap';
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
+
 @Injectable({ providedIn: 'root' })
 export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
 
@@ -15,118 +15,125 @@ export class ContattiUscitaGuard implements CanDeactivate<ContattiComponent> {
     private router: Router,
     private saturnoService: SaturnoService,
     private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
-        private animateService: AnimateService,
+    private animateService: AnimateService,
     private authService: Authservice
   ) {}
 
-
-
-    canDeactivate(
+  /**
+   * Determina se l'uscita dalla pagina contatti puo' proseguire subito
+   * oppure se deve attendere il completamento delle animazioni di uscita.
+   *
+   * Gestisce i casi di ritorno verso login, welcome, catalogo
+   * e il caso generico di navigazione verso altre pagine.
+   *
+   * @param component Istanza del componente contatti in uscita.
+   * @param _currentRoute Snapshot della route corrente.
+   * @param _currentState Stato corrente del router.
+   * @param nextState Stato di destinazione del router.
+   * @returns boolean | Promise<boolean>
+   */
+  canDeactivate(
     component: ContattiComponent,
     _currentRoute: any,
     _currentState: any,
     nextState?: any
   ): boolean | Promise<boolean> {
-        const animaFooterOut = (): Promise<void> => {
+    /**
+     * Anima la chiusura del footer e del suo contenuto testuale.
+     *
+     * @returns Promise<void>
+     */
+    const animaFooterOut = (): Promise<void> => {
       return new Promise((resolve) => {
-        const footer = document.querySelector('footer') as HTMLElement | null;
-        const footerP = document.querySelector('#footer-p') as HTMLElement | null;
+        const footer = document.querySelector('footer') as HTMLElement | null; // recupero il footer dal DOM
+        const footerP = document.querySelector('#footer-p') as HTMLElement | null; // recupero il testo interno del footer
 
-        if (footerP) {
-          gsap.killTweensOf(footerP);
-          gsap.to(footerP, { opacity: 0, duration: 0.18, ease: 'power1.out' });
+        if (footerP) { // controllo se il testo del footer esiste
+          gsap.killTweensOf(footerP); // fermo eventuali tween gia' attivi sul testo
+          gsap.to(footerP, { opacity: 0, duration: 0.18, ease: 'power1.out' }); // faccio svanire il testo del footer
         }
 
-        if (!footer) {
-          resolve();
-          return;
+        if (!footer) { // controllo se il footer non esiste
+          resolve(); // sblocco subito la promise se non ho nulla da animare
+          return; // interrompo il flusso dell'animazione footer
         }
 
-        gsap.killTweensOf(footer);
+        gsap.killTweensOf(footer); // fermo eventuali tween gia' attivi sul footer
         gsap.to(footer, {
-          scaleY: 0,
-          opacity: 0,
-          duration: 0.25,
-          ease: 'power2.in',
-          transformOrigin: 'bottom center',
-          onComplete: () => resolve(),
+          scaleY: 0, // comprimo il footer verticalmente
+          opacity: 0, // faccio svanire il footer
+          duration: 0.25, // imposto la durata dell'animazione
+          ease: 'power2.in', // imposto l'easing di uscita
+          transformOrigin: 'bottom center', // faccio chiudere il footer dal basso
+          onComplete: () => resolve(), // risolvo la promise quando l'animazione e' finita
         });
       });
     };
 
-    const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-    const targetUrl = (nextState?.url as string) || '';
-    const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
+    const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms)); // creo una piccola attesa temporizzata
+    const targetUrl = (nextState?.url as string) || ''; // leggo l'URL di destinazione o uso stringa vuota
+    const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0]; // pulisco l'URL da query string e fragment
 
-        const sonoLoggato = !!this.authService.leggiObsAuth().value?.tk;
-    if (sonoLoggato) {
-      window.dispatchEvent(new CustomEvent('chiudi-dati-personali'));
+    const sonoLoggato = !!this.authService.leggiObsAuth().value?.tk; // controllo se l'utente risulta autenticato
+    if (sonoLoggato) { // verifico se l'utente e' loggato
+      window.dispatchEvent(new CustomEvent('chiudi-dati-personali')); // richiedo la chiusura del pannello dati personali
     }
 
     const animaPannello = (): Promise<void> => {
-      return sonoLoggato ? Promise.resolve() : component.animaUscita();
+      return sonoLoggato ? Promise.resolve() : component.animaUscita(); // animo il pannello solo se non sono loggato
     };
-    // ── Login (torno indietro da contatti a login) ──
-    // ✅ NON animare pannello HTML (niente footer che vola)
-    const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito);
-    if (vaInLogin) {
-      return Promise.all([animaPannello(), animaFooterOut()]).then(() => true);
+
+    const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito); // verifico se la destinazione e' la pagina login
+    if (vaInLogin) { // controllo il ramo di uscita verso login
+      return Promise.all([animaPannello(), animaFooterOut()]).then(() => true); // aspetto le animazioni minime e poi sblocco la navigazione
     }
 
-    // ── Welcome ──
     const vaInBenvenuto =
-      pathPulito === '/' ||
-      pathPulito === '' ||
-      /^\/(it|en)?\/?(benvenuto|welcome)(\/|$)/.test(pathPulito);
+      pathPulito === '/' || // controllo se sto andando alla root
+      pathPulito === '' || // controllo se non ho un path esplicito
+      /^\/(it|en)?\/?(benvenuto|welcome)(\/|$)/.test(pathPulito); // controllo se sto andando nell'area welcome
 
-    if (vaInBenvenuto) {
-      sessionStorage.removeItem('welcome_restore');
-      sessionStorage.removeItem('welcome_scrollTop');
+    if (vaInBenvenuto) { // controllo il ramo di uscita verso welcome
+      sessionStorage.removeItem('welcome_restore'); // rimuovo l'eventuale stato di restore welcome
+      sessionStorage.removeItem('welcome_scrollTop'); // rimuovo l'eventuale posizione scroll salvata della welcome
 
-      const scroller = document.querySelector('.main-scroll') as HTMLElement | null;
-      if (scroller) scroller.scrollTop = 0;
+      const scroller = document.querySelector('.main-scroll') as HTMLElement | null; // recupero l'eventuale contenitore scroll principale
+      if (scroller) scroller.scrollTop = 0; // riporto lo scroll in alto se il contenitore esiste
 
-      const scene = this.saturnoService.getScene();
-      const light = this.saturnoService.getDirectionalLight();
+      const scene = this.saturnoService.getScene(); // recupero la scena 3D corrente
+      const light = this.saturnoService.getDirectionalLight(); // recupero la luce direzionale corrente
 
-      // ✅ Lascia intatto: Saturno + titolo (come ora)
-      this.animateService.setXGif();
-      this.animateService.animateTitoloVersoCentroGlobal(1.25, 0);
+      this.animateService.setXGif(); // ripristino la X in modalita' gif
+      this.animateService.animateTitoloVersoCentroGlobal(1.25, 0); // riporto il titolo verso il centro
 
-      if (scene) {
+      if (scene) { // controllo se la scena 3D esiste
         this.saturnoRouteAnimazioniService.animaVerso(
-          scene, 'WELCOME_ALTO', 1.25, light || undefined
+          scene, 'WELCOME_ALTO', 1.25, light || undefined // animo Saturno verso l'assetto welcome alto
         );
       }
 
-      // ✅ Niente animaUscita pannello: aspetto solo il tempo della transizione globale
-      return Promise.all([animaPannello(), animaFooterOut(), wait(1250)]).then(() => true);
+      return Promise.all([animaPannello(), animaFooterOut(), wait(1250)]).then(() => true); // aspetto pannello, footer e durata transizione globale
     }
 
-    // ── Catalogo ──
-    const vaInCatalogo = /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(pathPulito);
+    const vaInCatalogo = /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(pathPulito); // verifico se la destinazione e' il catalogo
 
-    if (vaInCatalogo) {
-      const scene = this.saturnoService.getScene();
-      const light = this.saturnoService.getDirectionalLight();
+    if (vaInCatalogo) { // controllo il ramo di uscita verso catalogo
+      const scene = this.saturnoService.getScene(); // recupero la scena 3D corrente
+      const light = this.saturnoService.getDirectionalLight(); // recupero la luce direzionale corrente
 
-      // ✅ Lascia intatto: Saturno perfetto (come ora)
-      if (scene) {
+      if (scene) { // controllo se la scena 3D esiste
         this.saturnoRouteAnimazioniService.animaVerso(
-          scene, 'CATALOGO_NASCOSTO', 1.2, light || undefined,
+          scene, 'CATALOGO_NASCOSTO', 1.2, light || undefined, // animo Saturno verso l'assetto nascosto del catalogo
           () => {
-            this.saturnoService.spegniSaturno();
-            this.animateService.pauseClearcoat();
+            this.saturnoService.spegniSaturno(); // spengo Saturno al termine della transizione
+            this.animateService.pauseClearcoat(); // metto in pausa l'effetto clearcoat
           }
         );
       }
 
-      // ✅ Niente animaUscita pannello: aspetto solo la durata scena
-      return Promise.all([animaPannello(), animaFooterOut(), wait(1200)]).then(() => true);
+      return Promise.all([animaPannello(), animaFooterOut(), wait(1200)]).then(() => true); // aspetto pannello, footer e durata scena
     }
 
-    // ── Default ──
-    // ✅ Nessuna animazione HTML
-    return Promise.all([animaPannello(), animaFooterOut()]).then(() => true);
+    return Promise.all([animaPannello(), animaFooterOut()]).then(() => true); // nel caso generico aspetto solo le animazioni HTML minime
   }
 }

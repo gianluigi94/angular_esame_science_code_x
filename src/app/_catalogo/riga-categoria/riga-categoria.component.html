@@ -1,34 +1,54 @@
-<div class="contenitore-carosello" [ngClass]="{ 'piu_visti': categoria === 'i_piu_visti' }">
+<!-- html delle righe categorie, presenti sia per il catalogo e sia nella scheda -->
 
+<!-- classe speciale assegnata ai ' i più visti' -->
+<div
+  class="contenitore-carosello"
+  [ngClass]="{ piu_visti: categoria === 'i_piu_visti' }"
+>
   <div class="intestazione-categoria">
+    <!-- titolo della categoria -->
     <h3 class="titolo-categoria">{{ categoria }}</h3>
- </div>
+  </div>
 
-  <div class="fascia-carosello"
-  [class.sei-colonne]="locandineVisibili === 6"
-  [style.transform]="trasformazioneWrapper">
-
-     <div
-   class="locandina"
-   #elementoLocandina
+  <!-- nel catalogo sono visibili 5 categorie per riga(poi bisogna scrllare orizontalmente), ma nella scheda sono visibili 6 -->
+  <div
+    class="fascia-carosello"
+    [class.sei-colonne]="locandineVisibili === 6"
+    [style.transform]="trasformazioneWrapper"
+  >
+    <!-- contenitore della locandina stessa con metodi all'hover e al click -->
+    <div
+      class="locandina"
+      #elementoLocandina
       *ngFor="let loc of locandine; let i = index; trackBy: tracciaLocandina"
-   (mouseenter)="onMouseEnterLocandina(loc)"
-   (mouseleave)="onMouseLeaveLocandina()"
-   (click)="onClickLocandina(loc)"
- >
-      <span class="numero">{{ (indicePagina * locandineVisibili) + i + 1 }}</span>
+      (mouseenter)="onMouseEnterLocandina(loc)"
+      (mouseleave)="onMouseLeaveLocandina()"
+      (click)="onClickLocandina(loc)"
+    >
+      <!-- numero per 'i piu visti' -->
+      <span class="numero">{{ indicePagina * locandineVisibili + i + 1 }}</span>
 
+      <!-- div che scompare verso l'alto con gsap, anche durante il cambio di locandine -->
       <div class="sparisci">
+        <!-- img con attributi che cambiano per lingua e metodi per il caricamento e segnalazione della sua presenza -->
         <img
-  [src]="loc.src"
-  [attr.alt]="('ui.locandinaimg.alt' | translate) + ' ' + (loc.titolo || loc.src)"
-  [attr.title]="titoloPulitoPerTooltip(('ui.carosello.slide_tooltip.title' | translate)) + ': ' + '&quot;' + (loc.titolo || loc.src) + '&quot;'"
-
-
-  (load)="immagineStabilizzata()"
-  (error)="immagineStabilizzata()"
-/>
-
+          [src]="loc.src"
+          [attr.alt]="
+            ('ui.locandinaimg.alt' | translate) + ' ' + (loc.titolo || loc.src)
+          "
+          [attr.title]="
+            titoloPulitoPerTooltip(
+              'ui.carosello.slide_tooltip.title' | translate
+            ) +
+            ': ' +
+            '&quot;' +
+            (loc.titolo || loc.src) +
+            '&quot;'
+          "
+          (load)="immagineStabilizzata()"
+          (error)="immagineStabilizzata()"
+        />
+        <!-- conenitore che copre la locandina quando cambia la tipologia -->
         <span class="carica_img" [class.visibile]="mostraSpinner">
           <div class="spinner_spinner">
             <span class="ring1"></span>
@@ -36,16 +56,17 @@
           </div>
         </span>
       </div>
+      <!-- contenitore con la possibilità di vedere uno o due bottoni audio(sovrapposti che ne sembi uno), il click su questo contenitore non si propaga sulla locandina sottostante -->
+      <div class="doppio_audio" (click)="$event.stopPropagation()">
+        <!-- richiamo il bottone per attivare / disattivare l'audio vero e proprio -->
+        <app-bottone-audio></app-bottone-audio>
+        <!-- icona che compare solo quando l'audio è bloccato dal solo brawser, ad un click sparisce(assieme all'ativazione dell'audio), attributi che cambiano a seconda della lingua -->
 
-
-    <div class="doppio_audio" (click)="$event.stopPropagation()">
-      <app-bottone-audio></app-bottone-audio>
-      <button
+        <button
           class="bottone-audio-provisorio"
-           [attr.aria-label]="'ui.tooltips.audio.unmute.title' | translate"
-  [attr.title]=" 'ui.tooltips.audio.unmute.title'  | translate"
+          [attr.aria-label]="'ui.tooltips.audio.unmute.title' | translate"
+          [attr.title]="'ui.tooltips.audio.unmute.title' | translate"
           [style.display]="solo_brawser_blocca ? 'inline-flex' : 'none'"
-
         >
           <div class="contenitore-icona" aria-hidden="true">
             <svg
@@ -65,29 +86,35 @@
             <div class="sbarra" aria-hidden="true"></div>
           </div>
         </button>
+      </div>
+      <!-- contenitore per salvare il media tra i preferiti, il click su di lui, non si estende sulla locandina -->
+      <app-bottone-preferiti
+        [titolo]="loc.titolo || loc.src"
+        (click)="$event.stopPropagation()"
+      ></app-bottone-preferiti>
     </div>
-
-    <app-bottone-preferiti [titolo]="loc.titolo || loc.src" (click)="$event.stopPropagation()"></app-bottone-preferiti>
-
-
-    </div>
-
   </div>
-
 </div>
 
+<!-- bottoni sottostanti, attributi che cambiano a secondoa della lingua -->
 <div class="button">
-<button class="bottone-carosello avanti" *ngIf="indicePagina < numeroMassimoPagine"
-  (click)="paginaSuccessiva()"
-  [attr.aria-label]="'ui.carosello_due.scroll.title' | translate"
-  [title]="'ui.carosello_due.scroll.title' | translate">
-  &#9654;
-</button>
+  <button
+    class="bottone-carosello avanti"
+    *ngIf="indicePagina < numeroMassimoPagine"
+    (click)="paginaSuccessiva()"
+    [attr.aria-label]="'ui.carosello_due.scroll.title' | translate"
+    [title]="'ui.carosello_due.scroll.title' | translate"
+  >
+    &#9654;
+  </button>
 
-<button class="bottone-carosello indietro" *ngIf="indicePagina > 0"
-  (click)="paginaPrecedente()"
-  [attr.aria-label]="'ui.carosello_due.scroll.title' | translate"
-  [title]="'ui.carosello_due.scroll.title' | translate">
-  &#9664;
-</button>
+  <button
+    class="bottone-carosello indietro"
+    *ngIf="indicePagina > 0"
+    (click)="paginaPrecedente()"
+    [attr.aria-label]="'ui.carosello_due.scroll.title' | translate"
+    [title]="'ui.carosello_due.scroll.title' | translate"
+  >
+    &#9664;
+  </button>
 </div>

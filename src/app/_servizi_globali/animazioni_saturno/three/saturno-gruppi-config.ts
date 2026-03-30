@@ -1,5 +1,5 @@
 import { ParticleGroupOptions } from 'src/app/_interfacce/saturno.interfacce';
-
+// creao i gruppi di particelle da usare nel service principale di saturno
 export const GRUPPI_CONFIG: ParticleGroupOptions[] = [
   { innerRadius: 1.34,  outerRadius: 1.35,  particleCount: 70,  color: 0xcfcfcf, size: 0.115, rotationSpeed: 0.00315 },
   { innerRadius: 1.54,  outerRadius: 1.65,  particleCount: 206, color: 0x9f8873, size: 0.1,   rotationSpeed: 0.0019  },

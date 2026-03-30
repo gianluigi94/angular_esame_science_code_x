@@ -1,21 +1,20 @@
 // Utility che concentra la logica di navigazione tra le slide, così il carosello si muove in modo prevedibile senza spargere nel componente dettagli di transizione.
 
 export class CaroselloScrollUtility {
-
   /**
- * Porta il carosello alla slide successiva.
- *
- * Esegue il cambio slide passando da 'avviaCambioSlideConFade' per gestire:
- * - fade-out audio e stop/reset video
- * - aggiornamento overlay con transizione
- * - aggiornamento indice, trasformazione e persistenza dell'indice reale
- * - gestione wrap alla prima slide reale quando si supera l'ultima
- * - riavvio trailer (se al top) oppure autoscroll (se non al top)
- *
- * @param ctx Contesto del componente/carousel
- * @param daAutoscroll Indica se l'avanzamento e' stato avviato dall'autoscroll
- * @returns void
- */
+   * Porta il carosello alla slide successiva.
+   *
+   * Esegue il cambio slide passando da 'avviaCambioSlideConFade' per gestire:
+   * - fade-out audio e stop/reset video
+   * - aggiornamento overlay con transizione
+   * - aggiornamento indice, trasformazione e persistenza dell'indice reale
+   * - gestione wrap alla prima slide reale quando si supera l'ultima
+   * - riavvio trailer (se al top) oppure autoscroll (se non al top)
+   *
+   * @param ctx Contesto del componente/carousel
+   * @param daAutoscroll Indica se l'avanzamento e' stato avviato dall'autoscroll
+   * @returns void
+   */
   static vaiAvanti(ctx: any, daAutoscroll: boolean = false): void {
     ctx.avviaCambioSlideConFade(() => {
       // Avvio il cambio slide con fade e poi eseguo la logica di avanzamento
@@ -67,20 +66,19 @@ export class CaroselloScrollUtility {
     });
   }
 
-
   /**
- * Porta il carosello alla slide precedente.
- *
- * Esegue il cambio slide passando da 'avviaCambioSlideConFade' per gestire:
- * - fade-out audio e stop/reset video
- * - aggiornamento overlay con transizione
- * - aggiornamento indice, trasformazione e persistenza dell'indice reale
- * - gestione wrap all'ultima slide reale quando si va prima della prima
- * - riavvio trailer (se al top) oppure autoscroll (se non al top)
- *
- * @param ctx Contesto del componente/carousel
- * @returns void
- */
+   * Porta il carosello alla slide precedente.
+   *
+   * Esegue il cambio slide passando da 'avviaCambioSlideConFade' per gestire:
+   * - fade-out audio e stop/reset video
+   * - aggiornamento overlay con transizione
+   * - aggiornamento indice, trasformazione e persistenza dell'indice reale
+   * - gestione wrap all'ultima slide reale quando si va prima della prima
+   * - riavvio trailer (se al top) oppure autoscroll (se non al top)
+   *
+   * @param ctx Contesto del componente/carousel
+   * @returns void
+   */
   static vaiIndietro(ctx: any): void {
     ctx.avviaCambioSlideConFade(() => {
       // Avvio il cambio slide con fade e poi eseguo la logica di arretramento
@@ -131,21 +129,20 @@ export class CaroselloScrollUtility {
     });
   }
 
-
   /**
- * Seleziona una slide specifica partendo da un indice 0-based.
- *
- * Converte l'indice 0-based nell'indice interno 1-based e, se diverso dall'attuale,
- * esegue il cambio slide passando da 'avviaCambioSlideConFade' per gestire:
- * - fade-out audio e stop/reset video
- * - aggiornamento overlay con transizione
- * - aggiornamento indice, trasformazione e persistenza dell'indice reale
- * - sblocco a fine transizione e riavvio trailer/autoscroll in base allo stato
- *
- * @param ctx Contesto del componente/carousel
- * @param indiceZeroBased Indice 0-based della slide reale da selezionare
- * @returns void
- */
+   * Seleziona una slide specifica partendo da un indice 0-based.
+   *
+   * Converte l'indice 0-based nell'indice interno 1-based e, se diverso dall'attuale,
+   * esegue il cambio slide passando da 'avviaCambioSlideConFade' per gestire:
+   * - fade-out audio e stop/reset video
+   * - aggiornamento overlay con transizione
+   * - aggiornamento indice, trasformazione e persistenza dell'indice reale
+   * - sblocco a fine transizione e riavvio trailer/autoscroll in base allo stato
+   *
+   * @param ctx Contesto del componente/carousel
+   * @param indiceZeroBased Indice 0-based della slide reale da selezionare
+   * @returns void
+   */
   static selezionaIndice(ctx: any, indiceZeroBased: number): void {
     ctx.avviaCambioSlideConFade(() => {
       // Avvio il cambio slide con fade e poi applico lo spostamento

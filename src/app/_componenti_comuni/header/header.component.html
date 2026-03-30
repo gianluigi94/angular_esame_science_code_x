@@ -1,131 +1,139 @@
+<!-- html dell header che è diversa se sono loggato oppure no -->
+
+<!-- una classe paricolare se sono nella scheda, che prende uno sfondo se scrollo -->
 <header [class.solido]="headerSolido" [class.player-aperto]="headerNascosto">
-  <!-- html dell header che è diversa se sono loggato oppure no -->
 
-  <!-- SINISTRA  -->
+  <!-- SINISTRA  SINISTRA  SINISTRA  SINISTRA  SINISTRA  SINISTRA  SINISTRA  SINISTRA  SINISTRA  SINISTRA  SINISTRA  -->
+
   <div class="sinistra">
-<div class="menu_sinistra"
-[style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'">
-
- <!-- torna al catalogo: visibile solo nella scheda -->
-    <a
-    *ngIf="authVisuale?.tk && paginaScheda()"
-  class="torna-catalogo"
-  (click)="onTornaCatalogoClick($event)"
-
->
-
-      <img
-        src="assets/img/pellicola.webp"
-        class="icona-pellicola"
-        alt=""
-        aria-hidden="true"
-      />
-      {{ labelTornaCatalogo }}
-    </a>
-<a *ngIf="playerAperto" class="torna-catalogo torno" (click)="tornaAllaScheda()">
-  {{ isIt ? 'Ritorna alla scheda ⮨' : 'Back to detail ⮨' }}
-</a>
-    <!-- menu "Le nostre categorie" sole se si è loggati, si mostrano al passaggio del mause -->
- <ul
-  class="menu-categorie"
-  *ngIf="authVisuale?.tk && !paginaScheda()"
-  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
-  (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
-  (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
->
-      <!-- voce principale -->
-      <li class="info-categorie">
+    <div
+      class="menu_sinistra"
+      [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+    >
+      <!-- torna al catalogo: visibile solo nella scheda -->
+      <a
+        *ngIf="authVisuale?.tk && paginaScheda()"
+        class="torna-catalogo"
+        (click)="onTornaCatalogoClick($event)"
+      >
         <img
           src="assets/img/pellicola.webp"
           class="icona-pellicola"
           alt=""
           aria-hidden="true"
         />
-        <span class="label-categorie">{{ isIt ? 'Le nostre categorie' : 'Our categories' }}</span>
-        <svg class="icona icona-tendina" viewBox="0 0 24 24">
-          <!-- freccia verso il basso -->
-          <path
-            d="M6 9l6 6 6-6"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-          />
-        </svg>
-      </li>
-
-      <!-- tendina PROVISORIO-->
-      <li class="tendina" [class.aperta]="menuCategorieAperto">
-        <ul class="menu-tendina">
-
-          <li
-            class="separatore-tendina"
-            role="separator"
+        {{ labelTornaCatalogo }}
+      </a>
+      <a
+        *ngIf="playerAperto"
+        class="torna-catalogo torno"
+        (click)="tornaAllaScheda()"
+      >
+        {{ isIt ? "Ritorna alla scheda ⮨" : "Back to detail ⮨" }}
+      </a>
+      <!-- menu "Le nostre categorie" sole se si è loggati, si mostrano al passaggio del mause -->
+      <ul
+        class="menu-categorie"
+        *ngIf="authVisuale?.tk && !paginaScheda()"
+        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
+        (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
+      >
+        <!-- voce principale -->
+        <li class="info-categorie">
+          <img
+            src="assets/img/pellicola.webp"
+            class="icona-pellicola"
+            alt=""
             aria-hidden="true"
-          ></li>
-           <li
- class="voce-tendina"
- *ngFor="let voce of vociCategorieMenu"
- (click)="onSelezionaCategoria(voce)"
- >
- {{ voce.label }}
- </li>
-        </ul>
-
-      </li>
-    </ul>
-
-
-    <!-- menu tipo contenuto: visibile solo da loggati -->
-<ul
-  class="menu-tipo"
-  *ngIf="authVisuale?.tk && !paginaScheda()"
-  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
-  (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
-  (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"
->
-      <!-- voce principale (mostra selezionata) -->
-      <li class="info-tipo">
-        <span class="label-tipo">{{ etichettaTipoSelezionato }}</span>
-        <svg class="icona icona-tendina" viewBox="0 0 24 24">
-          <path
-            d="M6 9l6 6 6-6"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
           />
-        </svg>
-      </li>
+          <span class="label-categorie">{{
+            isIt ? "Le nostre categorie" : "Our categories"
+          }}</span>
+          <svg class="icona icona-tendina" viewBox="0 0 24 24">
+            <!-- freccia verso il basso -->
+            <path
+              d="M6 9l6 6 6-6"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+            />
+          </svg>
+        </li>
 
-      <!-- tendina: mostra le altre 2 opzioni -->
-      <li class="tendina" [class.aperta]="menuTipoAperto">
-        <ul class="menu-tendina">
-          <li
-            class="voce-tendina"
-            *ngFor="let opzione of opzioniTipoNonSelezionate"
-            (click)="onSelezionaTipo(opzione)"
-          >
-            {{ etichettaTipo(opzione) }}
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <app-spinner class="scorolsp" *ngIf="spinnerScroll$ | async"></app-spinner>
-</div>
+        <!-- tendina del provisorio-->
+        <li class="tendina" [class.aperta]="menuCategorieAperto">
+          <ul class="menu-tendina">
+            <li
+              class="separatore-tendina"
+              role="separator"
+              aria-hidden="true"
+            ></li>
+            <li
+              class="voce-tendina"
+              *ngFor="let voce of vociCategorieMenu"
+              (click)="onSelezionaCategoria(voce)"
+            >
+              {{ voce.label }}
+            </li>
+          </ul>
+        </li>
+      </ul>
 
+      <!-- menu tipo contenuto: visibile solo da loggati -->
+      <ul
+        class="menu-tipo"
+        *ngIf="authVisuale?.tk && !paginaScheda()"
+        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
+        (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"
+      >
+        <!-- voce principale (mostra selezionata) -->
+        <li class="info-tipo">
+          <span class="label-tipo">{{ etichettaTipoSelezionato }}</span>
+          <svg class="icona icona-tendina" viewBox="0 0 24 24">
+            <path
+              d="M6 9l6 6 6-6"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+            />
+          </svg>
+        </li>
+
+        <!-- tendina: mostra le altre 2 opzioni -->
+        <li class="tendina" [class.aperta]="menuTipoAperto">
+          <ul class="menu-tendina">
+            <li
+              class="voce-tendina"
+              *ngFor="let opzione of opzioniTipoNonSelezionate"
+              (click)="onSelezionaTipo(opzione)"
+            >
+              {{ etichettaTipo(opzione) }}
+            </li>
+          </ul>
+        </li>
+      </ul>
+      <app-spinner
+        class="scorolsp"
+        *ngIf="spinnerScroll$ | async"
+      ></app-spinner>
+    </div>
   </div>
 
-  <!-- DESTRA -->
+  <!-- DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA DESTRA -->
+
+
   <div class="destra" *ngIf="!playerAperto">
-    <!-- SE LOGGATO: categorie, audio,  lingua, menu utente -->
-     <!-- Questa formula abbreviata dice: prova a leggere il token da authVisuale (se authVisuale esiste) e se il token ha un valore mostrerà il container, altrimenti il template -->
+
     <ng-container *ngIf="authVisuale?.tk; else vistaNonLoggato">
       <!-- Ricerca, al passassagio del mause l'input si apre-->
-    <div
-  class="contenitore-ricerca"
-  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
-  (mouseenter)="!logoutInCorso && (mostraRicerca = true)"
-  (mouseleave)="!logoutInCorso && (mostraRicerca = false)"
->
+      <div
+        class="contenitore-ricerca"
+        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        (mouseenter)="!logoutInCorso && (mostraRicerca = true)"
+        (mouseleave)="!logoutInCorso && (mostraRicerca = false)"
+      >
         <input
           type="text"
           class="ricerca-barra"
@@ -138,6 +146,7 @@
           aria-label="Apri ricerca"
           title="Apri ricerca"
         >
+        <!-- SVG della lente -->
           <svg width="24" height="24" viewBox="0 0 24 24">
             <circle
               cx="11"
@@ -166,9 +175,8 @@
         <button
           class="bottone-audio-provisorio"
           [attr.aria-label]="'ui.tooltips.audio.unmute.title' | translate"
-  [attr.title]=" 'ui.tooltips.audio.unmute.title'  | translate"
+          [attr.title]="'ui.tooltips.audio.unmute.title' | translate"
           [style.display]="solo_brawser_blocca ? 'inline-flex' : 'none'"
-
         >
           <div class="contenitore-icona" aria-hidden="true">
             <svg
@@ -226,12 +234,12 @@
       </div>
 
       <!-- Menu utente -->
-   <ul
-  class="menu-utente"
-  [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
-  (mouseenter)="!logoutInCorso && (menuUtenteAperto = true)"
-  (mouseleave)="!logoutInCorso && (menuUtenteAperto = false)"
->
+      <ul
+        class="menu-utente"
+        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        (mouseenter)="!logoutInCorso && (menuUtenteAperto = true)"
+        (mouseleave)="!logoutInCorso && (menuUtenteAperto = false)"
+      >
         <li class="info-utente">
           <svg class="icona icona-utente" viewBox="0 0 24 24">
             <circle cx="12" cy="8" r="4" fill="currentColor" />
@@ -250,19 +258,30 @@
         </li>
         <li class="tendina" [class.aperta]="menuUtenteAperto">
           <ul class="menu-tendina">
-            <li class="voce-tendina" [innerHTML]="'ui.menu_utente.profilo.label' | translate"></li>
-<li class="voce-tendina" (click)="onClickScollegati()" [innerHTML]="'ui.menu_utente.scollegati.label' | translate"></li>
-<li class="separatore-tendina" role="separator" aria-hidden="true"></li>
-<li class="voce-tendina" (click)="onContattiClick($event)" [innerHTML]="'ui.h2.contatti' | translate"></li>
+            <li
+              class="voce-tendina"
+              [innerHTML]="'ui.menu_utente.profilo.label' | translate"
+            ></li>
+            <li
+              class="voce-tendina"
+              (click)="onClickScollegati()"
+              [innerHTML]="'ui.menu_utente.scollegati.label' | translate"
+            ></li>
+            <li
+              class="separatore-tendina"
+              role="separator"
+              aria-hidden="true"
+            ></li>
+            <li
+              class="voce-tendina"
+              (click)="onContattiClick($event)"
+              [innerHTML]="'ui.h2.contatti' | translate"
+            ></li>
           </ul>
         </li>
       </ul>
     </ng-container>
 
-    <!-- SE NON LOGGATO: SOLO lingua + login -->
-    <!-- SE NON LOGGATO: SOLO lingua + login -->
-    <!-- SE NON LOGGATO: SOLO lingua + login -->
-    <!-- SE NON LOGGATO: SOLO lingua + login -->
     <!-- SE NON LOGGATO: SOLO lingua + login -->
 
     <ng-template #vistaNonLoggato>
@@ -312,7 +331,9 @@
         [routerLink]="pathLoginDaLingua()"
         [class.preparazione]="!headerPronto"
         [class.nascosto]="paginaLogin || paginaIscrizione || pagina404"
-[attr.aria-disabled]="paginaLogin || pagina404 || !headerPronto ? 'true' : null"
+        [attr.aria-disabled]="
+          paginaLogin || pagina404 || !headerPronto ? 'true' : null
+        "
         [innerHTML]="'ui.menu_utente.collegati.label' | translate"
       ></button>
     </ng-template>

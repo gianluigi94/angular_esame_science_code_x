@@ -199,7 +199,7 @@ video-js {
     will-change: opacity, transform;
     backface-visibility: hidden;
 
-    &.nascosto { // quando i non si vedono per poter creare un animazione
+    &.nascosto { // quando non si vedono per poter creare un animazione
       opacity: 0;
       transform: translatex(-28px);
       transition: opacity 0.2s ease, transform 0.2s ease;

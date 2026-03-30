@@ -5,7 +5,7 @@
   [class.offuscato]="mostraVideo"
   [class.non-top]="!alTop"
 >
-<!-- contenitore che contiene la diapositiva che scrolla -->
+  <!-- contenitore che contiene la diapositiva che scrolla -->
   <div
     class="scorrimento-carosello"
     [style.transform]="stileTrasformazione"
@@ -13,11 +13,8 @@
       transizioneAttiva ? 'transform 0.5s ease-in-out' : 'none'
     "
   >
-
-
-
-  <!-- immagine con alt dinamico alla lingua -->
-   <!-- CLONE DELL'ULTIMA SLIDE PER EFFETTO INFINITO -->
+    <!-- immagine con alt dinamico alla lingua -->
+    <!-- CLONE DELL'ULTIMA SLIDE PER EFFETTO INFINITO -->
     <div class="diapositiva">
       <img
         aria-hidden="true"
@@ -26,12 +23,12 @@
           'ui.carosello.altSfondo'
             | translate
               : {
-                  titolo: titoliAlt[immagini.length - 1] || ''
+                  titolo: titoliAlt[immagini.length - 1] || '',
                 }
         "
       />
     </div>
-  <!-- immagine con alt dinamico alla lingua -->
+    <!-- immagine con alt dinamico alla lingua -->
 
     <div class="diapositiva" *ngFor="let immagine of immagini; let i = index">
       <img
@@ -42,13 +39,13 @@
           'ui.carosello.altSfondo'
             | translate
               : {
-                  titolo: titoliAlt[i] || ''
+                  titolo: titoliAlt[i] || '',
                 }
         "
       />
     </div>
-  <!-- immagine con alt dinamico alla lingua -->
-   <!-- CLONE DELLA PRIMA SLIDE PER EFFETTO INFINITO -->
+    <!-- immagine con alt dinamico alla lingua -->
+    <!-- CLONE DELLA PRIMA SLIDE PER EFFETTO INFINITO -->
 
     <div class="diapositiva">
       <img
@@ -58,63 +55,57 @@
           'ui.carosello.altSfondo'
             | translate
               : {
-                  titolo: titoliAlt[0] || ''
+                  titolo: titoliAlt[0] || '',
                 }
         "
       />
     </div>
   </div>
 
-    <div
-   class="overlay-hover"
-   [class.visibile]="mostraImmagineHover && immagineHoverPronta"
-   aria-hidden="true"
- >
-    <img
- [src]="immagineHoverFissa"
- alt=""
- />
- </div>
+  <!-- contenitore con immagine che compare quando faccio hover su una locandina e serve a dare il tempo al player di far partire il video -->
+  <div
+    class="overlay-hover"
+    [class.visibile]="mostraImmagineHover && immagineHoverPronta"
+    aria-hidden="true"
+  >
+    <img [src]="immagineHoverFissa" alt="" />
+  </div>
 
   <!-- comanidi del carosello che cambiano stile se non sono in cima -->
   <div
-  class="comandi-carosello"
-  [class.rimpiciolito_salito_destra]="!alTop"
-  [class.nascosto-per-hover]="hoverLocandinaAttivo"
->
+    class="comandi-carosello"
+    [class.rimpiciolito_salito_destra]="!alTop"
+    [class.nascosto-per-hover]="hoverLocandinaAttivo"
+  >
     <div class="riga-alta">
       <!-- i bottoni hanno aria e title dinamici con la locandina e la lingua  -->
-<!-- bottoni indietro  -->
+      <!-- bottoni indietro  -->
       <button
         (click)="vaiIndietro()"
         [disabled]="scorrimentoInCorso"
         [attr.aria-label]="
-          'ui.carosello.prev_btn.title'
-            | translate : { titolo: getPrevTitolo() }
+          'ui.carosello.prev_btn.title' | translate: { titolo: getPrevTitolo() }
         "
         [attr.title]="
-          'ui.carosello.prev_btn.title'
-            | translate : { titolo: getPrevTitolo() }
+          'ui.carosello.prev_btn.title' | translate: { titolo: getPrevTitolo() }
         "
       >
         &#9664;
       </button>
-<!-- scritta novità dinamica con la lingua -->
+      <!-- scritta novità dinamica con la lingua -->
       <span
         class="etichetta-novita"
         [innerHTML]="'ui.carosello.novita.label' | translate"
       ></span>
-<!-- bottone per andare avanti -->
+      <!-- bottone per andare avanti -->
       <button
         (click)="vaiAvanti()"
         [disabled]="scorrimentoInCorso"
         [attr.aria-label]="
-          'ui.carosello.next_btn.title'
-            | translate : { titolo: getNextTitolo() }
+          'ui.carosello.next_btn.title' | translate: { titolo: getNextTitolo() }
         "
         [attr.title]="
-          'ui.carosello.next_btn.title'
-            | translate : { titolo: getNextTitolo() }
+          'ui.carosello.next_btn.title' | translate: { titolo: getNextTitolo() }
         "
       >
         &#9654;
@@ -123,7 +114,7 @@
 
     <div class="riga-bassa">
       <!-- bottoni per andare una slide precisa -->
-       <!-- aria e tilte dinamici con il cambio lingua e della slide -->
+      <!-- aria e tilte dinamici con il cambio lingua e della slide -->
       <button
         *ngFor="let _ of immagini; let i = index"
         [class.attivo]="i + 1 === indiceCorrente"
@@ -133,14 +124,14 @@
           'ui.carosello.slide.label'
             | translate
               : {
-                  titolo: titoliAlt[i] || ''
+                  titolo: titoliAlt[i] || '',
                 }
         "
         [attr.title]="
           'ui.carosello.slide.label'
             | translate
               : {
-                  titolo: titoliAlt[i] || ''
+                  titolo: titoliAlt[i] || '',
                 }
         "
       ></button>
@@ -148,9 +139,9 @@
   </div>
   <!-- sfumatura css -->
   <span class="sfumatura"></span>
-     <app-barra-avanzamento
+  <!-- richiamo il componente della barra di avanzamento e gli passo le giuste configurazioni per i trailer -->
+  <app-barra-avanzamento
     [visibile]="mostraVideo || pausaPerHover"
-
     [percentualeAvanzamento]="barraAvanzamentoService.percentualeAvanzamento"
     [percentualeBuffer]="barraAvanzamentoService.percentualeBuffer"
     [durataTotaleMs]="barraAvanzamentoService.durataTotaleMs"
@@ -182,26 +173,25 @@
         [src]="imgTitoloOverlay"
         (load)="segnalaTitoloCaricato()"
         [attr.alt]="
-          'ui.carosello.altTitolo' | translate : { titolo: titoloOverlay || '' }
+          'ui.carosello.altTitolo' | translate: { titolo: titoloOverlay || '' }
         "
       />
     </div>
-<!-- sottotitolo che cambia con il cambio della slide e della lingua, entra con animazione  -->
+    <!-- sottotitolo che cambia con il cambio della slide e della lingua, entra con animazione  -->
     <p class="sottotitolo" [class.nascosto]="!sottotitoloVisibile">
       {{ sottotitoloOverlay }}
       <!-- span play con title dinamico alla lingua -->
-     <span
-  class="play"
-    [class.nascosto-per-hover]="hoverLocandinaAttivo || !alTop"
-(click)="vaiAllaSchedaCorrente()"
-  [attr.title]="
-    'ui.carosello.slide_tooltip.title'
-      | translate : { titolo: titoloOverlay || '' }
-  "
->
-  &#9658;
-</span>
-
+      <span
+        class="play"
+        [class.nascosto-per-hover]="hoverLocandinaAttivo || !alTop"
+        (click)="vaiAllaSchedaCorrente()"
+        [attr.title]="
+          'ui.carosello.slide_tooltip.title'
+            | translate: { titolo: titoloOverlay || '' }
+        "
+      >
+        &#9658;
+      </span>
     </p>
   </div>
 </div>
