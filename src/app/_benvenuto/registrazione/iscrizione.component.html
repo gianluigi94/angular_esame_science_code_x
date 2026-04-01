@@ -386,14 +386,15 @@
 
         <!-- se il paese NON è Italia: semplice input testuale per la città estera -->
         <div class="campo-form" *ngIf="!s1.isItalia">
-          <input
-            type="text"
-            placeholder=" "
-            id="citta_nascita"
-            formControlName="citta"
-            [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['citta'].invalid && (sf.reactiveForm.controls['citta'].touched || formInviato) }"
-            (input)="s1.comuneValore = $any($event.target).value"
-          />
+         <input
+  type="text"
+  placeholder=" "
+  id="citta_nascita"
+  formControlName="citta"
+  spellcheck="false"
+  [ngClass]="{ 'is-invalid': sf.reactiveForm.controls['citta'].invalid && (sf.reactiveForm.controls['citta'].touched || formInviato) }"
+  (input)="s1.comuneValore = $any($event.target).value"
+/>
           <!-- label flottante per la città estera -->
           <label
             for="citta_nascita"
@@ -605,19 +606,20 @@
 
         <!-- se il domicilio NON è in Italia: semplice input testuale per la città estera -->
         <div class="campo-form" *ngIf="!s2.isItaliaDom">
-          <input
-            type="text"
-            placeholder=" "
-            id="citta_dom"
-            formControlName="cittaD"
-            [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cittaD'].invalid && (sf.reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }"
-          />
+         <input
+  type="text"
+  placeholder=" "
+  id="citta_dom"
+  formControlName="cittaD"
+  spellcheck="false"
+  [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cittaD'].invalid && (sf.reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }"
+/>
           <!-- label flottante città di domicilio estera -->
           <label
             for="citta_dom"
             [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['cittaD'].invalid && (sf.reactiveFormStep2.controls['cittaD'].touched || formInviatoStep2) }"
           >
-            {{ 'ui.registrazione.step2.citta_domicilio.input_label' | translate }}
+            {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
           </label>
         </div>
 
