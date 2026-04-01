@@ -1,6 +1,13 @@
 // componente che gestisce tutto il flusso della registrazione multi-step: caricamento dati iniziali, animazioni tra step, controllo password, scelta piano finale e raccolta dei dati conclusivi
 
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  HostListener,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import gsap from 'gsap';
 import { UtilityService } from '../login/_login_service/login_utility.service';
@@ -12,7 +19,13 @@ import { IscrizioneFormService } from './iscrizione_services/iscrizione-form.ser
 import { IscrizioneStep1Service } from './iscrizione_services/iscrizione-step1.service';
 import { IscrizioneStep2Service } from './iscrizione_services/iscrizione-step2.service';
 import { calcolaRobustezzaPassword } from './iscrizione_helpers/password.helper';
-import { animaEntrata, animaEntrataStep2, animaUscita, animaSfocatura, resetElementiStep } from './iscrizione_helpers/animazioni.helper';
+import {
+  animaEntrata,
+  animaEntrataStep2,
+  animaUscita,
+  animaSfocatura,
+  resetElementiStep,
+} from './iscrizione_helpers/animazioni.helper';
 import { Datepicker } from 'vanillajs-datepicker';
 import it from 'vanillajs-datepicker/locales/it';
 
@@ -311,30 +324,30 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     const f1 = this.forms.reactiveForm.value; // leggo tutti i valori raccolti nel primo step
     const f2 = this.forms.reactiveFormStep2.value; // leggo tutti i valori raccolti nel secondo step
     const f3 = this.forms.reactiveFormStep3.value; // leggo tutti i valori raccolti nel terzo step
-    Promise.all([this.sha512(this.emailUtente), this.sha512(f3.password)]) // calcolo in parallelo l'hash dell'email e della password
-      .then(([emailHash, passwordHash]) => {
-        console.log('=== DATI REGISTRAZIONE ===', {
-          nome: f1.nome,
-          cognome: f1.cognome, // dati anagrafici base
-          dataNascita: `${f1.dataGg}/${f1.dataMm}/${f1.dataAaaa}`, // data di nascita ricomposta in formato testuale
-          sesso: f1.sesso,
-          paeseNascita: f1.paese, // sesso e paese di nascita
-          comuneNascita: f1.comune || f1.citta,
-          codiceFiscale: f1.codiceFiscale, // luogo di nascita e codice fiscale
-          paeseDomicilio: f2.nazioneD,
-          comuneDomicilio: f2.comuneD || f2.cittaD, // dati del domicilio
-          via: f2.via,
-          civico: f2.civico,
-          provinciaD: f2.provinciaD,
-          cap: f2.cap,
-          dettagli: f2.dettagli, // dettagli indirizzo
-          telefono: f3.telefono,
-          emailSecondaria: f3.emailSecondaria, // recapiti aggiuntivi
-          piano: this.pianoSelezionato, // piano scelto nello step finale
-          email_sha512: emailHash,
-          password_sha512: passwordHash, // hash SHA-512 di email e password
-        });
-      });
+    const emailHash = UtilityService.hash(this.emailUtente);
+    const passwordHash = UtilityService.hash(f3.password);
+
+    console.log('=== DATI REGISTRAZIONE ===', {
+      nome: f1.nome,
+      cognome: f1.cognome,
+      dataNascita: `${f1.dataGg}/${f1.dataMm}/${f1.dataAaaa}`,
+      sesso: f1.sesso,
+      paeseNascita: f1.paese,
+      comuneNascita: f1.comune || f1.citta,
+      codiceFiscale: f1.codiceFiscale,
+      paeseDomicilio: f2.nazioneD,
+      comuneDomicilio: f2.comuneD || f2.cittaD,
+      via: f2.via,
+      civico: f2.civico,
+      provinciaD: f2.provinciaD,
+      cap: f2.cap,
+      dettagli: f2.dettagli,
+      telefono: f3.telefono,
+      emailSecondaria: f3.emailSecondaria,
+      piano: this.pianoSelezionato,
+      email_sha512: emailHash,
+      password_sha512: passwordHash,
+    });
   }
 
   /**
@@ -469,11 +482,4 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param testo string Testo da trasformare in hash.
    * @returns Promise<string> Hash SHA-512 in formato esadecimale.
    */
-  private async sha512(testo: string): Promise<string> {
-    const data = new TextEncoder().encode(testo); // converto il testo in un array di byte UTF-8
-    const hashBuffer = await crypto.subtle.digest('SHA-512', data); // calcolo il digest SHA-512 usando la Web Crypto API
-    return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, '0')) // trasformo ogni byte in una coppia esadecimale
-      .join(''); // unisco tutto in una singola stringa finale
-  }
 }

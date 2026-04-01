@@ -318,6 +318,10 @@ export class CaroselloAudioUtility {
    * Disconnette eventuali nodi precedenti, crea AudioContext se mancante e collega:
    * sorgente -> gain -> destinazione.
    *
+   * @link https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
+   * @link https://developer.mozilla.org/en-US/docs/Web/API/GainNode
+   * @link https://developer.mozilla.org/en-US/docs/Web/API/MediaElementAudioSourceNode
+   *
    * @param ctx Contesto del carosello
    * @param elVideo Elemento video reale da collegare
    * @returns void

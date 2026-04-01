@@ -1,4 +1,4 @@
-// services dove centralizzo la chiamate ami
+// services dove centralizzo la chiamate api
 import { Injectable } from '@angular/core';
 import { ChiamataHTTP } from '../_type/chiamateHTTP.type';
 import { HttpClient } from '@angular/common/http';
@@ -11,16 +11,16 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   /**
- * Costruisce l'URL completo di una risorsa API a partire da server, versione e segmenti dell'endpoint.
- *
- * Converte i segmenti in stringa e li unisce con '/' per ottenere un URL del tipo:
- *
- * @param risorsa Lista di segmenti dell'endpoint (stringhe o numeri) da concatenare.
- * @returns URL completo della risorsa.
- */
+   * Costruisce l'URL completo di una risorsa API a partire da server, versione e segmenti dell'endpoint.
+   *
+   * Converte i segmenti in stringa e li unisce con '/' per ottenere un URL del tipo:
+   *
+   * @param risorsa Lista di segmenti dell'endpoint (stringhe o numeri) da concatenare.
+   * @returns URL completo della risorsa.
+   */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    const server: string = 'http://localhost/science_codex/public/api'
+    const server: string = 'http://localhost/science_codex/public/api';
     // const server: string = 'http://192.168.1.38/science_codex/public/api';
     // const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
@@ -44,8 +44,9 @@ export class ApiService {
   protected richiestaGenerica(
     risorsa: (string | number)[], // Ricevo i pezzi dell'endpoint
     tipo: ChiamataHTTP, // Ricevo il tipo di chiamata
-    parametri: Object | null = null // Ricevo eventuali parametri query (opzionali)
-  ): Observable<IRispostaServer> { // Dico che ritorno un Observable con la risposta del server
+    parametri: Object | null = null, // Ricevo eventuali parametri query (opzionali)
+  ): Observable<IRispostaServer> {
+    // Dico che ritorno un Observable con la risposta del server
     const url = this.calcolaRisorsa(risorsa); // Costruisco l'URL completo usando i segmenti della risorsa
 
     switch (
@@ -61,32 +62,32 @@ export class ApiService {
   }
 
   /**
- * Recupera l'elenco delle categorie (tipologie indirizzi).
- *
- * @returns Observable con la risposta del server contenente l'elenco categorie.
- */
+   * Recupera l'elenco delle categorie (tipologie indirizzi).
+   *
+   * @returns Observable con la risposta del server contenente l'elenco categorie.
+   */
   public getTipologieIndirizzi(): Observable<IRispostaServer> {
     const risorsa: string[] = ['categorie']; // Definisco l'endpoint da chiamare
     return this.richiestaGenerica(risorsa, 'GET'); // Riutilizzo richiesta generica per fare la GET
   }
 
   /**
- * Recupera una categoria specifica tramite id.
- *
- * @param id Identificativo della categoria.
- * @returns Observable con la risposta del server contenente i dettagli della categoria.
- */
+   * Recupera una categoria specifica tramite id.
+   *
+   * @param id Identificativo della categoria.
+   * @returns Observable con la risposta del server contenente i dettagli della categoria.
+   */
   public getTipologiaIndirizzo(id: string): Observable<IRispostaServer> {
     const risorsa: string[] = ['categorie', id]; // Definisco l'endpoint includendo l'id
     return this.richiestaGenerica(risorsa, 'GET'); // Riutilizzo la richiesta generica per fare la GET
   }
 
   /**
- * Esegue la fase 1 del login recuperando i dati necessari  a partire dall'hash utente.
- *
- * @param hashUtente Hash dell'utente normalizzato.
- * @returns Observable con la risposta del server della fase 1.
- */
+   * Esegue la fase 1 del login recuperando i dati necessari  a partire dall'hash utente.
+   *
+   * @param hashUtente Hash dell'utente normalizzato.
+   * @returns Observable con la risposta del server della fase 1.
+   */
   public getLoginFase1(hashUtente: string): Observable<IRispostaServer> {
     //metodo per fare la prima chiamata di login usando solo l'hash utente
     const risorsa: string[] = ['accedi', hashUtente]; // Imposto l'endpoint /accedi/{hashUtente}
@@ -95,156 +96,159 @@ export class ApiService {
   }
 
   /**
- * Esegue la fase 2 del login usando hash utente, password mascherata e opzione 'resta collegato'.
- *
- * Se 'collegato' è true aggiunge il parametro query 'collegato=1'.
- *
- * @param hashUtente Hash dell'utente normalizzato.
- * @param hashPassword Hash/password mascherata calcolata lato client.
- * @param collegato Se true richiede una sessione persistente.
- * @returns Observable con la risposta del server della fase 2.
- */
+   * Esegue la fase 2 del login usando hash utente, password mascherata e opzione 'resta collegato'.
+   *
+   * Se 'collegato' è true aggiunge il parametro query 'collegato=1'.
+   *
+   * @param hashUtente Hash dell'utente normalizzato.
+   * @param hashPassword Hash/password mascherata calcolata lato client.
+   * @param collegato Se true richiede una sessione persistente.
+   * @returns Observable con la risposta del server della fase 2.
+   */
   public getLoginFase2(
     hashUtente: string, // Ricevo l'hash dell'utente
     hashPassword: string, // Ricevo l'hash della password (o password mascherata)
-    collegato: boolean // Ricevo se devo restare collegato
-  ): Observable<IRispostaServer> { // Dico che ritorno un Observable con la risposta del server
+    collegato: boolean, // Ricevo se devo restare collegato
+  ): Observable<IRispostaServer> {
+    // Dico che ritorno un Observable con la risposta del server
     const risorsa: string[] = ['accedi', hashUtente, hashPassword]; // Imposto l'endpoint /accedi/{hashUtente}/{hashPassword}
     const parametri = collegato ? { collegato: '1' } : {}; // Aggiungo il parametro collegato=1  se richiesto in querystring
     return this.richiestaGenerica(risorsa, 'GET', parametri); // Faccio la GET passando anche i parametri
   }
 
   /**
- * Esegue il login completo a due fasi tramite pipeline RxJS.
- *
- * Flusso:
- * - Normalizza l'utente e calcola gli hash.
- * - Fase 1: richiede al server i dati per calcolare la password mascherata  'sale'.
- * - Calcola la password mascherata con 'UtilityService.nascondiPassword'.
- * - Fase 2: invia hash utente + password mascherata e l'opzione 'restaCollegato'.
- *
- * @param utente Username inserito dall'utente.
- * @param password Password inserita dall'utente.
- * @param restaCollegato Se true richiede una sessione persistente.
- * @returns Observable con la risposta del server del login.
- */
+   * Esegue il login completo a due fasi tramite pipeline RxJS.
+   *
+   * Flusso:
+   * - Normalizza l'utente e calcola gli hash.
+   * - Fase 1: richiede al server i dati per calcolare la password mascherata  'sale'.
+   * - Calcola la password mascherata con 'UtilityService.nascondiPassword'.
+   * - Fase 2: invia hash utente + password mascherata e l'opzione 'restaCollegato'.
+   *
+   * @param utente Username inserito dall'utente.
+   * @param password Password inserita dall'utente.
+   * @param restaCollegato Se true richiede una sessione persistente.
+   * @returns Observable con la risposta del server del login.
+   */
   public login(
     utente: string, // Ricevo l'username inserito
     password: string, // Ricevo la password inserita
-    restaCollegato: boolean // Ricevo se l'utente vuole restare collegato
-  ): Observable<IRispostaServer> {  // Ritorno un Observable con la risposta del server
+    restaCollegato: boolean, // Ricevo se l'utente vuole restare collegato
+  ): Observable<IRispostaServer> {
+    // Ritorno un Observable con la risposta del server
     const utenteNorm = utente.trim().toLowerCase(); // Normalizzo l'utente togliendo spazi e mettendo in minuscolo
     const hashUtente: string = UtilityService.hash(utenteNorm); // Calcolo l'hash dell'utente normalizzato
     const hashPassword: string = UtilityService.hash(password); // Calcolo l'hash della password
 
-    const controllo$ = this.getLoginFase1(hashUtente).pipe( // Avvio la fase 1 e costruisco la pipeline RxJS
+    const controllo$ = this.getLoginFase1(hashUtente).pipe(
+      // Avvio la fase 1 e costruisco la pipeline RxJS
       take(1), // Prendo solo la prima risposta e poi chiudo
       tap((x) => console.log('DATI', x)), // Loggo i dati ricevuti per debug
-      map((rit: IRispostaServer): string => {  // Trasformo la risposta della fase 1 nella password 'nascosta'
+      map((rit: IRispostaServer): string => {
+        // Trasformo la risposta della fase 1 nella password 'nascosta'
         const sale: string = rit.data.sale; // Estraggo il sale dalla risposta del server
-        const passwordNascosta = UtilityService.nascondiPassword( // Calcolo una password mascherata usando hash e sale
+        const passwordNascosta = UtilityService.nascondiPassword(
+          // Calcolo una password mascherata usando hash e sale
           hashPassword, // Passo l'hash della password
-          sale // Passo il sale del server
+          sale, // Passo il sale del server
         );
         return passwordNascosta; // Ritorno la password mascherata come output della map
       }),
-      concatMap((passwordNascosta: string) => { // Passo alla fase 2 aspettando che la fase 1 sia completata
+      concatMap((passwordNascosta: string) => {
+        // Passo alla fase 2 aspettando che la fase 1 sia completata
         return this.getLoginFase2(hashUtente, passwordNascosta, restaCollegato); // Chiamo la fase 2 con utente, password e opzione resta collegato
-      })
+      }),
     );
 
     return controllo$;
   }
 
   /**
- * Recupera l'elenco dei film.
- *
- * @returns Observable con la risposta del server contenente l'elenco film.
- */
+   * Recupera l'elenco dei film.
+   *
+   * @returns Observable con la risposta del server contenente l'elenco film.
+   */
   public getElencoFilm(): Observable<IRispostaServer> {
     const risorsa: string[] = ['film']; // Imposto l'endpoint /film
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
 
   /**
- * Recupera l'elenco delle serie.
- *
- * @returns Observable con la risposta del server contenente l'elenco serie.
- */
+   * Recupera l'elenco delle serie.
+   *
+   * @returns Observable con la risposta del server contenente l'elenco serie.
+   */
   public getElencoSerie(): Observable<IRispostaServer> {
     const risorsa: string[] = ['serie']; // Imposto l'endpoint /serie
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
 
   /**
- * Recupera l'elenco delle novità.
- *
- * @returns Observable con la risposta del server contenente le novità.
- */
+   * Recupera l'elenco delle novità.
+   *
+   * @returns Observable con la risposta del server contenente le novità.
+   */
   getVnovita(): Observable<IRispostaServer> {
     const risorsa: string[] = ['novita']; // Imposto l'endpoint /novita
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
 
   /**
- * Esegue il logout lato server.
- *
- * @returns Observable con la risposta del server del logout.
- */
+   * Esegue il logout lato server.
+   *
+   * @returns Observable con la risposta del server del logout.
+   */
   public logout(): Observable<IRispostaServer> {
     const risorsa: (string | number)[] = ['logout']; // Imposto l'endpoint /logout
     return this.richiestaGenerica(risorsa, 'GET'); // Chiamo la GET di logout
   }
 
- /**
- * Scarica le traduzioni per una specifica lingua.
- *
- * Chiama l'endpoint 'traduzioni-lingua/<codiceLingua>' e ritorna un dizionario chiave -> traduzione.
- * non vuole Irisposta server voglio solo chiave->valore
- * @param codiceLingua Codice lingua.
- * @returns Observable con la mappa delle traduzioni.
- */
-  public getTraduzioniLingua( codiceLingua: string ): Observable<Record<string, string>> {
+  /**
+   * Scarica le traduzioni per una specifica lingua.
+   *
+   * Chiama l'endpoint 'traduzioni-lingua/<codiceLingua>' e ritorna un dizionario chiave -> traduzione.
+   * non vuole Irisposta server voglio solo chiave->valore
+   * @param codiceLingua Codice lingua.
+   * @returns Observable con la mappa delle traduzioni.
+   */
+  public getTraduzioniLingua(
+    codiceLingua: string,
+  ): Observable<Record<string, string>> {
     const url = this.calcolaRisorsa(['traduzioni-lingua', codiceLingua]); // Costruisco l'URL /traduzioni-lingua/{codiceLingua}
     return this.http.get<Record<string, string>>(url); // Faccio la GET diretta e ritorno un dizionario chiave->traduzione
   }
 
-
-
   /**
- * Recupera l'elenco delle categorie (per righe catalogo).
- *
- * @returns Observable con la risposta del server contenente l'elenco categorie.
- */
+   * Recupera l'elenco delle categorie (per righe catalogo).
+   *
+   * @returns Observable con la risposta del server contenente l'elenco categorie.
+   */
   public getCategorieCatalogo(): Observable<IRispostaServer> {
     const risorsa: string[] = ['categorie']; // Imposto l'endpoint /categorie
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
 
-
-
-/**
- * Recupera l'elenco delle traduzioni categorie.
- *
- * @returns Observable con la risposta del server contenente l'elenco traduzioni categorie.
- */
+  /**
+   * Recupera l'elenco delle traduzioni categorie.
+   *
+   * @returns Observable con la risposta del server contenente l'elenco traduzioni categorie.
+   */
   public getCategorieTraduzioni(): Observable<IRispostaServer> {
     const risorsa: string[] = ['categorie-traduzioni']; // Imposto l'endpoint /categorie-traduzioni
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
 
-
-/**
- * Recupera le locandine per categorie (vista categorie-locandine).
- *
- * @returns Observable con la risposta del server contenente id_categoria, img_locandina, lingua.
- */
+  /**
+   * Recupera le locandine per categorie (vista categorie-locandine).
+   *
+   * @returns Observable con la risposta del server contenente id_categoria, img_locandina, lingua.
+   */
   public getCategorieLocandine(): Observable<IRispostaServer> {
     const risorsa: string[] = ['categorie-locandine']; // Imposto l'endpoint /categorie-locandine
     return this.richiestaGenerica(risorsa, 'GET'); // Faccio la GET
   }
 
-   /**
+  /**
    * Recupera le righe del catalogo filtrate per lingua e tipo con paginazione.
    *
    * @param lingua Codice lingua da usare nella richiesta.
@@ -257,7 +261,7 @@ export class ApiService {
     lingua: string,
     tipo: string,
     limit: number = 4,
-    offset: number = 0
+    offset: number = 0,
   ): Observable<IRispostaServer> {
     const risorsa: string[] = ['catalogo-righe']; // imposto l'endpoint dedicato alle righe catalogo
     const parametri = {
@@ -298,9 +302,15 @@ export class ApiService {
    * @param lingua Codice lingua da richiedere.
    * @returns Observable<IRispostaServer>
    */
-  public getFilmTraduzioni(idFilm: number | string, lingua: string): Observable<IRispostaServer> {
+  public getFilmTraduzioni(
+    idFilm: number | string,
+    lingua: string,
+  ): Observable<IRispostaServer> {
     const risorsa: string[] = ['film-traduzioni']; // imposto l'endpoint delle traduzioni film
-    return this.richiestaGenerica(risorsa, 'GET', { id_film: String(idFilm), lingua }); // faccio la GET delle traduzioni film passando id e lingua
+    return this.richiestaGenerica(risorsa, 'GET', {
+      id_film: String(idFilm),
+      lingua,
+    }); // faccio la GET delle traduzioni film passando id e lingua
   }
 
   /**
@@ -310,9 +320,15 @@ export class ApiService {
    * @param lingua Codice lingua da richiedere.
    * @returns Observable<IRispostaServer>
    */
-  public getSerieTraduzioni(idSerie: number | string, lingua: string): Observable<IRispostaServer> {
+  public getSerieTraduzioni(
+    idSerie: number | string,
+    lingua: string,
+  ): Observable<IRispostaServer> {
     const risorsa: string[] = ['serie-traduzioni']; // imposto l'endpoint delle traduzioni serie
-    return this.richiestaGenerica(risorsa, 'GET', { id_serie: String(idSerie), lingua }); // faccio la GET delle traduzioni serie passando id e lingua
+    return this.richiestaGenerica(risorsa, 'GET', {
+      id_serie: String(idSerie),
+      lingua,
+    }); // faccio la GET delle traduzioni serie passando id e lingua
   }
 
   /**
@@ -332,7 +348,9 @@ export class ApiService {
    * @returns Observable<IRispostaServer>
    */
   public getStagioni(idSerie: number | string): Observable<IRispostaServer> {
-    return this.richiestaGenerica(['stagioni'], 'GET', { id_serie: String(idSerie) }); // faccio la GET delle stagioni filtrando per id serie
+    return this.richiestaGenerica(['stagioni'], 'GET', {
+      id_serie: String(idSerie),
+    }); // faccio la GET delle stagioni filtrando per id serie
   }
 
   /**
@@ -342,7 +360,9 @@ export class ApiService {
    * @returns Observable<IRispostaServer>
    */
   public getEpisodi(idStagione: number | string): Observable<IRispostaServer> {
-    return this.richiestaGenerica(['episodi'], 'GET', { id_stagione: String(idStagione) }); // faccio la GET degli episodi filtrando per id stagione
+    return this.richiestaGenerica(['episodi'], 'GET', {
+      id_stagione: String(idStagione),
+    }); // faccio la GET degli episodi filtrando per id stagione
   }
 
   /**
@@ -352,10 +372,13 @@ export class ApiService {
    * @param lingua Codice lingua da richiedere.
    * @returns Observable<IRispostaServer>
    */
-  public getEpisodiTraduzioni(idStagione: number | string, lingua: string): Observable<IRispostaServer> {
+  public getEpisodiTraduzioni(
+    idStagione: number | string,
+    lingua: string,
+  ): Observable<IRispostaServer> {
     return this.richiestaGenerica(['episodi-traduzioni'], 'GET', {
       id_stagione: String(idStagione), // passo l'id della stagione come parametro query
-      lingua // passo la lingua richiesta come parametro query
+      lingua, // passo la lingua richiesta come parametro query
     }); // faccio la GET delle traduzioni episodi
   }
 
@@ -370,7 +393,7 @@ export class ApiService {
   public getCategoriePerContenuto(
     lingua: string,
     tipo: string,
-    id: number | string
+    id: number | string,
   ): Observable<IRispostaServer> {
     const risorsa: string[] = ['categorie-per-contenuto']; // imposto l'endpoint dedicato alle categorie per contenuto
     const parametri = {
@@ -387,7 +410,10 @@ export class ApiService {
    * @returns Observable<IRispostaServer>
    */
   public getIntervalloPublicita(): Observable<IRispostaServer> {
-    return this.richiestaGenerica(['configurazione', 'intervallo-pubblicita'], 'GET'); // faccio la GET della configurazione intervallo pubblicita'
+    return this.richiestaGenerica(
+      ['configurazione', 'intervallo-pubblicita'],
+      'GET',
+    ); // faccio la GET della configurazione intervallo pubblicita'
   }
 
   /**
