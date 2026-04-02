@@ -61,8 +61,9 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
   ) {
     // validazioni form
     this.messaggioForm = this.fb.group({
-      nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+           nome:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
       cognome:   ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+      email:     ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
       tipologia: ['', Validators.required],
       messaggio: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]],
     });

@@ -90,17 +90,17 @@ a {
   width: fit-content;
   height: fit-content;
   left: 53%;
-  top: 15%;
+  top: 13%;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 17px;
   opacity: 0;
   pointer-events: none;
 
   h2 {
     text-shadow: 1px 1px 2px #c7ae80;
     color: rgb(199, 174, 128);
-    font-size: 36px;
+    font-size: 34px;
     margin-bottom: 10px;
     font-family: "Quantico", serif;
     font-weight: bolder;
@@ -120,7 +120,7 @@ a {
 }
 
 .form-label {
-  font-size: 24px;
+  font-size: 20px;
   font-family: "Quantico", serif;
   color: aliceblue;
   font-weight: bolder;
@@ -132,7 +132,8 @@ a {
   position: relative;
   width: fit-content;
 
-  input[type="text"] {
+    input[type="text"],
+  input[type="email"] {
     width: 260px;
     height: 47px;
     background: #000000df;

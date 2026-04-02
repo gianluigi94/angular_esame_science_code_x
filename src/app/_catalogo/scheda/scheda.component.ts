@@ -745,6 +745,8 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
       this.schedaPronta.reset(); // segno la scheda come non pronta
       this.resetStatoScheda(); // resetto lo stato interno prima del nuovo contenuto
 
+      this.cdr.detectChanges(); // rimuovo l'img sfondo dal DOM (urlSfondoScheda è ora '' quindi ngIf=false)
+
       if (this._primaNavigazione) {
         const sp = new URLSearchParams(window.location.search); // leggo gli eventuali parametri di riproduzione dall'URL
         this._paramRiproduzioneInAttesa =
@@ -771,11 +773,11 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
       this.ctx.idContenuto = id; // salvo l'id contenuto corrente nel contesto
       this.ctx.tipoContenuto = this.leggiTipoDaUrl(); // ricavo e salvo il tipo contenuto dall'URL
 
-      this.cdr.detectChanges(); // applico subito startAnim=false al DOM
+      this.cdr.detectChanges(); // creo l'img sfondo come elemento fresco nel DOM (ngIf torna true se urlSfondoScheda è presente)
       const sfondoEl = document.querySelector(
         '.sfondo_scheda',
       ) as HTMLElement | null; // recupero l'elemento sfondo della scheda
-      if (sfondoEl) void sfondoEl.offsetWidth; // forzo il reflow per riavviare correttamente l'animazione
+      if (sfondoEl) void sfondoEl.offsetWidth; // forzo il reflow sull'elemento appena creato
       this.startAnim = true; // riattivo l'animazione generale
 
       this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni se tutto e' pronto
@@ -1045,7 +1047,7 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
    *
    * @returns void
    */
-  private resetStatoScheda(): void {
+private resetStatoScheda(): void {
     this.startAnim = this.startAnimTitolo = this.startAnimDescrizione = false; // spengo tutte le animazioni iniziali
     this.ctx.avvioTrailerSchedaRichiesto = false; // annullo eventuali richieste di avvio trailer
     this.ctx.trailerInRiproduzione = true; // riporto il trailer allo stato iniziale
@@ -1055,6 +1057,8 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
       this._tabellaPronto =
       this._labelPronte =
         false; // resetto tutti i flag di prontezza
+    this.urlSfondoScheda = ''; // forzo la distruzione dell'img sfondo nel DOM al prossimo detectChanges
+    this.imgTitoloScheda = ''; // forzo la distruzione del titolo grafico nel DOM al prossimo detectChanges
     this.descrizioneTestuale = ''; // pulisco la descrizione testuale
     this.titoloScheda = this.descrizione = this.ctx.slugCorrente = ''; // pulisco titolo, descrizione semantica e slug
     this.labelsHelper.altSfondoScheda = this.labelsHelper.altTitoloScheda = ''; // pulisco gli alt della scheda

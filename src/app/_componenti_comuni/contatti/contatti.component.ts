@@ -59,6 +59,14 @@ export class ContattiComponent implements AfterViewInit, OnInit, OnDestroy {
           Validators.maxLength(50),
         ],
       ],
+            email: [
+        '',
+        [
+          Validators.required,
+          Validators.email,
+          Validators.maxLength(100),
+        ],
+      ],
       tipologia: ['', Validators.required],
       messaggio: [
         '',

@@ -172,6 +172,56 @@
         </div>
       </div>
 
+            <div class="campo-wrapper">
+        <!-- titolo email -->
+        <p
+          class="form-label"
+          [ngClass]="{
+            'is-invalid':
+              messaggioForm.controls['email'].invalid &&
+              (messaggioForm.controls['email'].touched || formInviatoMsg),
+          }"
+        >
+          {{ "ui.contatti.form.email.label" | translate }}
+          <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="email"
+            placeholder=" "
+            id="dp_msg_email"
+            formControlName="email"
+            [ngClass]="{
+              'is-invalid':
+                messaggioForm.controls['email'].invalid &&
+                (messaggioForm.controls['email'].touched || formInviatoMsg),
+            }"
+          />
+          <label for="dp_msg_email">{{
+            "ui.contatti.form.email.label" | translate
+          }}</label>
+        </div>
+        <!-- messaggi errore -->
+        <p
+          class="form-errore"
+          *ngIf="
+            messaggioForm.controls['email'].errors?.['required'] &&
+            (messaggioForm.controls['email'].touched || formInviatoMsg)
+          "
+        >
+          {{ "ui.contatti.form.email.error.required" | translate }}
+        </p>
+        <p
+          class="form-errore"
+          *ngIf="
+            messaggioForm.controls['email'].errors?.['email'] &&
+            (messaggioForm.controls['email'].touched || formInviatoMsg)
+          "
+        >
+          {{ "ui.contatti.form.email.error.email" | translate }}
+        </p>
+      </div>
+
       <div class="campo-wrapper">
         <!-- titolo tipologia -->
         <p
