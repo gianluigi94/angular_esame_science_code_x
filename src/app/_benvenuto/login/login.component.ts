@@ -284,8 +284,10 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
 
         const messaggio = this.translate.instant(chiave); // traduco subito il messaggio da mostrare all'utente
 
-        if (chiave === 'ui.toast.error.login.max_acces') {
-          // controllo se si tratta del caso di tentativi di accesso esauriti
+        if (
+          chiave === 'ui.toast.error.login.max_acces' ||
+          chiave === 'ui.toast.error.login.in_attesa'
+        ) {
           this.toastService.mostra(
             messaggio,
             'allarm',
@@ -294,14 +296,13 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
             'login_errore',
           );
         } else {
-          // entro qui per tutti gli altri errori di login
           this.toastService.mostra(
             messaggio,
             'error',
             false,
             undefined,
             'login_errore',
-          ); // mostro un toast di errore standard con chiave fissa di errore login
+          );
         }
 
         this.saturnoService.flashErrorLight(); // faccio lampeggiare la luce di errore anche in caso di risposta fallita

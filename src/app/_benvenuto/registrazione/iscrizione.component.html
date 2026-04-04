@@ -1257,7 +1257,10 @@
     </div>
 
     <!-- disclaimer sotto le card, entra animato -->
-    <p class="piano-disclaimer campo-animato">{{ 'ui.registrazione.piano.disclaimer' | translate }}</p>
+    <p class="piano-disclaimer campo-animato">
+  {{ 'ui.registrazione.piano.disclaimer' | translate }}
+  <span class="disclaimer-consiglio">{{ 'ui.registrazione.piano.disclaimer.consiglio' | translate }}</span>
+</p>
 
     <!-- bottoni di navigazione step 4: indietro a sinistra, registrati a destra,
          il bottone registrati è disabilitato finché non si sceglie un piano -->
@@ -1272,14 +1275,17 @@
 
       <!-- bottone registrati: di tipo button (non submit, non c'è form), disabilitato se nessun piano selezionato -->
       <button
-        class="avanti_btn"
-        type="button"
-        [disabled]="!pianoSelezionato"
-        (click)="avanti4()"
-        [title]="'ui.registrazione.bottone.registrati.title' | translate"
-      >
-        {{ 'ui.registrazione.bottone.registrati' | translate }}
-      </button>
+  class="avanti_btn"
+  type="button"
+  [disabled]="!pianoSelezionato || invioInCorso"
+  (click)="avanti4()"
+  [title]="'ui.registrazione.bottone.registrati.title' | translate"
+>
+  <ng-container *ngIf="!invioInCorso">
+    {{ 'ui.registrazione.bottone.registrati' | translate }}
+  </ng-container>
+  <app-spinner *ngIf="invioInCorso"></app-spinner>
+</button>
     </div>
   </div>
 </section>

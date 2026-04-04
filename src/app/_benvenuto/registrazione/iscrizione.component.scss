@@ -724,8 +724,10 @@ input[type="text"].is-invalid {
   -webkit-backface-visibility: hidden;
 }
 .piano-disclaimer {
+      text-shadow: 1px 1px 3px #14110a;
+
   font-family: "Quantico", serif;
-  font-size: 15px;
+  font-size: 16px;
   color: aliceblue;
   text-align: center;
   max-width: 750px;
@@ -735,3 +737,11 @@ input[type="text"].is-invalid {
   background-color: #14110a44;
   padding: 5px;
 }
+
+.disclaimer-consiglio {
+    text-shadow: 1px 1px 3px #14110a;
+
+    display: block;
+    margin-top: 6px;
+    color: #e79c50;
+  }

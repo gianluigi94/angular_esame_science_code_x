@@ -98,11 +98,14 @@ export class UtilityService {
     }
 
     if (msg.includes('PASSWORD SCADUTA')) {
-      // riconosco il caso di password scaduta
       return 'ui.toast.erro.login.password_deprecata';
     }
 
-    return 'ui.toast.error.login.mancante'; // restituisco una chiave generica come ripiego
+    if (msg.includes('IN ATTESA DI VERIFICA')) {
+      return 'ui.toast.error.login.in_attesa';
+    }
+
+    return 'ui.toast.error.login.mancante';
   }
 
   /**

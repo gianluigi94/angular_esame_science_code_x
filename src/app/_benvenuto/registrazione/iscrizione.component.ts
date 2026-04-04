@@ -8,8 +8,9 @@ import {
   HostListener,
   ChangeDetectorRef,
 } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 import gsap from 'gsap';
+import { TranslateService } from '@ngx-translate/core';
 import { UtilityService } from '../login/_login_service/login_utility.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
@@ -28,6 +29,9 @@ import {
 } from './iscrizione_helpers/animazioni.helper';
 import { Datepicker } from 'vanillajs-datepicker';
 import it from 'vanillajs-datepicker/locales/it';
+import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { Router } from '@angular/router';
+import { ToastService } from 'src/app/_servizi_globali/toast.service';
 
 (Datepicker as any).locales.it = (it as any).it; // registro manualmente la localizzazione italiana del datepicker esterno
 
@@ -54,7 +58,7 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   formInviatoStep3 = false; // flag che mi dice se il form del terzo step e' gia' stato inviato almeno una volta
   emailUtente = ''; // l'email passata dalla pagina precedente tramite state di navigazione
   pianoSelezionato: 'base' | 'pro' | null = null; // il piano scelto nello step finale
-
+  invioInCorso = false;
   mostraPassword = false; // flag che decide se mostrare in chiaro la password
   mostraConfermaPassword = false; // flag che decide se mostrare in chiaro la conferma password
   errorePasswordNonCombacia = false; // flag che segnala il caso in cui password e conferma password non coincidono
@@ -110,16 +114,20 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   } // controllo se il valore attuale della password contiene almeno un simbolo non alfanumerico
 
-  constructor(
+ constructor(
     public cambioLinguaService: CambioLinguaService,
     private cdr: ChangeDetectorRef,
+    private translate: TranslateService,
     private saturnoService: SaturnoService,
     private saturnoRouteAnimazioniService: SaturnoRouteAnimazioniService,
     private saturnoPosizioniService: SaturnoPosizioniService,
     public forms: IscrizioneFormService,
     public step1: IscrizioneStep1Service,
     public step2: IscrizioneStep2Service,
-  ) {}
+    private apiService: ApiService,
+    private router: Router,
+    private toastService: ToastService,
+) {}
 
   /**
    * Chiude tutti i dropdown custom quando l'utente clicca in qualsiasi punto del documento.
@@ -320,33 +328,45 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
    *
    * @returns void
    */
-  avanti4(): void {
-    const f1 = this.forms.reactiveForm.value; // leggo tutti i valori raccolti nel primo step
-    const f2 = this.forms.reactiveFormStep2.value; // leggo tutti i valori raccolti nel secondo step
-    const f3 = this.forms.reactiveFormStep3.value; // leggo tutti i valori raccolti nel terzo step
-    const emailHash = UtilityService.hash(this.emailUtente);
-    const passwordHash = UtilityService.hash(f3.password);
+async avanti4(): Promise<void> {
+    const f1 = this.forms.reactiveForm.value;
+    const f2 = this.forms.reactiveFormStep2.value;
+    const f3 = this.forms.reactiveFormStep3.value;
+    const emailHash    = await UtilityService.hash(this.emailUtente);
+    const passwordHash = await UtilityService.hash(f3.password);
 
-    console.log('=== DATI REGISTRAZIONE ===', {
-      nome: f1.nome,
-      cognome: f1.cognome,
-      dataNascita: `${f1.dataGg}/${f1.dataMm}/${f1.dataAaaa}`,
-      sesso: f1.sesso,
-      paeseNascita: f1.paese,
-      comuneNascita: f1.comune || f1.citta,
-      codiceFiscale: f1.codiceFiscale,
-      paeseDomicilio: f2.nazioneD,
-      comuneDomicilio: f2.comuneD || f2.cittaD,
-      via: f2.via,
-      civico: f2.civico,
-      provinciaD: f2.provinciaD,
-      cap: f2.cap,
-      dettagli: f2.dettagli,
-      telefono: f3.telefono,
-      emailSecondaria: f3.emailSecondaria,
-      piano: this.pianoSelezionato,
-      email_sha512: emailHash,
-      password_sha512: passwordHash,
+    const codice = this.cambioLinguaService.leggiCodiceLingua();
+    const homeUrl = codice === 'it' ? '/it' : '/en';
+
+    this.invioInCorso = true;
+
+    this.apiService.registrazione({
+      email_sha512:     emailHash,
+      password_sha512:  passwordHash,
+      nome:             f1.nome,
+      cognome:          f1.cognome,
+      data_nascita:     `${f1.dataGg}/${f1.dataMm}/${f1.dataAaaa}`,
+      sesso:            f1.sesso,
+      codice_fiscale:   f1.codiceFiscale,
+      iso_domicilio:    f2.nazioneD,
+      comune_domicilio: f2.comuneD  || null,
+      citta_domicilio:  f2.cittaD   || null,
+      via:              f2.via      || null,
+      civico:           f2.civico   || null,
+      cap:              f2.cap      || null,
+      telefono:         f3.telefono         || null,
+      email_secondaria: f3.emailSecondaria  || null,
+      piano:            this.pianoSelezionato!,
+    }).subscribe({
+    next: () => {
+        this.translate.get('ui.registrazione.toast.successo').pipe(take(1)).subscribe((testo) => {
+          this.toastService.successo(testo);
+        });
+        this.router.navigateByUrl(homeUrl);
+      },
+      error: () => {
+        this.invioInCorso = false;
+      },
     });
   }
 

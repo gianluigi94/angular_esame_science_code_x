@@ -6,5 +6,7 @@
     },
     "typescript.suggest.objectLiteralMethodSnippets.enabled": true,
     "editor.bracketPairColorization.enabled": false,
-    "workbench.editor.limit.enabled": true
+    "workbench.editor.limit.enabled": true,
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

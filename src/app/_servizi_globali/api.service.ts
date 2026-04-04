@@ -20,9 +20,9 @@ export class ApiService {
    */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    // const server: string = 'http://localhost/science_codex/public/api';
+    const server: string = 'http://localhost/science_codex/public/api';
     // const server: string = 'http://192.168.1.38/science_codex/public/api';
-    const server: string = 'https://api.sciencecodex.net/api';
+    // const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
 
     const segments = [server, versione, ...risorsa.map(String)]; // Unisco server, versione e parametri della risorsa in un array
@@ -452,4 +452,26 @@ export class ApiService {
   public getPrezziNazione(iso: string): Observable<IRispostaServer> {
     return this.richiestaGenerica(['prezzi-nazione', iso], 'GET'); // faccio la GET dei prezzi associati alla nazione richiesta
   }
+
+  public registrazione(dati: {
+    email_sha512:     string;
+    password_sha512:  string;
+    nome:             string;
+    cognome:          string;
+    data_nascita:     string;
+    sesso:            string;
+    codice_fiscale:   string;
+    iso_domicilio:    string;
+    comune_domicilio: string | null;
+    citta_domicilio:  string | null;
+    via:              string | null;
+    civico:           string | null;
+    cap:              string | null;
+    telefono:         string | null;
+    email_secondaria: string | null;
+    piano:            string;
+}): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['registrazione']);
+    return this.http.post<IRispostaServer>(url, dati);
+}
 }
