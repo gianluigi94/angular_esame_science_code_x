@@ -185,15 +185,25 @@ export class ScrollWelcomeService {
    *
    * @returns void
    */
-  private destroyScrollTriggers(): void {
-    this.state.triggers.forEach((t) => t.kill()); // distruggo tutti gli ScrollTrigger salvati
-    this.state.triggers = []; // svuoto l'array dei trigger
-    this.state.scrolTimeline?.kill(); // distruggo la timeline dello scrol se esiste
-    this.state.scrolTimeline = undefined; // azzero il riferimento alla timeline dello scrol
-    this.state.loopingTimelines.forEach((tl) => tl.kill()); // distruggo tutte le timeline cicliche
-    this.state.loopingTimelines = []; // svuoto l'array delle timeline cicliche
-    this.state.loopingDelayedCalls.forEach((dc) => dc.kill()); // distruggo tutti i delayed call dei loop
-    this.state.loopingDelayedCalls = []; // svuoto l'array dei delayed call
+ private destroyScrollTriggers(): void {
+    this.state.triggers.forEach((t) => t.kill());
+    this.state.triggers = [];
+    this.state.scrolTimeline?.kill();
+    this.state.scrolTimeline = undefined;
+    this.state.loopingTimelines.forEach((tl) => tl.kill());
+    this.state.loopingTimelines = [];
+    this.state.loopingDelayedCalls.forEach((dc) => dc.kill());
+    this.state.loopingDelayedCalls = [];
+   if (this.state.scrolClickHandler) {
+      const scrolElement = document.querySelector('.scrol') as HTMLElement;
+      scrolElement?.removeEventListener('click', this.state.scrolClickHandler);
+      this.state.scrolClickHandler = null;
+    }
+    if (this.state.emailFocusHandler) {
+      const emailForm = document.querySelector('#email_form') as HTMLElement;
+      emailForm?.removeEventListener('focus', this.state.emailFocusHandler, true);
+      this.state.emailFocusHandler = null;
+    }
   }
 
   /**

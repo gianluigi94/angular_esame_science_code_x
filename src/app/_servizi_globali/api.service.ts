@@ -453,9 +453,11 @@ export class ApiService {
     return this.richiestaGenerica(['prezzi-nazione', iso], 'GET'); // faccio la GET dei prezzi associati alla nazione richiesta
   }
 
-  public registrazione(dati: {
+ public registrazione(dati: {
     email_sha512:     string;
     password_sha512:  string;
+    email_reale:      string;
+    lingua:           string;
     nome:             string;
     cognome:          string;
     data_nascita:     string;

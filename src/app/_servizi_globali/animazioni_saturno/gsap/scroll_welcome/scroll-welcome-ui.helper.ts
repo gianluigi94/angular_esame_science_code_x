@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { AnimateService } from '../../animate.service';
 import { ScrollWelcomeState } from './scroll-welcome-state';
 import { calcolaScaleTitle, calcolaLeftValue, calcolaTopValue, checkSpecialTablet} from './scroll-welcome-layout.utils';
+import { isMobileOrTablet } from 'src/app/_helpers_globali/helpers';
 
 const SCROLLER = '.main-scroll'; // definisco il selettore dello scroller principale
 const TRIGGER = '#saturno-scrolle'; // definisco il selettore dell'elemento trigger
@@ -101,9 +102,17 @@ export class ScrollWelcomeUiHelper {
    * @returns void
    */
   creaScrolTrigger(): void {
-    const scrolElement = document.querySelector('.scrol') as HTMLElement; // recupero l'elemento scrol dal DOM
+    const scrolElement = document.querySelector('.scrol') as HTMLElement;
     this.state.scrolTimeline =
-      this.animateService.animateScrolElement(scrolElement); // avvio e salvo la timeline dell'animazione scrol
+      this.animateService.animateScrolElement(scrolElement);
+
+    if (!isMobileOrTablet()) {
+      this.state.scrolClickHandler = () => {
+        const scroller = document.querySelector(SCROLLER) as HTMLElement;
+        scroller?.scrollBy({ top: 100, behavior: 'smooth' });
+      };
+      scrolElement?.addEventListener('click', this.state.scrolClickHandler);
+    }
 
     const scrolTrigger = ScrollTrigger.create({
       // creo il trigger che gestisce visibilita' e pausa di scrol
@@ -194,6 +203,16 @@ export class ScrollWelcomeUiHelper {
         scaleX: 0,
         transformOrigin: 'center center',
       }); // imposto lo stato iniziale nascosto e compresso del form
+
+    if (!isMobileOrTablet()) {
+      this.state.emailFocusHandler = () => {
+        const scroller = document.querySelector(SCROLLER) as HTMLElement;
+        if (scroller && scroller.scrollTop === 0) {
+          scroller.scrollBy({ top: 100, behavior: 'smooth' });
+        }
+      };
+      emailForm.addEventListener('focus', this.state.emailFocusHandler, true);
+    }
 
     const t = ScrollTrigger.create({
       // creo il trigger che controlla l'animazione del form email

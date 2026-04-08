@@ -273,7 +273,8 @@ h3 {
   color: #ffffff;
   font-size: 17px;
   -webkit-font-smoothing: antialiased;
-
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 

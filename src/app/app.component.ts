@@ -126,8 +126,27 @@ export class AppComponent implements OnInit {
 
     if (isRotta404(urlIniziale)) this.appToast.mostraToast404Persistente(); // mostro il toast persistente se parto in 404
 
-    this.titoloPaginaService.avvia(); // avvio la logica globale del titolo pagina
-    this.performanceService.performanceLevel$ // mi iscrivo allo stream che classifica il livello performance
+    this.titoloPaginaService.avvia();
+
+    const params = new URLSearchParams(window.location.search);
+    const verifica = params.get('verifica');
+   const codiceV = this.cambioLinguaService.leggiCodiceLingua();
+    if (verifica === 'ok') {
+      const testo = codiceV === 'it'
+        ? "L'email è stata verificata CORRETTAMENTE.\nOra puoi accedere alla piattaforma."
+        : "Your email has been verified SUCCESSFULLY.\nYou can now access the platform.";
+      this.toastService.successo(testo);
+    } else if (verifica === 'scaduto' || verifica === 'errore') {
+      const testo = codiceV === 'it'
+        ? 'Qualcosa è andato storto durante la verifica della tua email, probabilmente è passato troppo tempo. Riprova più tardi e se il problema persiste manda un messaggio in assistenza.'
+        : 'Something went wrong during your email verification, the link may have expired. Please try again later and if the problem persists contact our support team.';
+      this.toastService.errore(testo);
+    }
+    if (verifica) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    this.performanceService.performanceLevel$
       .pipe(
         filter((l) => l !== 'Calcolando...'),
         take(1),
