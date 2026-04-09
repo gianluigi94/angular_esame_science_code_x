@@ -7,14 +7,13 @@ import { LoginComponent } from './login/login.component';
 import { LoginUscitaGuard } from '../_guard/login-uscita.guard';
 import { IscrizioneComponent } from './registrazione/iscrizione.component';
 import { IscrizioneUscitaGuard } from '../_guard/iscrizione-uscita.guard';
+import { IscrizioneAccessoGuard } from '../_guard/iscrizione-accesso.guard';
 const routes: Routes = [
   {
-    //se il path è vuoto vengo reidirizzato al componente di bevenuto, /benvenuto
     path: '',
     component: WelcomeComponent,
   },
   {
-    //se il path è /benvenuto/login entrano in gioco il componente di login e una guard che si accorge quando da da benvenuto/login ritorno a solo /benvenuto e mostra le animazioni al ritroso
     path: 'login',
     component: LoginComponent,
     canDeactivate: [LoginUscitaGuard],
@@ -26,11 +25,13 @@ const routes: Routes = [
   },
   {
     path: 'registrazione',
+    canActivate: [IscrizioneAccessoGuard],
     canDeactivate: [IscrizioneUscitaGuard],
     component: IscrizioneComponent,
   },
   {
     path: 'registration',
+    canActivate: [IscrizioneAccessoGuard],
     canDeactivate: [IscrizioneUscitaGuard],
     component: IscrizioneComponent,
   },

@@ -140,6 +140,10 @@ a {
     box-shadow: 0 0 8px #999da0;
     font-family: "Quantico", serif;
 
+    &[type="email"] {
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+    }
+
     &:focus {
       outline: none;
       box-shadow: 0 0 4px orange !important;
@@ -265,7 +269,11 @@ textarea {
 }
 
 .invia-btn {
-  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  width: 90px;
   padding: 0 28px;
   font-size: 16px;
   border: none;
@@ -302,4 +310,8 @@ textarea {
 .contatti-form-contenuto input:-webkit-autofill::first-line {
   font-size: 18px !important;
   font-family: "Quantico", serif !important;
+}
+
+.contatti-form-contenuto input[type="email"]:-webkit-autofill::first-line {
+  font-family: system-ui, -apple-system, Arial, sans-serif !important;
 }

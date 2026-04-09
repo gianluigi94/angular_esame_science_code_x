@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import gsap from 'gsap';
-
+import { IscrizioneAccessoService } from 'src/app/_servizi_globali/iscrizione-accesso.service';
 @Component({
   selector: 'app-main-intro',
   templateUrl: './main-intro.component.html',
@@ -16,6 +16,7 @@ export class MainIntroComponent {
 
   constructor(
     private fb: FormBuilder,
+    private iscrizioneAccessoService: IscrizioneAccessoService,
     private saturnoService: SaturnoService,
     private router: Router,
     private cambioLinguaService: CambioLinguaService,
@@ -79,12 +80,12 @@ export class MainIntroComponent {
 
     setTimeout(
       () => {
-        // aspetto la fine visiva dell'animazione prima di cambiare pagina
+        this.iscrizioneAccessoService.autorizza();
         this.router.navigateByUrl(`${base}/${sottoPath}`, {
-          state: { email: this.reactiveForm.get('email')!.value }, // passo l'email inserita tramite state per ritrovarla nella pagina successiva
+          state: { email: this.reactiveForm.get('email')!.value },
         });
       },
-      durata * 1500 + 80, //decisione temporale
+      durata * 1500 + 80,
     );
   }
 }

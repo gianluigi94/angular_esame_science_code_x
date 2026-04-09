@@ -476,4 +476,15 @@ export class ApiService {
     const url = this.calcolaRisorsa(['registrazione']);
     return this.http.post<IRispostaServer>(url, dati);
 }
+
+public inviaMessaggio(dati: {
+    nome:      string;
+    cognome:   string;
+    email:     string;
+    tipologia: string;
+    messaggio: string;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['contatti-messaggio']);
+    return this.http.post<IRispostaServer>(url, dati);
+  }
 }

@@ -512,6 +512,11 @@ input[type="text"].is-invalid {
   font-size: 18px !important;
   font-family: "Quantico", serif !important;
 }
+
+#email_secondaria:-webkit-autofill::first-line {
+  font-family: Arial, sans-serif !important;
+  font-size: 17px !important;
+}
 .errori-stack {
   display: flex;
   flex-direction: column;

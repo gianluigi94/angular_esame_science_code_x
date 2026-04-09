@@ -354,16 +354,17 @@
             <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
             <!-- input testo: quando aperto mostra il testo di ricerca, quando chiuso mostra il comune o stringa vuota,
                  al blur verifica che il valore scritto corrisponda a un comune esistente -->
-            <input
-              class="select-input-testo comune-input"
-              type="text"
-              [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
-              [value]="s1.comuneAperto ? s1.filtroComuni : (s1.comuneValore ? s1.comuneLabel() : '')"
-              (click)="s1.toggleComune($event)"
-              (input)="s1.onInputComune($event)"
-              (keydown)="s1.navigaComune($event)"
-              (blur)="s1.onBlurComune($event)"
-            />
+           <input
+  class="select-input-testo comune-input"
+  type="text"
+  autocomplete="new-password"
+  [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
+  [value]="s1.comuneAperto ? s1.filtroComuni : (s1.comuneValore ? s1.comuneLabel() : '')"
+  (click)="s1.toggleComune($event)"
+  (input)="s1.onInputComune($event)"
+  (keydown)="s1.navigaComune($event)"
+  (blur)="s1.onBlurComune($event)"
+/>
           </div>
 
           <!-- lista comuni filtrati dalla ricerca -->

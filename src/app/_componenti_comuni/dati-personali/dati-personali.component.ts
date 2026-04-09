@@ -3,6 +3,8 @@ import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } fr
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription, take } from 'rxjs';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+import { ToastService } from 'src/app/_servizi_globali/toast.service';
+import { TranslateService } from '@ngx-translate/core';
 import gsap from 'gsap';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
@@ -18,7 +20,8 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
   visibile = false; // tengo lo stato di visibilita' del pannello dati personali
   mostraForm = false; // decido se mostrare il form al posto del contenuto principale
   messaggioForm: FormGroup; // tengo il form reattivo del messaggio
-  formInviatoMsg = false; // segno se ho gia' tentato l'invio del form
+  formInviatoMsg = false;
+  invioInCorso = false;
 
   mail: string = ''; // tengo la mail ricevuta dal backend
   indirizzo: string = ''; // tengo l'indirizzo ricevuto dal backend
@@ -58,6 +61,8 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
     private contattiAnimazioni: ContattiAnimazioniService,
     private cambioLingua: CambioLinguaService,
     private fb: FormBuilder,
+    private toastService: ToastService,
+    private translate: TranslateService,
   ) {
     // validazioni form
     this.messaggioForm = this.fb.group({
@@ -252,9 +257,29 @@ export class DatiPersonaliComponent implements OnInit, AfterViewInit, OnDestroy 
    * @returns void
    */
   inviaMessaggio(): void {
-    this.formInviatoMsg = true; // segno che e' stato tentato l'invio del form
-    if (this.messaggioForm.invalid) return; // esco se il form non e' valido
-    console.log('Messaggio da inviare:', this.messaggioForm.value); // loggo il payload finche' non sara' collegato il backend
+    this.formInviatoMsg = true;
+    if (this.messaggioForm.invalid) return;
+    this.invioInCorso = true;
+    const v = this.messaggioForm.value;
+    this.apiService.inviaMessaggio({
+      nome:      v.nome,
+      cognome:   v.cognome,
+      email:     v.email,
+      tipologia: v.tipologia,
+      messaggio: v.messaggio,
+    }).pipe(take(1)).subscribe({
+      next: () => {
+        this.invioInCorso = false;
+        this.messaggioForm.reset();
+        this.formInviatoMsg = false;
+        this.translate.get('ui.contatti.toast.successo').pipe(take(1)).subscribe(t => this.toastService.successo(t));
+        this.chiudiForm();
+      },
+      error: () => {
+        this.invioInCorso = false;
+        this.translate.get('ui.contatti.toast.errore').pipe(take(1)).subscribe(t => this.toastService.errore(t));
+      },
+    });
   }
 
   /**

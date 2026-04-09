@@ -145,6 +145,10 @@ a {
     box-shadow: 0 0 8px #999da0;
     font-family: "Quantico", serif;
 
+    &[type="email"] {
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+    }
+
     &:focus {
       outline: none;
       box-shadow: 0 0 4px orange !important;
@@ -273,9 +277,13 @@ textarea {
 }
 
 .invia-btn {
-  height: 47px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  width: 90px;
   padding: 0 28px;
-  font-size: 18px;
+  font-size: 17px;
   border: none;
   background: linear-gradient(135deg, #e79c50, #c97a2b);
   color: white;
@@ -286,7 +294,6 @@ textarea {
   font-family: "Quantico", serif;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   transform: translateZ(0);
-  pointer-events: auto;
 
   &:not(:disabled):hover {
     transform: scale(1.06) translateZ(0);
@@ -309,7 +316,11 @@ textarea {
   transition: background-color 9999s ease-in-out 0s;
 }
 
-.dati-form-contenuto input:-webkit-autofill::first-line {
+.contatti-form-contenuto input:-webkit-autofill::first-line {
   font-size: 18px !important;
   font-family: "Quantico", serif !important;
+}
+
+.contatti-form-contenuto input[type="email"]:-webkit-autofill::first-line {
+  font-family: system-ui, -apple-system, Arial, sans-serif !important;
 }

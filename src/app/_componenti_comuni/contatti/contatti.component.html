@@ -370,10 +370,13 @@
       <button
         type="button"
         class="invia-btn"
-        [disabled]="messaggioForm.invalid"
+        [disabled]="messaggioForm.invalid || invioInCorso"
         (click)="inviaMessaggio()"
       >
-        {{ "ui.contatti.form.invia" | translate }}
+        <ng-container *ngIf="!invioInCorso">
+          {{ "ui.contatti.form.invia" | translate }}
+        </ng-container>
+        <app-spinner *ngIf="invioInCorso"></app-spinner>
       </button>
     </div>
   </form>
