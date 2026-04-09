@@ -21,8 +21,10 @@ import { LoginUscitaService } from './_login_service/login_uscita.service';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnDestroy, AfterViewInit {
-  @ViewChild('loginContenuto', { static: true }) // prendo il riferimento all'elemento del template con #loginContenuto già in fase di inizializzazione
-  loginContenuto!: ElementRef<HTMLElement>; // mi conservo l'elemento HTML per usarlo nelle animazioni
+  @ViewChild('loginContenuto', { static: true })
+  loginContenuto!: ElementRef<HTMLElement>;
+  @ViewChild('formReset', { static: false })
+  formReset?: ElementRef<HTMLElement>;
 
   stoControllando: boolean = false; // flag che mi dice se sto eseguendo il controllo di accesso in corso
   reactiveForm: FormGroup; // tengo il form reattivo che contiene i controlli e le validazioni
@@ -31,8 +33,10 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
   mostraPassword: boolean = false; // flag per decidere se mostrare la password in chiaro o mascherata(mentre la scrive nell'input non nell'invio)
   private distruggi$ = new Subject<void>(); //  segnale che uso per chiudere le sottoscrizioni quando distruggo il componente
 
-  saltaAnimazioneUscita: boolean = false; // flag per decidere se saltare l'animazione di uscita, ad esempio dopo un login riuscito
+  saltaAnimazioneUscita: boolean = false;
   saltaAnimazioniIngresso: boolean = false;
+  invioResetInCorso: boolean = false;
+  resetForm: FormGroup;
   constructor(
     private fb: FormBuilder,
     private authService: Authservice,
@@ -76,7 +80,10 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
       restaCollegato: [false], // definisco il controllo del checkbox 'resta collegato' con valore iniziale falso
     });
 
-    this.auth = this.authService.leggiObsAuth(); // mi aggancio allo stato di autenticazione esposto dal servizio per avere sempre il valore aggiornato
+    this.resetForm = this.fb.group({
+      emailReset: ['', [Validators.required, Validators.email, Validators.minLength(5), Validators.maxLength(40)]],
+    });
+    this.auth = this.authService.leggiObsAuth();
   }
 
   /**
@@ -139,7 +146,36 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
 
     UtilityService.nascondiSottotitoloEScrol(); // spengo e nascondo sottotitolo e indicatore di scorrimento per questa pagina
   }
+apriFormReset(): void {
+    const login = this.loginContenuto.nativeElement.querySelector('.form-login') as HTMLElement;
+    gsap.to(login, { top: '-100%', left: '100%', scale: 0.2, opacity: 0, duration: 0.8, ease: 'power2.in', onComplete: () => {
+      gsap.set(login, { display: 'none' });
+    }});
+    this.resetForm.reset();
+    setTimeout(() => {
+      const reset = this.loginContenuto.nativeElement.querySelector('.form-reset') as HTMLElement;
+      if (!reset) return;
+      gsap.set(reset, { display: 'flex', top: '-100%', left: '100%', scale: 0.2, opacity: 0, pointerEvents: 'auto' });
+      gsap.to(reset, { top: 0, left: 0, scale: 1, opacity: 1, duration: 0.8, ease: 'power2.out' });
+    }, 500);
+  }
 
+  chiudiFormReset(): void {
+    const reset = this.loginContenuto.nativeElement.querySelector('.form-reset') as HTMLElement;
+    gsap.to(reset, { top: '-100%', left: '100%', scale: 0.2, opacity: 0, duration: 0.8, ease: 'power2.in', onComplete: () => {
+      gsap.set(reset, { display: 'none', pointerEvents: 'none', clearProps: 'top,left,scale,opacity' });
+    }});
+    setTimeout(() => {
+      const login = this.loginContenuto.nativeElement.querySelector('.form-login') as HTMLElement;
+      gsap.set(login, { display: 'flex', top: '-100%', left: '100%', scale: 0.2, opacity: 0 });
+      gsap.to(login, { top: 'auto', left: 'auto', scale: 1, opacity: 1, duration: 0.8, ease: 'power2.out', clearProps: 'top,left' });
+    }, 500);
+  }
+
+  inviaReset(): void {
+    if (this.resetForm.invalid) return;
+    this.invioResetInCorso = true;
+  }
   /**
    * Avvia (o salta) l'animazione di uscita del pannello login.
    * Tipicamente usato da un guard di routing che aspetta la fine dell'animazione

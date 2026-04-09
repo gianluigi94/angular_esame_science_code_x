@@ -186,6 +186,36 @@
         ></span>
         <app-spinner *ngIf="stoControllando"></app-spinner>
       </button>
+    <span class="password-dimenticata" (click)="apriFormReset()">
+        {{ 'ui.login.password_dimenticata' | translate }}
+      </span>
+    </form>
+
+    <form class="form-reset" #formReset [formGroup]="resetForm" (ngSubmit)="inviaReset()">
+      <h2>{{ 'ui.login.reset.titolo.1' | translate }}<span>{{ 'ui.login.reset.titolo.2' | translate }}</span></h2>
+      <p class="reset-descrizione">{{ 'ui.login.reset.descrizione' | translate }}</p>
+      <div class="campo-form">
+        <input
+          type="text"
+          placeholder=" "
+          id="reset_email"
+          formControlName="emailReset"
+          autocomplete="username"
+        />
+        <label for="reset_email">{{ 'ui.accesso.utente.placeholder' | translate }}</label>
+      </div>
+      <div class="reset-bottoni">
+        <span class="indietro-reset" (click)="chiudiFormReset()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          {{ 'ui.login.reset.indietro' | translate }}
+        </span>
+        <button type="submit" class="accedi_btn" [disabled]="resetForm.invalid || invioResetInCorso">
+          <ng-container *ngIf="!invioResetInCorso">{{ 'ui.login.reset.bottone' | translate }}</ng-container>
+          <app-spinner *ngIf="invioResetInCorso"></app-spinner>
+        </button>
+      </div>
     </form>
   </ng-container>
 </section>

@@ -284,3 +284,150 @@ app-footer {
 #password:-webkit-autofill::first-line {
   font-size: 18px !important;
 }
+  .password-dimenticata {
+  align-self: flex-end;
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  margin-top: 5px;
+  color: #c3d4e6;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: -4px;
+  transition: color 0.2s ease;
+
+  &:hover { color: #e79c50; }
+}
+
+.form-reset {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  gap: 12px;
+  margin-left: 58%;
+  margin-top: 125px;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+
+  h2 {
+    color: aliceblue;
+    font-size: 40px;
+    font-family: "Quantico", serif;
+    margin-bottom: 40px;
+    min-width: 350px;
+    margin-top: 50px;
+  }
+
+  .reset-descrizione {
+    font-family: "Quantico", serif;
+    font-size: 15px;
+    color: #a0a0a0;
+    max-width: 350px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .campo-form {
+    position: relative;
+    width: fit-content;
+  }
+
+  #reset_email {
+    width: 350px;
+    height: 50px;
+    background: #00000081;
+    border: none;
+    border-radius: 7px;
+    font-size: 18px;
+    padding: 18px 10px 0 10px;
+    color: rgb(205, 205, 205);
+    box-shadow: 0 0 8px #999da0;
+    font-family: system-ui, -apple-system, Arial, sans-serif;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 4px orange !important;
+    }
+
+    &::placeholder { color: #4f5050; }
+  }
+
+  .campo-form label {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    pointer-events: none;
+    transition: top 0.15s ease, transform 0.15s ease, font-size 0.15s ease, color 0.15s ease;
+    font-family: "Quantico", serif;
+    color: #4f5050;
+    font-weight: bolder;
+  }
+
+  #reset_email:focus ~ label,
+  #reset_email:not(:placeholder-shown) ~ label {
+    top: 4px;
+    transform: translateY(0);
+    font-size: 12px;
+  }
+
+  .reset-bottoni {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  .indietro-reset {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: "Quantico", serif;
+    font-size: 15px;
+    color: #c4c4c4;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover { color: #c7ae80; }
+  }
+
+  button {
+    width: 155px;
+    height: 45px;
+    font-size: 18px;
+    border: none;
+    background: linear-gradient(135deg, #e79c50, #c97a2b);
+    color: white;
+    box-shadow: 0 0 8px #999da0;
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+#reset_email:-webkit-autofill,
+#reset_email:-webkit-autofill:hover,
+#reset_email:-webkit-autofill:focus {
+  -webkit-text-fill-color: rgb(205, 205, 205) !important;
+  caret-color: rgb(205, 205, 205);
+  padding: 18px 10px 0 10px !important;
+  border-radius: 7px;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+#reset_email:-webkit-autofill::first-line {
+  font-size: 18px !important;
+  font-family: system-ui, -apple-system, Arial, sans-serif !important;
+}
