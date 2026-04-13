@@ -487,4 +487,14 @@ public inviaMessaggio(dati: {
     const url = this.calcolaRisorsa(['contatti-messaggio']);
     return this.http.post<IRispostaServer>(url, dati);
   }
+
+  richiediResetPassword(email: string, lingua: string): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['richiedi-reset-password']);
+    return this.http.post<IRispostaServer>(url, { email, lingua });
+  }
+
+  resetPassword(email: string, password_sha512: string): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['reset-password']);
+    return this.http.put<IRispostaServer>(url, { email, password_sha512 });
+  }
 }

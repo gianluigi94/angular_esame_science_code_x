@@ -146,6 +146,21 @@ export class AppComponent implements OnInit {
       window.history.replaceState({}, '', window.location.pathname);
     }
 
+    const resetParam = params.get('reset');
+    const rid = params.get('rid');
+    if (resetParam === 'scaduto') {
+      const testo = codiceV === 'it'
+        ? 'Il link per il reset della password è scaduto. Richiedine uno nuovo.'
+        : 'The password reset link has expired. Please request a new one.';
+      this.toastService.errore(testo);
+    }
+    if (resetParam === 'ok') {
+      sessionStorage.setItem('reset_pw_pending', '1');
+    }
+    if (resetParam) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     this.performanceService.performanceLevel$
       .pipe(
         filter((l) => l !== 'Calcolando...'),

@@ -8,9 +8,11 @@ import { LoginComponent } from './login/login.component';
 import { ComponentiComuniModule } from '../_componenti_comuni/componenti-comuni.module';
 import { SaturnoModule } from '../_componenti_comuni/saturno/saturno.module';
 import { IscrizioneComponent } from './registrazione/iscrizione.component';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
 @NgModule({
   declarations: [
     WelcomeComponent,
+    ResetPasswordComponent,
     LoginComponent,
     IscrizioneComponent,
   ],

@@ -149,7 +149,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
 apriFormReset(): void {
     const login = this.loginContenuto.nativeElement.querySelector('.form-login') as HTMLElement;
     gsap.to(login, { top: '-100%', left: '100%', scale: 0.2, opacity: 0, duration: 0.8, ease: 'power2.in', onComplete: () => {
-      gsap.set(login, { display: 'none' });
+      gsap.set(login, { pointerEvents: 'none' });
     }});
     this.resetForm.reset();
     setTimeout(() => {
@@ -163,11 +163,11 @@ apriFormReset(): void {
   chiudiFormReset(): void {
     const reset = this.loginContenuto.nativeElement.querySelector('.form-reset') as HTMLElement;
     gsap.to(reset, { top: '-100%', left: '100%', scale: 0.2, opacity: 0, duration: 0.8, ease: 'power2.in', onComplete: () => {
-      gsap.set(reset, { display: 'none', pointerEvents: 'none', clearProps: 'top,left,scale,opacity' });
+      gsap.set(reset, { display: 'none', pointerEvents: 'none' });
     }});
     setTimeout(() => {
       const login = this.loginContenuto.nativeElement.querySelector('.form-login') as HTMLElement;
-      gsap.set(login, { display: 'flex', top: '-100%', left: '100%', scale: 0.2, opacity: 0 });
+      gsap.set(login, { pointerEvents: 'auto' });
       gsap.to(login, { top: 'auto', left: 'auto', scale: 1, opacity: 1, duration: 0.8, ease: 'power2.out', clearProps: 'top,left' });
     }, 500);
   }
@@ -175,6 +175,20 @@ apriFormReset(): void {
   inviaReset(): void {
     if (this.resetForm.invalid) return;
     this.invioResetInCorso = true;
+    const email = this.resetForm.controls['emailReset'].value;
+    const lingua = this.translate.currentLang || 'it';
+    this.api.richiediResetPassword(email, lingua).pipe(take(1)).subscribe({
+      next: () => {
+        this.invioResetInCorso = false;
+        this.translate.get('ui.login.reset.email_inviata').pipe(take(1)).subscribe(t => this.toastService.successo(t));
+        this.chiudiFormReset();
+      },
+      error: () => {
+        this.invioResetInCorso = false;
+        this.translate.get('ui.login.reset.email_inviata').pipe(take(1)).subscribe(t => this.toastService.successo(t));
+        this.chiudiFormReset();
+      },
+    });
   }
   /**
    * Avvia (o salta) l'animazione di uscita del pannello login.
