@@ -97,12 +97,23 @@ export class AppLoaderService {
         );
 
         const deveMostrareLoader =
-          !caricamentoDisabilitato && // considero il loader solo se il caricamento non e' disabilitato
-          (erroreFatale || // mantengo il loader se c'e' un errore fatale
-            !traduzioniPronte || // mantengo il loader se le traduzioni non sono pronte
-            !sessioneVerificata || // mantengo il loader se la sessione non e' verificata
-            !saturnoPronto || // mantengo il loader se Saturno non e' pronto
-            (deveCaricare && !caroselloPronto)); // mantengo il loader se devo caricare il carosello ma non e' ancora pronto
+          !caricamentoDisabilitato &&
+          (erroreFatale ||
+            !traduzioniPronte ||
+            !sessioneVerificata ||
+            !saturnoPronto ||
+            (deveCaricare && !caroselloPronto));
+
+        if (deveMostrareLoader) {
+          console.log('[LOADER BLOCCATO DA]',
+            erroreFatale ? 'erroreFatale' : '',
+            !traduzioniPronte ? 'traduzioniPronte=false' : '',
+            !sessioneVerificata ? 'sessioneVerificata=false' : '',
+            !saturnoPronto ? 'saturnoPronto=false' : '',
+            (deveCaricare && !caroselloPronto) ? 'carosello non pronto' : '',
+            caricamentoDisabilitato ? '(ma caricamento disabilitato)' : '',
+          );
+        }
 
         try {
           const nav = performance.getEntriesByType('navigation') as any[]; // leggo le entry di navigazione dal Performance API

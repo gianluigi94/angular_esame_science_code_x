@@ -45,3 +45,7 @@ export function isRottaContatti(url: string): boolean {
 export function isRottaCatalogo(url: string): boolean {
   return /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url); // verifico se l'URL appartiene all'area catalogo
 }
+
+export function isRottaPiano(url: string): boolean {
+  return /^\/(it|en)\/(piano|plan)(\/|$)/.test(url);
+}

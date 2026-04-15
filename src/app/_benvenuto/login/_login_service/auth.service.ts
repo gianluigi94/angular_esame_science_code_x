@@ -64,13 +64,13 @@ export class Authservice {
     } else {
       // se non ho nessun dato salvato...
       auth = {
-        // creo un oggetto Auth 'vuoto'
         idUtente: null,
         idRuolo: null,
         idStato: null,
         tk: null,
         nome: null,
         abilita: null,
+        isoNazione: null,
       };
     }
     return auth;
@@ -91,13 +91,13 @@ export class Authservice {
   logout(consideraSessioneGiaVerificata: boolean = true): void {
     // eseguo il logout locale e resetto lo stato di sessione client
     const authVuoto: Auth = {
-      // preparo un oggetto Auth 'vuoto' per azzerare l'autenticazione
       idUtente: null,
       idRuolo: null,
       idStato: null,
       tk: null,
       nome: null,
       abilita: null,
+      isoNazione: null,
     };
     this.settaObsAuth(authVuoto); // aggiorno lo stato globale segnando che non sono più autenticato
     localStorage.removeItem('auth'); // pulisco entrambi

@@ -77,7 +77,8 @@ export class CambioLinguaService {
     this.sincCatalogoPathConLingua(codice); // sincronizzo il path dell'area catalogo con la nuova lingua
     this.sincNotFoundPathConLingua(codice); // sincronizzo il path della pagina not found con la nuova lingua
     this.sincContattiPathConLingua(codice); // sincronizzo il path della pagina contatti con la nuova lingua
-    this.sincIscrizionePathConLingua(codice); // sincronizzo il path della pagina iscrizione con la nuova lingua
+    this.sincIscrizionePathConLingua(codice);
+    this.sincPianoPathConLingua(codice);
     this.toastService.chiudiTutti(); // chiudo eventuali toast aperti per evitare messaggi nella lingua sbagliata
     this.cambioLinguaAvviato$.next(codice); // notifico che ho iniziato il cambio lingua con quel codice
 
@@ -399,7 +400,27 @@ export class CambioLinguaService {
 
     this.location.replaceState(target + tail); // cambio URL senza navigare e senza ricreare componenti
   }
+private sincPianoPathConLingua(codice: string): void {
+    const full =
+      this.location.path(true) ||
+      (window.location.pathname + window.location.search + window.location.hash) ||
+      '';
+    const soloPath = full.split('?')[0].split('#')[0];
+    const tail = full.substring(soloPath.length);
+    const m = soloPath.match(/^\/(it|en)\/(piano|plan)(\/.*)?$/);
 
+    if (!m) return;
+
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
+    const segmento = c === 'it' ? 'piano' : 'plan';
+    const resto = m[3] || '';
+    const target = ('/' + c + '/' + segmento + resto).replace(/\/+$/, '');
+    const current = soloPath.replace(/\/+$/, '');
+
+    if (target === current) return;
+
+    this.location.replaceState(target + tail);
+  }
   /**
    * Sincronizza il path della pagina iscrizione con la lingua ricevuta senza navigare.
    *

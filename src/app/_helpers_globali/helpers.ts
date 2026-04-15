@@ -151,6 +151,14 @@ export function salvaPathInSessionStorage(url: string): void { // salvo in sessi
       }, 500); // aspetto mezzo secondo
     }
 
+    const eraPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(last); // verifico se prima ero nella pagina piano
+    const oraPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(pathPulito); // verifico se ora sono nella pagina piano
+    if (eraPiano && !oraPiano) { // controllo se sto uscendo dal piano
+      setTimeout(() => { // ritardo leggermente la pulizia del flag
+        sessionStorage.removeItem('vengo_da_piano'); // rimuovo il flag di provenienza dal piano
+      }, 500); // aspetto mezzo secondo
+    }
+
     sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito); // salvo il path pulito come ultimo path utile
   } catch {} // ignoro eventuali errori di sessionStorage
 }
@@ -289,6 +297,7 @@ export function traduciSegmentiUrl(url: string, langSalvata: 'it' | 'en'): strin
     u = u.replace(/\/(series)(\/|$)/, '/serie$2'); // traduco series in serie
     u = u.replace(/\/(season)(\/|$)/, '/stagione$2'); // traduco season in stagione
     u = u.replace(/([?&])play=/, '$1riproduzione='); // traduco il parametro play in riproduzione
+    u = u.replace(/\/(plan)(\/|$)/, '/piano$2'); // traduco plan in piano
   } else { // entro nel ramo di traduzione verso l'inglese
     u = u.replace(/\/(benvenuto)(\/|$)/, '/welcome$2'); // traduco benvenuto in welcome
     u = u.replace(/\/(accedi)(\/|$)/, '/login$2'); // traduco accedi in login
@@ -298,6 +307,7 @@ export function traduciSegmentiUrl(url: string, langSalvata: 'it' | 'en'): strin
     u = u.replace(/\/(serie)(\/|$)/, '/series$2'); // traduco serie in series
     u = u.replace(/\/(stagione)(\/|$)/, '/season$2'); // traduco stagione in season
     u = u.replace(/([?&])riproduzione=/, '$1play='); // traduco il parametro riproduzione in play
+    u = u.replace(/\/(piano)(\/|$)/, '/plan$2'); // traduco piano in plan
   }
 
   return u; // restituisco l'URL tradotto finale

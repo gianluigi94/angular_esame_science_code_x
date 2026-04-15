@@ -10,6 +10,30 @@
 <!-- pagina gestita da angular, main e sopprattutto il footer cambiano a seconda della rotta in cui mi trovo e sono gesti diversamente-->
 <router-outlet></router-outlet>
 <app-dati-personali></app-dati-personali>
+<div *ngIf="pannelloPianoVisibile" class="piano-pannello">
+  <app-piano-card
+    [pianoSelezionato]="pianoSelezionatoApp"
+    [prezzoBase]="prezzoPianoBase"
+    [prezzoPremium]="prezzoPianoPermium"
+    (pianoScelto)="pianoSelezionatoApp = $event"
+  ></app-piano-card>
+  <div class="piano-bottoni">
+    <button type="button" class="piano-indietro-btn" (click)="onIndietroPiano()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      {{ 'ui.registrazione.bottone.indietro' | translate }}
+    </button>
+    <button
+      type="button"
+      class="piano-conferma-btn"
+      [disabled]="!pianoSelezionatoApp || pianoSelezionatoApp === pianoCorrente"
+      (click)="onConfermaPiano()"
+    >
+      {{ 'ui.piano.conferma' | translate }}
+    </button>
+  </div>
+</div>
 <!-- importo i toast che possono comparire ovunque  -->
 <app-toast-container></app-toast-container>
 

@@ -295,13 +295,13 @@ apriFormReset(): void {
           const tk: string = rit.data.tk; // estraggo il token dalla risposta
           const p = UtilityService.leggiToken(tk)?.data || {}; // decodifico il token per ricavare i dati utente, oppure uso un oggetto vuoto
           const auth: Auth = {
-            // costruisco l'oggetto di autenticazione
-            tk: tk, // salvo il token e i dati (o evenutuale null)
+            tk: tk,
             nome: p.nome ?? null,
             idRuolo: p.id_ruolo ?? null,
             idStato: p.id_stato_utente ?? null,
             idUtente: p.id_contatto ?? null,
             abilita: Array.isArray(p.abilita) ? p.abilita : null,
+            isoNazione: p.iso_nazione ?? null,
           };
           this.authService.settaObsAuth(auth); // aggiorno lo stato di autenticazione globale con i dati appena ottenuti
           this.authService.scriviAuthSuStorage(auth, restaCollegato); // local se collegato, altrimenti session
@@ -356,14 +356,14 @@ apriFormReset(): void {
         }
 
         this.saturnoService.flashErrorLight(); // faccio lampeggiare la luce di errore anche in caso di risposta fallita
-        const auth: Auth = {
-          // preparo un oggetto auth 'vuoto' per segnare che non sono autenticato
-          tk: null, // imposto il token a null e azzero i valori
+       const auth: Auth = {
+          tk: null,
           nome: null,
           idRuolo: null,
           idStato: null,
           idUtente: null,
           abilita: null,
+          isoNazione: null,
         };
         this.authService.settaObsAuth(auth); // aggiorno lo stato globale impostandolo come non autenticato
         this.stoControllando = false; // spengo lo stato di caricamento perché ho finito la gestione dell'errore

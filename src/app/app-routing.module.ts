@@ -110,6 +110,22 @@ const routes: Routes = [
           ),
       },
       {
+        path: 'piano', // definisco il path italiano della pagina piano
+        loadChildren: () =>
+          // carico il modulo piano in lazy loading
+          import('./_componenti_comuni/piano/piano.module').then(
+            (m) => m.PianoModule, // ritorno il modulo Piano
+          ),
+      },
+      {
+        path: 'plan', // definisco anche il path inglese della pagina piano sotto /it
+        loadChildren: () =>
+          // carico il modulo piano in lazy loading
+          import('./_componenti_comuni/piano/piano.module').then(
+            (m) => m.PianoModule, // ritorno il modulo Piano
+          ),
+      },
+      {
         path: '**', // intercetto tutte le sotto-rotte italiane non riconosciute
         component: RedirectNonTrovatoComponent, // reindirizzo alla gestione not found
       },
@@ -188,6 +204,22 @@ const routes: Routes = [
           // carico il modulo contatti in lazy loading
           import('./_componenti_comuni/contatti/contatti.module').then(
             (m) => m.ContattiModule, // ritorno il modulo Contatti
+          ),
+      },
+      {
+        path: 'piano', // definisco anche il path italiano della pagina piano sotto /en
+        loadChildren: () =>
+          // carico il modulo piano in lazy loading
+          import('./_componenti_comuni/piano/piano.module').then(
+            (m) => m.PianoModule, // ritorno il modulo Piano
+          ),
+      },
+      {
+        path: 'plan', // definisco il path inglese della pagina piano
+        loadChildren: () =>
+          // carico il modulo piano in lazy loading
+          import('./_componenti_comuni/piano/piano.module').then(
+            (m) => m.PianoModule, // ritorno il modulo Piano
           ),
       },
       {

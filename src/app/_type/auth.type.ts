@@ -4,5 +4,6 @@ export type Auth={
   idRuolo: number | null,
   idStato: number | null,
   abilita: number[] | null,
-  idUtente: number | null
+  idUtente: number | null,
+  isoNazione: string | null
 }

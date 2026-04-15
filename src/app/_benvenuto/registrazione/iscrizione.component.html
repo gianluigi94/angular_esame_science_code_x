@@ -1166,102 +1166,20 @@
   <!-- step 4: scelta del piano (base o premium), non è un form ma un div con card cliccabili -->
   <div class="form-registrazione" *ngIf="stepAttuale === 4">
 
-    <!-- contenitore delle due card piano, entrano animate -->
-    <div class="piani-wrapper campo-animato">
-
-      <!-- card piano base: si segna come selezionata al click, mostra spunta se è il piano attivo -->
-      <div
-        class="piano-card"
-        [class.piano-selezionato]="pianoSelezionato === 'base'"
-        (click)="pianoSelezionato = 'base'"
-      >
-        <!-- badge con nome del piano tradotto -->
-        <div class="piano-badge">{{ 'ui.registrazione.piano.base.badge' | translate }}</div>
-
-        <!-- wrapper prezzo: mostra il prezzo barrato e sotto la scritta 'gratis per sempre' -->
-        <div class="piano-prezzo-wrapper">
-          <span class="piano-prezzo-barrato">{{ s2.prezzoBase }}/{{ 'ui.registrazione.piano.mese' | translate }}</span>
-          <span class="piano-gratis">
-            <span class="piano-gratis-parola">{{ 'ui.registrazione.piano.gratis' | translate }}</span>
-            {{ 'ui.registrazione.piano.per_sempre' | translate }}
-          </span>
-        </div>
-
-        <!-- lista delle feature del piano base: catalogo e aggiornamenti sì, pubblicità no -->
-        <ul class="piano-features">
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-            {{ 'ui.registrazione.piano.feature.catalogo' | translate }}
-          </li>
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-            {{ 'ui.registrazione.piano.feature.aggiornamenti' | translate }}
-          </li>
-          <!-- feature non disponibile: icona X grigia al posto del segno di spunta -->
-          <li class="feature-no">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#555"><path d="M18 6L6 18M6 6l12 12" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>
-            {{ 'ui.registrazione.piano.feature.pubblicita' | translate }}
-          </li>
-        </ul>
-
-        <!-- spunta di selezione: compare solo se questo è il piano selezionato -->
-        <div class="piano-check" *ngIf="pianoSelezionato === 'base'">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" fill="#e79c50"/>
-            <path d="M7 12l4 4 6-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- card piano premium: stessa struttura del base, ha tutte e tre le feature disponibili -->
-      <div
-        class="piano-card piano-pro"
-        [class.piano-selezionato]="pianoSelezionato === 'pro'"
-        (click)="pianoSelezionato = 'pro'"
-      >
-        <!-- badge premium con classe specifica per stile diverso -->
-        <div class="piano-badge piano-badge-pro">{{ 'ui.registrazione.piano.premium.badge' | translate }}</div>
-
-        <!-- wrapper prezzo premium -->
-        <div class="piano-prezzo-wrapper">
-          <span class="piano-prezzo-barrato">{{ s2.prezzoPremium }}/{{ 'ui.registrazione.piano.mese' | translate }}</span>
-          <span class="piano-gratis">
-            <span class="piano-gratis-parola">{{ 'ui.registrazione.piano.gratis' | translate }}</span>
-            {{ 'ui.registrazione.piano.per_sempre' | translate }}
-          </span>
-        </div>
-
-        <!-- lista delle feature del piano premium: tutte e tre disponibili incluso no pubblicità -->
-        <ul class="piano-features">
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-            {{ 'ui.registrazione.piano.feature.catalogo' | translate }}
-          </li>
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-            {{ 'ui.registrazione.piano.feature.aggiornamenti' | translate }}
-          </li>
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#e79c50"><path d="M20 6L9 17l-5-5"/></svg>
-            {{ 'ui.registrazione.piano.feature.no_pubblicita' | translate }}
-          </li>
-        </ul>
-
-        <!-- spunta di selezione: compare solo se questo è il piano selezionato -->
-        <div class="piano-check" *ngIf="pianoSelezionato === 'pro'">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" fill="#e79c50"/>
-            <path d="M7 12l4 4 6-7" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </div>
-    </div>
+    <!-- card piano: componente condiviso con registrazione e pagina piano -->
+    <app-piano-card
+      class="campo-animato"
+      [pianoSelezionato]="pianoSelezionato"
+      [prezzoBase]="s2.prezzoBase"
+      [prezzoPremium]="s2.prezzoPremium"
+      (pianoScelto)="pianoSelezionato = $event"
+    ></app-piano-card>
 
     <!-- disclaimer sotto le card, entra animato -->
     <p class="piano-disclaimer campo-animato">
-  {{ 'ui.registrazione.piano.disclaimer' | translate }}
-  <span class="disclaimer-consiglio">{{ 'ui.registrazione.piano.disclaimer.consiglio' | translate }}</span>
-</p>
+      {{ 'ui.registrazione.piano.disclaimer' | translate }}
+      <span class="disclaimer-consiglio">{{ 'ui.registrazione.piano.disclaimer.consiglio' | translate }}</span>
+    </p>
 
     <!-- bottoni di navigazione step 4: indietro a sinistra, registrati a destra,
          il bottone registrati è disabilitato finché non si sceglie un piano -->

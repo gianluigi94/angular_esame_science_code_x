@@ -16,6 +16,7 @@ import { SpinnerComponent } from './spinner/spinner.component';
 import { PaginaCaricamentoComponent } from './pagina-caricamento/pagina-caricamento.component';
 import { DatiPersonaliComponent } from './dati-personali/dati-personali.component';
 import { BarraAvanzamentoComponent } from './barra-avanzamento/barra-avanzamento.component';
+import { PianoCardComponent } from './piano-card/piano-card.component';
 import { ReactiveFormsModule } from '@angular/forms';
 @NgModule({
   declarations: [
@@ -32,6 +33,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     PaginaCaricamentoComponent,
     DatiPersonaliComponent,
     BarraAvanzamentoComponent,
+    PianoCardComponent,
   ],
   imports: [
     CommonModule,
@@ -53,6 +55,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     DatiPersonaliComponent,
     PaginaCaricamentoComponent,
     BarraAvanzamentoComponent,
+    PianoCardComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

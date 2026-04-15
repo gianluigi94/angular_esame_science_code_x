@@ -21,7 +21,7 @@ import { GRUPPI_CONFIG } from './saturno-gruppi-config';
 import { SaturnoDischiService } from './saturno-dischi.service';
 import { SaturnoMouseHelper } from './saturno_helpers/saturno-mouse.helper';
 import { SaturnoLoopHelper } from './saturno_helpers/saturno-loop.helper';
-import { eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione, eRottaNotFound, eRottaContatti, eSchedaCatalogo,leggiUrlAttuale } from './saturno-url.utils';
+import { eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione, eRottaNotFound, eRottaContatti, eRottaPiano, eSchedaCatalogo, leggiUrlAttuale } from './saturno-url.utils';
 
 @Injectable({ providedIn: 'root' })
 export class SaturnoService {
@@ -271,15 +271,18 @@ export class SaturnoService {
       const urlSubito = leggiUrlAttuale(); // leggo subito l'URL completo attuale
       const vengoDaContattiFlag =
         sessionStorage.getItem('vengo_da_contatti') === 'true'; // verifico se arrivo dai contatti tramite flag di sessione
+      const vengoDaPianoFlag =
+        sessionStorage.getItem('vengo_da_piano') === 'true'; // verifico se arrivo dal piano tramite flag di sessione
       if (
-        vengoDaContattiFlag && // controllo se arrivo dai contatti
+        (vengoDaContattiFlag || vengoDaPianoFlag) && // controllo se arrivo dai contatti o dal piano
         this.scenaInizializzata && // controllo se la scena era gia' stata inizializzata
         (eRottaCatalogo(urlSubito) || eSchedaCatalogo(urlSubito)) && // controllo se sono in catalogo o in una scheda catalogo
         !this.catalogoGiaAnimato // controllo che il catalogo non risulti gia' animato
       ) {
         try {
           sessionStorage.removeItem('vengo_da_contatti');
-        } catch {} // provo a consumare il flag di provenienza dai contatti
+          sessionStorage.removeItem('vengo_da_piano');
+        } catch {} // provo a consumare i flag di provenienza dai contatti e dal piano
         const saturno = document.querySelector(
           'app-saturno',
         ) as HTMLElement | null; // recupero il contenitore di Saturno dal DOM
@@ -322,12 +325,14 @@ export class SaturnoService {
 
           const vengoDaContatti =
             (sessionStorage.getItem('vengo_da_contatti') || '') === 'true'; // verifico di nuovo se arrivo dai contatti
+          const vengoDaPiano =
+            (sessionStorage.getItem('vengo_da_piano') || '') === 'true'; // verifico se arrivo dal piano
 
-          if (vengoDaContatti) {
-            // controllo se devo fare il fade out partendo dai contatti
+          if (vengoDaContatti || vengoDaPiano) { // controllo se devo fare il fade out partendo dai contatti o dal piano
             try {
               sessionStorage.removeItem('vengo_da_contatti');
-            } catch {} // provo a consumare il flag di provenienza dai contatti
+              sessionStorage.removeItem('vengo_da_piano');
+            } catch {} // provo a consumare i flag di provenienza dai contatti e dal piano
 
             const saturno = document.querySelector(
               'app-saturno',
@@ -718,8 +723,8 @@ export class SaturnoService {
           });
           this.particleGroups = particleGroups; // salvo tutti i gruppi particellari creati nel riferimento del service
 
-          if (eRottaContatti(url)) {
-            // controllo se la rotta corrente e' contatti
+          if (eRottaContatti(url) || eRottaPiano(url)) {
+            // controllo se la rotta corrente e' contatti o piano
             this.ensureRingsAndParticlesIfMissing(scene); // ricreo anelli e particelle se mancanti
             this.animateService.setXNormale(); // porto la X nello stato normale
             this.animateService.setTitoloAltoGlobal(); // porto il titolo nella posizione alta

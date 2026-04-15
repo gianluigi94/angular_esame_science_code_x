@@ -8,7 +8,7 @@
   <div class="sinistra">
     <div
       class="menu_sinistra"
-      [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+      [style.visibility]="pagina404 || paginaContatti || paginaPiano ? 'hidden' : 'visible'"
     >
       <!-- torna al catalogo: visibile solo nella scheda -->
       <a
@@ -35,7 +35,7 @@
       <ul
         class="menu-categorie"
         *ngIf="authVisuale?.tk && !paginaScheda()"
-        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
         (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
       >
@@ -84,7 +84,7 @@
       <ul
         class="menu-tipo"
         *ngIf="authVisuale?.tk && !paginaScheda()"
-        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
         (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"
       >
@@ -130,7 +130,7 @@
       <!-- Ricerca, al passassagio del mause l'input si apre-->
       <div
         class="contenitore-ricerca"
-        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (mostraRicerca = true)"
         (mouseleave)="!logoutInCorso && (mostraRicerca = false)"
       >
@@ -236,7 +236,7 @@
       <!-- Menu utente -->
       <ul
         class="menu-utente"
-        [style.visibility]="pagina404 || paginaContatti ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (menuUtenteAperto = true)"
         (mouseleave)="!logoutInCorso && (menuUtenteAperto = false)"
       >
@@ -267,6 +267,13 @@
               (click)="onClickScollegati()"
               [innerHTML]="'ui.menu_utente.scollegati.label' | translate"
             ></li>
+
+            <li
+              *ngIf="chiaveRuolo"
+              class="voce-tendina vocina"
+              [class.piano-non-cliccabile]="authVisuale?.idRuolo !== 2 && authVisuale?.idRuolo !== 3"
+              (click)="(authVisuale?.idRuolo === 2 || authVisuale?.idRuolo === 3) && onCambiaPianoClick()"
+            >{{ chiaveRuolo | translate }}</li>
             <li
               class="separatore-tendina"
               role="separator"

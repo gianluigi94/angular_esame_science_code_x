@@ -86,17 +86,13 @@ export class AuthInterceptor implements HttpInterceptor {
             const haTokenIniziale = this.statoSessione.haTokenIniziale; // verifico se all'avvio avevo già un token salvato
             const richiestaConBearer = reqDaUsare.headers.has('Authorization'); // controllo se questa richiesta è partita con l'intestazione di autorizzazione
 
-            if (!haTokenIniziale) {
-              // entro qui se non avevo un token all'avvio
-              // nessun token salvato all'avvio: prima risposta OK basta
-              this.statoSessione.segnaSessioneVerificata(); // considero la sessione verificata alla prima risposta andata bene
+            const suRottaPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(window.location.pathname);
+            if (!haTokenIniziale || suRottaPiano) {
+              this.statoSessione.segnaSessioneVerificata();
             } else {
-              // entro qui se invece all'avvio avevo già un token
-              // avevo un token: considero "confermata" solo una risposta OK con bearer
               if (richiestaConBearer) {
-                // confermo la sessione solo se la chiamata è stata fatta includendo il bearer
-                this.statoSessione.sessioneGiaConfermata = true; // segno che la sessione è ormai stata confermata almeno una volta
-                this.statoSessione.segnaSessioneVerificata(); // segnalo che la verifica della sessione è completata
+                this.statoSessione.sessioneGiaConfermata = true;
+                this.statoSessione.segnaSessioneVerificata();
               }
             }
           }

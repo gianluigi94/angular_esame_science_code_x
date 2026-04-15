@@ -142,8 +142,11 @@ export class TitoloPaginaService {
     } else if (path === '/catalogo/film-serie' || path === '/catalog/movies-series') { // controllo se mi trovo nella sezione film e serie
       titolo = codice === 'it' ? `Film e Serie - ${base}` : `Movies & Series - ${base}`; // imposto il titolo localizzato della sezione mista
 
-    } else if (path === '/non-trovato' || path === '/not-found') { // controllo se mi trovo nella pagina 404
-      titolo = codice === 'it' ? `Pagina non trovata - ${base}` : `Page Not Found - ${base}`; // imposto il titolo localizzato della pagina non trovata
+    } else if (path === '/non-trovato' || path === '/not-found') {
+      titolo = codice === 'it' ? `Pagina non trovata - ${base}` : `Page Not Found - ${base}`;
+
+    } else if (path === '/piano' || path === '/plan') {
+      titolo = codice === 'it' ? `Il tuo piano - ${base}` : `Your plan - ${base}`;
     }
 
     this.title.setTitle(titolo); // imposto il titolo del browser con quello calcolato

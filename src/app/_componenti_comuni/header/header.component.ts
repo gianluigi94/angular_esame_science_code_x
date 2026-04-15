@@ -22,7 +22,7 @@ import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.serv
 import { ContattiNavigazioneService } from 'src/app/_servizi_globali/contatti-navigazione.service';
 import { StopVideoGlobaleService } from 'src/app/_catalogo/riga-categoria/categoria_services/stop-video-globale.service';
 import { SchedaProntaService } from 'src/app/_catalogo/scheda/scheda_service/scheda-pronta.service';
-
+import { CambioPianoAnimazioneService } from 'src/app/_servizi_globali/cambio-piano-animazione.service';
 import { prefissoLinguaDaUrl, baseCatalogoDaUrl, pathCatalogoDaTipo, pathLoginDaLingua, isPaginaScheda} from './header_utility/header-url.utils';
 import { HeaderAuthHelper } from './header_helpers/header-auth.helper';
 import { HeaderCategorieHelper } from './header_helpers/header-categorie.helper';
@@ -53,6 +53,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   paginaIscrizione = false; // controllo se sono nella pagina iscrizione
   pagina404 = false; // controllo se sono nella pagina 404
   paginaContatti = false; // controllo se sono nella pagina contatti
+  paginaPiano = false; // controllo se sono nella pagina piano
 
   authCorrente: Auth | null = null; // salvo lo stato auth corrente reale
   authVisuale: Auth | null = null; // salvo lo stato auth mostrato a schermo
@@ -71,6 +72,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private api: ApiService,
     private authService: Authservice,
+    private cambioPianoAnimazione: CambioPianoAnimazioneService,
     private router: Router,
     cambioLinguaService: CambioLinguaService,
     private translate: TranslateService,
@@ -197,6 +199,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
    */
   get etichettaTipoSelezionato(): string {
     return this.etichettaTipo(this.tipoSelezionato); // calcolo l'etichetta del tipo attualmente selezionato
+  }
+
+
+  get chiaveRuolo(): string {
+    const id = this.authVisuale?.idRuolo;
+    return id ? `ui.ruolo.${id}` : '';
   }
 
   /**
@@ -407,7 +415,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     event.preventDefault(); // blocco il comportamento predefinito del link
     this.contattiNav.vai(); // delego la navigazione contatti al servizio
   }
-
+onCambiaPianoClick(): void {
+    if (this.auth.logoutInCorso) return;
+    this.cambioPianoAnimazione.apriPannelloPiano();
+  }
   /**
    * Gestisce il ritorno al catalogo dalla scheda o dal player.
    *
@@ -451,5 +462,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       ); // verifico se sono nella pagina iscrizione
     this.pagina404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url); // verifico se sono nella pagina 404
     this.paginaContatti = /^\/(it\/contatti|en\/contact)(\/|$)/.test(url); // verifico se sono nella pagina contatti
+    this.paginaPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(url); // verifico se sono nella pagina piano
   }
 }

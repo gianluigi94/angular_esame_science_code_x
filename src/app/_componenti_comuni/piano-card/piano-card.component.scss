@@ -1,0 +1,142 @@
+@keyframes spunta-entra {
+  0%   { opacity: 0; transform: scale(0.3) rotate(-20deg); }
+  60%  { transform: scale(1.2) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.piani-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 28px;
+  align-items: stretch;
+}
+
+.piano-card {
+  position: relative;
+  width: 360px;
+  min-height: 420px;
+  background: #000000df;
+  border-radius: 16px;
+  box-shadow: 0 0 8px #999da0;
+  padding: 44px 36px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  border: 2px solid transparent;
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+
+  &:hover {
+    box-shadow: 0 0 18px #e79c5055;
+    transform: scale(1.04) translateZ(0);
+  }
+
+  &.piano-selezionato {
+    border-color: #e79c50;
+    box-shadow: 0 0 22px #e79c5088;
+  }
+}
+
+.piano-badge {
+  font-family: "Quantico", serif;
+  font-size: 36px;
+  font-weight: bold;
+  color: aliceblue;
+  text-shadow: 1px 1px 3px #14110a;
+  letter-spacing: 3px;
+}
+
+.piano-prezzo-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.piano-prezzo-barrato {
+  font-family: "Quantico", serif;
+  font-size: 21px;
+  color: #555;
+  text-decoration: line-through;
+  text-decoration-color: #e79c5055;
+}
+
+.piano-gratis {
+  font-family: "Quantico", serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #e79c50;
+  text-shadow: 0 0 10px #e79c5066;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.piano-gratis-parola {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.piano-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: "Quantico", serif;
+    font-size: 19px;
+    color: rgb(205, 205, 205);
+
+    &.feature-no { color: #555; }
+
+    svg {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+    }
+  }
+}
+
+.piano-check {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  animation: spunta-entra 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.piano-badge,
+.piano-prezzo-wrapper {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.piano-disclaimer {
+  text-shadow: 1px 1px 3px #14110a;
+  font-family: "Quantico", serif;
+  font-size: 16px;
+  color: aliceblue;
+  text-align: center;
+  max-width: 750px;
+  line-height: 1.5;
+  margin-top: 16px;
+  border-radius: 10px;
+  background-color: #14110a44;
+  padding: 5px;
+}
+
+.disclaimer-consiglio {
+  text-shadow: 1px 1px 3px #14110a;
+  display: block;
+  margin-top: 6px;
+  color: #e79c50;
+}

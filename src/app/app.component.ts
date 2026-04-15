@@ -1,6 +1,6 @@
 // Componente root che coordina avvio app, loader globali, lingua, titolo pagina, toast, sessione e reazioni alle navigazioni.
 
-import { Component, OnInit, Inject, NgZone } from '@angular/core';
+import { Component, OnInit, Inject, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CambioLinguaService } from './_servizi_globali/cambio-lingua.service';
 import { TraduzioniService } from './_servizi_globali/traduzioni.service';
 import { ErroreGlobaleService } from './_servizi_globali/errore-globale.service';
@@ -20,10 +20,10 @@ import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
 import { SchedaProntaService } from './_catalogo/scheda/scheda_service/scheda-pronta.service';
 import { isFirefox, pulisciUrl, isCatalogoHome, isAreaCatalogo, leggiPathDaSessionStorage, salvaPathInSessionStorage, impostaLangHtml }from './_helpers_globali/helpers';
-import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo } from './_helpers_globali/app-routes.utils';
+import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo, isRottaPiano } from './_helpers_globali/app-routes.utils';
 import { AppToastService } from './_servizi_globali/app-toast.service';
 import { AppLoaderService } from './_servizi_globali/app-loader.service';
-
+import { ApiService } from './_servizi_globali/api.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -62,15 +62,55 @@ export class AppComponent implements OnInit {
     return this.appLoader.deveCaricareImmaginiCarosello$.value;
   } // leggo dal service loader il valore corrente del flag immagini carosello
 
-  sonoIn404 = false; // tengo traccia se mi trovo nella pagina 404
-  nascondiSfondoIn404 = false; // tengo traccia se devo nascondere lo sfondo nella 404
-  ultimaUrl = ''; // conservo l'ultima URL vista
-  isFirefox = false; // tengo traccia se il browser corrente e' Firefox
-  chiaveToast404 = this.appToast.chiaveToast404; // conservo la chiave del toast persistente della 404
-  private appLoader: AppLoaderService; // conservo l'istanza del service che centralizza la logica loader
+  sonoIn404 = false;
+  nascondiSfondoIn404 = false;
+  ultimaUrl = '';
+  isFirefox = false;
+  chiaveToast404 = this.appToast.chiaveToast404;
+  pannelloPianoVisibile = false;
+  pianoSelezionatoApp: 'base' | 'pro' | null = null;
+  prezzoPianoBase = '';
+  prezzoPianoPermium = '';
+  private appLoader: AppLoaderService;
+ private onApriPannelloPiano = () => {
+    this.pannelloPianoVisibile = true;
+    const auth = this.authService.leggiObsAuth().value;
+    const idRuolo = auth?.idRuolo;
+    const iso = auth?.isoNazione ?? 'IT';
+    this.pianoSelezionatoApp = idRuolo === 2 ? 'base' : idRuolo === 3 ? 'pro' : null;
+    this.apiService.getPrezziNazione(iso).subscribe({
+      next: (rit) => {
+        const d = rit.data;
+        if (!d || !d.tasso || parseFloat(d.tasso) <= 0) {
+          this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€';
+        } else {
+          const tasso = parseFloat(d.tasso);
+          const aliquota = d.aliquota ? parseFloat(d.aliquota) / 100 : 0;
+          const simbolo = d.valuta_simbolo ?? '€';
+          this.prezzoPianoBase = `${(5 * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+          this.prezzoPianoPermium = `${(10 * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+        }
+      },
+      error: () => { this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€'; },
+    });
+    requestAnimationFrame(() => {
+      import('gsap').then(({ default: gsap }) => {
+        const card = document.querySelector('app-piano-card');
+        if (!card) return;
+        gsap.set(card, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+        const bottoni = document.querySelector('.piano-bottoni') as HTMLElement | null;
+        if (bottoni) gsap.set(bottoni, { opacity: 0 });
+        setTimeout(() => {
+          gsap.to(card, { opacity: 1, scaleX: 1, duration: 0.9, ease: 'power2.out' });
+          if (bottoni) gsap.to(bottoni, { opacity: 1, duration: 0.6, delay: 0.5, ease: 'power2.out' });
+        }, 500);
+      });
+    });
+  };
 
   constructor(
     private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
     private cambioLinguaService: CambioLinguaService,
     private traduzioniService: TraduzioniService,
     private erroreGlobaleService: ErroreGlobaleService,
@@ -86,6 +126,7 @@ export class AppComponent implements OnInit {
     private performanceService: PerformanceService,
     private authService: Authservice,
     private appToast: AppToastService,
+    private apiService: ApiService,
     @Inject(DOCUMENT) private documento: Document,
   ) {
     this.appLoader = new AppLoaderService( // costruisco manualmente il service loader usando le dipendenze necessarie
@@ -126,6 +167,46 @@ export class AppComponent implements OnInit {
 
     if (isRotta404(urlIniziale)) this.appToast.mostraToast404Persistente(); // mostro il toast persistente se parto in 404
 
+    window.addEventListener('apri-pannello-piano', this.onApriPannelloPiano);
+
+
+
+    window.addEventListener('loader-hidden', () => {
+      if (!isRottaPiano(this.router.url)) return;
+      const idRuolo = this.authService.leggiObsAuth().value?.idRuolo;
+      this.pianoSelezionatoApp = idRuolo === 2 ? 'base' : idRuolo === 3 ? 'pro' : null;
+      this.pannelloPianoVisibile = true;
+      this.cdr.detectChanges();
+      requestAnimationFrame(() => {
+        import('gsap').then(({ default: gsap }) => {
+          const card = document.querySelector('app-piano-card');
+          if (!card) return;
+          gsap.set(card, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+          const bottoni = document.querySelector('.piano-bottoni') as HTMLElement | null;
+          if (bottoni) gsap.set(bottoni, { opacity: 0 });
+          setTimeout(() => {
+            gsap.to(card, { opacity: 1, scaleX: 1, duration: 0.9, ease: 'power2.out' });
+            if (bottoni) gsap.to(bottoni, { opacity: 1, duration: 0.6, delay: 0.5, ease: 'power2.out' });
+          }, 500);
+        });
+      });
+    });
+    window.addEventListener('chiudi-pannello-piano', () => {
+      import('gsap').then(({ default: gsap }) => {
+        const card = document.querySelector('app-piano-card');
+        const bottoni = document.querySelector('.piano-bottoni') as HTMLElement | null;
+        if (!card) { this.pannelloPianoVisibile = false; return; }
+        if (bottoni) gsap.to(bottoni, { opacity: 0, duration: 0.2, ease: 'power2.in' });
+        gsap.to(card, {
+          opacity: 0,
+          scaleX: 0,
+          duration: 0.4,
+          ease: 'power2.in',
+          transformOrigin: 'center center',
+          onComplete: () => { this.pannelloPianoVisibile = false; }
+        });
+      });
+    });
     this.titoloPaginaService.avvia();
 
     const params = new URLSearchParams(window.location.search);
@@ -204,7 +285,8 @@ export class AppComponent implements OnInit {
           // controllo se la nuova rotta e' contatti da utente loggato
           window.dispatchEvent(new CustomEvent('apri-dati-personali')); // apro i dati personali
 
-        this.sonoIn404 = isRotta404(url); // aggiorno lo stato 404 in base alla nuova rotta
+        if (!isRottaPiano(url)) this.pannelloPianoVisibile = false;
+        this.sonoIn404 = isRotta404(url);
         const precedente = this.ultimaUrl; // salvo l'URL precedente prima di aggiornarlo
         this.ultimaUrl = url; // aggiorno l'ultima URL con quella nuova
         salvaPathInSessionStorage(url); // salvo la nuova URL nella sessione
@@ -228,13 +310,24 @@ export class AppComponent implements OnInit {
         })();
         const eroInContatti = isRottaContatti(precedente); // controllo se la rotta precedente era contatti
 
+        const vengoDaPiano = (() => {
+          // ricavo in modo sicuro se arrivo dal flusso piano
+          try {
+            return sessionStorage.getItem('vengo_da_piano') === 'true';
+          } catch {
+            return false;
+          } // leggo il flag da sessionStorage con fallback sicuro
+        })();
+        const eroInPiano = isRottaPiano(precedente); // controllo se la rotta precedente era piano
+
         const disabilitaLoader = // calcolo se devo disabilitare il loader nella nuova situazione
           isRottaLogin(url) || // disabilito su login
           isRotta404(url) || // disabilito su 404
           (isRottaCatalogo(url) &&
             (isRottaLogin(precedente) ||
               isRotta404(precedente) ||
-              (vengoDaContatti && eroInContatti))) || // disabilito in alcuni ingressi al catalogo da pagine speciali
+              (vengoDaContatti && eroInContatti) ||
+              (vengoDaPiano && eroInPiano))) || // disabilito in alcuni ingressi al catalogo da pagine speciali
           (eroInContatti && isRotta404(precedente)); // disabilito anche nel caso particolare contatti dopo 404 precedente
 
         this.appLoader.caricamentoDisabilitato$.next(disabilitaLoader); // aggiorno il flag del loader disabilitato
@@ -321,4 +414,18 @@ export class AppComponent implements OnInit {
   private isLoggato(): boolean {
     return !!this.authService.leggiObsAuth().value?.tk; // ritorno true se nello stato auth e' presente un token
   }
+
+  get pianoCorrente(): 'base' | 'pro' | null {
+    const id = this.authService.leggiObsAuth().value?.idRuolo;
+    return id === 2 ? 'base' : id === 3 ? 'pro' : null;
+  }
+
+  onIndietroPiano(): void {
+    window.history.back();
+  }
+
+  onConfermaPiano(): void {
+    window.history.back();
+  }
+
 }
