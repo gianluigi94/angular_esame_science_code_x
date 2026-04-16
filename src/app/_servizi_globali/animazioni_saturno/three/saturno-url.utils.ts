@@ -94,8 +94,15 @@ export function eRottaContatti(url: string): boolean {
 export function eRottaPiano(url: string): boolean {
   const path = String(url || '')
     .split('?')[0]
-    .split('#')[0]; // ripulisco l'URL da query string e hash
-  return /^\/(it|en)\/(piano|plan)(\/|$)/.test(path); // verifico se il path appartiene alla rotta piano
+    .split('#')[0];
+  return /^\/(it|en)\/(piano|plan)(\/|$)/.test(path);
+}
+
+export function eRottaRicevute(url: string): boolean {
+  const path = String(url || '')
+    .split('?')[0]
+    .split('#')[0];
+  return /^\/(it|en)\/(ricevute|receipts)(\/|$)/.test(path);
 }
 /**
  * Verifica se l'URL appartiene a una scheda catalogo film o serie con id numerico.

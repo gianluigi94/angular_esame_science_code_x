@@ -20,7 +20,7 @@ import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
 import { SchedaProntaService } from './_catalogo/scheda/scheda_service/scheda-pronta.service';
 import { isFirefox, pulisciUrl, isCatalogoHome, isAreaCatalogo, leggiPathDaSessionStorage, salvaPathInSessionStorage, impostaLangHtml }from './_helpers_globali/helpers';
-import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo, isRottaPiano } from './_helpers_globali/app-routes.utils';
+import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo, isRottaPiano, isRottaRicevute } from './_helpers_globali/app-routes.utils';
 import { AppToastService } from './_servizi_globali/app-toast.service';
 import { AppLoaderService } from './_servizi_globali/app-loader.service';
 import { ApiService } from './_servizi_globali/api.service';
@@ -336,24 +336,33 @@ export class AppComponent implements OnInit {
         const eroInContatti = isRottaContatti(precedente); // controllo se la rotta precedente era contatti
 
         const vengoDaPiano = (() => {
-          // ricavo in modo sicuro se arrivo dal flusso piano
           try {
             return sessionStorage.getItem('vengo_da_piano') === 'true';
           } catch {
             return false;
-          } // leggo il flag da sessionStorage con fallback sicuro
+          }
         })();
-        const eroInPiano = isRottaPiano(precedente); // controllo se la rotta precedente era piano
+        const eroInPiano = isRottaPiano(precedente);
 
-        const disabilitaLoader = // calcolo se devo disabilitare il loader nella nuova situazione
-          isRottaLogin(url) || // disabilito su login
-          isRotta404(url) || // disabilito su 404
+        const vengoDaRicevute = (() => {
+          try {
+            return sessionStorage.getItem('vengo_da_ricevute') === 'true';
+          } catch {
+            return false;
+          }
+        })();
+        const eroInRicevute = isRottaRicevute(precedente);
+
+        const disabilitaLoader =
+          isRottaLogin(url) ||
+          isRotta404(url) ||
           (isRottaCatalogo(url) &&
             (isRottaLogin(precedente) ||
               isRotta404(precedente) ||
               (vengoDaContatti && eroInContatti) ||
-              (vengoDaPiano && eroInPiano))) || // disabilito in alcuni ingressi al catalogo da pagine speciali
-          (eroInContatti && isRotta404(precedente)); // disabilito anche nel caso particolare contatti dopo 404 precedente
+              (vengoDaPiano && eroInPiano) ||
+              (vengoDaRicevute && eroInRicevute))) ||
+          (eroInContatti && isRotta404(precedente));
 
         this.appLoader.caricamentoDisabilitato$.next(disabilitaLoader); // aggiorno il flag del loader disabilitato
 

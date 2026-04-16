@@ -21,7 +21,7 @@ import { GRUPPI_CONFIG } from './saturno-gruppi-config';
 import { SaturnoDischiService } from './saturno-dischi.service';
 import { SaturnoMouseHelper } from './saturno_helpers/saturno-mouse.helper';
 import { SaturnoLoopHelper } from './saturno_helpers/saturno-loop.helper';
-import { eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione, eRottaNotFound, eRottaContatti, eRottaPiano, eSchedaCatalogo, leggiUrlAttuale } from './saturno-url.utils';
+import { eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione, eRottaNotFound, eRottaContatti, eRottaPiano, eRottaRicevute, eSchedaCatalogo, leggiUrlAttuale } from './saturno-url.utils';
 
 @Injectable({ providedIn: 'root' })
 export class SaturnoService {
@@ -272,9 +272,11 @@ export class SaturnoService {
       const vengoDaContattiFlag =
         sessionStorage.getItem('vengo_da_contatti') === 'true'; // verifico se arrivo dai contatti tramite flag di sessione
       const vengoDaPianoFlag =
-        sessionStorage.getItem('vengo_da_piano') === 'true'; // verifico se arrivo dal piano tramite flag di sessione
+        sessionStorage.getItem('vengo_da_piano') === 'true';
+      const vengoDaRicevuteFlag =
+        sessionStorage.getItem('vengo_da_ricevute') === 'true';
       if (
-        (vengoDaContattiFlag || vengoDaPianoFlag) && // controllo se arrivo dai contatti o dal piano
+        (vengoDaContattiFlag || vengoDaPianoFlag || vengoDaRicevuteFlag) &&
         this.scenaInizializzata && // controllo se la scena era gia' stata inizializzata
         (eRottaCatalogo(urlSubito) || eSchedaCatalogo(urlSubito)) && // controllo se sono in catalogo o in una scheda catalogo
         !this.catalogoGiaAnimato // controllo che il catalogo non risulti gia' animato
@@ -282,24 +284,24 @@ export class SaturnoService {
         try {
           sessionStorage.removeItem('vengo_da_contatti');
           sessionStorage.removeItem('vengo_da_piano');
-        } catch {} // provo a consumare i flag di provenienza dai contatti e dal piano
+          sessionStorage.removeItem('vengo_da_ricevute');
+        } catch {}
         const saturno = document.querySelector(
           'app-saturno',
-        ) as HTMLElement | null; // recupero il contenitore di Saturno dal DOM
+        ) as HTMLElement | null;
         const sfondo = document.querySelector(
           'app-sfondo',
-        ) as HTMLElement | null; // recupero il contenitore dello sfondo dal DOM
+        ) as HTMLElement | null;
         if (saturno) {
           gsap.killTweensOf(saturno);
           gsap.set(saturno, { opacity: 1 });
-        } // fermo i tween e rendo visibile Saturno se esiste
+        }
         if (sfondo) {
           gsap.killTweensOf(sfondo);
           gsap.set(sfondo, { opacity: 1 });
-        } // fermo i tween e rendo visibile lo sfondo se esiste
+        }
         this.animateService.fadeOutSaturnoESfondo(1.25, () => {
-          // faccio partire il fade out di Saturno e sfondo
-          this.animateService.enablePageScroll(); // riabilito lo scroll pagina al termine del fade
+          this.animateService.enablePageScroll();
         });
       }
 
@@ -324,15 +326,18 @@ export class SaturnoService {
           }
 
           const vengoDaContatti =
-            (sessionStorage.getItem('vengo_da_contatti') || '') === 'true'; // verifico di nuovo se arrivo dai contatti
+            (sessionStorage.getItem('vengo_da_contatti') || '') === 'true';
           const vengoDaPiano =
-            (sessionStorage.getItem('vengo_da_piano') || '') === 'true'; // verifico se arrivo dal piano
+            (sessionStorage.getItem('vengo_da_piano') || '') === 'true';
+          const vengoDaRicevute =
+            (sessionStorage.getItem('vengo_da_ricevute') || '') === 'true';
 
-          if (vengoDaContatti || vengoDaPiano) { // controllo se devo fare il fade out partendo dai contatti o dal piano
+          if (vengoDaContatti || vengoDaPiano || vengoDaRicevute) {
             try {
               sessionStorage.removeItem('vengo_da_contatti');
               sessionStorage.removeItem('vengo_da_piano');
-            } catch {} // provo a consumare i flag di provenienza dai contatti e dal piano
+              sessionStorage.removeItem('vengo_da_ricevute');
+            } catch {}
 
             const saturno = document.querySelector(
               'app-saturno',
@@ -724,18 +729,34 @@ export class SaturnoService {
           this.particleGroups = particleGroups; // salvo tutti i gruppi particellari creati nel riferimento del service
 
           if (eRottaContatti(url) || eRottaPiano(url)) {
-            // controllo se la rotta corrente e' contatti o piano
-            this.ensureRingsAndParticlesIfMissing(scene); // ricreo anelli e particelle se mancanti
-            this.animateService.setXNormale(); // porto la X nello stato normale
-            this.animateService.setTitoloAltoGlobal(); // porto il titolo nella posizione alta
+            this.ensureRingsAndParticlesIfMissing(scene);
+            this.animateService.setXNormale();
+            this.animateService.setTitoloAltoGlobal();
             this.saturnoPosizioniService.applicaPoseAScena(
               scene,
               'LOGIN_LATERALE',
-            ); // applico subito la posa login laterale
+            );
             if (this.directionalLight) {
-              // controllo se la luce direzionale esiste
-              this.directionalLight.intensity = 2.8; // imposto l'intensita' finale della luce
-              this.directionalLight.position.z = 0.1001; // imposto la posizione z finale della luce
+              this.directionalLight.intensity = 2.8;
+              this.directionalLight.position.z = 0.1001;
+            }
+          }
+
+          if (eRottaRicevute(url)) {
+            this.ensureRingsAndParticlesIfMissing(scene);
+            this.animateService.setXNormale();
+            this.animateService.setTitoloAltoGlobal();
+            this.saturnoPosizioniService.applicaPoseAScena(
+              scene,
+              'WELCOME_BASSO',
+            );
+            const t = 1.1;
+            const baseY = window.innerWidth <= 868 ? -3.6 : -3.4;
+            scene.position.x = 3.1 * t + 1.2 * Math.sin(Math.PI * t);
+            scene.position.y = baseY * Math.pow(t, 2);
+            if (this.directionalLight) {
+              this.directionalLight.intensity = 2.8;
+              this.directionalLight.position.z = 5.1001;
             }
           }
 

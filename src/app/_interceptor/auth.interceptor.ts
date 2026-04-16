@@ -87,7 +87,8 @@ export class AuthInterceptor implements HttpInterceptor {
             const richiestaConBearer = reqDaUsare.headers.has('Authorization'); // controllo se questa richiesta è partita con l'intestazione di autorizzazione
 
             const suRottaPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(window.location.pathname);
-            if (!haTokenIniziale || suRottaPiano) {
+            const suRottaRicevute = /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(window.location.pathname);
+            if (!haTokenIniziale || suRottaPiano || suRottaRicevute) {
               this.statoSessione.segnaSessioneVerificata();
             } else {
               if (richiestaConBearer) {

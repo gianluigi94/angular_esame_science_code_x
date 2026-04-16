@@ -23,6 +23,7 @@ import { ContattiNavigazioneService } from 'src/app/_servizi_globali/contatti-na
 import { StopVideoGlobaleService } from 'src/app/_catalogo/riga-categoria/categoria_services/stop-video-globale.service';
 import { SchedaProntaService } from 'src/app/_catalogo/scheda/scheda_service/scheda-pronta.service';
 import { CambioPianoAnimazioneService } from 'src/app/_servizi_globali/cambio-piano-animazione.service';
+import { CambioRicevuteAnimazioneService } from 'src/app/_servizi_globali/cambio-ricevute-animazione.service';
 import { prefissoLinguaDaUrl, baseCatalogoDaUrl, pathCatalogoDaTipo, pathLoginDaLingua, isPaginaScheda} from './header_utility/header-url.utils';
 import { HeaderAuthHelper } from './header_helpers/header-auth.helper';
 import { HeaderCategorieHelper } from './header_helpers/header-categorie.helper';
@@ -73,6 +74,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private authService: Authservice,
     private cambioPianoAnimazione: CambioPianoAnimazioneService,
+    private cambioRicevuteAnimazione: CambioRicevuteAnimazioneService,
     private router: Router,
     cambioLinguaService: CambioLinguaService,
     private translate: TranslateService,
@@ -421,9 +423,7 @@ onCambiaPianoClick(): void {
   }
   onRicevuteClick(): void {
     if (this.auth.logoutInCorso) return;
-    const codice = this.cambioLinguaService.leggiCodiceLingua();
-    const path = codice === 'it' ? '/it/ricevute' : '/en/receipts';
-    this.router.navigateByUrl(path);
+    this.cambioRicevuteAnimazione.apriRicevute();
   }
   /**
    * Gestisce il ritorno al catalogo dalla scheda o dal player.

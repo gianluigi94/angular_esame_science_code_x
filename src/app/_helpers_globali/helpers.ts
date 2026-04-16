@@ -151,12 +151,20 @@ export function salvaPathInSessionStorage(url: string): void { // salvo in sessi
       }, 500); // aspetto mezzo secondo
     }
 
-    const eraPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(last); // verifico se prima ero nella pagina piano
-    const oraPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(pathPulito); // verifico se ora sono nella pagina piano
-    if (eraPiano && !oraPiano) { // controllo se sto uscendo dal piano
-      setTimeout(() => { // ritardo leggermente la pulizia del flag
-        sessionStorage.removeItem('vengo_da_piano'); // rimuovo il flag di provenienza dal piano
-      }, 500); // aspetto mezzo secondo
+    const eraPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(last);
+    const oraPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(pathPulito);
+    if (eraPiano && !oraPiano) {
+      setTimeout(() => {
+        sessionStorage.removeItem('vengo_da_piano');
+      }, 500);
+    }
+
+    const eraRicevute = /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(last);
+    const oraRicevute = /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(pathPulito);
+    if (eraRicevute && !oraRicevute) {
+      setTimeout(() => {
+        sessionStorage.removeItem('vengo_da_ricevute');
+      }, 500);
     }
 
     sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito); // salvo il path pulito come ultimo path utile
