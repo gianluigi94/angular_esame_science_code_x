@@ -49,3 +49,7 @@ export function isRottaCatalogo(url: string): boolean {
 export function isRottaPiano(url: string): boolean {
   return /^\/(it|en)\/(piano|plan)(\/|$)/.test(url);
 }
+
+export function isRottaRicevute(url: string): boolean {
+  return /^\/(it|en)\/(ricevute|receipts)(\/|$)/.test(url);
+}

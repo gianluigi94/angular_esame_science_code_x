@@ -275,6 +275,11 @@
               (click)="(authVisuale?.idRuolo === 2 || authVisuale?.idRuolo === 3) && onCambiaPianoClick()"
             >{{ chiaveRuolo | translate }}</li>
             <li
+              class="voce-tendina"
+              (click)="onRicevuteClick()"
+              [innerHTML]="'ui.menu_utente.ricevute.label' | translate"
+            ></li>
+            <li
               class="separatore-tendina"
               role="separator"
               aria-hidden="true"

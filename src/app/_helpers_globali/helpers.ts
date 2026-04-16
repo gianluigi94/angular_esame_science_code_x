@@ -297,7 +297,8 @@ export function traduciSegmentiUrl(url: string, langSalvata: 'it' | 'en'): strin
     u = u.replace(/\/(series)(\/|$)/, '/serie$2'); // traduco series in serie
     u = u.replace(/\/(season)(\/|$)/, '/stagione$2'); // traduco season in stagione
     u = u.replace(/([?&])play=/, '$1riproduzione='); // traduco il parametro play in riproduzione
-    u = u.replace(/\/(plan)(\/|$)/, '/piano$2'); // traduco plan in piano
+    u = u.replace(/\/(plan)(\/|$)/, '/piano$2');
+    u = u.replace(/\/(receipts)(\/|$)/, '/ricevute$2');
   } else { // entro nel ramo di traduzione verso l'inglese
     u = u.replace(/\/(benvenuto)(\/|$)/, '/welcome$2'); // traduco benvenuto in welcome
     u = u.replace(/\/(accedi)(\/|$)/, '/login$2'); // traduco accedi in login
@@ -307,7 +308,8 @@ export function traduciSegmentiUrl(url: string, langSalvata: 'it' | 'en'): strin
     u = u.replace(/\/(serie)(\/|$)/, '/series$2'); // traduco serie in series
     u = u.replace(/\/(stagione)(\/|$)/, '/season$2'); // traduco stagione in season
     u = u.replace(/([?&])riproduzione=/, '$1play='); // traduco il parametro riproduzione in play
-    u = u.replace(/\/(piano)(\/|$)/, '/plan$2'); // traduco piano in plan
+    u = u.replace(/\/(piano)(\/|$)/, '/plan$2');
+    u = u.replace(/\/(ricevute)(\/|$)/, '/receipts$2');
   }
 
   return u; // restituisco l'URL tradotto finale

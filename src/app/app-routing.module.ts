@@ -117,17 +117,30 @@ const routes: Routes = [
             (m) => m.PianoModule, // ritorno il modulo Piano
           ),
       },
-      {
-        path: 'plan', // definisco anche il path inglese della pagina piano sotto /it
+     {
+        path: 'plan',
         loadChildren: () =>
-          // carico il modulo piano in lazy loading
           import('./_componenti_comuni/piano/piano.module').then(
-            (m) => m.PianoModule, // ritorno il modulo Piano
+            (m) => m.PianoModule,
           ),
       },
       {
-        path: '**', // intercetto tutte le sotto-rotte italiane non riconosciute
-        component: RedirectNonTrovatoComponent, // reindirizzo alla gestione not found
+        path: 'ricevute',
+        loadChildren: () =>
+          import('./_componenti_comuni/ricevute/ricevute.module').then(
+            (m) => m.RicevuteModule,
+          ),
+      },
+      {
+        path: 'receipts',
+        loadChildren: () =>
+          import('./_componenti_comuni/ricevute/ricevute.module').then(
+            (m) => m.RicevuteModule,
+          ),
+      },
+      {
+        path: '**',
+        component: RedirectNonTrovatoComponent,
       },
     ],
   },
@@ -215,16 +228,29 @@ const routes: Routes = [
           ),
       },
       {
-        path: 'plan', // definisco il path inglese della pagina piano
+        path: 'plan',
         loadChildren: () =>
-          // carico il modulo piano in lazy loading
           import('./_componenti_comuni/piano/piano.module').then(
-            (m) => m.PianoModule, // ritorno il modulo Piano
+            (m) => m.PianoModule,
           ),
       },
       {
-        path: '**', // intercetto tutte le sotto-rotte inglesi non riconosciute
-        component: RedirectNonTrovatoComponent, // reindirizzo alla gestione not found
+        path: 'ricevute',
+        loadChildren: () =>
+          import('./_componenti_comuni/ricevute/ricevute.module').then(
+            (m) => m.RicevuteModule,
+          ),
+      },
+      {
+        path: 'receipts',
+        loadChildren: () =>
+          import('./_componenti_comuni/ricevute/ricevute.module').then(
+            (m) => m.RicevuteModule,
+          ),
+      },
+      {
+        path: '**',
+        component: RedirectNonTrovatoComponent,
       },
     ],
   },

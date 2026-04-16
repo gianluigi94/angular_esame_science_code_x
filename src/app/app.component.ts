@@ -24,6 +24,9 @@ import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo, isRottaPian
 import { AppToastService } from './_servizi_globali/app-toast.service';
 import { AppLoaderService } from './_servizi_globali/app-loader.service';
 import { ApiService } from './_servizi_globali/api.service';
+import { UtilityService } from './_benvenuto/login/_login_service/login_utility.service';
+import { Auth } from './_type/auth.type';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -71,6 +74,7 @@ export class AppComponent implements OnInit {
   pianoSelezionatoApp: 'base' | 'pro' | null = null;
   prezzoPianoBase = '';
   prezzoPianoPermium = '';
+  confermaPianoInCorso = false;
   private appLoader: AppLoaderService;
  private onApriPannelloPiano = () => {
     this.pannelloPianoVisibile = true;
@@ -87,8 +91,10 @@ export class AppComponent implements OnInit {
           const tasso = parseFloat(d.tasso);
           const aliquota = d.aliquota ? parseFloat(d.aliquota) / 100 : 0;
           const simbolo = d.valuta_simbolo ?? '€';
-          this.prezzoPianoBase = `${(5 * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
-          this.prezzoPianoPermium = `${(10 * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+          const prezzoBase    = d.prezzo_base_mensile    ? parseFloat(d.prezzo_base_mensile)    : 5;
+          const prezzoPremium = d.prezzo_premium_mensile ? parseFloat(d.prezzo_premium_mensile) : 10;
+          this.prezzoPianoBase    = `${(prezzoBase    * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+          this.prezzoPianoPermium = `${(prezzoPremium * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
         }
       },
       error: () => { this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€'; },
@@ -173,8 +179,27 @@ export class AppComponent implements OnInit {
 
     window.addEventListener('loader-hidden', () => {
       if (!isRottaPiano(this.router.url)) return;
-      const idRuolo = this.authService.leggiObsAuth().value?.idRuolo;
+      const auth = this.authService.leggiObsAuth().value;
+      const idRuolo = auth?.idRuolo;
+      const iso = auth?.isoNazione ?? 'IT';
       this.pianoSelezionatoApp = idRuolo === 2 ? 'base' : idRuolo === 3 ? 'pro' : null;
+      this.apiService.getPrezziNazione(iso).subscribe({
+        next: (rit) => {
+          const d = rit.data;
+          if (!d || !d.tasso || parseFloat(d.tasso) <= 0) {
+            this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€';
+          } else {
+            const tasso = parseFloat(d.tasso);
+            const aliquota = d.aliquota ? parseFloat(d.aliquota) / 100 : 0;
+            const simbolo = d.valuta_simbolo ?? '€';
+            const prezzoBase    = d.prezzo_base_mensile    ? parseFloat(d.prezzo_base_mensile)    : 5;
+          const prezzoPremium = d.prezzo_premium_mensile ? parseFloat(d.prezzo_premium_mensile) : 10;
+          this.prezzoPianoBase    = `${(prezzoBase    * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+          this.prezzoPianoPermium = `${(prezzoPremium * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+          }
+        },
+        error: () => { this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€'; },
+      });
       this.pannelloPianoVisibile = true;
       this.cdr.detectChanges();
       requestAnimationFrame(() => {
@@ -425,7 +450,29 @@ export class AppComponent implements OnInit {
   }
 
   onConfermaPiano(): void {
-    window.history.back();
+    if (!this.pianoSelezionatoApp) return;
+    this.confermaPianoInCorso = true;
+    this.apiService.cambiaPiano(this.pianoSelezionatoApp).subscribe({
+      next: (rit: any) => {
+        const nuovoTk = rit.tk ?? rit.data?.tk;
+        if (!nuovoTk) { this.confermaPianoInCorso = false; return; }
+        const p = UtilityService.leggiToken(nuovoTk)?.data || {};
+        const authCorrente = this.authService.leggiObsAuth().value;
+        const restaCollegato = !!localStorage.getItem('auth');
+        const nuovaAuth: Auth = {
+          ...authCorrente,
+          tk: nuovoTk,
+          idRuolo: p.id_ruolo ?? authCorrente.idRuolo,
+          abilita: Array.isArray(p.abilita) ? p.abilita : authCorrente.abilita,
+        };
+        this.authService.settaObsAuth(nuovaAuth);
+        this.authService.scriviAuthSuStorage(nuovaAuth, restaCollegato);
+        this.confermaPianoInCorso = false;
+        this.translate.get('ui.piano.toast.successo').pipe(take(1)).subscribe(t => this.toastService.successo(t));
+        window.history.back();
+      },
+      error: () => { this.confermaPianoInCorso = false; },
+    });
   }
 
 }

@@ -27,10 +27,13 @@
     <button
       type="button"
       class="piano-conferma-btn"
-      [disabled]="!pianoSelezionatoApp || pianoSelezionatoApp === pianoCorrente"
+      [disabled]="!pianoSelezionatoApp || pianoSelezionatoApp === pianoCorrente || confermaPianoInCorso"
       (click)="onConfermaPiano()"
     >
-      {{ 'ui.piano.conferma' | translate }}
+      <ng-container *ngIf="!confermaPianoInCorso">
+        {{ 'ui.piano.conferma' | translate }}
+      </ng-container>
+      <app-spinner *ngIf="confermaPianoInCorso"></app-spinner>
     </button>
   </div>
 </div>

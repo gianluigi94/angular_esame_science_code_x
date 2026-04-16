@@ -497,4 +497,9 @@ public inviaMessaggio(dati: {
     const url = this.calcolaRisorsa(['reset-password']);
     return this.http.put<IRispostaServer>(url, { email, password_sha512 });
   }
+
+  public cambiaPiano(piano: 'base' | 'pro'): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['cambia-piano']);
+    return this.http.put<IRispostaServer>(url, { piano });
+  }
 }

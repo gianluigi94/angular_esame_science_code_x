@@ -118,10 +118,12 @@ export class IscrizioneStep2Service {
         const tasso:    number = parseFloat(d.tasso); // converto il tasso in numero
         const aliquota: number = d.aliquota ? parseFloat(d.aliquota) / 100 : 0; // converto l'aliquota in numero percentuale decimale
         const simbolo:  string = d.valuta_simbolo ?? '€'; // leggo il simbolo valuta oppure uso euro come fallback
+        const prezzoBase    = d.prezzo_base_mensile    ? parseFloat(d.prezzo_base_mensile)    : 5;
+        const prezzoPremium = d.prezzo_premium_mensile ? parseFloat(d.prezzo_premium_mensile) : 10;
         const calcola  = (base: number) =>
-          `${(base * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`; // preparo una funzione che calcola il prezzo finale convertito
-        this.prezzoBase    = calcola(5); // aggiorno il prezzo base
-        this.prezzoPremium = calcola(10); // aggiorno il prezzo premium
+          `${(base * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+        this.prezzoBase    = calcola(prezzoBase);
+        this.prezzoPremium = calcola(prezzoPremium);
       },
       error: () => { this.prezzoBase = '5€'; this.prezzoPremium = '10€'; }, // se la chiamata fallisce torno ai prezzi di default
     });

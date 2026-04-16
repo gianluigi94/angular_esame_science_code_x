@@ -419,6 +419,12 @@ onCambiaPianoClick(): void {
     if (this.auth.logoutInCorso) return;
     this.cambioPianoAnimazione.apriPannelloPiano();
   }
+  onRicevuteClick(): void {
+    if (this.auth.logoutInCorso) return;
+    const codice = this.cambioLinguaService.leggiCodiceLingua();
+    const path = codice === 'it' ? '/it/ricevute' : '/en/receipts';
+    this.router.navigateByUrl(path);
+  }
   /**
    * Gestisce il ritorno al catalogo dalla scheda o dal player.
    *
