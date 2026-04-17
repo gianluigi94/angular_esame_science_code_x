@@ -2,3 +2,80 @@
   [usaAnimazioniIngresso]="false"
   [usaAnimazioniScroll]="false"
 ></app-saturno>
+
+<span class="sfocatura"></span>
+<div class="ricevute-wrap">
+  <h2 class="ricevute-titolo">{{ 'ui.ricevute.titolo' | translate }}</h2>
+
+  <div class="ricevute-tabella">
+
+    <div class="riga-header">
+      <span class="col-mese">{{ 'ui.ricevute.header.data_emissione' | translate }}</span>
+      <span class="col-totale">{{ 'ui.ricevute.header.totale' | translate }}</span>
+      <span class="col-sconto">{{ 'ui.ricevute.header.sconto' | translate }}</span>
+      <span class="col-stato">{{ 'ui.ricevute.header.stato' | translate }}</span>
+      <span class="col-azioni"></span>
+    </div>
+
+    <div
+      class="riga-mese"
+      *ngFor="let riga of righe"
+      [class.aperta]="riga.aperta"
+      [class.corrente]="riga.stato === 'corrente'"
+    >
+      <div class="riga-mese-header" (click)="toggleDettagli(riga)">
+
+        <span class="col-mese">
+          <span class="expand-icon" [class.ruotato]="riga.aperta">▶</span>
+          <ng-container *ngIf="riga.stato === 'saldato'">
+            {{ riga.giornoEmissione }} {{ riga.mese | translate }} {{ riga.anno }}
+          </ng-container>
+          <span *ngIf="riga.stato === 'corrente'" class="badge-corrente">{{ 'ui.ricevute.badge.in_corso' | translate }}</span>
+        </span>
+
+        <span class="col-totale">
+          {{ riga.totale.toFixed(2) }} {{ riga.valuta }}
+        </span>
+
+        <span class="col-sconto">100%</span>
+
+        <span class="col-stato">
+          <span class="pallino" [class.saldato]="riga.stato === 'saldato'" [class.corrente]="riga.stato === 'corrente'"></span>
+          {{ (riga.stato === 'saldato' ? 'ui.ricevute.stato.saldato' : 'ui.ricevute.stato.in_corso') | translate }}
+        </span>
+
+        <span class="col-azioni">
+          <button
+            *ngIf="riga.stato === 'saldato'"
+            class="btn-scarica"
+            (click)="scarica(riga, $event)"
+            [title]="'ui.ricevute.azioni.scarica' | translate"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 3v13M7 11l5 5 5-5M4 20h16"/>
+            </svg>
+          </button>
+          <span *ngIf="riga.stato === 'corrente'" class="no-download" [title]="'ui.ricevute.azioni.non_disponibile' | translate">—</span>
+        </span>
+
+      </div>
+
+      <div class="riga-dettagli" *ngIf="riga.aperta">
+        <div class="dettagli-header">
+          <span>{{ 'ui.ricevute.dettagli.giorno' | translate }}</span>
+          <span>{{ 'ui.ricevute.dettagli.piano' | translate }}</span>
+          <span>{{ 'ui.ricevute.dettagli.imposte' | translate }}</span>
+          <span>{{ 'ui.ricevute.dettagli.totale' | translate }}</span>
+        </div>
+        <div class="dettaglio-giorno" *ngFor="let g of riga.giorni">
+          <span>{{ riga.mese | translate }} {{ g.giorno }}, {{ riga.anno }}</span>
+          <span><span class="tag-piano" [class.premium]="g.piano === 'premium'">{{ ('ui.ricevute.piano.' + g.piano) | translate }}</span></span>
+          <span class="col-imposte">{{ g.imposte.toFixed(2) }} {{ g.valuta }}</span>
+          <span>{{ g.importo.toFixed(2) }} {{ g.valuta }}</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

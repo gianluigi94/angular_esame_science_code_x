@@ -49,9 +49,37 @@ export class RicevuteUscitaGuard implements CanDeactivate<RicevuteComponent> {
     const targetUrl = (nextState?.url as string) || '';
     const pathPulito = String(targetUrl || '').split('?')[0].split('#')[0];
 
+    const animaChiudiTabella = (): Promise<void> => {
+      return new Promise((resolve) => {
+        const titolo = document.querySelector('.ricevute-titolo') as HTMLElement | null;
+        const tabella = document.querySelector('.ricevute-tabella') as HTMLElement | null;
+        const sfocatura = document.querySelector('.sfocatura') as HTMLElement | null;
+
+        if (titolo) {
+          gsap.killTweensOf(titolo);
+          gsap.to(titolo, { opacity: 0, duration: 0.2, ease: 'power2.in' });
+        }
+        if (sfocatura) {
+          gsap.killTweensOf(sfocatura);
+          gsap.to(sfocatura, { opacity: 0, duration: 0.4, ease: 'power2.in' });
+        }
+        if (!tabella) { resolve(); return; }
+
+        gsap.killTweensOf(tabella);
+        gsap.to(tabella, {
+          opacity: 0,
+          scaleX: 0,
+          duration: 0.4,
+          ease: 'power2.in',
+          transformOrigin: 'center center',
+          onComplete: () => resolve(),
+        });
+      });
+    };
+
     const vaInLogin = /^\/(it|en)\/(benvenuto|welcome)\/(accedi|login)(\/|$)/.test(pathPulito);
     if (vaInLogin) {
-      return Promise.all([animaFooterOut()]).then(() => true);
+      return Promise.all([animaFooterOut(), animaChiudiTabella()]).then(() => true);
     }
 
     const vaInBenvenuto =
@@ -78,7 +106,7 @@ export class RicevuteUscitaGuard implements CanDeactivate<RicevuteComponent> {
         );
       }
 
-      return Promise.all([animaFooterOut(), wait(1250)]).then(() => true);
+      return Promise.all([animaFooterOut(), animaChiudiTabella(), wait(1250)]).then(() => true);
     }
 
     const vaInCatalogo = /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(pathPulito);
@@ -97,9 +125,9 @@ export class RicevuteUscitaGuard implements CanDeactivate<RicevuteComponent> {
         );
       }
 
-      return Promise.all([animaFooterOut(), wait(1400)]).then(() => true);
+      return Promise.all([animaFooterOut(), animaChiudiTabella(), wait(1400)]).then(() => true);
     }
 
-    return Promise.all([animaFooterOut()]).then(() => true);
+    return Promise.all([animaFooterOut(), animaChiudiTabella()]).then(() => true);
   }
 }

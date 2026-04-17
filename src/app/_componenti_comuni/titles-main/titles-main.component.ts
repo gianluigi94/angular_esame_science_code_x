@@ -109,9 +109,14 @@ constructor(
       return; // interrompo il flusso dopo la gestione della pagina contatti
     }
 
-    if (this.isPianoRoute) { // controllo se mi trovo nella pagina piano
-      window.history.back(); // torno indietro nella cronologia del browser
-      return; // interrompo il flusso dopo la gestione della pagina piano
+    if (this.isPianoRoute) {
+      window.history.back();
+      return;
+    }
+
+    if (this.isRicevuteRoute) {
+      window.history.back();
+      return;
     }
 
     if (this.isNotFoundRoute) { // controllo se mi trovo nella pagina 404
@@ -141,8 +146,13 @@ constructor(
     return /^\/(it\/contatti|en\/contact)(\/|$)/.test(url); // verifico se la route punta alla pagina contatti
   }
 get isPianoRoute(): boolean {
-    const url = this.router.url.split('?')[0].split('#')[0]; // pulisco la route corrente da query string e fragment
-    return /^\/(it\/piano|en\/plan)(\/|$)/.test(url); // verifico se la route punta alla pagina piano
+    const url = this.router.url.split('?')[0].split('#')[0];
+    return /^\/(it\/piano|en\/plan)(\/|$)/.test(url);
+  }
+
+  get isRicevuteRoute(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0];
+    return /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(url);
   }
   /**
    * Verifica se la route corrente corrisponde alla welcome.
