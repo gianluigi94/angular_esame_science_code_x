@@ -2,6 +2,7 @@
 
 import { Component, OnInit, Inject, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CambioLinguaService } from './_servizi_globali/cambio-lingua.service';
+import { CambioRicevuteAnimazioneService } from './_servizi_globali/cambio-ricevute-animazione.service';
 import { TraduzioniService } from './_servizi_globali/traduzioni.service';
 import { ErroreGlobaleService } from './_servizi_globali/errore-globale.service';
 import { ToastService } from './_servizi_globali/toast.service';
@@ -75,6 +76,7 @@ export class AppComponent implements OnInit {
   prezzoPianoBase = '';
   prezzoPianoPermium = '';
   confermaPianoInCorso = false;
+  spinnerRicevuteVisibile = false;
   private appLoader: AppLoaderService;
  private onApriPannelloPiano = () => {
     this.pannelloPianoVisibile = true;
@@ -133,6 +135,7 @@ export class AppComponent implements OnInit {
     private authService: Authservice,
     private appToast: AppToastService,
     private apiService: ApiService,
+    private cambioRicevuteAnimazione: CambioRicevuteAnimazioneService,
     @Inject(DOCUMENT) private documento: Document,
   ) {
     this.appLoader = new AppLoaderService( // costruisco manualmente il service loader usando le dipendenze necessarie
@@ -371,6 +374,10 @@ export class AppComponent implements OnInit {
         if (deve && !isAreaCatalogo(precedente))
           this.caricamentoCaroselloService.resetta(); // resetto il carosello se entro nella home catalogo da fuori area catalogo
       });
+
+    this.cambioRicevuteAnimazione.spinnerVisibile$.subscribe((v) => {
+      this.spinnerRicevuteVisibile = v;
+    });
 
     this.appToast.gestisciToastBenvenuto(); // avvio la logica globale del toast benvenuto
     this.appToast.gestisciErroriFatali(); // avvio la logica globale dei toast di errore fatale

@@ -122,3 +122,16 @@ app-piano-card{
     cursor: not-allowed;
   }
 }
+.spinner-ricevute-globale {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+  transform: scale(1.55);
+}

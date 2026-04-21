@@ -498,8 +498,18 @@ public inviaMessaggio(dati: {
     return this.http.put<IRispostaServer>(url, { email, password_sha512 });
   }
 
-  public cambiaPiano(piano: 'base' | 'pro'): Observable<IRispostaServer> {
+ public cambiaPiano(piano: 'base' | 'pro'): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['cambia-piano']);
     return this.http.put<IRispostaServer>(url, { piano });
+  }
+
+  public getRicevute(): Observable<IRispostaServer> {
+    const risorsa: string[] = ['ricevute'];
+    return this.richiestaGenerica(risorsa, 'GET');
+  }
+
+  public getRicevutaDettagli(idRicevuta: number | string): Observable<IRispostaServer> {
+    const risorsa: (string | number)[] = ['ricevute', idRicevuta, 'dettagli'];
+    return this.richiestaGenerica(risorsa, 'GET');
   }
 }

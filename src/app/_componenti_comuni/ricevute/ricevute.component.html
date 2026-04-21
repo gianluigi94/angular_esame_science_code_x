@@ -3,8 +3,8 @@
   [usaAnimazioniScroll]="false"
 ></app-saturno>
 
-<span class="sfocatura"></span>
-<div class="ricevute-wrap">
+<span *ngIf="!caricamento" class="sfocatura"></span>
+<div *ngIf="!caricamento" class="ricevute-wrap">
   <h2 class="ricevute-titolo">{{ 'ui.ricevute.titolo' | translate }}</h2>
 
   <div class="ricevute-tabella">
@@ -15,6 +15,10 @@
       <span class="col-sconto">{{ 'ui.ricevute.header.sconto' | translate }}</span>
       <span class="col-stato">{{ 'ui.ricevute.header.stato' | translate }}</span>
       <span class="col-azioni"></span>
+    </div>
+
+    <div *ngIf="!caricamento && righe.length === 0" class="nessuna-ricevuta">
+      {{ 'ui.ricevute.vuoto' | translate }}
     </div>
 
     <div
@@ -28,7 +32,12 @@
         <span class="col-mese">
           <span class="expand-icon" [class.ruotato]="riga.aperta">▶</span>
           <ng-container *ngIf="riga.stato === 'saldato'">
-            {{ riga.giornoEmissione }} {{ riga.mese | translate }} {{ riga.anno }}
+            <ng-container *ngIf="linguaCorrente === 'it'">
+              {{ riga.giornoEmissione }} {{ riga.mese | translate }} {{ riga.anno }}
+            </ng-container>
+            <ng-container *ngIf="linguaCorrente !== 'it'">
+              {{ riga.mese | translate }} {{ riga.giornoEmissione }}, {{ riga.anno }}
+            </ng-container>
           </ng-container>
           <span *ngIf="riga.stato === 'corrente'" class="badge-corrente">{{ 'ui.ricevute.badge.in_corso' | translate }}</span>
         </span>
@@ -67,15 +76,41 @@
           <span>{{ 'ui.ricevute.dettagli.imposte' | translate }}</span>
           <span>{{ 'ui.ricevute.dettagli.totale' | translate }}</span>
         </div>
-        <div class="dettaglio-giorno" *ngFor="let g of riga.giorni">
-          <span>{{ riga.mese | translate }} {{ g.giorno }}, {{ riga.anno }}</span>
-          <span><span class="tag-piano" [class.premium]="g.piano === 'premium'">{{ ('ui.ricevute.piano.' + g.piano) | translate }}</span></span>
-          <span class="col-imposte">{{ g.imposte.toFixed(2) }} {{ g.valuta }}</span>
-          <span>{{ g.importo.toFixed(2) }} {{ g.valuta }}</span>
+
+        <div *ngIf="riga.caricamentoGiorni" class="caricamento-dettagli">
+          <div class="spinner-col"><app-spinner></app-spinner></div>
+          <div class="spinner-col"><app-spinner></app-spinner></div>
+          <div class="spinner-col"><app-spinner></app-spinner></div>
+          <div class="spinner-col"><app-spinner></app-spinner></div>
         </div>
+
+        <ng-container *ngIf="!riga.caricamentoGiorni">
+          <div class="dettaglio-giorno" *ngFor="let g of riga.giorni">
+          <span>
+            <ng-container *ngIf="linguaCorrente === 'it'">{{ g.giorno }} {{ g.mese | translate }} {{ g.anno }}</ng-container>
+            <ng-container *ngIf="linguaCorrente !== 'it'">{{ g.mese | translate }} {{ g.giorno }}, {{ g.anno }}</ng-container>
+          </span>
+            <span><span class="tag-piano" [class.premium]="g.piano === 'premium'">{{ ('ui.ricevute.piano.' + g.piano) | translate }}</span></span>
+            <span class="col-imposte">{{ g.imposte.toFixed(2) }} {{ g.valuta }}</span>
+            <span>{{ g.importo.toFixed(2) }} {{ g.valuta }}</span>
+          </div>
+        </ng-container>
       </div>
 
     </div>
 
   </div>
+
+  <button type="button" class="ricevute-indietro-btn" (click)="tornaIndietro()">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="#c4c4c4"
+    >
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+    {{ 'ui.torna.log.contatti' | translate }}
+  </button>
 </div>

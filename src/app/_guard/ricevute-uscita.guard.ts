@@ -54,6 +54,7 @@ export class RicevuteUscitaGuard implements CanDeactivate<RicevuteComponent> {
         const titolo = document.querySelector('.ricevute-titolo') as HTMLElement | null;
         const tabella = document.querySelector('.ricevute-tabella') as HTMLElement | null;
         const sfocatura = document.querySelector('.sfocatura') as HTMLElement | null;
+        const bottoneIndietro = document.querySelector('.ricevute-indietro-btn') as HTMLElement | null;
 
         if (titolo) {
           gsap.killTweensOf(titolo);
@@ -62,6 +63,10 @@ export class RicevuteUscitaGuard implements CanDeactivate<RicevuteComponent> {
         if (sfocatura) {
           gsap.killTweensOf(sfocatura);
           gsap.to(sfocatura, { opacity: 0, duration: 0.4, ease: 'power2.in' });
+        }
+        if (bottoneIndietro) {
+          gsap.killTweensOf(bottoneIndietro);
+          gsap.to(bottoneIndietro, { opacity: 0, duration: 0.2, ease: 'power2.in' });
         }
         if (!tabella) { resolve(); return; }
 

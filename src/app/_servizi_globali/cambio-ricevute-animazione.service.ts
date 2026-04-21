@@ -1,10 +1,13 @@
 import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import { CambioLinguaService } from './cambio-lingua.service';
 import { StopVideoGlobaleService } from '../_catalogo/riga-categoria/categoria_services/stop-video-globale.service';
 
 @Injectable({ providedIn: 'root' })
 export class CambioRicevuteAnimazioneService {
+
+  spinnerVisibile$ = new BehaviorSubject<boolean>(false);
 
   constructor(
     private injector: Injector,
@@ -14,6 +17,7 @@ export class CambioRicevuteAnimazioneService {
   ) {}
 
   async apriRicevute(): Promise<void> {
+    setTimeout(() => this.spinnerVisibile$.next(true), 750);
     const [
       { SaturnoService },
       { SaturnoRouteAnimazioniService },

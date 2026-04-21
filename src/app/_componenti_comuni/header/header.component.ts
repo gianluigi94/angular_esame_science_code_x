@@ -55,6 +55,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   pagina404 = false; // controllo se sono nella pagina 404
   paginaContatti = false; // controllo se sono nella pagina contatti
   paginaPiano = false; // controllo se sono nella pagina piano
+  paginaRicevute = false;
 
   authCorrente: Auth | null = null; // salvo lo stato auth corrente reale
   authVisuale: Auth | null = null; // salvo lo stato auth mostrato a schermo
@@ -469,5 +470,6 @@ onCambiaPianoClick(): void {
     this.pagina404 = /^\/(it|en)\/(non-trovato|not-found)(\/|$)/.test(url); // verifico se sono nella pagina 404
     this.paginaContatti = /^\/(it\/contatti|en\/contact)(\/|$)/.test(url); // verifico se sono nella pagina contatti
     this.paginaPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(url); // verifico se sono nella pagina piano
+    this.paginaRicevute = /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(url);
   }
 }

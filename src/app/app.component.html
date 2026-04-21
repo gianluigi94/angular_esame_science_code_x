@@ -38,6 +38,10 @@
   </div>
 </div>
 <!-- importo i toast che possono comparire ovunque  -->
+<div *ngIf="spinnerRicevuteVisibile" class="spinner-ricevute-globale">
+  <app-spinner></app-spinner>
+</div>
+
 <app-toast-container></app-toast-container>
 
 <!-- la pagina di bloccante che si visualizza nel caricamento, o quando c'è un errore: impedisce la navigazione quando cade una sessione, fa da sfondo all errore fatale, deve caricare scena 3d e traduzioni e deve aspettare che se vado in /catalogo, il carosello sia pronto   -->

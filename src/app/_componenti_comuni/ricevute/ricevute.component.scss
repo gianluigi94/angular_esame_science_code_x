@@ -8,6 +8,7 @@
   z-index: 8;
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
+  opacity: 0;
 }
 .ricevute-wrap {
   position: fixed;
@@ -31,7 +32,7 @@
   margin-bottom: 45px;
   font-family: "Quantico", serif;
   text-align: center;
-
+  opacity: 0;
 }
 
 .ricevute-tabella {
@@ -47,6 +48,9 @@
   background: rgba(0, 0, 0, 0.45);
   max-height: 70vh;
   overflow-y: auto;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: center center;
 
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
@@ -264,4 +268,41 @@
 .col-imposte {
   color: rgba(255, 255, 255, 0.35);
   font-size: 12px;
+}
+.nessuna-ricevuta {
+  padding: 40px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "Quantico", serif;
+  font-size: 14px;
+}
+
+.caricamento-dettagli {
+  display: flex;
+  padding: 20px 0;
+
+  .spinner-col {
+    flex: 1;
+    display: flex;
+    margin-left: 20px;
+  }
+
+  .spinner-col:first-child { flex: 2; }
+}
+.ricevute-indietro-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #c4c4c4;
+  font-family: "Quantico", serif;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 4px;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+  margin-top: 20px;
+
+  &:hover { color: #c7ae80; }
 }
