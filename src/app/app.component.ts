@@ -21,7 +21,7 @@ import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
 import { SchedaProntaService } from './_catalogo/scheda/scheda_service/scheda-pronta.service';
 import { isFirefox, pulisciUrl, isCatalogoHome, isAreaCatalogo, leggiPathDaSessionStorage, salvaPathInSessionStorage, impostaLangHtml }from './_helpers_globali/helpers';
-import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo, isRottaPiano, isRottaRicevute } from './_helpers_globali/app-routes.utils';
+import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo, isRottaPiano, isRottaRicevute, isRottaProfilo } from './_helpers_globali/app-routes.utils';
 import { AppToastService } from './_servizi_globali/app-toast.service';
 import { AppLoaderService } from './_servizi_globali/app-loader.service';
 import { ApiService } from './_servizi_globali/api.service';
@@ -356,6 +356,15 @@ export class AppComponent implements OnInit {
         })();
         const eroInRicevute = isRottaRicevute(precedente);
 
+        const vengoDaProfilo = (() => {
+          try {
+            return sessionStorage.getItem('vengo_da_profilo') === 'true';
+          } catch {
+            return false;
+          }
+        })();
+        const eroInProfilo = isRottaProfilo(precedente);
+
         const disabilitaLoader =
           isRottaLogin(url) ||
           isRotta404(url) ||
@@ -364,7 +373,8 @@ export class AppComponent implements OnInit {
               isRotta404(precedente) ||
               (vengoDaContatti && eroInContatti) ||
               (vengoDaPiano && eroInPiano) ||
-              (vengoDaRicevute && eroInRicevute))) ||
+              (vengoDaRicevute && eroInRicevute) ||
+              (vengoDaProfilo && eroInProfilo))) ||
           (eroInContatti && isRotta404(precedente));
 
         this.appLoader.caricamentoDisabilitato$.next(disabilitaLoader); // aggiorno il flag del loader disabilitato

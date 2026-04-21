@@ -139,6 +139,20 @@ const routes: Routes = [
           ),
       },
       {
+        path: 'profilo',
+        loadChildren: () =>
+          import('./_componenti_comuni/profilo/profilo.module').then(
+            (m) => m.ProfiloModule,
+          ),
+      },
+      {
+        path: 'profile',
+        loadChildren: () =>
+          import('./_componenti_comuni/profilo/profilo.module').then(
+            (m) => m.ProfiloModule,
+          ),
+      },
+      {
         path: '**',
         component: RedirectNonTrovatoComponent,
       },
@@ -246,6 +260,20 @@ const routes: Routes = [
         loadChildren: () =>
           import('./_componenti_comuni/ricevute/ricevute.module').then(
             (m) => m.RicevuteModule,
+          ),
+      },
+      {
+        path: 'profilo',
+        loadChildren: () =>
+          import('./_componenti_comuni/profilo/profilo.module').then(
+            (m) => m.ProfiloModule,
+          ),
+      },
+      {
+        path: 'profile',
+        loadChildren: () =>
+          import('./_componenti_comuni/profilo/profilo.module').then(
+            (m) => m.ProfiloModule,
           ),
       },
       {

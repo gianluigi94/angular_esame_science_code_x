@@ -80,6 +80,7 @@ export class CambioLinguaService {
     this.sincIscrizionePathConLingua(codice);
     this.sincPianoPathConLingua(codice);
     this.sincRicevutePathConLingua(codice);
+    this.sincProfiloPathConLingua(codice);
     this.toastService.chiudiTutti(); // chiudo eventuali toast aperti per evitare messaggi nella lingua sbagliata
     this.cambioLinguaAvviato$.next(codice); // notifico che ho iniziato il cambio lingua con quel codice
 
@@ -465,6 +466,28 @@ private sincPianoPathConLingua(codice: string): void {
 
     const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
     const segmento = c === 'it' ? 'ricevute' : 'receipts';
+    const resto = m[3] || '';
+    const target = ('/' + c + '/' + segmento + resto).replace(/\/+$/, '');
+    const current = soloPath.replace(/\/+$/, '');
+
+    if (target === current) return;
+
+    this.location.replaceState(target + tail);
+  }
+
+  private sincProfiloPathConLingua(codice: string): void {
+    const full =
+      this.location.path(true) ||
+      (window.location.pathname + window.location.search + window.location.hash) ||
+      '';
+    const soloPath = full.split('?')[0].split('#')[0];
+    const tail = full.substring(soloPath.length);
+    const m = soloPath.match(/^\/(it|en)\/(profilo|profile)(\/.*)?$/);
+
+    if (!m) return;
+
+    const c = String(codice || '').toLowerCase() === 'it' ? 'it' : 'en';
+    const segmento = c === 'it' ? 'profilo' : 'profile';
     const resto = m[3] || '';
     const target = ('/' + c + '/' + segmento + resto).replace(/\/+$/, '');
     const current = soloPath.replace(/\/+$/, '');

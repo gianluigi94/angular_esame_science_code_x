@@ -149,6 +149,8 @@ export class TitoloPaginaService {
       titolo = codice === 'it' ? `Il tuo piano - ${base}` : `Your plan - ${base}`;
     } else if (path === '/ricevute' || path === '/receipts') {
       titolo = codice === 'it' ? `Le tue ricevute - ${base}` : `Your receipts - ${base}`;
+    } else if (path === '/profilo' || path === '/profile') {
+      titolo = codice === 'it' ? `Modifica profilo - ${base}` : `Edit profile - ${base}`;
     }
 
     this.title.setTitle(titolo); // imposto il titolo del browser con quello calcolato

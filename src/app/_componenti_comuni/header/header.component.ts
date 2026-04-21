@@ -24,6 +24,7 @@ import { StopVideoGlobaleService } from 'src/app/_catalogo/riga-categoria/catego
 import { SchedaProntaService } from 'src/app/_catalogo/scheda/scheda_service/scheda-pronta.service';
 import { CambioPianoAnimazioneService } from 'src/app/_servizi_globali/cambio-piano-animazione.service';
 import { CambioRicevuteAnimazioneService } from 'src/app/_servizi_globali/cambio-ricevute-animazione.service';
+import { CambioProfiloAnimazioneService } from 'src/app/_servizi_globali/cambio-profilo-animazione.service';
 import { prefissoLinguaDaUrl, baseCatalogoDaUrl, pathCatalogoDaTipo, pathLoginDaLingua, isPaginaScheda} from './header_utility/header-url.utils';
 import { HeaderAuthHelper } from './header_helpers/header-auth.helper';
 import { HeaderCategorieHelper } from './header_helpers/header-categorie.helper';
@@ -56,6 +57,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   paginaContatti = false; // controllo se sono nella pagina contatti
   paginaPiano = false; // controllo se sono nella pagina piano
   paginaRicevute = false;
+  paginaProfilo = false;
 
   authCorrente: Auth | null = null; // salvo lo stato auth corrente reale
   authVisuale: Auth | null = null; // salvo lo stato auth mostrato a schermo
@@ -76,6 +78,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: Authservice,
     private cambioPianoAnimazione: CambioPianoAnimazioneService,
     private cambioRicevuteAnimazione: CambioRicevuteAnimazioneService,
+    private cambioProfiloAnimazione: CambioProfiloAnimazioneService,
     private router: Router,
     cambioLinguaService: CambioLinguaService,
     private translate: TranslateService,
@@ -426,6 +429,11 @@ onCambiaPianoClick(): void {
     if (this.auth.logoutInCorso) return;
     this.cambioRicevuteAnimazione.apriRicevute();
   }
+
+  onProfiloClick(): void {
+    if (this.auth.logoutInCorso) return;
+    this.cambioProfiloAnimazione.apriProfilo();
+  }
   /**
    * Gestisce il ritorno al catalogo dalla scheda o dal player.
    *
@@ -471,5 +479,6 @@ onCambiaPianoClick(): void {
     this.paginaContatti = /^\/(it\/contatti|en\/contact)(\/|$)/.test(url); // verifico se sono nella pagina contatti
     this.paginaPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(url); // verifico se sono nella pagina piano
     this.paginaRicevute = /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(url);
+    this.paginaProfilo = /^\/(it\/profilo|en\/profile)(\/|$)/.test(url);
   }
 }

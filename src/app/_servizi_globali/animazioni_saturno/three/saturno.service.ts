@@ -21,7 +21,7 @@ import { GRUPPI_CONFIG } from './saturno-gruppi-config';
 import { SaturnoDischiService } from './saturno-dischi.service';
 import { SaturnoMouseHelper } from './saturno_helpers/saturno-mouse.helper';
 import { SaturnoLoopHelper } from './saturno_helpers/saturno-loop.helper';
-import { eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione, eRottaNotFound, eRottaContatti, eRottaPiano, eRottaRicevute, eSchedaCatalogo, leggiUrlAttuale } from './saturno-url.utils';
+import { eRottaCatalogo, eRottaWelcome, eRottaLogin, eRottaRegistrazione, eRottaNotFound, eRottaContatti, eRottaPiano, eRottaRicevute, eRottaProfilo, eSchedaCatalogo, leggiUrlAttuale } from './saturno-url.utils';
 
 @Injectable({ providedIn: 'root' })
 export class SaturnoService {
@@ -275,8 +275,10 @@ export class SaturnoService {
         sessionStorage.getItem('vengo_da_piano') === 'true';
       const vengoDaRicevuteFlag =
         sessionStorage.getItem('vengo_da_ricevute') === 'true';
+      const vengoDaProfiloFlag =
+        sessionStorage.getItem('vengo_da_profilo') === 'true';
       if (
-        (vengoDaContattiFlag || vengoDaPianoFlag || vengoDaRicevuteFlag) &&
+        (vengoDaContattiFlag || vengoDaPianoFlag || vengoDaRicevuteFlag || vengoDaProfiloFlag) &&
         this.scenaInizializzata && // controllo se la scena era gia' stata inizializzata
         (eRottaCatalogo(urlSubito) || eSchedaCatalogo(urlSubito)) && // controllo se sono in catalogo o in una scheda catalogo
         !this.catalogoGiaAnimato // controllo che il catalogo non risulti gia' animato
@@ -285,6 +287,7 @@ export class SaturnoService {
           sessionStorage.removeItem('vengo_da_contatti');
           sessionStorage.removeItem('vengo_da_piano');
           sessionStorage.removeItem('vengo_da_ricevute');
+          sessionStorage.removeItem('vengo_da_profilo');
         } catch {}
         const saturno = document.querySelector(
           'app-saturno',
@@ -331,12 +334,15 @@ export class SaturnoService {
             (sessionStorage.getItem('vengo_da_piano') || '') === 'true';
           const vengoDaRicevute =
             (sessionStorage.getItem('vengo_da_ricevute') || '') === 'true';
+          const vengoDaProfilo =
+            (sessionStorage.getItem('vengo_da_profilo') || '') === 'true';
 
-          if (vengoDaContatti || vengoDaPiano || vengoDaRicevute) {
+          if (vengoDaContatti || vengoDaPiano || vengoDaRicevute || vengoDaProfilo) {
             try {
               sessionStorage.removeItem('vengo_da_contatti');
               sessionStorage.removeItem('vengo_da_piano');
               sessionStorage.removeItem('vengo_da_ricevute');
+              sessionStorage.removeItem('vengo_da_profilo');
             } catch {}
 
             const saturno = document.querySelector(
@@ -743,6 +749,24 @@ export class SaturnoService {
           }
 
           if (eRottaRicevute(url)) {
+            this.ensureRingsAndParticlesIfMissing(scene);
+            this.animateService.setXNormale();
+            this.animateService.setTitoloAltoGlobal();
+            this.saturnoPosizioniService.applicaPoseAScena(
+              scene,
+              'WELCOME_BASSO',
+            );
+            const t = 1.1;
+            const baseY = window.innerWidth <= 868 ? -3.6 : -3.4;
+            scene.position.x = 3.1 * t + 1.2 * Math.sin(Math.PI * t);
+            scene.position.y = baseY * Math.pow(t, 2);
+            if (this.directionalLight) {
+              this.directionalLight.intensity = 2.8;
+              this.directionalLight.position.z = 5.1001;
+            }
+          }
+
+          if (eRottaProfilo(url)) {
             this.ensureRingsAndParticlesIfMissing(scene);
             this.animateService.setXNormale();
             this.animateService.setTitoloAltoGlobal();

@@ -98,6 +98,10 @@ export function eRottaPiano(url: string): boolean {
   return /^\/(it|en)\/(piano|plan)(\/|$)/.test(path);
 }
 
+export function eRottaProfilo(url: string): boolean {
+  return /^\/(it|en)\/(profilo|profile)(\/|$)/.test(url || '');
+}
+
 export function eRottaRicevute(url: string): boolean {
   const path = String(url || '')
     .split('?')[0]

@@ -5,6 +5,7 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { IRispostaServer } from 'src/app/_interfacce/IRispostaServer.interface';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { CambioRicevuteAnimazioneService } from 'src/app/_servizi_globali/cambio-ricevute-animazione.service';
+import { CambioProfiloAnimazioneService } from 'src/app/_servizi_globali/cambio-profilo-animazione.service';
 
 interface RigaGiorno {
   data: string;

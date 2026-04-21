@@ -53,3 +53,7 @@ export function isRottaPiano(url: string): boolean {
 export function isRottaRicevute(url: string): boolean {
   return /^\/(it|en)\/(ricevute|receipts)(\/|$)/.test(url);
 }
+
+export function isRottaProfilo(url: string): boolean {
+  return /^\/(it|en)\/(profilo|profile)(\/|$)/.test(url);
+}

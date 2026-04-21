@@ -167,6 +167,14 @@ export function salvaPathInSessionStorage(url: string): void { // salvo in sessi
       }, 500);
     }
 
+    const eraProfilo = /^\/(it\/profilo|en\/profile)(\/|$)/.test(last);
+    const oraProfilo = /^\/(it\/profilo|en\/profile)(\/|$)/.test(pathPulito);
+    if (eraProfilo && !oraProfilo) {
+      setTimeout(() => {
+        sessionStorage.removeItem('vengo_da_profilo');
+      }, 500);
+    }
+
     sessionStorage.setItem(CHIAVE_SESSIONE_PATH, pathPulito); // salvo il path pulito come ultimo path utile
   } catch {} // ignoro eventuali errori di sessionStorage
 }
@@ -307,6 +315,7 @@ export function traduciSegmentiUrl(url: string, langSalvata: 'it' | 'en'): strin
     u = u.replace(/([?&])play=/, '$1riproduzione='); // traduco il parametro play in riproduzione
     u = u.replace(/\/(plan)(\/|$)/, '/piano$2');
     u = u.replace(/\/(receipts)(\/|$)/, '/ricevute$2');
+    u = u.replace(/\/(profile)(\/|$)/, '/profilo$2');
   } else { // entro nel ramo di traduzione verso l'inglese
     u = u.replace(/\/(benvenuto)(\/|$)/, '/welcome$2'); // traduco benvenuto in welcome
     u = u.replace(/\/(accedi)(\/|$)/, '/login$2'); // traduco accedi in login
@@ -318,6 +327,7 @@ export function traduciSegmentiUrl(url: string, langSalvata: 'it' | 'en'): strin
     u = u.replace(/([?&])riproduzione=/, '$1play='); // traduco il parametro riproduzione in play
     u = u.replace(/\/(piano)(\/|$)/, '/plan$2');
     u = u.replace(/\/(ricevute)(\/|$)/, '/receipts$2');
+    u = u.replace(/\/(profilo)(\/|$)/, '/profile$2');
   }
 
   return u; // restituisco l'URL tradotto finale

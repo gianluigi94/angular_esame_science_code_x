@@ -88,7 +88,8 @@ export class AuthInterceptor implements HttpInterceptor {
 
             const suRottaPiano = /^\/(it\/piano|en\/plan)(\/|$)/.test(window.location.pathname);
             const suRottaRicevute = /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(window.location.pathname);
-            if (!haTokenIniziale || suRottaPiano || suRottaRicevute) {
+            const suRottaProfilo = /^\/(it\/profilo|en\/profile)(\/|$)/.test(window.location.pathname);
+            if (!haTokenIniziale || suRottaPiano || suRottaRicevute || suRottaProfilo) {
               this.statoSessione.segnaSessioneVerificata();
             } else {
               if (richiestaConBearer) {

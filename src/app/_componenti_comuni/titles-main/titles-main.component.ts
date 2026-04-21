@@ -119,6 +119,11 @@ constructor(
       return;
     }
 
+    if (this.isProfiloRoute) {
+      window.history.back();
+      return;
+    }
+
     if (this.isNotFoundRoute) { // controllo se mi trovo nella pagina 404
       const auth = this.authService.leggiObsAuth().value; // leggo lo stato auth corrente
       const autenticato = auth && auth.tk !== null; // verifico se l'utente risulta autenticato
@@ -153,6 +158,11 @@ get isPianoRoute(): boolean {
   get isRicevuteRoute(): boolean {
     const url = this.router.url.split('?')[0].split('#')[0];
     return /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(url);
+  }
+
+  get isProfiloRoute(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0];
+    return /^\/(it\/profilo|en\/profile)(\/|$)/.test(url);
   }
   /**
    * Verifica se la route corrente corrisponde alla welcome.

@@ -8,7 +8,7 @@
   <div class="sinistra">
     <div
       class="menu_sinistra"
-      [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute ? 'hidden' : 'visible'"
+      [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute || paginaProfilo ? 'hidden' : 'visible'"
     >
       <!-- torna al catalogo: visibile solo nella scheda -->
       <a
@@ -35,7 +35,7 @@
       <ul
         class="menu-categorie"
         *ngIf="authVisuale?.tk && !paginaScheda()"
-        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute || paginaProfilo ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (menuCategorieAperto = true)"
         (mouseleave)="!logoutInCorso && (menuCategorieAperto = false)"
       >
@@ -84,7 +84,7 @@
       <ul
         class="menu-tipo"
         *ngIf="authVisuale?.tk && !paginaScheda()"
-        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute || paginaProfilo ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (menuTipoAperto = true)"
         (mouseleave)="!logoutInCorso && (menuTipoAperto = false)"
       >
@@ -130,7 +130,7 @@
       <!-- Ricerca, al passassagio del mause l'input si apre-->
       <div
         class="contenitore-ricerca"
-        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute || paginaProfilo ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (mostraRicerca = true)"
         (mouseleave)="!logoutInCorso && (mostraRicerca = false)"
       >
@@ -236,7 +236,7 @@
       <!-- Menu utente -->
       <ul
         class="menu-utente"
-        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute ? 'hidden' : 'visible'"
+        [style.visibility]="pagina404 || paginaContatti || paginaPiano || paginaRicevute || paginaProfilo ? 'hidden' : 'visible'"
         (mouseenter)="!logoutInCorso && (menuUtenteAperto = true)"
         (mouseleave)="!logoutInCorso && (menuUtenteAperto = false)"
       >
@@ -260,6 +260,7 @@
           <ul class="menu-tendina">
             <li
               class="voce-tendina"
+              (click)="onProfiloClick()"
               [innerHTML]="'ui.menu_utente.profilo.label' | translate"
             ></li>
             <li
