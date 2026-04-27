@@ -1,79 +1,211 @@
-<app-saturno
-  [usaAnimazioniIngresso]="false"
-  [usaAnimazioniScroll]="false"
-></app-saturno>
+  <app-saturno
+    [usaAnimazioniIngresso]="false"
+    [usaAnimazioniScroll]="false"
+  ></app-saturno>
 
-<span class="sfocatura"></span>
-<section class="profilo-contenuto">
+  <span class="sfocatura"></span>
 
-  <h2 class="profilo-titolo">{{ 'ui.profilo.titolo' | translate }}</h2>
+  <section class="profilo-contenuto">
+    <div class="profilo-blocco">
+      <h2 class="profilo-titolo">{{ "ui.profilo.titolo" | translate }}</h2>
 
-  <div class="profilo-box">
-  <form class="form-profilo" [formGroup]="formEmail" (ngSubmit)="inviaEmail()" (keydown.enter)="$event.preventDefault()" autocomplete="off">
-
-    <div class="riga-email campo-animato">
-
-      <div class="campo-wrapper">
-        <p
-          class="label-sopra"
-          [ngClass]="{ 'is-invalid': formEmail.controls['email'].invalid && (formEmail.controls['email'].touched || formInviato) }"
-          [innerHTML]="'ui.profilo.email.titolo' | translate"
-        ></p>
-        <div class="campo-form">
-          <input
-            type="text"
-            placeholder=" "
-            id="profilo_email"
-            name="profilo_email_unico"
-            formControlName="email"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            [ngClass]="{ 'is-invalid': formEmail.controls['email'].invalid && (formEmail.controls['email'].touched || formInviato) }"
-          />
-          <label
-            for="profilo_email"
-            [ngClass]="{ 'is-invalid': formEmail.controls['email'].invalid && (formEmail.controls['email'].touched || formInviato) }"
-          >
-            {{ 'ui.registrazione.step3.email_secondaria.input_label' | translate }}
-          </label>
+      <div class="profilo-box">
+        <div
+          *ngIf="vistaCorrente === 'scelta'"
+          class="scelta-contenuto campo-animato"
+        >
+          <button type="button" class="azione-btn" (click)="vaiAEmail()">
+  {{ 'ui.profilo.email.bottone' | translate }}
+</button>
         </div>
-        <div class="errori-stack">
-          <p class="errore-campo" *ngIf="(formEmail.controls['email'].touched || formInviato) && formEmail.controls['email'].errors?.['required']">
-            {{ 'ui.contatti.form.email.error.required' | translate }}
-          </p>
-          <p class="errore-campo" *ngIf="(formEmail.controls['email'].touched || formInviato) && formEmail.controls['email'].errors?.['email']">
-            {{ 'ui.contatti.form.email.error.email' | translate }}
-          </p>
-          <p class="errore-campo" *ngIf="(formEmail.controls['email'].touched || formInviato) && formEmail.controls['email'].errors?.['maxlength']">
-            {{ 'ui.registrazione.email_secondaria.error.maxlength' | translate }}
-          </p>
-        </div>
+
+        <form
+          *ngIf="vistaCorrente === 'email'"
+          class="form-profilo campo-animato"
+          [formGroup]="formEmail"
+          (ngSubmit)="inviaEmail()"
+          (keydown.enter)="$event.preventDefault()"
+          autocomplete="off"
+        >
+          <div class="riga-email">
+
+            <div class="campo-wrapper">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formEmail.controls['vecchiaEmail'].invalid && (formEmail.controls['vecchiaEmail'].touched || formInviato) }"
+              >
+                {{ 'ui.profilo.vecchia_email.titolo' | translate }} <span class="asterisco">*</span>
+              </p>
+
+              <div class="campo-form">
+                <input
+                  type="text"
+                  placeholder=" "
+                  id="profilo_vecchia_email"
+                  name="profilo_vecchia_email_unico"
+                  formControlName="vecchiaEmail"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  [ngClass]="{ 'is-invalid': formEmail.controls['vecchiaEmail'].invalid && (formEmail.controls['vecchiaEmail'].touched || formInviato) }"
+                />
+                <label
+                  for="profilo_vecchia_email"
+                  [ngClass]="{ 'is-invalid': formEmail.controls['vecchiaEmail'].invalid && (formEmail.controls['vecchiaEmail'].touched || formInviato) }"
+                >
+                  {{ 'ui.registrazione.step3.email_secondaria.input_label' | translate }}
+                </label>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="(formEmail.controls['vecchiaEmail'].touched || formInviato) && formEmail.controls['vecchiaEmail'].errors?.['required']">
+                  {{ 'ui.contatti.form.email.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formEmail.controls['vecchiaEmail'].touched || formInviato) && (formEmail.controls['vecchiaEmail'].errors?.['email'] || formEmail.controls['vecchiaEmail'].errors?.['pattern'])">
+                  {{ 'ui.contatti.form.email.error.email' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formEmail.controls['vecchiaEmail'].touched || formInviato) && formEmail.controls['vecchiaEmail'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.email_secondaria.error.maxlength' | translate }}
+                </p>
+              </div>
+            </div>
+
+            <div class="campo-wrapper">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formEmail.controls['password'].invalid && (formEmail.controls['password'].touched || formInviato) }"
+              >
+                {{ 'ui.registrazione.step3.conferma_password.label' | translate }} <span class="asterisco">*</span>
+              </p>
+
+              <div class="campo-form password-wrapper-profilo">
+                <input
+                  [type]="mostraPassword ? 'text' : 'password'"
+                  placeholder=" "
+                  id="profilo_password"
+                  name="profilo_password_unico"
+                  formControlName="password"
+                  autocomplete="new-password"
+                  [ngClass]="{ 'is-invalid': formEmail.controls['password'].invalid && (formEmail.controls['password'].touched || formInviato) }"
+                />
+                <label
+                  for="profilo_password"
+                  [ngClass]="{ 'is-invalid': formEmail.controls['password'].invalid && (formEmail.controls['password'].touched || formInviato) }"
+                >
+                  {{ 'ui.registrazione.step3.password.input_label' | translate }}
+                </label>
+
+                <button
+                  type="button"
+                  class="toggle-password-profilo"
+                  tabindex="-1"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleVisibilitaPassword()"
+                >
+                  <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                  </svg>
+                  <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                    <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="(formEmail.controls['password'].touched || formInviato) && formEmail.controls['password'].errors?.['required']">
+                  {{ 'ui.registrazione.password.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formEmail.controls['password'].touched || formInviato) && formEmail.controls['password'].errors?.['minlength']">
+                  {{ 'ui.registrazione.password.error.minlength' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formEmail.controls['password'].touched || formInviato) && formEmail.controls['password'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.password.error.maxlength' | translate }}
+                </p>
+              </div>
+            </div>
+
+            <div class="campo-wrapper">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formEmail.controls['email'].invalid && (formEmail.controls['email'].touched || formInviato) }"
+                [innerHTML]="'ui.profilo.email.titolo' | translate"
+              ></p>
+
+              <div class="campo-form">
+                <input
+                  type="text"
+                  placeholder=" "
+                  id="profilo_email"
+                  name="profilo_email_unico"
+                  formControlName="email"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  [ngClass]="{ 'is-invalid': formEmail.controls['email'].invalid && (formEmail.controls['email'].touched || formInviato) }"
+                />
+                <label
+                  for="profilo_email"
+                  [ngClass]="{ 'is-invalid': formEmail.controls['email'].invalid && (formEmail.controls['email'].touched || formInviato) }"
+                >
+                  {{ 'ui.registrazione.step3.email_secondaria.input_label' | translate }}
+                </label>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="(formEmail.controls['email'].touched || formInviato) && formEmail.controls['email'].errors?.['required']">
+                  {{ 'ui.contatti.form.email.error.required' | translate }}
+                </p>
+
+                <p class="errore-campo" *ngIf="(formEmail.controls['email'].touched || formInviato) && (formEmail.controls['email'].errors?.['email'] || formEmail.controls['email'].errors?.['pattern'])">
+                  {{ 'ui.contatti.form.email.error.email' | translate }}
+                </p>
+
+                <p class="errore-campo" *ngIf="(formEmail.controls['email'].touched || formInviato) && formEmail.controls['email'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.email_secondaria.error.maxlength' | translate }}
+                </p>
+              </div>
+            </div>
+
+            <button
+              class="invia_btn"
+              type="submit"
+              [disabled]="!formEmail.valid || stoVerificando"
+            >
+              <ng-container *ngIf="!stoVerificando">
+                {{ 'ui.profilo.email.invia' | translate }}
+              </ng-container>
+              <app-spinner *ngIf="stoVerificando"></app-spinner>
+            </button>
+          </div>
+        </form>
       </div>
 
       <button
-        class="invia_btn"
-        type="submit"
-        [disabled]="!formEmail.valid"
+        type="button"
+        class="profilo-indietro-btn"
+        (click)="onClickIndietro()"
+        [disabled]="animazioneInCorso"
       >
-        {{ 'ui.profilo.email.invia' | translate }}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="#c4c4c4"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        {{
+          (vistaCorrente === "email"
+            ? "ui.main.tornaIndietro"
+            : "ui.torna.log.contatti"
+          ) | translate
+        }}
       </button>
     </div>
-
-  </form>
-  </div>
-
-  <button type="button" class="profilo-indietro-btn" (click)="tornaIndietro()">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="#c4c4c4"
-    >
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-    {{ 'ui.torna.log.contatti' | translate }}
-  </button>
-</section>
+  </section>

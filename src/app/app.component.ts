@@ -3,6 +3,7 @@
 import { Component, OnInit, Inject, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CambioLinguaService } from './_servizi_globali/cambio-lingua.service';
 import { CambioRicevuteAnimazioneService } from './_servizi_globali/cambio-ricevute-animazione.service';
+import { CambioProfiloAnimazioneService } from './_servizi_globali/cambio-profilo-animazione.service';
 import { TraduzioniService } from './_servizi_globali/traduzioni.service';
 import { ErroreGlobaleService } from './_servizi_globali/errore-globale.service';
 import { ToastService } from './_servizi_globali/toast.service';
@@ -77,7 +78,8 @@ export class AppComponent implements OnInit {
   prezzoPianoPermium = '';
   confermaPianoInCorso = false;
   spinnerRicevuteVisibile = false;
-  private appLoader: AppLoaderService;
+spinnerProfiloVisibile = false;
+private appLoader: AppLoaderService;
  private onApriPannelloPiano = () => {
     this.pannelloPianoVisibile = true;
     const auth = this.authService.leggiObsAuth().value;
@@ -117,27 +119,28 @@ export class AppComponent implements OnInit {
   };
 
   constructor(
-    private ngZone: NgZone,
-    private cdr: ChangeDetectorRef,
-    private cambioLinguaService: CambioLinguaService,
-    private traduzioniService: TraduzioniService,
-    private erroreGlobaleService: ErroreGlobaleService,
-    private toastService: ToastService,
-    private animateService: AnimateService,
-    private statoSessioneClient: StatoSessioneClientService,
-    private translate: TranslateService,
-    private saturnoStatoService: SaturnoStatoService,
-    private router: Router,
-    private schedaProntaService: SchedaProntaService,
-    private caricamentoCaroselloService: CaricamentoCaroselloService,
-    private titoloPaginaService: TitoloPaginaService,
-    private performanceService: PerformanceService,
-    private authService: Authservice,
-    private appToast: AppToastService,
-    private apiService: ApiService,
-    private cambioRicevuteAnimazione: CambioRicevuteAnimazioneService,
-    @Inject(DOCUMENT) private documento: Document,
-  ) {
+  private ngZone: NgZone,
+  private cdr: ChangeDetectorRef,
+  private cambioLinguaService: CambioLinguaService,
+  private traduzioniService: TraduzioniService,
+  private erroreGlobaleService: ErroreGlobaleService,
+  private toastService: ToastService,
+  private animateService: AnimateService,
+  private statoSessioneClient: StatoSessioneClientService,
+  private translate: TranslateService,
+  private saturnoStatoService: SaturnoStatoService,
+  private router: Router,
+  private schedaProntaService: SchedaProntaService,
+  private caricamentoCaroselloService: CaricamentoCaroselloService,
+  private titoloPaginaService: TitoloPaginaService,
+  private performanceService: PerformanceService,
+  private authService: Authservice,
+  private appToast: AppToastService,
+  private apiService: ApiService,
+  private cambioRicevuteAnimazione: CambioRicevuteAnimazioneService,
+  private cambioProfiloAnimazione: CambioProfiloAnimazioneService,
+  @Inject(DOCUMENT) private documento: Document,
+) {
     this.appLoader = new AppLoaderService( // costruisco manualmente il service loader usando le dipendenze necessarie
       erroreGlobaleService, // passo il service degli errori globali
       traduzioniService, // passo il service delle traduzioni
@@ -270,6 +273,47 @@ export class AppComponent implements OnInit {
       window.history.replaceState({}, '', window.location.pathname);
     }
 
+    const cambioEmail = params.get('cambio_email');
+    if (cambioEmail) {
+      localStorage.setItem('link_email', '1');
+    }
+    if (cambioEmail === 'ok') {
+      localStorage.setItem('cambio_email_pending', 'ok');
+    } else if (cambioEmail === 'scaduto' || cambioEmail === 'errore') {
+      localStorage.setItem('cambio_email_pending', 'errore');
+    }
+
+    const cambioPending = localStorage.getItem('cambio_email_pending');
+    if (cambioPending === 'ok') {
+      localStorage.removeItem('cambio_email_pending');
+      localStorage.removeItem('toast_benvenuto');
+    } else if (cambioPending === 'errore') {
+      localStorage.removeItem('cambio_email_pending');
+      localStorage.removeItem('toast_benvenuto');
+      const testo = codiceV === 'it'
+        ? 'Qualcosa è andato storto, probabilmente è passato troppo tempo. Riprova più tardi e se il problema persiste manda un messaggio in assistenza.'
+        : 'Something went wrong, the link may have expired. Please try again later and if the problem persists contact our support team.';
+      this.toastService.errore(testo);
+      setTimeout(() => {
+        localStorage.removeItem('link_email');
+      }, 500);
+    }
+
+    const stoPerRicaricare = !!cambioEmail && (!!localStorage.getItem('auth') || !!sessionStorage.getItem('auth'));
+    if (localStorage.getItem('link_email') === '1' && cambioPending !== 'errore' && !stoPerRicaricare) {
+      localStorage.removeItem('toast_benvenuto');
+      const testo = codiceV === 'it'
+        ? 'Il cambio email è avvenuto con SUCCESSO.'
+        : 'The email change was SUCCESSFUL.';
+      this.toastService.successo(testo);
+      setTimeout(() => {
+        localStorage.removeItem('link_email');
+      }, 500);
+    }
+    if (cambioEmail) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     this.performanceService.performanceLevel$
       .pipe(
         filter((l) => l !== 'Calcolando...'),
@@ -386,8 +430,12 @@ export class AppComponent implements OnInit {
       });
 
     this.cambioRicevuteAnimazione.spinnerVisibile$.subscribe((v) => {
-      this.spinnerRicevuteVisibile = v;
-    });
+  this.spinnerRicevuteVisibile = v;
+});
+
+this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
+  this.spinnerProfiloVisibile = v;
+});
 
     this.appToast.gestisciToastBenvenuto(); // avvio la logica globale del toast benvenuto
     this.appToast.gestisciErroriFatali(); // avvio la logica globale dei toast di errore fatale

@@ -30,8 +30,8 @@
     ngOnInit(): void {
       // inizializzo le sottoscrizioni quando il componente viene creato
       this.sub = this.toastService.toast$.subscribe((msg) => {
-        // ascolto i nuovi toast emessi dal servizio
-        this.toasts.push(msg); // aggiungo il nuovo toast alla lista da mostrare
+        console.log('[TOAST] nuovo toast:', msg.testo?.substring(0, 40), 'chiave:', msg.chiave);
+        this.toasts.push(msg);
 
         if (msg.persistente) {
           // se il toast è persistente non lo rimuovo automaticamente
@@ -49,13 +49,13 @@
       });
 
       this.subChiudi = this.toastService.chiudi$.subscribe((chiave) => {
-        // ascolto la richiesta di chiusura di uno specifico toast
-        this.toasts = this.toasts.filter((t) => t.chiave !== chiave); // tengo solo i toast con chiave diversa, eliminando quello richiesto
+        console.log('[TOAST] chiudi richiesto per chiave:', chiave);
+        this.toasts = this.toasts.filter((t) => t.chiave !== chiave);
       });
 
       this.subChiudiTutti = this.toastService.chiudiTutti$.subscribe(() => {
-        // ascolto la richiesta di chiudere tutti i toast
-        this.toasts = []; // svuoto la lista così spariscono tutti
+        console.log('[TOAST] chiudiTutti richiesto');
+        this.toasts = [];
       });
     }
 

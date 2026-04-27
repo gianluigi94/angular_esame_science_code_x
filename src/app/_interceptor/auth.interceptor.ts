@@ -74,13 +74,13 @@ export class AuthInterceptor implements HttpInterceptor {
           if (event instanceof HttpResponse && !req.url.includes('/accedi')) {
             // reagisco solo alle risposte complete e ignoro quelle del login
 
-            const now = performance.now(); // misuro il tempo corrente per tracciare quando arriva la risposta
+            const now = performance.now();
             console.log(
-              'RISPOSTA SERVER (status ' +
+              '[INTERCEPT] RISPOSTA ' +
                 event.status +
-                ') alle ' +
-                now +
-                ' ms',
+                ' | ' +
+                req.url +
+                ' | @' + now.toFixed(0) + ' ms',
             );
 
             const haTokenIniziale = this.statoSessione.haTokenIniziale; // verifico se all'avvio avevo già un token salvato
@@ -110,9 +110,8 @@ export class AuthInterceptor implements HttpInterceptor {
           ''; // se non ho nulla, mi assicuro di avere almeno una stringa vuota
 
         // login: il componente se la gestisce da solo
-        if (req.url.includes('/accedi')) {
-          // se l'errore riguarda la chiamata di accesso, non lo gestisco qui
-          return throwError(() => err); // rilancio l'errore così il componente di login può occuparsene
+       if (req.url.includes('/accedi') || req.url.includes('/verifica-credenziali')) {
+          return throwError(() => err);
         }
         const msgLower = (rawMsg || '').toLowerCase(); // porto il messaggio in minuscolo per fare controlli senza problemi
         const eTokenScadutoMascheratoDa500 = // preparo un flag per riconoscere un token scaduto anche quando torna come errore 500
@@ -136,18 +135,21 @@ export class AuthInterceptor implements HttpInterceptor {
             haTokenIniziale && !giaConfermata; // decido che è un token 'morto all'ingresso' se c'era ma non ha mai passato una chiamata con bearer
 
           if (deveEssereTrattatoComeIniziale) {
-            // gestisco il caso in cui entro e trovo già un token non valido
-            // token salvato da subito, ma nessuna chiamata con bearer è mai andata bene
-            this.authService.logout(false); // eseguo il logout senza mostrare la schermata bloccante
+            this.authService.logout(false);
 
-            // dopo il reload mostreremo il toast di bentornato
-            localStorage.setItem('toast_benvenuto', 'true'); // salvo un flag per far comparire il messaggio dopo il ricaricamento
+            const urlCorrente = window.location.search;
+            if (urlCorrente.includes('cambio_email=ok')) {
+              localStorage.setItem('cambio_email_pending', 'ok');
+            } else if (urlCorrente.includes('cambio_email=scaduto') || urlCorrente.includes('cambio_email=errore')) {
+              localStorage.setItem('cambio_email_pending', 'errore');
+            } else {
+              localStorage.setItem('toast_benvenuto', 'true');
+            }
 
             if (!this.statoSessione.staRicaricando) {
-              // evito ricaricamenti multipli se più richieste falliscono insieme
-              this.statoSessione.staRicaricando = true; // segno che sto già ricaricando la pagina
-              this.erroreGlobale.resettaErroreFatale(); // pulisco eventuali stati di errore grave prima del reload
-              window.location.reload(); // ricarico la pagina per ripartire in uno stato pulito
+              this.statoSessione.staRicaricando = true;
+              this.erroreGlobale.resettaErroreFatale();
+              window.location.reload();
             }
           } else {
             // entro qui se la sessione era valida e poi è scaduta durante l'uso

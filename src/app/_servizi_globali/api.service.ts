@@ -163,6 +163,48 @@ export class ApiService {
     return controllo$;
   }
 
+
+  public getVerificaFase1(hashUtente: string): Observable<IRispostaServer> {
+    const risorsa: string[] = ['verifica-credenziali', hashUtente];
+    return this.richiestaGenerica(risorsa, 'GET');
+  }
+
+
+  public getVerificaFase2(hashUtente: string, hashPassword: string): Observable<IRispostaServer> {
+    const risorsa: string[] = ['verifica-credenziali', hashUtente, hashPassword];
+    return this.richiestaGenerica(risorsa, 'GET');
+  }
+
+
+  public verificaCredenziali(utente: string, password: string): Observable<IRispostaServer> {
+    const utenteNorm = utente.trim().toLowerCase();
+    const hashUtente: string = UtilityService.hash(utenteNorm);
+    const hashPassword: string = UtilityService.hash(password);
+
+    const controllo$ = this.getVerificaFase1(hashUtente).pipe(
+      take(1),
+      map((rit: IRispostaServer): string => {
+        const sale: string = rit.data.sale;
+        const passwordNascosta = UtilityService.nascondiPassword(hashPassword, sale);
+        return passwordNascosta;
+      }),
+      concatMap((passwordNascosta: string) => {
+        return this.getVerificaFase2(hashUtente, passwordNascosta);
+      }),
+    );
+
+    return controllo$;
+  }
+
+  public cambioEmail(userSha512: string, emailReale: string, lingua: string): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['cambio-email']);
+    return this.http.post<IRispostaServer>(url, {
+      user_sha512: userSha512,
+      email_reale: emailReale,
+      lingua: lingua,
+    });
+  }
+
   /**
    * Recupera l'elenco dei film.
    *
@@ -409,12 +451,12 @@ export class ApiService {
    *
    * @returns Observable<IRispostaServer>
    */
-  public getIntervalloPublicita(): Observable<IRispostaServer> {
-    return this.richiestaGenerica(
-      ['configurazione', 'intervallo-pubblicita'],
-      'GET',
-    ); // faccio la GET della configurazione intervallo pubblicita'
-  }
+ public getIntervalloPublicita(): Observable<IRispostaServer> {
+  return this.richiestaGenerica(
+    ['configurazione', 'intervallo-media'],
+    'GET',
+  );
+}
 
   /**
    * Recupera la prossima pubblicita' disponibile.
@@ -422,8 +464,8 @@ export class ApiService {
    * @returns Observable<IRispostaServer>
    */
   public getProssimaPublicita(): Observable<IRispostaServer> {
-    return this.richiestaGenerica(['pubblicita', 'prossima'], 'GET'); // faccio la GET della prossima pubblicita'
-  }
+  return this.richiestaGenerica(['media', 'prossima'], 'GET');
+}
 
   /**
    * Recupera l'elenco delle nazioni.
@@ -454,7 +496,7 @@ export class ApiService {
   }
 
  public registrazione(dati: {
-    email_sha512:     string;
+    user_sha512:      string;
     password_sha512:  string;
     email_reale:      string;
     lingua:           string;

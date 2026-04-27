@@ -113,7 +113,7 @@ export class PlayerAdBreakHelper {
 
     const lingua =
       localStorage.getItem('video_lingua') === 'italiano' ? 'it' : 'en'; // ricavo la lingua video corrente per costruire l'URL della pubblicita'
-    const urlAd = `https://d2kd3i5q9rl184.cloudfront.net/pubblicita/pub_${idPubblicita}_${lingua}.mp4`; // costruisco l'URL completo della pubblicita' da riprodurre
+    const urlAd = `https://d2kd3i5q9rl184.cloudfront.net/media/med_${idPubblicita}_${lingua}.mp4`; // costruisco l'URL completo della pubblicita' da riprodurre
 
     this.adVideoEl = document.createElement('video'); // creo dinamicamente il tag video che usero' per la pubblicita'
     this.adVideoEl.style.cssText = `

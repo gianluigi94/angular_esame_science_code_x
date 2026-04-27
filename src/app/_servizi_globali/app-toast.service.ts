@@ -44,8 +44,9 @@ export class AppToastService {
    * @returns void
    */
   gestisciToastBenvenuto(): void {
-    const haToast = localStorage.getItem('toast_benvenuto'); // leggo il flag locale che indica se mostrare il toast di bentornato
-    if (haToast === null) return; // esco subito se il flag non esiste
+    if (localStorage.getItem('link_email') === '1') return;
+    const haToast = localStorage.getItem('toast_benvenuto');
+    if (haToast === null) return;
 
     const codice = this.cambioLingua.leggiCodiceLingua(); // leggo il codice lingua corrente
     const testo  = codice === 'it' // scelgo il testo del toast in base alla lingua corrente

@@ -341,7 +341,7 @@ async avanti4(): Promise<void> {
     this.invioInCorso = true;
 
    this.apiService.registrazione({
-      email_sha512:     emailHash,
+      user_sha512:      emailHash,
       password_sha512:  passwordHash,
       email_reale:      this.emailUtente,
       lingua:           this.cambioLinguaService.leggiCodiceLingua(),
