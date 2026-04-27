@@ -18,7 +18,7 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
 
   formEmail: FormGroup;
   formInviato = false;
-  vistaCorrente: 'scelta' | 'email' = 'scelta';
+  vistaCorrente: 'scelta' | 'email' | 'password' = 'scelta';
   animazioneInCorso = false;
   stoVerificando = false;
   mostraPassword = false;
@@ -147,6 +147,79 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
     }
   }
 
+  vaiAPassword(): void {
+    if (this.animazioneInCorso) return;
+
+    this.animazioneInCorso = true;
+
+    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
+    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+    if (contenutoScelta) {
+      gsap.killTweensOf(contenutoScelta);
+    }
+    if (bottoneIndietro) {
+      gsap.killTweensOf(bottoneIndietro);
+    }
+
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        this.ngZone.run(() => {
+          this.vistaCorrente = 'password';
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            const formPassword = document.querySelector('.form-profilo') as HTMLElement | null;
+            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+            if (formPassword) {
+              gsap.set(formPassword, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+              gsap.to(formPassword, {
+                opacity: 1,
+                scaleX: 1,
+                duration: 0.45,
+                ease: 'power2.out',
+              });
+            }
+
+            if (nuovoBottoneIndietro) {
+              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
+              gsap.to(nuovoBottoneIndietro, {
+                opacity: 1,
+                duration: 0.35,
+                delay: 0.08,
+                ease: 'power2.out',
+                onComplete: () => {
+                  this.animazioneInCorso = false;
+                },
+              });
+            } else {
+              this.animazioneInCorso = false;
+            }
+          }, 0);
+        });
+      },
+    });
+
+    if (contenutoScelta) {
+      timeline.to(contenutoScelta, {
+        opacity: 0,
+        scaleX: 0,
+        duration: 0.35,
+        ease: 'power2.in',
+        transformOrigin: 'center center',
+      }, 0);
+    }
+
+    if (bottoneIndietro) {
+      timeline.to(bottoneIndietro, {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+      }, 0);
+    }
+  }
+
   tornaAScelta(): void {
     if (this.animazioneInCorso) return;
 
@@ -223,7 +296,7 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   onClickIndietro(): void {
     if (this.animazioneInCorso) return;
 
-    if (this.vistaCorrente === 'email') {
+    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password') {
       this.tornaAScelta();
       return;
     }

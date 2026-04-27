@@ -18,7 +18,7 @@
   {{ 'ui.profilo.email.bottone' | translate }}
 </button>
 
-          <button type="button" class="azione-btn">
+          <button type="button" class="azione-btn" (click)="vaiAPassword()">
             {{ 'ui.profilo.password.bottone' | translate }}
           </button>
         </div>
@@ -187,6 +187,119 @@
             </button>
           </div>
         </form>
+
+        <form
+          *ngIf="vistaCorrente === 'password'"
+          class="form-profilo campo-animato"
+          (keydown.enter)="$event.preventDefault()"
+          autocomplete="off"
+        >
+          <div class="riga-email">
+
+            <div class="campo-wrapper">
+              <p class="label-sopra">
+                Email <span class="asterisco">*</span>
+              </p>
+
+              <div class="campo-form">
+                <input
+                  type="text"
+                  placeholder=" "
+                  id="profilo_password_email"
+                  name="profilo_password_email_unico"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                />
+                <label for="profilo_password_email">
+                  {{ 'ui.registrazione.step3.email_secondaria.input_label' | translate }}
+                </label>
+              </div>
+            </div>
+
+            <div class="campo-wrapper">
+              <p class="label-sopra">
+                {{ 'ui.profilo.password.vecchia_titolo' | translate }} <span class="asterisco">*</span>
+              </p>
+
+              <div class="campo-form password-wrapper-profilo">
+                <input
+                  [type]="mostraPassword ? 'text' : 'password'"
+                  placeholder=" "
+                  id="profilo_vecchia_password"
+                  name="profilo_vecchia_password_unico"
+                  autocomplete="new-password"
+                />
+                <label for="profilo_vecchia_password">
+                  Password
+                </label>
+
+                <button
+                  type="button"
+                  class="toggle-password-profilo"
+                  tabindex="-1"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleVisibilitaPassword()"
+                >
+                  <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                  </svg>
+                  <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                    <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="campo-wrapper">
+              <p class="label-sopra">
+                {{ 'ui.profilo.password.nuova_titolo' | translate }} <span class="asterisco">*</span>
+              </p>
+
+              <div class="campo-form password-wrapper-profilo">
+                <input
+                  [type]="mostraPassword ? 'text' : 'password'"
+                  placeholder=" "
+                  id="profilo_nuova_password"
+                  name="profilo_nuova_password_unico"
+                  autocomplete="new-password"
+                />
+                <label for="profilo_nuova_password">
+                  Password
+                </label>
+
+                <button
+                  type="button"
+                  class="toggle-password-profilo"
+                  tabindex="-1"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleVisibilitaPassword()"
+                >
+                  <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                  </svg>
+                  <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                    <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button
+              class="invia_btn"
+              type="button"
+            >
+              Invia modifiche
+            </button>
+          </div>
+        </form>
       </div>
 
       <button
@@ -205,7 +318,7 @@
           <path d="M15 18l-6-6 6-6" />
         </svg>
         {{
-          (vistaCorrente === "email"
+          (vistaCorrente === "email" || vistaCorrente === "password"
             ? "ui.main.tornaIndietro"
             : "ui.torna.log.contatti"
           ) | translate
