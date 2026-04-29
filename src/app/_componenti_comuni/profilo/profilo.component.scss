@@ -134,7 +134,8 @@
   }
 
   #profilo_vecchia_email,
-  #profilo_email {
+  #profilo_email,
+  #profilo_password_email {
     font-family: Arial, sans-serif !important;
     font-size: 17px !important;
   }
@@ -182,7 +183,8 @@
 }
 
 #profilo_vecchia_email:-webkit-autofill::first-line,
-#profilo_email:-webkit-autofill::first-line {
+#profilo_email:-webkit-autofill::first-line,
+#profilo_password_email:-webkit-autofill::first-line {
   font-family: Arial, sans-serif !important;
   font-size: 17px !important;
 }
@@ -311,5 +313,30 @@
   .campo-form input[type="password"] {
     width: 400px;
     box-sizing: border-box;
+  }
+}
+
+.pwd-robustezza-bar {
+  width: 400px;
+  height: 4px;
+  background: #2a2a2a;
+  border-radius: 4px;
+  margin-top: 2px;
+  position: relative;
+
+  .pwd-robustezza-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  .pwd-robustezza-label {
+    position: absolute;
+    right: 0;
+    top: 6px;
+    font-size: 12px;
+    font-family: "Quantico", serif;
+    font-weight: bold;
+    color: #c4c4c4;
   }
 }

@@ -20,9 +20,9 @@ export class ApiService {
    */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    const server: string = 'http://localhost/science_codex/public/api';
+    // const server: string = 'http://localhost/science_codex/public/api';
     // const server: string = 'http://192.168.1.38/science_codex/public/api';
-    // const server: string = 'https://api.sciencecodex.net/api';
+    const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
 
     const segments = [server, versione, ...risorsa.map(String)]; // Unisco server, versione e parametri della risorsa in un array
@@ -202,6 +202,13 @@ export class ApiService {
       user_sha512: userSha512,
       email_reale: emailReale,
       lingua: lingua,
+    });
+  }
+
+  public cambioPassword(passwordSha512: string): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['cambio-password']);
+    return this.http.put<IRispostaServer>(url, {
+      password_sha512: passwordSha512,
     });
   }
 
@@ -535,9 +542,9 @@ public inviaMessaggio(dati: {
     return this.http.post<IRispostaServer>(url, { email, lingua });
   }
 
-  resetPassword(email: string, password_sha512: string): Observable<IRispostaServer> {
+  resetPassword(rid: string, password_sha512: string): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['reset-password']);
-    return this.http.put<IRispostaServer>(url, { email, password_sha512 });
+    return this.http.put<IRispostaServer>(url, { rid, password_sha512 });
   }
 
  public cambiaPiano(piano: 'base' | 'pro'): Observable<IRispostaServer> {

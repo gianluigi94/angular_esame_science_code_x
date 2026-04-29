@@ -5,6 +5,7 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_utility.service';
+import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/password.helper';
 import gsap from 'gsap';
 
 @Component({
@@ -22,14 +23,35 @@ export class ResetPasswordComponent implements OnInit, AfterViewInit {
   mostraPassword = false;
   mostraConferma = false;
 
-  get errorePasswordNonCombacia(): boolean {
-    const p = this.resetForm.controls['password'].value;
-    const c = this.resetForm.controls['conferma'].value;
-    return !!p && !!c && p !== c;
+  passwordRobustezza: 0 | 1 | 2 | 3 = 0;
+  passwordEntropyPerc = 0;
+  private paroleComuni: string[] = [];
+
+  get pwdColore(): string {
+    const p = this.passwordEntropyPerc;
+    if (p < 50) return `rgb(255,${Math.round((p / 50) * 255)},0)`;
+    return `rgb(${Math.round((1 - (p - 50) / 50) * 255)},180,0)`;
+  }
+
+  get pwdMancaMaiuscola(): boolean {
+    return !/[A-Z]/.test(this.resetForm?.get('password')?.value ?? '');
+  }
+
+  get pwdMancaMinuscola(): boolean {
+    return !/[a-z]/.test(this.resetForm?.get('password')?.value ?? '');
+  }
+
+  get pwdMancaNumero(): boolean {
+    return !/\d/.test(this.resetForm?.get('password')?.value ?? '');
+  }
+
+  get pwdMancaSimbolo(): boolean {
+    return !/[^A-Za-z0-9]/.test(this.resetForm?.get('password')?.value ?? '');
   }
 
  visibile = false;
   private deveAnimare = false;
+  private rid: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -38,18 +60,43 @@ export class ResetPasswordComponent implements OnInit, AfterViewInit {
     private translate: TranslateService,
   ) {
     this.resetForm = this.fb.group({
-      email:    ['', [Validators.required, Validators.email, Validators.minLength(5), Validators.maxLength(40)]],
-      password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(20)]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(20), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/)]],
       conferma: ['', [Validators.required]],
-    });
+    }, { validators: this.confermaPasswordValidator });
+  }
+
+  private confermaPasswordValidator(group: any) {
+    const pwd = group.get('password')?.value;
+    const conf = group.get('conferma')?.value;
+    if (!pwd || !conf) return null;
+    return pwd === conf ? null : { mismatch: true };
+  }
+
+  get errorePasswordNonCombacia(): boolean {
+    return !!this.resetForm?.errors?.['mismatch'];
+  }
+
+  onPasswordInput(pwd: string): void {
+    const rit = calcolaRobustezzaPassword(pwd, this.paroleComuni);
+    this.passwordRobustezza = rit.robustezza;
+    this.passwordEntropyPerc = rit.entropyPerc;
   }
 
   ngOnInit(): void {
-    const pending = sessionStorage.getItem('reset_pw_pending');
-    if (pending === '1') {
+    fetch('assets/common_words.json')
+      .then((r) => r.json())
+      .then((data: { commonWords: string[] }) => {
+        this.paroleComuni = data.commonWords.map((w) => w.toLowerCase());
+      })
+      .catch(() => {
+        this.paroleComuni = [];
+      });
+
+    const ridSalvato = localStorage.getItem('reset_pw_rid');
+    if (ridSalvato) {
+      this.rid = ridSalvato;
       this.visibile = true;
       this.deveAnimare = true;
-      sessionStorage.removeItem('reset_pw_pending');
     }
   }
 
@@ -82,18 +129,26 @@ export class ResetPasswordComponent implements OnInit, AfterViewInit {
   invia(): void {
     this.formInviato = true;
     if (this.resetForm.invalid || this.errorePasswordNonCombacia) return;
+    if (!this.rid) {
+      this.translate.get('ui.login.reset.errore').pipe(take(1)).subscribe(t => this.toastService.errore(t));
+      return;
+    }
     this.invioInCorso = true;
-    const email = this.resetForm.controls['email'].value;
     const passwordHash = UtilityService.hash(this.resetForm.controls['password'].value);
-    this.apiService.resetPassword(email, passwordHash).pipe(take(1)).subscribe({
+    this.apiService.resetPassword(this.rid, passwordHash).pipe(take(1)).subscribe({
       next: () => {
         this.invioInCorso = false;
+        localStorage.removeItem('reset_pw_rid');
+        this.rid = null;
         this.translate.get('ui.login.reset.successo').pipe(take(1)).subscribe(t => this.toastService.successo(t));
         this.chiudi();
       },
       error: () => {
         this.invioInCorso = false;
+        localStorage.removeItem('reset_pw_rid');
+        this.rid = null;
         this.translate.get('ui.login.reset.errore').pipe(take(1)).subscribe(t => this.toastService.errore(t));
+        this.chiudi();
       },
     });
   }

@@ -176,7 +176,7 @@ export class IscrizioneFormService {
           Validators.required,
           Validators.minLength(8),
           Validators.maxLength(30),
-          Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/),
+          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/),
         ],
       ], // definisco la password come obbligatoria con requisiti minimi di sicurezza
       confermaPassword: ['', Validators.required], // definisco il campo di conferma password come obbligatorio

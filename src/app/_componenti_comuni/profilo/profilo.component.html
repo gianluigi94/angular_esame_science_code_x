@@ -191,13 +191,18 @@
         <form
           *ngIf="vistaCorrente === 'password'"
           class="form-profilo campo-animato"
+          [formGroup]="formPassword"
+          (ngSubmit)="inviaPassword()"
           (keydown.enter)="$event.preventDefault()"
           autocomplete="off"
         >
           <div class="riga-email">
 
             <div class="campo-wrapper">
-              <p class="label-sopra">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formPassword.controls['email'].invalid && (formPassword.controls['email'].touched || formInviato) }"
+              >
                 Email <span class="asterisco">*</span>
               </p>
 
@@ -207,31 +212,56 @@
                   placeholder=" "
                   id="profilo_password_email"
                   name="profilo_password_email_unico"
+                  formControlName="email"
                   autocomplete="off"
                   autocorrect="off"
                   autocapitalize="off"
                   spellcheck="false"
+                  [ngClass]="{ 'is-invalid': formPassword.controls['email'].invalid && (formPassword.controls['email'].touched || formInviato) }"
                 />
-                <label for="profilo_password_email">
+                <label
+                  for="profilo_password_email"
+                  [ngClass]="{ 'is-invalid': formPassword.controls['email'].invalid && (formPassword.controls['email'].touched || formInviato) }"
+                >
                   {{ 'ui.registrazione.step3.email_secondaria.input_label' | translate }}
                 </label>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="(formPassword.controls['email'].touched || formInviato) && formPassword.controls['email'].errors?.['required']">
+                  {{ 'ui.contatti.form.email.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formPassword.controls['email'].touched || formInviato) && (formPassword.controls['email'].errors?.['email'] || formPassword.controls['email'].errors?.['pattern'])">
+                  {{ 'ui.contatti.form.email.error.email' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formPassword.controls['email'].touched || formInviato) && formPassword.controls['email'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.email_secondaria.error.maxlength' | translate }}
+                </p>
               </div>
             </div>
 
             <div class="campo-wrapper">
-              <p class="label-sopra">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formPassword.controls['vecchiaPassword'].invalid && (formPassword.controls['vecchiaPassword'].touched || formInviato) }"
+              >
                 {{ 'ui.profilo.password.vecchia_titolo' | translate }} <span class="asterisco">*</span>
               </p>
 
               <div class="campo-form password-wrapper-profilo">
                 <input
-                  [type]="mostraPassword ? 'text' : 'password'"
+                  [type]="mostraVecchiaPassword ? 'text' : 'password'"
                   placeholder=" "
                   id="profilo_vecchia_password"
                   name="profilo_vecchia_password_unico"
+                  formControlName="vecchiaPassword"
                   autocomplete="new-password"
+                  [ngClass]="{ 'is-invalid': formPassword.controls['vecchiaPassword'].invalid && (formPassword.controls['vecchiaPassword'].touched || formInviato) }"
                 />
-                <label for="profilo_vecchia_password">
+                <label
+                  for="profilo_vecchia_password"
+                  [ngClass]="{ 'is-invalid': formPassword.controls['vecchiaPassword'].invalid && (formPassword.controls['vecchiaPassword'].touched || formInviato) }"
+                >
                   Password
                 </label>
 
@@ -240,35 +270,56 @@
                   class="toggle-password-profilo"
                   tabindex="-1"
                   (mousedown)="$event.preventDefault()"
-                  (click)="toggleVisibilitaPassword()"
+                  (click)="toggleVisibilitaVecchiaPassword()"
                 >
-                  <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                  <svg *ngIf="mostraVecchiaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
                     <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
                     <circle cx="12" cy="12" r="2.5"/>
                   </svg>
-                  <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                  <svg *ngIf="!mostraVecchiaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
                     <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
                     <circle cx="12" cy="12" r="2.5"/>
                     <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
                   </svg>
                 </button>
               </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="(formPassword.controls['vecchiaPassword'].touched || formInviato) && formPassword.controls['vecchiaPassword'].errors?.['required']">
+                  {{ 'ui.registrazione.password.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formPassword.controls['vecchiaPassword'].touched || formInviato) && formPassword.controls['vecchiaPassword'].errors?.['minlength']">
+                  {{ 'ui.registrazione.password.error.minlength' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formPassword.controls['vecchiaPassword'].touched || formInviato) && formPassword.controls['vecchiaPassword'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.password.error.maxlength' | translate }}
+                </p>
+              </div>
             </div>
 
             <div class="campo-wrapper">
-              <p class="label-sopra">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formPassword.controls['nuovaPassword'].invalid && (formPassword.controls['nuovaPassword'].touched || formInviato) }"
+              >
                 {{ 'ui.profilo.password.nuova_titolo' | translate }} <span class="asterisco">*</span>
               </p>
 
               <div class="campo-form password-wrapper-profilo">
                 <input
-                  [type]="mostraPassword ? 'text' : 'password'"
+                  [type]="mostraNuovaPassword ? 'text' : 'password'"
                   placeholder=" "
                   id="profilo_nuova_password"
                   name="profilo_nuova_password_unico"
+                  formControlName="nuovaPassword"
                   autocomplete="new-password"
+                  [ngClass]="{ 'is-invalid': formPassword.controls['nuovaPassword'].invalid && (formPassword.controls['nuovaPassword'].touched || formInviato) }"
+                  (input)="onNuovaPasswordInput($any($event.target).value)"
                 />
-                <label for="profilo_nuova_password">
+                <label
+                  for="profilo_nuova_password"
+                  [ngClass]="{ 'is-invalid': formPassword.controls['nuovaPassword'].invalid && (formPassword.controls['nuovaPassword'].touched || formInviato) }"
+                >
                   Password
                 </label>
 
@@ -277,26 +328,121 @@
                   class="toggle-password-profilo"
                   tabindex="-1"
                   (mousedown)="$event.preventDefault()"
-                  (click)="toggleVisibilitaPassword()"
+                  (click)="toggleVisibilitaNuovaPassword()"
                 >
-                  <svg *ngIf="mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                  <svg *ngIf="mostraNuovaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
                     <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
                     <circle cx="12" cy="12" r="2.5"/>
                   </svg>
-                  <svg *ngIf="!mostraPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                  <svg *ngIf="!mostraNuovaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
                     <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
                     <circle cx="12" cy="12" r="2.5"/>
                     <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
                   </svg>
                 </button>
               </div>
+
+              <div class="pwd-robustezza-bar" *ngIf="passwordRobustezza > 0">
+                <div
+                  class="pwd-robustezza-fill"
+                  [style.width.%]="passwordEntropyPerc"
+                  [style.background-color]="pwdColore"
+                ></div>
+                <span class="pwd-robustezza-label">
+                  {{
+                    passwordEntropyPerc >= 75
+                      ? ('ui.registrazione.password.robustezza.forte' | translate)
+                      : passwordEntropyPerc >= 50
+                        ? ('ui.registrazione.password.robustezza.discreta' | translate)
+                        : passwordEntropyPerc >= 25
+                          ? ('ui.registrazione.password.robustezza.moderata' | translate)
+                          : ('ui.registrazione.password.robustezza.debole' | translate)
+                  }}
+                </span>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="(formPassword.controls['nuovaPassword'].touched || formInviato) && formPassword.controls['nuovaPassword'].errors?.['required']">
+                  {{ 'ui.registrazione.password.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formPassword.controls['nuovaPassword'].touched || formInviato) && formPassword.controls['nuovaPassword'].errors?.['minlength']">
+                  {{ 'ui.registrazione.password.error.minlength' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formPassword.controls['nuovaPassword'].touched || formInviato) && formPassword.controls['nuovaPassword'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.password.error.maxlength' | translate }}
+                </p>
+                <ng-container *ngIf="(formPassword.controls['nuovaPassword'].touched || formInviato) && formPassword.controls['nuovaPassword'].errors?.['pattern']">
+                  <p class="errore-campo" *ngIf="pwdMancaMaiuscola">{{ 'ui.registrazione.password.error.maiuscola' | translate }}</p>
+                  <p class="errore-campo" *ngIf="pwdMancaMinuscola">{{ 'ui.registrazione.password.error.minuscola' | translate }}</p>
+                  <p class="errore-campo" *ngIf="pwdMancaNumero">{{ 'ui.registrazione.password.error.numero' | translate }}</p>
+                  <p class="errore-campo" *ngIf="pwdMancaSimbolo">{{ 'ui.registrazione.password.error.simbolo' | translate }}</p>
+                </ng-container>
+              </div>
+            </div>
+
+            <div class="campo-wrapper">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': (formPassword.controls['confermaNuovaPassword'].invalid || formPassword.errors?.['mismatchNuova']) && (formPassword.controls['confermaNuovaPassword'].touched || formInviato) }"
+              >
+                {{ 'ui.profilo.password.conferma_nuova_titolo' | translate }} <span class="asterisco">*</span>
+              </p>
+
+              <div class="campo-form password-wrapper-profilo">
+                <input
+                  [type]="mostraConfermaNuovaPassword ? 'text' : 'password'"
+                  placeholder=" "
+                  id="profilo_conferma_nuova_password"
+                  name="profilo_conferma_nuova_password_unico"
+                  formControlName="confermaNuovaPassword"
+                  autocomplete="new-password"
+                  [ngClass]="{ 'is-invalid': (formPassword.controls['confermaNuovaPassword'].invalid || formPassword.errors?.['mismatchNuova']) && (formPassword.controls['confermaNuovaPassword'].touched || formInviato) }"
+                />
+                <label
+                  for="profilo_conferma_nuova_password"
+                  [ngClass]="{ 'is-invalid': (formPassword.controls['confermaNuovaPassword'].invalid || formPassword.errors?.['mismatchNuova']) && (formPassword.controls['confermaNuovaPassword'].touched || formInviato) }"
+                >
+                  Password
+                </label>
+
+                <button
+                  type="button"
+                  class="toggle-password-profilo"
+                  tabindex="-1"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="toggleVisibilitaConfermaNuovaPassword()"
+                >
+                  <svg *ngIf="mostraConfermaNuovaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                  </svg>
+                  <svg *ngIf="!mostraConfermaNuovaPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#c4c4c4">
+                    <path d="M12 4C7 4 3.1 7.1 1.5 12 3.1 16.9 7 20 12 20s8.9-3.1 10.5-8C20.9 7.1 17 4 12 4Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                    <circle cx="12" cy="12" r="2.5"/>
+                    <path d="M4 4L20 20" stroke="#c4c4c4" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="(formPassword.controls['confermaNuovaPassword'].touched || formInviato) && formPassword.controls['confermaNuovaPassword'].errors?.['required']">
+                  {{ 'ui.registrazione.password.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="(formPassword.controls['confermaNuovaPassword'].touched || formInviato) && formPassword.errors?.['mismatchNuova'] && !formPassword.controls['confermaNuovaPassword'].errors?.['required']">
+                  {{ 'ui.profilo.password.error.mismatch' | translate }}
+                </p>
+              </div>
             </div>
 
             <button
               class="invia_btn"
-              type="button"
+              type="submit"
+              [disabled]="!formPassword.valid || stoVerificando"
             >
-              Invia modifiche
+              <ng-container *ngIf="!stoVerificando">
+                {{ 'ui.profilo.email.invia' | translate }}
+              </ng-container>
+              <app-spinner *ngIf="stoVerificando"></app-spinner>
             </button>
           </div>
         </form>

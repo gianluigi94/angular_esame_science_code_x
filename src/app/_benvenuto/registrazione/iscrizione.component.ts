@@ -92,6 +92,12 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   } // controllo se il valore attuale della password contiene almeno una maiuscola
 
+  get pwdMancaMinuscola(): boolean {
+    return !/[a-z]/.test(
+      this.forms.reactiveFormStep3?.get('password')?.value ?? '',
+    );
+  }
+
   /**
    * Mi dice se nella password corrente manca almeno una cifra.
    *

@@ -1066,6 +1066,7 @@
           </p>
           <ng-container *ngIf="(sf.reactiveFormStep3.controls['password'].touched || formInviatoStep3) && sf.reactiveFormStep3.controls['password'].errors?.['pattern']">
             <p class="errore-campo" *ngIf="pwdMancaMaiuscola">{{ 'ui.registrazione.password.error.maiuscola' | translate }}</p>
+            <p class="errore-campo" *ngIf="pwdMancaMinuscola">{{ 'ui.registrazione.password.error.minuscola' | translate }}</p>
             <p class="errore-campo" *ngIf="pwdMancaNumero">{{ 'ui.registrazione.password.error.numero' | translate }}</p>
             <p class="errore-campo" *ngIf="pwdMancaSimbolo">{{ 'ui.registrazione.password.error.simbolo' | translate }}</p>
           </ng-container>

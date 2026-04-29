@@ -8,7 +8,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_utility.service';
-
+import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/password.helper';
 @Component({
   selector: 'app-profilo',
   templateUrl: './profilo.component.html',
@@ -17,12 +17,40 @@ import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_ut
 export class ProfiloComponent implements AfterViewInit, OnInit {
 
   formEmail: FormGroup;
+  formPassword: FormGroup;
   formInviato = false;
   vistaCorrente: 'scelta' | 'email' | 'password' = 'scelta';
   animazioneInCorso = false;
   stoVerificando = false;
   mostraPassword = false;
+  mostraVecchiaPassword = false;
+  mostraNuovaPassword = false;
+  mostraConfermaNuovaPassword = false;
 
+  passwordRobustezza: 0 | 1 | 2 | 3 = 0;
+  passwordEntropyPerc = 0;
+  private paroleComuni: string[] = [];
+get pwdColore(): string {
+    const p = this.passwordEntropyPerc;
+    if (p < 50) return `rgb(255,${Math.round((p / 50) * 255)},0)`;
+    return `rgb(${Math.round((1 - (p - 50) / 50) * 255)},180,0)`;
+  }
+
+  get pwdMancaMaiuscola(): boolean {
+    return !/[A-Z]/.test(this.formPassword?.get('nuovaPassword')?.value ?? '');
+  }
+
+  get pwdMancaMinuscola(): boolean {
+    return !/[a-z]/.test(this.formPassword?.get('nuovaPassword')?.value ?? '');
+  }
+
+  get pwdMancaNumero(): boolean {
+    return !/\d/.test(this.formPassword?.get('nuovaPassword')?.value ?? '');
+  }
+
+  get pwdMancaSimbolo(): boolean {
+    return !/[^A-Za-z0-9]/.test(this.formPassword?.get('nuovaPassword')?.value ?? '');
+  }
   constructor(
     private cambioProfilo: CambioProfiloAnimazioneService,
     private fb: FormBuilder,
@@ -38,16 +66,36 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
       password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(20)]],
       email: ['', [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.minLength(5), Validators.maxLength(40)]],
     });
+
+    this.formPassword = this.fb.group({
+      email: ['', [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.minLength(5), Validators.maxLength(40)]],
+      vecchiaPassword: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(20)]],
+      nuovaPassword: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(20), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/)]],
+      confermaNuovaPassword: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(20)]],
+    }, { validators: this.confermaNuovaPasswordValidator });
   }
 
   ngOnInit(): void {
     sessionStorage.setItem('vengo_da_profilo', 'true');
     this.cambioProfilo.spinnerVisibile$.next(false);
     setTimeout(() => this.avviaAnimazioniIngresso(), 0);
+
+    fetch('assets/common_words.json')
+      .then((r) => r.json())
+      .then((data: { commonWords: string[] }) => {
+        this.paroleComuni = data.commonWords.map((w) => w.toLowerCase());
+      })
+      .catch(() => {
+        this.paroleComuni = [];
+      });
   }
 
   ngAfterViewInit(): void {}
-
+  onNuovaPasswordInput(pwd: string): void {
+    const rit = calcolaRobustezzaPassword(pwd, this.paroleComuni);
+    this.passwordRobustezza = rit.robustezza;
+    this.passwordEntropyPerc = rit.entropyPerc;
+  }
   avviaAnimazioniIngresso(): void {
     const titolo = document.querySelector('.profilo-titolo') as HTMLElement | null;
     const box = document.querySelector('.profilo-box') as HTMLElement | null;
@@ -367,5 +415,90 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
       input?.focus();
       if (start !== null && end !== null) input?.setSelectionRange(start, end);
     }, 0);
+  }
+
+  toggleVisibilitaVecchiaPassword(): void {
+    const input = document.getElementById('profilo_vecchia_password') as HTMLInputElement;
+    const start = input?.selectionStart ?? null;
+    const end = input?.selectionEnd ?? null;
+    this.mostraVecchiaPassword = !this.mostraVecchiaPassword;
+    setTimeout(() => {
+      input?.focus();
+      if (start !== null && end !== null) input?.setSelectionRange(start, end);
+    }, 0);
+  }
+
+  toggleVisibilitaNuovaPassword(): void {
+    const input = document.getElementById('profilo_nuova_password') as HTMLInputElement;
+    const start = input?.selectionStart ?? null;
+    const end = input?.selectionEnd ?? null;
+    this.mostraNuovaPassword = !this.mostraNuovaPassword;
+    setTimeout(() => {
+      input?.focus();
+      if (start !== null && end !== null) input?.setSelectionRange(start, end);
+    }, 0);
+  }
+
+  toggleVisibilitaConfermaNuovaPassword(): void {
+    const input = document.getElementById('profilo_conferma_nuova_password') as HTMLInputElement;
+    const start = input?.selectionStart ?? null;
+    const end = input?.selectionEnd ?? null;
+    this.mostraConfermaNuovaPassword = !this.mostraConfermaNuovaPassword;
+    setTimeout(() => {
+      input?.focus();
+      if (start !== null && end !== null) input?.setSelectionRange(start, end);
+    }, 0);
+  }
+  private confermaNuovaPasswordValidator(group: any) {
+    const nuova = group.get('nuovaPassword')?.value;
+    const conferma = group.get('confermaNuovaPassword')?.value;
+    if (!nuova || !conferma) return null;
+    return nuova === conferma ? null : { mismatchNuova: true };
+  }
+  inviaPassword(): void {
+    this.formInviato = true;
+    if (this.formPassword.invalid) {
+      this.formPassword.markAllAsTouched();
+      return;
+    }
+
+    const email = this.formPassword.controls['email'].value;
+    const vecchiaPassword = this.formPassword.controls['vecchiaPassword'].value;
+    const nuovaPassword = this.formPassword.controls['nuovaPassword'].value;
+
+    this.stoVerificando = true;
+    this.api.verificaCredenziali(email, vecchiaPassword).pipe(take(1)).subscribe({
+      next: (rit) => {
+        if (rit.data !== null && rit.message !== null) {
+          const nuovaPasswordHash = UtilityService.hash(nuovaPassword);
+          this.api.cambioPassword(nuovaPasswordHash).pipe(take(1)).subscribe({
+            next: () => {
+              this.stoVerificando = false;
+              this.toastService.chiudi('login_errore');
+              this.toastService.successo(this.translate.instant('ui.profilo.cambio_password.successo'));
+              this.tornaAScelta();
+            },
+            error: () => {
+              this.stoVerificando = false;
+              this.saturnoService.flashErrorLight();
+            },
+          });
+        } else {
+          this.stoVerificando = false;
+          this.saturnoService.flashErrorLight();
+        }
+      },
+      error: (err) => {
+        this.stoVerificando = false;
+        const chiave = UtilityService.chiaveToastErroreDaBackend(err);
+        const messaggio = this.translate.instant(chiave);
+        if (chiave === 'ui.toast.error.login.max_acces' || chiave === 'ui.toast.error.login.in_attesa') {
+          this.toastService.mostra(messaggio, 'allarm', false, undefined, 'login_errore');
+        } else {
+          this.toastService.mostra(messaggio, 'error', false, undefined, 'login_errore');
+        }
+        this.saturnoService.flashErrorLight();
+      },
+    });
   }
 }
