@@ -37,6 +37,7 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
   saltaAnimazioniIngresso: boolean = false;
   invioResetInCorso: boolean = false;
   resetForm: FormGroup;
+  private onApriResetDaToast = () => this.apriFormReset();
   constructor(
     private fb: FormBuilder,
     private authService: Authservice,
@@ -96,7 +97,8 @@ export class LoginComponent implements OnDestroy, AfterViewInit {
    * @returns void
    */
   ngAfterViewInit(): void {
-    sessionStorage.setItem('vengo_da_login', 'true'); // metto valore per salvare il mio passagio in questa pagina per animazioni
+    sessionStorage.setItem('vengo_da_login', 'true');
+    window.addEventListener('apri-reset-da-toast', this.onApriResetDaToast);
     if (this.saltaAnimazioniIngresso) {
       // nel caso ricarico salto le animazioni e faccio scomparire il sottotitolo
       UtilityService.nascondiSottotitoloEScrol();
@@ -330,9 +332,9 @@ apriFormReset(): void {
       error: (err) => {
         // gestisco il caso di errore della chiamata di login
 
-        const chiave = UtilityService.chiaveToastErroreDaBackend(err); // ricavo la chiave di traduzione corretta in base al messaggio del backend
+        const chiave = UtilityService.chiaveToastErroreDaBackend(err);
 
-        const messaggio = this.translate.instant(chiave); // traduco subito il messaggio da mostrare all'utente
+        const messaggio = this.translate.instant(chiave);
 
         if (
           chiave === 'ui.toast.error.login.max_acces' ||
@@ -343,6 +345,15 @@ apriFormReset(): void {
             'allarm',
             false,
             undefined,
+            'login_errore',
+          );
+        } else if (chiave === 'ui.toast.erro.login.password_deprecata') {
+          const testoNuovo = this.translate.instant('ui.toast.password_scaduta.testo');
+          this.toastService.mostra(
+            testoNuovo,
+            'allarm',
+            true,
+            'apri_reset',
             'login_errore',
           );
         } else {
@@ -385,8 +396,8 @@ apriFormReset(): void {
    * @returns void
    */
   ngOnDestroy(): void {
-    // gestisco la distruzione del componente per chiudere le sottoscrizioni collegate
-    this.distruggi$.next(); // emetto il segnale di chiusura per far terminare tutte le pipe
+    window.removeEventListener('apri-reset-da-toast', this.onApriResetDaToast);
+    this.distruggi$.next();
   }
 
   /**

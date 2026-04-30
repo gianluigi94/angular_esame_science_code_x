@@ -53,6 +53,10 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
           return throwError(() => err); // rilancio l'errore così com'è
         }
 
+        if (err.status === 422) {
+          return throwError(() => err);
+        }
+
         // 404 su dettaglio film/serie -> pagina non trovato (NO errore fatale)
         const e404 = err.status === 404;
         const eDettaglioFilmSerie = /\/api\/v1\/(film|serie)(\/|$|-)/i.test(

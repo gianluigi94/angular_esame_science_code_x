@@ -471,15 +471,18 @@ get pwdColore(): string {
       next: (rit) => {
         if (rit.data !== null && rit.message !== null) {
           const nuovaPasswordHash = UtilityService.hash(nuovaPassword);
-          this.api.cambioPassword(nuovaPasswordHash).pipe(take(1)).subscribe({
+          this.api.cambioPassword(nuovaPasswordHash).subscribe({
             next: () => {
               this.stoVerificando = false;
               this.toastService.chiudi('login_errore');
               this.toastService.successo(this.translate.instant('ui.profilo.cambio_password.successo'));
               this.tornaAScelta();
             },
-            error: () => {
+            error: (err) => {
               this.stoVerificando = false;
+              const chiave = UtilityService.chiaveToastErroreDaBackend(err);
+              const messaggio = this.translate.instant(chiave);
+              this.toastService.mostra(messaggio, 'error', false, undefined, 'login_errore');
               this.saturnoService.flashErrorLight();
             },
           });

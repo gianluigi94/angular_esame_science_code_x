@@ -31,12 +31,12 @@ export class ToastService {
    * @returns void
    */
   mostra(
-    testo: string, // Ricevo il testo del toast
-    tipo: TipoToast = 'info', // Ricevo il tipo del toast con default info
-    persistente: boolean = false, // Ricevo se è persistente con default false
-    azione?: 'ripeti_accesso', // Ricevo un'azione opzionale
-    chiave?: string, // Ricevo una chiave opzionale
-    mostraSpinner: boolean = false, // Ricevo se mostrare lo spinner con default false
+    testo: string,
+    tipo: TipoToast = 'info',
+    persistente: boolean = false,
+    azione?: 'ripeti_accesso' | 'apri_reset',
+    chiave?: string,
+    mostraSpinner: boolean = false,
   ): void {
     this.toastSubject.next({
       testo,

@@ -105,6 +105,10 @@ export class UtilityService {
       return 'ui.toast.error.login.in_attesa';
     }
 
+    if (msg.includes('PASSWORD GIA UTILIZZATA')) {
+      return 'ui.toast.error.password_gia_usata';
+    }
+
     return 'ui.toast.error.login.mancante';
   }
 

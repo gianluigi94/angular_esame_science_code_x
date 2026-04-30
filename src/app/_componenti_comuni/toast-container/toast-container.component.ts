@@ -68,9 +68,14 @@
      * @param event Evento di click del mouse.
      */
     onRipetiAccesso(event: MouseEvent): void {
-      // gestisco il clic sul comando che forza un nuovo accesso
-      event.preventDefault(); // evito il comportamento predefinito del click
-      window.location.reload(); // ricarico la pagina per far ripartire il flusso di accesso
+      event.preventDefault();
+      window.location.reload();
+    }
+
+    onApriReset(event: MouseEvent, chiave?: string): void {
+      event.preventDefault();
+      if (chiave) this.toastService.chiudi(chiave);
+      window.dispatchEvent(new CustomEvent('apri-reset-da-toast'));
     }
 
     /**
