@@ -296,6 +296,13 @@ apriFormReset(): void {
           // considero valido il login solo se ho dati e messaggio non nulli
           const tk: string = rit.data.tk; // estraggo il token dalla risposta
           const p = UtilityService.leggiToken(tk)?.data || {}; // decodifico il token per ricavare i dati utente, oppure uso un oggetto vuoto
+
+          console.log('[DEBUG_PREAVVISO_PSW_TOKEN_LOGIN]', {
+            preavviso_psw: p.preavviso_psw,
+            giorni_scadenza_psw: p.giorni_scadenza_psw,
+            data: p,
+          });
+
           const auth: Auth = {
             tk: tk,
             nome: p.nome ?? null,
@@ -304,9 +311,32 @@ apriFormReset(): void {
             idUtente: p.id_contatto ?? null,
             abilita: Array.isArray(p.abilita) ? p.abilita : null,
             isoNazione: p.iso_nazione ?? null,
+            preavvisoPsw: p.preavviso_psw ?? null,
+            giorniScadenzaPsw: p.giorni_scadenza_psw ?? null,
           };
           this.authService.settaObsAuth(auth); // aggiorno lo stato di autenticazione globale con i dati appena ottenuti
           this.authService.scriviAuthSuStorage(auth, restaCollegato); // local se collegato, altrimenti session
+
+          console.log('[DEBUG_PREAVVISO_PSW_AUTH_LOGIN]', {
+            preavvisoPsw: auth.preavvisoPsw,
+            giorniScadenzaPsw: auth.giorniScadenzaPsw,
+            mostraToast: auth.preavvisoPsw === true && auth.giorniScadenzaPsw !== null,
+          });
+
+          if (auth.preavvisoPsw === true && auth.giorniScadenzaPsw !== null) {
+            setTimeout(() => {
+              const testoPreavviso = this.translate
+                .instant('ui.toast.password_preavviso.testo')
+                .replace('{n}', String(auth.giorniScadenzaPsw));
+              this.toastService.mostra(
+                testoPreavviso,
+                'allarm',
+                true,
+                'cambio_password',
+                'password_preavviso',
+              );
+            }, 2500);
+          }
 
           const testo = this.translate.instant(
             'ui.menu_utente.collegati.riuscito',
@@ -375,6 +405,8 @@ apriFormReset(): void {
           idUtente: null,
           abilita: null,
           isoNazione: null,
+          preavvisoPsw: null,
+          giorniScadenzaPsw: null,
         };
         this.authService.settaObsAuth(auth); // aggiorno lo stato globale impostandolo come non autenticato
         this.stoControllando = false; // spengo lo stato di caricamento perché ho finito la gestione dell'errore

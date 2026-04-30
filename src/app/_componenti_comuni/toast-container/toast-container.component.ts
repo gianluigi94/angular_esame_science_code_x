@@ -4,6 +4,7 @@
   import { Subscription } from 'rxjs';
   import { ToastService} from 'src/app/_servizi_globali/toast.service';
   import { ToastMessage } from 'src/app/_type/toast-messaggio.type';
+  import { CambioProfiloAnimazioneService } from 'src/app/_servizi_globali/cambio-profilo-animazione.service';
   @Component({
     selector: 'app-toast-container',
     templateUrl: './toast-container.component.html',
@@ -16,7 +17,8 @@
     subChiudiTutti?: Subscription; // mi tengo la sottoscrizione che ascolta la richiesta di chiusura di tutti i toast
     constructor(
       // preparo il componente ricevendo i servizi necessari
-      private toastService: ToastService
+      private toastService: ToastService,
+      private cambioProfiloAnimazione: CambioProfiloAnimazioneService
     ) {}
 
     /**
@@ -76,6 +78,12 @@
       event.preventDefault();
       if (chiave) this.toastService.chiudi(chiave);
       window.dispatchEvent(new CustomEvent('apri-reset-da-toast'));
+    }
+
+    onCambioPassword(event: MouseEvent, chiave?: string): void {
+      event.preventDefault();
+      if (chiave) this.toastService.chiudi(chiave);
+      this.cambioProfiloAnimazione.apriProfilo();
     }
 
     /**

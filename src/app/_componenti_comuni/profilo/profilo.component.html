@@ -18,8 +18,13 @@
   {{ 'ui.profilo.email.bottone' | translate }}
 </button>
 
-          <button type="button" class="azione-btn" (click)="vaiAPassword()">
+          <button type="button" class="azione-btn azione-password-btn" (click)="vaiAPassword()">
             {{ 'ui.profilo.password.bottone' | translate }}
+            <span
+              *ngIf="mostraIconaPreavvisoPassword"
+              class="icona-preavviso-password-profilo"
+              title="Password in scadenza"
+            >!</span>
           </button>
         </div>
 

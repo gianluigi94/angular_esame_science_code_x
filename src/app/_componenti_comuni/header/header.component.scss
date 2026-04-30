@@ -571,3 +571,45 @@ header {
   cursor: default !important;
   opacity: 0.5;
 }
+
+.icona-preavviso-password {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  border-radius: 50%;
+  background: #e79c50;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  box-shadow: 0 0 7px rgba(231, 156, 80, 0.75);
+  pointer-events: none;
+}
+
+.info-utente {
+  position: relative;
+}
+
+.icona-preavviso-utente {
+  position: absolute;
+  top: -6px;
+  right: -5px;
+}
+
+.voce-profilo-preavviso {
+  position: relative;
+}
+
+.testo-profilo-preavviso {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icona-preavviso-profilo {
+  position: static;
+}

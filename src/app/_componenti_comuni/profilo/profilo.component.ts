@@ -8,6 +8,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { SaturnoService } from 'src/app/_servizi_globali/animazioni_saturno/three/saturno.service';
 import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_utility.service';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
+import { Auth } from 'src/app/_type/auth.type';
 import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/password.helper';
 @Component({
   selector: 'app-profilo',
@@ -30,6 +32,11 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   passwordRobustezza: 0 | 1 | 2 | 3 = 0;
   passwordEntropyPerc = 0;
   private paroleComuni: string[] = [];
+
+  get mostraIconaPreavvisoPassword(): boolean {
+    return this.authService.leggiObsAuth().value?.preavvisoPsw === true;
+  }
+
 get pwdColore(): string {
     const p = this.passwordEntropyPerc;
     if (p < 50) return `rgb(255,${Math.round((p / 50) * 255)},0)`;
@@ -60,6 +67,7 @@ get pwdColore(): string {
     private translate: TranslateService,
     private toastService: ToastService,
     private saturnoService: SaturnoService,
+    private authService: Authservice,
   ) {
     this.formEmail = this.fb.group({
       vecchiaEmail: ['', [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.minLength(5), Validators.maxLength(40)]],
@@ -472,9 +480,28 @@ get pwdColore(): string {
         if (rit.data !== null && rit.message !== null) {
           const nuovaPasswordHash = UtilityService.hash(nuovaPassword);
           this.api.cambioPassword(nuovaPasswordHash).subscribe({
-            next: () => {
+            next: (rit: any) => {
+              const nuovoTk = rit.data?.tk;
+
+              if (nuovoTk) {
+                const p = UtilityService.leggiToken(nuovoTk)?.data || {};
+                const authCorrente = this.authService.leggiObsAuth().value;
+                const restaCollegato = !!localStorage.getItem('auth');
+
+                const nuovaAuth: Auth = {
+                  ...authCorrente,
+                  tk: nuovoTk,
+                  preavvisoPsw: p.preavviso_psw ?? false,
+                  giorniScadenzaPsw: p.giorni_scadenza_psw ?? null,
+                };
+
+                this.authService.settaObsAuth(nuovaAuth);
+                this.authService.scriviAuthSuStorage(nuovaAuth, restaCollegato);
+              }
+
               this.stoVerificando = false;
               this.toastService.chiudi('login_errore');
+              this.toastService.chiudi('password_preavviso');
               this.toastService.successo(this.translate.instant('ui.profilo.cambio_password.successo'));
               this.tornaAScelta();
             },

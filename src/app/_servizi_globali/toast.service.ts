@@ -34,7 +34,7 @@ export class ToastService {
     testo: string,
     tipo: TipoToast = 'info',
     persistente: boolean = false,
-    azione?: 'ripeti_accesso' | 'apri_reset',
+    azione?: 'ripeti_accesso' | 'apri_reset' | 'cambio_password',
     chiave?: string,
     mostraSpinner: boolean = false,
   ): void {

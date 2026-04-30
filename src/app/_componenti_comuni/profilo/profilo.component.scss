@@ -340,3 +340,26 @@
     color: #c4c4c4;
   }
 }
+.azione-password-btn {
+  position: relative;
+}
+
+.icona-preavviso-password-profilo {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  border-radius: 50%;
+  background: #0b65c2;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  box-shadow: 0 0 7px rgba(11, 101, 194, 0.75);
+}

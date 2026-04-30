@@ -17,5 +17,9 @@
     <a *ngIf="t.azione === 'apri_reset'" href="javascript:void(0)" (click)="onApriReset($event, t.chiave)" class="toast-link">
       {{ 'ui.toast.password_scaduta.link' | translate }}
     </a>
+
+    <a *ngIf="t.azione === 'cambio_password'" href="javascript:void(0)" (click)="onCambioPassword($event, t.chiave)" class="toast-link toast-link-preavviso-password">
+      {{ 'ui.toast.password_preavviso.link' | translate }}
+    </a>
   </div>
 </div>

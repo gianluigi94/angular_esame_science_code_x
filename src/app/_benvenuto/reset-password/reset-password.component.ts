@@ -5,6 +5,8 @@ import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_utility.service';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
+import { Auth } from 'src/app/_type/auth.type';
 import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/password.helper';
 import gsap from 'gsap';
 

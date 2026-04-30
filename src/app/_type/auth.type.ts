@@ -5,5 +5,7 @@ export type Auth={
   idStato: number | null,
   abilita: number[] | null,
   idUtente: number | null,
-  isoNazione: string | null
+  isoNazione: string | null,
+  preavvisoPsw: boolean | null,
+  giorniScadenzaPsw: number | null
 }

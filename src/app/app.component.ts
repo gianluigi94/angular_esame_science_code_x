@@ -539,6 +539,8 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
           tk: nuovoTk,
           idRuolo: p.id_ruolo ?? authCorrente.idRuolo,
           abilita: Array.isArray(p.abilita) ? p.abilita : authCorrente.abilita,
+          preavvisoPsw: p.preavviso_psw ?? authCorrente.preavvisoPsw,
+          giorniScadenzaPsw: p.giorni_scadenza_psw ?? authCorrente.giorniScadenzaPsw,
         };
         this.authService.settaObsAuth(nuovaAuth);
         this.authService.scriviAuthSuStorage(nuovaAuth, restaCollegato);

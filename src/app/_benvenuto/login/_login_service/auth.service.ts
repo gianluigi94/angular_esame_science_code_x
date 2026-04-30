@@ -71,6 +71,8 @@ export class Authservice {
         nome: null,
         abilita: null,
         isoNazione: null,
+        preavvisoPsw: null,
+        giorniScadenzaPsw: null,
       };
     }
     return auth;
@@ -98,6 +100,8 @@ export class Authservice {
       nome: null,
       abilita: null,
       isoNazione: null,
+      preavvisoPsw: null,
+      giorniScadenzaPsw: null,
     };
     this.settaObsAuth(authVuoto); // aggiorno lo stato globale segnando che non sono più autenticato
     localStorage.removeItem('auth'); // pulisco entrambi

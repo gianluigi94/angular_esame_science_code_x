@@ -3,7 +3,7 @@ export interface ToastMessage {
   testo: string;
   tipo: TipoToast;
   persistente?: boolean;
-  azione?: 'ripeti_accesso' | 'apri_reset';
+  azione?: 'ripeti_accesso' | 'apri_reset' | 'cambio_password';
   chiave?: string;
   mostraSpinner?: boolean;
 }

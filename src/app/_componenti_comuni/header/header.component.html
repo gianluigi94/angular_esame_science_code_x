@@ -246,6 +246,11 @@
             <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
           </svg>
           <span class="nome-utente">{{ authVisuale?.nome || "" }}</span>
+          <span
+            *ngIf="authVisuale?.preavvisoPsw"
+            class="icona-preavviso-password icona-preavviso-utente"
+            title="Password in scadenza"
+          >!</span>
 
           <svg class="icona icona-tendina" viewBox="0 0 24 24">
             <path
@@ -259,10 +264,18 @@
         <li class="tendina" [class.aperta]="menuUtenteAperto">
           <ul class="menu-tendina">
             <li
-              class="voce-tendina"
+              class="voce-tendina voce-profilo-preavviso"
               (click)="onProfiloClick()"
-              [innerHTML]="'ui.menu_utente.profilo.label' | translate"
-            ></li>
+            >
+              <span class="testo-profilo-preavviso">
+                <span [innerHTML]="'ui.menu_utente.profilo.label' | translate"></span>
+                <span
+                  *ngIf="authVisuale?.preavvisoPsw"
+                  class="icona-preavviso-password icona-preavviso-profilo"
+                  title="Password in scadenza"
+                >!</span>
+              </span>
+            </li>
             <li
               class="voce-tendina"
               (click)="onClickScollegati()"
