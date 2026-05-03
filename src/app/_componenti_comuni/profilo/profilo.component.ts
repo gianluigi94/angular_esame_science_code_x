@@ -21,13 +21,19 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   formEmail: FormGroup;
   formPassword: FormGroup;
   formInviato = false;
-  vistaCorrente: 'scelta' | 'email' | 'password' = 'scelta';
+  vistaCorrente: 'scelta' | 'email' | 'password' | 'indirizzi' = 'scelta';
   animazioneInCorso = false;
   stoVerificando = false;
   mostraPassword = false;
   mostraVecchiaPassword = false;
   mostraNuovaPassword = false;
   mostraConfermaNuovaPassword = false;
+
+  indirizziMock: any[] = [
+    { tipo: 'domicilio',    paese: 'Italia',  citta: 'Barge',  via: 'Via Castello', civico: '2',   aperta: false },
+    { tipo: 'fatturazione', paese: 'Francia', citta: 'Parigi', via: 'Rue de Rivoli', civico: '15', aperta: false },
+  ];
+  formNuovoAperto = false;
 
   passwordRobustezza: 0 | 1 | 2 | 3 = 0;
   passwordEntropyPerc = 0;
@@ -276,16 +282,114 @@ get pwdColore(): string {
     }
   }
 
+  vaiAIndirizzi(): void {
+    if (this.animazioneInCorso) return;
+
+    this.animazioneInCorso = true;
+
+    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
+    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+    if (contenutoScelta) {
+      gsap.killTweensOf(contenutoScelta);
+    }
+    if (bottoneIndietro) {
+      gsap.killTweensOf(bottoneIndietro);
+    }
+
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        this.ngZone.run(() => {
+          this.vistaCorrente = 'indirizzi';
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            const contenutoIndirizzi = document.querySelector('.indirizzi-contenuto') as HTMLElement | null;
+            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+            if (contenutoIndirizzi) {
+              gsap.set(contenutoIndirizzi, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+              gsap.to(contenutoIndirizzi, {
+                opacity: 1,
+                scaleX: 1,
+                duration: 0.45,
+                ease: 'power2.out',
+              });
+            }
+
+            if (nuovoBottoneIndietro) {
+              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
+              gsap.to(nuovoBottoneIndietro, {
+                opacity: 1,
+                duration: 0.35,
+                delay: 0.08,
+                ease: 'power2.out',
+                onComplete: () => {
+                  this.animazioneInCorso = false;
+                },
+              });
+            } else {
+              this.animazioneInCorso = false;
+            }
+          }, 0);
+        });
+      },
+    });
+
+    if (contenutoScelta) {
+      timeline.to(contenutoScelta, {
+        opacity: 0,
+        scaleX: 0,
+        duration: 0.35,
+        ease: 'power2.in',
+        transformOrigin: 'center center',
+      }, 0);
+    }
+
+    if (bottoneIndietro) {
+      timeline.to(bottoneIndietro, {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.in',
+      }, 0);
+    }
+  }
+
+  apriFormModifica(i: number): void {
+    this.indirizziMock.forEach((ind, idx) => {
+      if (idx !== i) ind.aperta = false;
+    });
+    this.formNuovoAperto = false;
+    this.indirizziMock[i].aperta = !this.indirizziMock[i].aperta;
+  }
+
+  chiudiForm(i: number): void {
+    this.indirizziMock[i].aperta = false;
+  }
+
+  apriFormNuovo(): void {
+    this.indirizziMock.forEach((ind) => ind.aperta = false);
+    this.formNuovoAperto = !this.formNuovoAperto;
+  }
+
+  chiudiFormNuovo(): void {
+    this.formNuovoAperto = false;
+  }
+
+  eliminaIndirizzo(i: number): void {
+    this.indirizziMock.splice(i, 1);
+  }
+
   tornaAScelta(): void {
     if (this.animazioneInCorso) return;
 
     this.animazioneInCorso = true;
 
-    const formEmail = document.querySelector('.form-profilo') as HTMLElement | null;
+    const contenutoUscita = document.querySelector('.form-profilo, .indirizzi-contenuto') as HTMLElement | null;
     const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
 
-    if (formEmail) {
-      gsap.killTweensOf(formEmail);
+    if (contenutoUscita) {
+      gsap.killTweensOf(contenutoUscita);
     }
     if (bottoneIndietro) {
       gsap.killTweensOf(bottoneIndietro);
@@ -330,8 +434,8 @@ get pwdColore(): string {
       },
     });
 
-    if (formEmail) {
-      timeline.to(formEmail, {
+    if (contenutoUscita) {
+      timeline.to(contenutoUscita, {
         opacity: 0,
         scaleX: 0,
         duration: 0.35,
@@ -352,7 +456,7 @@ get pwdColore(): string {
   onClickIndietro(): void {
     if (this.animazioneInCorso) return;
 
-    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password') {
+    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password' || this.vistaCorrente === 'indirizzi') {
       this.tornaAScelta();
       return;
     }

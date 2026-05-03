@@ -363,3 +363,229 @@
   line-height: 1;
   box-shadow: 0 0 7px rgba(11, 101, 194, 0.75);
 }
+
+.indirizzi-contenuto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: center center;
+}
+
+.indirizzi-tabella {
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid rgba(231, 156, 80, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.indirizzi-tabella .riga-header {
+  display: flex;
+  padding: 10px 18px;
+  background: rgba(231, 156, 80, 0.08);
+  border-bottom: 1px solid rgba(231, 156, 80, 0.2);
+  font-family: "Quantico", serif;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.col-tipo   { flex: 1; }
+.col-paese  { flex: 1; }
+.col-citta  { flex: 1; }
+.col-via    { flex: 2; }
+
+.indirizzi-tabella .col-azioni {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.riga-indirizzo {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease;
+}
+
+.riga-indirizzo:last-child {
+  border-bottom: none;
+}
+
+.riga-indirizzo.aperta .riga-indirizzo-header {
+  background: rgba(231, 156, 80, 0.08);
+  border-bottom: 1px solid rgba(231, 156, 80, 0.15);
+}
+
+.riga-indirizzo-header {
+  display: flex;
+  padding: 14px 18px;
+  align-items: center;
+  font-family: "Quantico", serif;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.tag-tipo {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 2px 6px;
+  display: inline-block;
+}
+
+.tag-tipo.fatturazione {
+  color: #e79c50;
+  border-color: rgba(231, 156, 80, 0.4);
+}
+
+.btn-icona {
+  background: transparent;
+  border: 1px solid rgba(231, 156, 80, 0.3);
+  border-radius: 6px;
+  color: #e79c50;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.btn-icona svg {
+  width: 15px;
+  height: 15px;
+}
+
+.btn-icona:hover {
+  background: rgba(231, 156, 80, 0.1);
+  border-color: #e79c50;
+}
+
+.btn-elimina {
+  color: #e07a7a;
+  border-color: rgba(224, 122, 122, 0.3);
+}
+
+.btn-elimina:hover {
+  background: rgba(224, 122, 122, 0.1);
+  border-color: #e07a7a;
+}
+
+.riga-form {
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  animation: apriFormIndirizzo 0.25s ease;
+}
+
+@keyframes apriFormIndirizzo {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.btn-aggiungi {
+  background: transparent;
+  border: 1px dashed rgba(231, 156, 80, 0.4);
+  border-radius: 50%;
+  color: #e79c50;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.btn-aggiungi svg {
+  width: 22px;
+  height: 22px;
+}
+
+.btn-aggiungi:hover {
+  background: rgba(231, 156, 80, 0.08);
+  border-color: #e79c50;
+  transform: scale(1.05);
+}
+
+.form-nuovo {
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid rgba(231, 156, 80, 0.3);
+  border-radius: 10px;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  animation: apriFormIndirizzo 0.25s ease;
+}
+
+.form-mock-placeholder {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 30px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+}
+
+.form-bottoni {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.btn-annulla,
+.btn-salva {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-annulla {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-annulla:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+
+.btn-salva {
+  background: #e79c50;
+  border: 1px solid #e79c50;
+  color: #14110a;
+  font-weight: 600;
+}
+
+.btn-salva:hover {
+  background: #f0ad60;
+}
+
+.nessun-indirizzo {
+  padding: 40px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "Quantico", serif;
+  font-size: 14px;
+}

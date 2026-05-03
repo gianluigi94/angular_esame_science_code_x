@@ -26,6 +26,10 @@
               title="Password in scadenza"
             >!</span>
           </button>
+
+          <button type="button" class="azione-btn" (click)="vaiAIndirizzi()">
+            {{ 'ui.profilo.indirizzi.bottone' | translate }}
+          </button>
         </div>
 
         <form
@@ -451,6 +455,99 @@
             </button>
           </div>
         </form>
+      </div>
+
+      <div *ngIf="vistaCorrente === 'indirizzi'" class="indirizzi-contenuto campo-animato">
+
+        <div class="indirizzi-tabella">
+
+          <div class="riga-header">
+            <span class="col-tipo">{{ 'ui.profilo.indirizzi.header.tipo' | translate }}</span>
+            <span class="col-paese">{{ 'ui.profilo.indirizzi.header.paese' | translate }}</span>
+            <span class="col-citta">{{ 'ui.profilo.indirizzi.header.citta' | translate }}</span>
+            <span class="col-via">{{ 'ui.profilo.indirizzi.header.via' | translate }}</span>
+            <span class="col-azioni"></span>
+          </div>
+
+          <div *ngIf="indirizziMock.length === 0" class="nessun-indirizzo">
+            {{ 'ui.profilo.indirizzi.vuoto' | translate }}
+          </div>
+
+          <div
+            class="riga-indirizzo"
+            *ngFor="let ind of indirizziMock; let i = index"
+            [class.aperta]="ind.aperta"
+          >
+            <div class="riga-indirizzo-header">
+
+              <span class="col-tipo">
+                <span class="tag-tipo" [class.fatturazione]="ind.tipo === 'fatturazione'">
+                  {{ ind.tipo }}
+                </span>
+              </span>
+
+              <span class="col-paese">{{ ind.paese }}</span>
+              <span class="col-citta">{{ ind.citta }}</span>
+              <span class="col-via">{{ ind.via }} {{ ind.civico }}</span>
+
+              <span class="col-azioni">
+                <button class="btn-icona" (click)="apriFormModifica(i)" [title]="'ui.profilo.indirizzi.azioni.modifica' | translate">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icona btn-elimina" (click)="eliminaIndirizzo(i)" [title]="'ui.profilo.indirizzi.azioni.elimina' | translate">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  </svg>
+                </button>
+              </span>
+
+            </div>
+
+            <div class="riga-form" *ngIf="ind.aperta">
+              <div class="form-mock-placeholder">
+                {{ 'ui.profilo.indirizzi.form_modifica.placeholder' | translate }}
+              </div>
+              <div class="form-bottoni">
+                <button type="button" class="btn-annulla" (click)="chiudiForm(i)">
+                  {{ 'ui.profilo.indirizzi.form.annulla' | translate }}
+                </button>
+                <button type="button" class="btn-salva">
+                  {{ 'ui.profilo.indirizzi.form.salva' | translate }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="btn-aggiungi"
+          (click)="apriFormNuovo()"
+          [title]="'ui.profilo.indirizzi.azioni.aggiungi' | translate"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+
+        <div class="form-nuovo" *ngIf="formNuovoAperto">
+          <div class="form-mock-placeholder">
+            {{ 'ui.profilo.indirizzi.form_nuovo.placeholder' | translate }}
+          </div>
+          <div class="form-bottoni">
+            <button type="button" class="btn-annulla" (click)="chiudiFormNuovo()">
+              {{ 'ui.profilo.indirizzi.form.annulla' | translate }}
+            </button>
+            <button type="button" class="btn-salva">
+              {{ 'ui.profilo.indirizzi.form.aggiungi' | translate }}
+            </button>
+          </div>
+        </div>
+
       </div>
 
       <button
