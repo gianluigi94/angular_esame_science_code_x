@@ -515,9 +515,10 @@ export class ApiService {
     iso_domicilio:    string;
     comune_domicilio: string | null;
     citta_domicilio:  string | null;
-    via:              string | null;
-    civico:           string | null;
+    via:              string;
+    civico:           string;
     cap:              string | null;
+    dettagli:         string | null;
     telefono:         string | null;
     email_secondaria: string | null;
     piano:            string;

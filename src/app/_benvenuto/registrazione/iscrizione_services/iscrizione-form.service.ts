@@ -135,15 +135,20 @@ export class IscrizioneFormService {
       via: [
         '',
         [
+          Validators.required,
           Validators.minLength(3),
           Validators.maxLength(100),
           Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s'.,°\/\-]+$/),
         ],
-      ], // definisco la via con limiti di lunghezza e caratteri ammessi
+      ],
       civico: [
         '',
-        [Validators.maxLength(10), Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/)],
-      ], // definisco il civico con lunghezza massima e pattern consentito
+        [
+          Validators.required,
+          Validators.maxLength(10),
+          Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/),
+        ],
+      ],
       dettagli: ['', [Validators.minLength(3), Validators.maxLength(200)]], // definisco i dettagli aggiuntivi con limiti di lunghezza
       provinciaD: [
         '',
