@@ -18,6 +18,7 @@ import { DatiPersonaliComponent } from './dati-personali/dati-personali.componen
 import { BarraAvanzamentoComponent } from './barra-avanzamento/barra-avanzamento.component';
 import { PianoCardComponent } from './piano-card/piano-card.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { FormIndirizzoComponent } from './form-indirizzo/form-indirizzo.component';
 @NgModule({
   declarations: [
     SfondoComponent,
@@ -34,6 +35,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     DatiPersonaliComponent,
     BarraAvanzamentoComponent,
     PianoCardComponent,
+    FormIndirizzoComponent,
   ],
   imports: [
     CommonModule,
@@ -56,6 +58,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     PaginaCaricamentoComponent,
     BarraAvanzamentoComponent,
     PianoCardComponent,
+    FormIndirizzoComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

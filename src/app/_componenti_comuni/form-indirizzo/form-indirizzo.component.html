@@ -1,0 +1,340 @@
+<div class="form-indirizzo" [class.layout-profilo]="layout === 'profilo'" [formGroup]="form">
+
+  <div class="riga-doppia campo-animato">
+
+    <div class="campo-wrapper">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': form.controls['nazioneD'].invalid && (form.controls['nazioneD'].touched || formInviato) }"
+      >
+        {{ 'ui.registrazione.step2.paese_domicilio.label' | translate }} <span class="asterisco">*</span>
+      </p>
+
+      <div class="select-custom">
+        <div
+          class="select-header"
+          (click)="service.togglePaeseDom($event)"
+          [class.aperto]="service.paeseDomAperto"
+          [class.compilato]="service.paeseDomValore"
+          [ngClass]="{ 'is-invalid': form.controls['nazioneD'].invalid && (form.controls['nazioneD'].touched || formInviato) }"
+        >
+          <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
+          <input
+            class="select-input-testo paese-dom-input"
+            type="text"
+            [placeholder]="'ui.registrazione.placeholder.seleziona_paese' | translate"
+            [value]="service.paeseDomAperto ? service.filtroNazioniDom : (service.paeseDomValore ? service.paeseDomLabel() : '')"
+            (click)="service.togglePaeseDom($event)"
+            (input)="service.onInputPaeseDom($event)"
+            (keydown)="service.navigaPaeseDom($event)"
+            (blur)="service.onBlurPaeseDom($event)"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+            <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+          </svg>
+        </div>
+
+        <div class="select-dropdown" *ngIf="service.paeseDomAperto">
+          <div
+            class="select-opzione"
+            *ngFor="let n of service.nazioniFiltrateDom; let i = index"
+            [class.attivo]="i === service.indiceNazioneDom"
+            (click)="service.selezionaPaeseDom(n.iso)"
+          >
+            {{ cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
+          </div>
+        </div>
+      </div>
+
+      <p class="errore-campo" *ngIf="form.controls['nazioneD'].invalid && (form.controls['nazioneD'].touched || formInviato)">
+        {{ 'ui.registrazione.paese_domicilio.error.required' | translate }}
+      </p>
+    </div>
+
+    <div class="campo-wrapper">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': (service.isItaliaDom ? form.controls['comuneD'].invalid : form.controls['cittaD'].invalid) && ((service.isItaliaDom ? form.controls['comuneD'].touched : form.controls['cittaD'].touched) || formInviato) }"
+      >
+        {{ service.isItaliaDom ? ('ui.registrazione.step2.comune_domicilio.label' | translate) : ('ui.registrazione.step2.citta_domicilio.label' | translate) }}
+        <span class="asterisco">*</span>
+      </p>
+
+      <div class="select-custom" *ngIf="service.isItaliaDom">
+        <div
+          class="select-header"
+          (click)="service.toggleComuneDom($event)"
+          [class.aperto]="service.comuneDomAperto"
+          [class.compilato]="service.comuneDomValore"
+          [ngClass]="{ 'is-invalid': form.controls['comuneD'].invalid && (form.controls['comuneD'].touched || formInviato) }"
+        >
+          <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
+          <input
+            class="select-input-testo comune-dom-input"
+            type="text"
+            autocomplete="new-password"
+            [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
+            [value]="service.comuneDomAperto ? service.filtroComuniDom : (service.comuneDomValore ? service.comuneDomValore : '')"
+            (click)="service.toggleComuneDom($event)"
+            (input)="service.onInputComuneDom($event)"
+            (keydown)="service.navigaComuneDom($event)"
+            (blur)="service.onBlurComuneDom($event)"
+          />
+        </div>
+
+        <div class="select-dropdown" *ngIf="service.comuneDomAperto">
+          <div
+            class="select-opzione"
+            *ngFor="let c of service.comuniFiltreatiDom; let i = index"
+            [class.attivo]="i === service.indiceComuneDom"
+            (click)="service.selezionaComuneDom(c.comune)"
+          >
+            {{ c.comune }}
+          </div>
+        </div>
+      </div>
+
+      <p class="errore-campo" *ngIf="service.isItaliaDom && form.controls['comuneD'].invalid && (form.controls['comuneD'].touched || formInviato)">
+        {{ 'ui.registrazione.comune_domicilio.error.required' | translate }}
+      </p>
+
+      <div class="campo-form" *ngIf="!service.isItaliaDom">
+        <input
+          type="text"
+          placeholder=" "
+          id="citta_dom"
+          formControlName="cittaD"
+          spellcheck="false"
+          [ngClass]="{ 'is-invalid': form.controls['cittaD'].invalid && (form.controls['cittaD'].touched || formInviato) }"
+        />
+        <label
+          for="citta_dom"
+          [ngClass]="{ 'is-invalid': form.controls['cittaD'].invalid && (form.controls['cittaD'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
+        </label>
+      </div>
+
+      <p class="errore-campo" *ngIf="!service.isItaliaDom && form.controls['cittaD'].invalid && (form.controls['cittaD'].touched || formInviato)">
+        {{ 'ui.registrazione.citta_domicilio.error.invalid' | translate }}
+      </p>
+    </div>
+  </div>
+
+  <div class="riga-quadrupla campo-animato">
+
+    <div class="campo-wrapper">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': form.controls['via'].invalid && (form.controls['via'].touched || formInviato) }"
+      >
+        {{ 'ui.registrazione.step2.via.label' | translate }} <span class="asterisco">*</span>
+      </p>
+      <div class="campo-form">
+        <input
+          type="text"
+          placeholder=" "
+          id="via_dom"
+          formControlName="via"
+          [ngClass]="{ 'is-invalid': form.controls['via'].invalid && (form.controls['via'].touched || formInviato) }"
+        />
+        <label for="via_dom" [ngClass]="{ 'is-invalid': form.controls['via'].invalid && (form.controls['via'].touched || formInviato) }">
+          {{ 'ui.registrazione.step2.via.input_label' | translate }}
+        </label>
+      </div>
+      <div class="errori-stack">
+        <p class="errore-campo" *ngIf="(form.controls['via'].touched || formInviato) && form.controls['via'].errors?.['required']">
+          {{ 'ui.registrazione.via.error.required' | translate }}
+        </p>
+        <p class="errore-campo" *ngIf="(form.controls['via'].touched || formInviato) && form.controls['via'].errors?.['minlength']">
+          {{ 'ui.registrazione.via.error.minlength' | translate }}
+        </p>
+        <p class="errore-campo" *ngIf="(form.controls['via'].touched || formInviato) && form.controls['via'].errors?.['maxlength']">
+          {{ 'ui.registrazione.via.error.maxlength' | translate }}
+        </p>
+        <p class="errore-campo" *ngIf="(form.controls['via'].touched || formInviato) && form.controls['via'].errors?.['pattern']">
+          {{ 'ui.registrazione.via.error.pattern' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <div class="campo-wrapper">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': form.controls['civico'].invalid && (form.controls['civico'].touched || formInviato) }"
+      >
+        {{ 'ui.registrazione.step2.civico.label' | translate }} <span class="asterisco">*</span>
+      </p>
+      <div class="campo-form">
+        <input
+          type="text"
+          placeholder=" "
+          id="civico_dom"
+          formControlName="civico"
+          [ngClass]="{ 'is-invalid': form.controls['civico'].invalid && (form.controls['civico'].touched || formInviato) }"
+        />
+        <label for="civico_dom" [ngClass]="{ 'is-invalid': form.controls['civico'].invalid && (form.controls['civico'].touched || formInviato) }">
+          {{ 'ui.registrazione.step2.civico.input_label' | translate }}
+        </label>
+      </div>
+      <div class="errori-stack">
+        <p class="errore-campo" *ngIf="(form.controls['civico'].touched || formInviato) && form.controls['civico'].errors?.['required']">
+          {{ 'ui.registrazione.civico.error.required' | translate }}
+        </p>
+        <p class="errore-campo" *ngIf="(form.controls['civico'].touched || formInviato) && form.controls['civico'].errors?.['maxlength']">
+          {{ 'ui.registrazione.civico.error.maxlength' | translate }}
+        </p>
+        <p class="errore-campo" *ngIf="(form.controls['civico'].touched || formInviato) && form.controls['civico'].errors?.['pattern']">
+          {{ 'ui.registrazione.civico.error.pattern' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <ng-container *ngIf="service.isItaliaDom">
+
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': form.controls['provinciaD'].invalid && (form.controls['provinciaD'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.step2.provincia.label' | translate }} <span class="asterisco">*</span>
+        </p>
+        <div class="campo-form">
+          <input
+            type="text"
+            placeholder=" "
+            id="provincia_dom"
+            maxlength="2"
+            [class.cf-flash]="service.provinciaFlash"
+            formControlName="provinciaD"
+            [ngClass]="{ 'is-invalid': form.controls['provinciaD'].invalid && (form.controls['provinciaD'].touched || formInviato) }"
+            (input)="service.onInputProvincia($event)"
+          />
+          <label
+            for="provincia_dom"
+            [ngClass]="{ 'is-invalid': form.controls['provinciaD'].invalid && (form.controls['provinciaD'].touched || formInviato) }"
+          >
+            {{ 'ui.registrazione.step2.provincia.input_label' | translate }}
+          </label>
+        </div>
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(form.controls['provinciaD'].touched || formInviato) && form.controls['provinciaD'].errors?.['required']">
+            {{ 'ui.registrazione.provincia.error.required' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(form.controls['provinciaD'].touched || formInviato) && form.controls['provinciaD'].errors?.['pattern']">
+            {{ 'ui.registrazione.provincia.error.pattern' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <div class="campo-wrapper">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': form.controls['cap'].invalid && (form.controls['cap'].touched || formInviato) }"
+        >
+          {{ 'ui.registrazione.step2.cap.label' | translate }} <span class="asterisco">*</span>
+        </p>
+
+        <div class="campo-form" *ngIf="!service.capIsMulti">
+          <input
+            type="text"
+            placeholder=" "
+            id="cap_dom"
+            maxlength="5"
+            inputmode="numeric"
+            [class.cf-flash]="service.capFlash"
+            formControlName="cap"
+            [ngClass]="{ 'is-invalid': form.controls['cap'].invalid && (form.controls['cap'].touched || formInviato) }"
+            (input)="service.onInputCap($event)"
+          />
+          <label
+            for="cap_dom"
+            [ngClass]="{ 'is-invalid': form.controls['cap'].invalid && (form.controls['cap'].touched || formInviato) }"
+          >
+            {{ 'ui.registrazione.step2.cap.label' | translate }}
+          </label>
+        </div>
+
+        <div class="select-custom select-cap-dom" *ngIf="service.capIsMulti">
+          <div
+            class="select-header"
+            (click)="service.toggleCapDom($event)"
+            [class.aperto]="service.capDomAperto"
+            [class.compilato]="service.capValore"
+            [ngClass]="{ 'is-invalid': form.controls['cap'].invalid && (form.controls['cap'].touched || formInviato) }"
+          >
+            <span class="select-label-piccola">{{ 'ui.registrazione.step2.cap.label' | translate }}</span>
+            <span class="cap-placeholder-fake" *ngIf="!service.capValore && !service.filtroCapDom" [class.cf-flash]="service.capFlash">
+              {{ 'ui.registrazione.placeholder.seleziona_cap' | translate }}
+            </span>
+            <input
+              class="select-input-testo cap-dom-input"
+              type="text"
+              placeholder=""
+              inputmode="numeric"
+              [value]="service.capDomAperto ? service.filtroCapDom : (service.capValore ? service.capValore : '')"
+              (click)="service.toggleCapDom($event)"
+              (input)="service.onInputCapDom($event)"
+              (keydown)="service.navigaCapDom($event)"
+              (blur)="service.onBlurCapDom($event)"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+              <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+            </svg>
+          </div>
+
+          <div class="select-dropdown" *ngIf="service.capDomAperto">
+            <div
+              class="select-opzione"
+              *ngFor="let c of service.capFiltrate; let i = index"
+              [class.attivo]="i === service.indiceCapDom"
+              (click)="service.selezionaCapDom(c)"
+            >
+              {{ c }}
+            </div>
+          </div>
+        </div>
+
+        <div class="errori-stack">
+          <p class="errore-campo" *ngIf="(form.controls['cap'].touched || formInviato) && form.controls['cap'].errors?.['required']">
+            {{ 'ui.registrazione.cap.error.required' | translate }}
+          </p>
+          <p class="errore-campo" *ngIf="(form.controls['cap'].touched || formInviato) && form.controls['cap'].errors?.['pattern']">
+            {{ 'ui.registrazione.cap.error.pattern' | translate }}
+          </p>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="campo-wrapper campo-centrato campo-animato">
+    <p class="label-sopra">
+      {{ 'ui.registrazione.step2.dettagli.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
+    </p>
+    <div class="campo-form">
+      <input
+        type="text"
+        placeholder=" "
+        id="dettagli_dom"
+        formControlName="dettagli"
+        [ngClass]="{ 'is-invalid': form.controls['dettagli'].invalid && form.controls['dettagli'].touched }"
+      />
+      <label for="dettagli_dom" [ngClass]="{ 'is-invalid': form.controls['dettagli'].invalid && form.controls['dettagli'].touched }">
+        {{ 'ui.registrazione.step2.dettagli.input_label' | translate }}
+      </label>
+    </div>
+    <div class="errori-stack">
+      <p class="errore-campo" *ngIf="form.controls['dettagli'].touched && form.controls['dettagli'].errors?.['minlength']">
+        {{ 'ui.registrazione.dettagli.error.minlength' | translate }}
+      </p>
+      <p class="errore-campo" *ngIf="form.controls['dettagli'].touched && form.controls['dettagli'].errors?.['maxlength']">
+        {{ 'ui.registrazione.dettagli.error.maxlength' | translate }}
+      </p>
+    </div>
+  </div>
+
+  <p class="errore-campo errore-coerenza" *ngIf="service.erroreCoerenzaIndirizzo">
+    {{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}
+  </p>
+
+</div>
