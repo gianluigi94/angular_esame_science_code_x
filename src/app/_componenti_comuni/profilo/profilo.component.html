@@ -455,9 +455,8 @@
             </button>
           </div>
         </form>
-      </div>
 
-      <div *ngIf="vistaCorrente === 'indirizzi'" class="indirizzi-contenuto campo-animato">
+        <div *ngIf="vistaCorrente === 'indirizzi'" class="indirizzi-contenuto campo-animato">
 
         <div class="indirizzi-tabella">
 
@@ -506,9 +505,7 @@
             </div>
 
             <div class="riga-form" *ngIf="ind.aperta">
-              <div class="form-mock-placeholder">
-                {{ 'ui.profilo.indirizzi.form_modifica.placeholder' | translate }}
-              </div>
+
               <div class="form-bottoni">
                 <button type="button" class="btn-annulla" (click)="chiudiForm(i)">
                   {{ 'ui.profilo.indirizzi.form.annulla' | translate }}
@@ -535,9 +532,6 @@
         </button>
 
         <div class="form-nuovo" *ngIf="formNuovoAperto">
-          <div class="form-mock-placeholder">
-            {{ 'ui.profilo.indirizzi.form_nuovo.placeholder' | translate }}
-          </div>
           <div class="form-bottoni">
             <button type="button" class="btn-annulla" (click)="chiudiFormNuovo()">
               {{ 'ui.profilo.indirizzi.form.annulla' | translate }}
@@ -548,6 +542,7 @@
           </div>
         </div>
 
+        </div>
       </div>
 
       <button
@@ -574,4 +569,3 @@
       </button>
     </div>
   </section>
-<!-- ok -->
