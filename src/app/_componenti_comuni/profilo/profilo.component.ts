@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, AfterViewInit, OnInit, ChangeDetectorRef, NgZone, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { take } from 'rxjs';
 import gsap from 'gsap';
@@ -11,6 +11,9 @@ import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_ut
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { Auth } from 'src/app/_type/auth.type';
 import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/password.helper';
+import { SelectNazioniService, StatoSelectNazioni } from 'src/app/_servizi_globali/select-nazioni.service';
+import { SelectIndirizzoItaliaService, StatoSelectComuneItalia, StatoSelectCapItalia } from 'src/app/_servizi_globali/select-indirizzo-italia.service';
+import { SelectTipiIndirizziService,  StatoSelectTipoIndirizzo, TipoIndirizzo } from './select-tipi-indirizzi.service';
 @Component({
   selector: 'app-profilo',
   templateUrl: './profilo.component.html',
@@ -30,10 +33,19 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   mostraConfermaNuovaPassword = false;
 
   indirizziMock: any[] = [
-    { tipo: 'domicilio',    paese: 'Italia',  citta: 'Barge',  via: 'Via Castello', civico: '2',   aperta: false },
-    { tipo: 'fatturazione', paese: 'Francia', citta: 'Parigi', via: 'Rue de Rivoli', civico: '15', aperta: false },
-  ];
+  { id_tipo_indirizzo: 1, tipo: 'domicilio',    iso: 'IT', paese: 'Italia',  citta: 'Barge',  provincia: 'CN', cap: '12032', via: 'Via Castello', civico: '2',  dettagli: '', aperta: false },
+  { id_tipo_indirizzo: 5, tipo: 'fatturazione', iso: 'FR', paese: 'Francia', citta: 'Parigi', provincia: '',   cap: '',      via: 'Rue de Rivoli', civico: '15', dettagli: '', aperta: false },
+];
   formNuovoAperto = false;
+  statoNazioneNuovo!: StatoSelectNazioni;
+  statiNazioniModifica: StatoSelectNazioni[] = [];
+  statoComuneNuovo!: StatoSelectComuneItalia;
+  statiComuniModifica: StatoSelectComuneItalia[] = [];
+  statoCapNuovo!: StatoSelectCapItalia;
+statiCapModifica: StatoSelectCapItalia[] = [];
+statoTipoNuovo!: StatoSelectTipoIndirizzo;
+statiTipiModifica: StatoSelectTipoIndirizzo[] = [];
+formNuovoIndirizzo: FormGroup;
 
   passwordRobustezza: 0 | 1 | 2 | 3 = 0;
   passwordEntropyPerc = 0;
@@ -74,6 +86,9 @@ get pwdColore(): string {
     private toastService: ToastService,
     private saturnoService: SaturnoService,
     private authService: Authservice,
+    public selectNazioniService: SelectNazioniService,
+public selectIndirizzoItaliaService: SelectIndirizzoItaliaService,
+public selectTipiIndirizziService: SelectTipiIndirizziService,
   ) {
     this.formEmail = this.fb.group({
       vecchiaEmail: ['', [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.minLength(5), Validators.maxLength(40)]],
@@ -87,11 +102,38 @@ get pwdColore(): string {
       nuovaPassword: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(20), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/)]],
       confermaNuovaPassword: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(20)]],
     }, { validators: this.confermaNuovaPasswordValidator });
+
+    this.formNuovoIndirizzo = this.fb.group({
+  idTipoIndirizzo: [null, Validators.required],
+  nazione: ['IT', Validators.required],
+  comune: ['', Validators.required],
+  citta: [''],
+  provincia: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
+  cap: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+  via: [''],
+  civico: [''],
+  dettagli: [''],
+});
+
+    this.statoNazioneNuovo = this.selectNazioniService.creaStato('IT');
+    this.statiNazioniModifica = this.indirizziMock.map((ind) => this.selectNazioniService.creaStato(ind.iso ?? 'IT'));
+
+    this.statoComuneNuovo = this.selectIndirizzoItaliaService.creaStatoComune('');
+    this.statiComuniModifica = this.indirizziMock.map((ind) => this.selectIndirizzoItaliaService.creaStatoComune(ind.iso === 'IT' ? ind.citta : ''));
+
+    this.statoCapNuovo = this.selectIndirizzoItaliaService.creaStatoCap('');
+this.statiCapModifica = this.indirizziMock.map((ind) => this.selectIndirizzoItaliaService.creaStatoCap(ind.iso === 'IT' ? ind.cap : ''));
+
+this.statoTipoNuovo = this.selectTipiIndirizziService.creaStato(null, '');
+this.statiTipiModifica = this.indirizziMock.map((ind) => this.selectTipiIndirizziService.creaStato(ind.id_tipo_indirizzo ?? null, ind.tipo ?? ''));
   }
 
   ngOnInit(): void {
     sessionStorage.setItem('vengo_da_profilo', 'true');
     this.cambioProfilo.spinnerVisibile$.next(false);
+    this.selectNazioniService.caricaNazioni();
+this.selectIndirizzoItaliaService.caricaComuni();
+this.selectTipiIndirizziService.caricaTipiIndirizzi();
     setTimeout(() => this.avviaAnimazioniIngresso(), 0);
 
     fetch('assets/common_words.json')
@@ -105,6 +147,12 @@ get pwdColore(): string {
   }
 
   ngAfterViewInit(): void {}
+
+  @HostListener('document:click')
+  onClickDocumentoProfilo(): void {
+    this.chiudiSelectNazioni();
+  }
+
   onNuovaPasswordInput(pwd: string): void {
     const rit = calcolaRobustezzaPassword(pwd, this.paroleComuni);
     this.passwordRobustezza = rit.robustezza;
@@ -375,9 +423,169 @@ get pwdColore(): string {
   chiudiFormNuovo(): void {
     this.formNuovoAperto = false;
   }
+  statoNazioneModifica(i: number): StatoSelectNazioni {
+    if (!this.statiNazioniModifica[i]) {
+      this.statiNazioniModifica[i] = this.selectNazioniService.creaStato(this.indirizziMock[i]?.iso ?? 'IT');
+    }
 
+    return this.statiNazioniModifica[i];
+  }
+statoTipoModifica(i: number): StatoSelectTipoIndirizzo {
+  if (!this.statiTipiModifica[i]) {
+    this.statiTipiModifica[i] = this.selectTipiIndirizziService.creaStato(
+      this.indirizziMock[i]?.id_tipo_indirizzo ?? null,
+      this.indirizziMock[i]?.tipo ?? '',
+    );
+  }
+
+  return this.statiTipiModifica[i];
+}
+
+selezionaTipoNuovo(tipo: TipoIndirizzo): void {
+  this.selectTipiIndirizziService.seleziona(this.statoTipoNuovo, tipo);
+
+  this.formNuovoIndirizzo.get('idTipoIndirizzo')!.setValue(tipo.id_tipo_indirizzo);
+  this.formNuovoIndirizzo.get('idTipoIndirizzo')!.markAsTouched();
+}
+
+selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
+  const stato = this.statoTipoModifica(i);
+
+  this.selectTipiIndirizziService.seleziona(stato, tipo);
+
+  this.indirizziMock[i].id_tipo_indirizzo = tipo.id_tipo_indirizzo;
+  this.indirizziMock[i].tipo = tipo.tipo;
+}
+  statoComuneModifica(i: number): StatoSelectComuneItalia {
+    if (!this.statiComuniModifica[i]) {
+      this.statiComuniModifica[i] = this.selectIndirizzoItaliaService.creaStatoComune(this.indirizziMock[i]?.iso === 'IT' ? this.indirizziMock[i]?.citta ?? '' : '');
+    }
+
+    return this.statiComuniModifica[i];
+  }
+
+  statoCapModifica(i: number): StatoSelectCapItalia {
+    if (!this.statiCapModifica[i]) {
+      this.statiCapModifica[i] = this.selectIndirizzoItaliaService.creaStatoCap(this.indirizziMock[i]?.iso === 'IT' ? this.indirizziMock[i]?.cap ?? '' : '');
+    }
+
+    return this.statiCapModifica[i];
+  }
+
+  selezionaNazioneNuovo(valore: string): void {
+    this.selectNazioniService.seleziona(this.statoNazioneNuovo, valore);
+    this.formNuovoIndirizzo.get('nazione')!.setValue(valore);
+    this.formNuovoIndirizzo.get('nazione')!.markAsTouched();
+
+    this.statoComuneNuovo = this.selectIndirizzoItaliaService.creaStatoComune('');
+    this.statoCapNuovo = this.selectIndirizzoItaliaService.creaStatoCap('');
+
+    this.formNuovoIndirizzo.get('comune')!.setValue('');
+    this.formNuovoIndirizzo.get('citta')!.setValue('');
+    this.formNuovoIndirizzo.get('provincia')!.setValue('');
+    this.formNuovoIndirizzo.get('cap')!.setValue('');
+
+    if (valore === 'IT') {
+      this.formNuovoIndirizzo.get('comune')!.setValidators(Validators.required);
+      this.formNuovoIndirizzo.get('citta')!.clearValidators();
+      this.formNuovoIndirizzo.get('provincia')!.setValidators([Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]);
+      this.formNuovoIndirizzo.get('cap')!.setValidators([Validators.required, Validators.pattern(/^\d{5}$/)]);
+    } else {
+      this.formNuovoIndirizzo.get('citta')!.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(80)]);
+      this.formNuovoIndirizzo.get('comune')!.clearValidators();
+      this.formNuovoIndirizzo.get('provincia')!.clearValidators();
+      this.formNuovoIndirizzo.get('cap')!.clearValidators();
+    }
+
+    this.formNuovoIndirizzo.get('comune')!.updateValueAndValidity();
+    this.formNuovoIndirizzo.get('citta')!.updateValueAndValidity();
+    this.formNuovoIndirizzo.get('provincia')!.updateValueAndValidity();
+    this.formNuovoIndirizzo.get('cap')!.updateValueAndValidity();
+  }
+
+  selezionaNazioneModifica(i: number, valore: string): void {
+    const stato = this.statoNazioneModifica(i);
+
+    this.selectNazioniService.seleziona(stato, valore);
+
+    this.indirizziMock[i].iso = valore;
+
+    const label = this.selectNazioniService.label(stato);
+
+    if (label) {
+      this.indirizziMock[i].paese = label;
+    }
+
+    this.statiComuniModifica[i] = this.selectIndirizzoItaliaService.creaStatoComune('');
+    this.statiCapModifica[i] = this.selectIndirizzoItaliaService.creaStatoCap('');
+
+    this.indirizziMock[i].citta = '';
+    this.indirizziMock[i].provincia = '';
+    this.indirizziMock[i].cap = '';
+  }
+    selezionaComuneNuovo(valore: string): void {
+    const comune = this.selectIndirizzoItaliaService.selezionaComune(this.statoComuneNuovo, this.statoCapNuovo, valore);
+
+    this.formNuovoIndirizzo.get('comune')!.setValue(valore);
+    this.formNuovoIndirizzo.get('comune')!.markAsTouched();
+
+    if (comune) {
+      this.formNuovoIndirizzo.get('provincia')!.setValue((comune.sigla_automobilistica ?? '').toUpperCase());
+      this.formNuovoIndirizzo.get('provincia')!.markAsTouched();
+
+      this.formNuovoIndirizzo.get('cap')!.setValue(this.statoCapNuovo.valore);
+      if (this.statoCapNuovo.valore) {
+        this.formNuovoIndirizzo.get('cap')!.markAsTouched();
+      }
+    }
+  }
+
+  selezionaComuneModifica(i: number, valore: string): void {
+    const statoComune = this.statoComuneModifica(i);
+    const statoCap = this.statoCapModifica(i);
+    const comune = this.selectIndirizzoItaliaService.selezionaComune(statoComune, statoCap, valore);
+
+    this.indirizziMock[i].citta = valore;
+
+    if (comune) {
+      this.indirizziMock[i].provincia = (comune.sigla_automobilistica ?? '').toUpperCase();
+      this.indirizziMock[i].cap = statoCap.valore;
+    }
+  }
+
+  selezionaCapNuovo(valore: string): void {
+    this.selectIndirizzoItaliaService.selezionaCap(this.statoCapNuovo, valore);
+
+    this.formNuovoIndirizzo.get('cap')!.setValue(valore);
+    this.formNuovoIndirizzo.get('cap')!.markAsTouched();
+  }
+
+  selezionaCapModifica(i: number, valore: string): void {
+    const statoCap = this.statoCapModifica(i);
+
+    this.selectIndirizzoItaliaService.selezionaCap(statoCap, valore);
+
+    this.indirizziMock[i].cap = valore;
+  }
+chiudiSelectNazioni(): void {
+  this.selectNazioniService.chiudi(this.statoNazioneNuovo);
+  this.statiNazioniModifica.forEach((stato) => this.selectNazioniService.chiudi(stato));
+
+  this.selectIndirizzoItaliaService.chiudiComune(this.statoComuneNuovo);
+  this.statiComuniModifica.forEach((stato) => this.selectIndirizzoItaliaService.chiudiComune(stato));
+
+  this.selectIndirizzoItaliaService.chiudiCap(this.statoCapNuovo);
+  this.statiCapModifica.forEach((stato) => this.selectIndirizzoItaliaService.chiudiCap(stato));
+
+  this.selectTipiIndirizziService.chiudi(this.statoTipoNuovo);
+  this.statiTipiModifica.forEach((stato) => this.selectTipiIndirizziService.chiudi(stato));
+}
   eliminaIndirizzo(i: number): void {
     this.indirizziMock.splice(i, 1);
+    this.statiNazioniModifica.splice(i, 1);
+    this.statiComuniModifica.splice(i, 1);
+    this.statiCapModifica.splice(i, 1);
+this.statiTipiModifica.splice(i, 1);
   }
 
   tornaAScelta(): void {

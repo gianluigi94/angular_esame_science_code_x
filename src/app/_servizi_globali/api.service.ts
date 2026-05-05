@@ -67,9 +67,9 @@ export class ApiService {
    * @returns Observable con la risposta del server contenente l'elenco categorie.
    */
   public getTipologieIndirizzi(): Observable<IRispostaServer> {
-    const risorsa: string[] = ['categorie']; // Definisco l'endpoint da chiamare
-    return this.richiestaGenerica(risorsa, 'GET'); // Riutilizzo richiesta generica per fare la GET
-  }
+  const risorsa: string[] = ['tipi-indirizzi'];
+  return this.richiestaGenerica(risorsa, 'GET');
+}
 
   /**
    * Recupera una categoria specifica tramite id.

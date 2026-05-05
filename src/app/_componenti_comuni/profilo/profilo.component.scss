@@ -572,14 +572,16 @@
 }
 
 .btn-salva {
-  background: #e79c50;
-  border: 1px solid #e79c50;
-  color: #14110a;
+  background: linear-gradient(135deg, #e79c50, #c97a2b);
+  border: none;
+  color: white;
+  box-shadow: 0 0 8px #999da0;
   font-weight: 600;
 }
 
 .btn-salva:hover {
-  background: #f0ad60;
+  transform: scale(1.06) translateZ(0);
+  box-shadow: 0 0 14px #e79c5088;
 }
 
 .nessun-indirizzo {
@@ -588,4 +590,302 @@
   color: rgba(255, 255, 255, 0.5);
   font-family: "Quantico", serif;
   font-size: 14px;
+}
+.select-custom-profilo {
+  position: relative;
+  width: 400px;
+
+  .select-header {
+    position: relative;
+    width: 100%;
+    height: 47px;
+    background: #000000df;
+    border-radius: 7px;
+    box-shadow: 0 0 8px #999da0;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-family: "Quantico", serif;
+    font-size: 18px;
+    color: rgb(205, 205, 205);
+    box-sizing: border-box;
+
+    &.aperto {
+      box-shadow: 0 0 4px orange;
+    }
+
+    &.is-invalid {
+  color: red !important;
+}
+
+.placeholder {
+  color: #4f5050;
+}
+
+.select-label-piccola {
+      display: none;
+      position: absolute;
+      left: 12px;
+      top: 3px;
+      font-size: 12px;
+      color: #4f5050;
+      font-family: "Quantico", serif;
+      font-weight: bolder;
+      pointer-events: none;
+    }
+
+    &.compilato .select-label-piccola {
+      display: block;
+    }
+
+    &.compilato span:not(.select-label-piccola),
+    &.compilato .select-input-testo {
+      margin-top: 16px;
+      transition: margin-top 0.15s ease;
+    }
+
+    .select-input-testo {
+      flex: 1;
+      background: transparent !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      height: auto !important;
+      font-family: "Quantico", serif;
+      font-size: 18px !important;
+      color: rgb(205, 205, 205) !important;
+      cursor: pointer;
+      min-width: 0;
+
+      &::placeholder {
+        color: #4f5050;
+      }
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  .select-dropdown-profilo {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    background: #1a1a1a;
+    border-radius: 7px;
+    box-shadow: 0 0 8px #999da0;
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #e79c50 transparent;
+  }
+
+  .select-opzione {
+    padding: 12px 16px;
+    font-family: "Quantico", serif;
+    font-size: 18px;
+    color: rgb(205, 205, 205);
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover,
+    &.attivo {
+      background: #2a2a3a;
+      color: orange;
+    }
+  }
+}
+
+.riga-mini-indirizzo-profilo {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 28px;
+
+  .campo-form input[type="text"],
+  .campo-form input[type="password"] {
+    width: 180px;
+  }
+
+  .provincia-profilo-input {
+    width: 90px !important;
+    text-align: center;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+}
+
+.select-cap-profilo {
+  width: 180px !important;
+}
+@keyframes cf-colore-auto {
+  0%   { color: #e79c50; }
+  60%  { color: #e79c50; }
+  100% { color: rgb(205, 205, 205); }
+}
+
+@keyframes cf-colore-placeholder {
+  0%   { color: #e79c50; }
+  60%  { color: #e79c50; }
+  100% { color: #4f5050; }
+}
+
+.cf-flash {
+  animation: cf-colore-auto 1.5s ease forwards;
+}
+
+.cf-flash-placeholder {
+  animation: cf-colore-placeholder 1.5s ease forwards;
+}
+
+.cap-placeholder-fake {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-family: "Quantico", serif;
+  font-size: 18px;
+  color: #4f5050;
+}
+.riga-mini-indirizzo-profilo .campo-form input[readonly] ~ label {
+  top: 4px;
+  transform: translateY(0);
+  font-size: 12px;
+}
+
+.opzionale {
+  font-size: 14px;
+  color: #e79c50;
+  font-family: "Quantico", serif;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
+.riga-via-civico-profilo {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 28px;
+  margin-top: 22px;
+  margin-left: 12px;
+
+  .via-profilo-input {
+    width: 380px !important;
+  }
+
+  .civico-profilo-input {
+    width: 170px !important;
+  }
+}
+
+.campo-dettagli-profilo {
+  margin-top: 22px;
+  margin-left: 12px;
+
+  .dettagli-profilo-input {
+    width: 400px !important;
+  }
+}
+
+.riga-due-campi-profilo {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 28px;
+  width: 100%;
+  margin-bottom: 22px;
+  margin-left: 12px;
+}
+
+.riga-tre-campi-profilo {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 28px;
+  width: 100%;
+  margin-bottom: 22px;
+  margin-left: 12px;
+}
+
+.riga-due-campi-profilo .select-custom-profilo {
+  width: 280px;
+}
+
+.riga-tre-campi-profilo > .campo-wrapper .select-custom-profilo {
+  width: 280px;
+}
+
+.riga-tre-campi-profilo .riga-mini-indirizzo-profilo {
+  margin-top: 0;
+}
+.riga-form,
+.form-nuovo {
+  .label-sopra {
+    font-size: 16px;
+  }
+
+  .campo-form {
+    input[type="text"],
+    input[type="password"] {
+      font-size: 15px;
+      box-shadow: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      box-shadow: 0 0 4px orange !important;
+    }
+  }
+
+  .select-custom-profilo {
+    .select-header {
+      font-size: 15px;
+      box-shadow: none;
+
+      &.aperto {
+        box-shadow: 0 0 4px orange;
+      }
+
+      .select-input-testo {
+        font-size: 15px !important;
+      }
+    }
+
+    .select-opzione {
+      font-size: 15px;
+    }
+  }
+
+  .cap-placeholder-fake {
+    font-size: 15px;
+  }
+}
+.riga-form,
+.form-nuovo {
+  .campo-form {
+    input[type="text"],
+    input[type="password"] {
+            background: #261e18b1;
+    }
+  }
+
+  .select-custom-profilo {
+    .select-header {
+            background: #261e18b1;
+    }
+  }
+}
+.riga-form,
+.form-nuovo {
+  .campo-form label,
+  .select-custom-profilo .select-header .select-label-piccola,
+  .cap-placeholder-fake {
+    color: #6a6a6a;
+  }
 }
