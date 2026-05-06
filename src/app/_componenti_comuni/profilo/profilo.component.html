@@ -495,7 +495,7 @@
                     <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
                   </svg>
                 </button>
-                <button class="btn-icona btn-elimina" (click)="eliminaIndirizzo(i)" [title]="'ui.profilo.indirizzi.azioni.elimina' | translate">
+                <button class="btn-icona btn-elimina" (click)="apriModaleEliminazione(ind)" [title]="'ui.profilo.indirizzi.azioni.elimina' | translate">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                   </svg>
@@ -504,11 +504,14 @@
 
             </div>
 
-            <div class="riga-form" *ngIf="ind.aperta">
+            <div class="riga-form" *ngIf="ind.aperta && formsModifica[i]" [formGroup]="formsModifica[i]!">
 
   <div class="riga-due-campi-profilo">
     <div class="campo-wrapper">
-      <p class="label-sopra">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['idTipoIndirizzo'].invalid && formsModifica[i]!.controls['idTipoIndirizzo'].touched }"
+      >
         {{ 'ui.profilo.indirizzi.header.tipo' | translate }} <span class="asterisco">*</span>
       </p>
 
@@ -520,6 +523,7 @@
           (keydown)="selectTipiIndirizziService.naviga(statoTipoModifica(i), $event, selezionaTipoModifica.bind(this, i))"
           [class.aperto]="statoTipoModifica(i).aperto"
           [class.compilato]="statoTipoModifica(i).tipo"
+          [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['idTipoIndirizzo'].invalid && formsModifica[i]!.controls['idTipoIndirizzo'].touched }"
         >
           <span class="select-label-piccola">{{ 'ui.profilo.indirizzi.header.tipo' | translate }}</span>
 
@@ -547,7 +551,10 @@
     </div>
 
     <div class="campo-wrapper">
-      <p class="label-sopra">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['nazione'].invalid && formsModifica[i]!.controls['nazione'].touched }"
+      >
         {{ 'ui.registrazione.step2.paese_domicilio.label' | translate }} <span class="asterisco">*</span>
       </p>
 
@@ -557,6 +564,7 @@
           (click)="selectNazioniService.toggle(statoNazioneModifica(i), $event, [statoNazioneNuovo], '.paese-modifica-input-' + i)"
           [class.aperto]="statoNazioneModifica(i).aperto"
           [class.compilato]="statoNazioneModifica(i).valore"
+          [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['nazione'].invalid && formsModifica[i]!.controls['nazione'].touched }"
         >
           <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
 
@@ -595,7 +603,10 @@
 
                 <div class="riga-tre-campi-profilo">
                   <div class="campo-wrapper">
-                    <p class="label-sopra">
+                    <p
+                      class="label-sopra"
+                      [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['comune'].invalid && formsModifica[i]!.controls['comune'].touched }"
+                    >
                       {{ 'ui.registrazione.step2.comune_domicilio.label' | translate }} <span class="asterisco">*</span>
                     </p>
 
@@ -605,6 +616,7 @@
                         (click)="selectIndirizzoItaliaService.toggleComune(statoComuneModifica(i), $event, [], '.comune-modifica-input-' + i)"
                         [class.aperto]="statoComuneModifica(i).aperto"
                         [class.compilato]="statoComuneModifica(i).valore"
+                        [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['comune'].invalid && formsModifica[i]!.controls['comune'].touched }"
                       >
                         <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
 
@@ -632,41 +644,65 @@
                         </div>
                       </div>
                     </div>
+
+                    <div class="errori-stack">
+                      <p class="errore-campo" *ngIf="formsModifica[i]!.controls['comune'].touched && formsModifica[i]!.controls['comune'].errors?.['required']">
+                        {{ 'ui.registrazione.comune_domicilio.error.required' | translate }}
+                      </p>
+                    </div>
                   </div>
 
                   <div class="riga-mini-indirizzo-profilo">
                     <div class="campo-wrapper">
-                      <p class="label-sopra">
+                      <p
+                        class="label-sopra"
+                        [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['provincia'].invalid && formsModifica[i]!.controls['provincia'].touched }"
+                      >
                         {{ 'ui.registrazione.step2.provincia.label' | translate }} <span class="asterisco">*</span>
                       </p>
 
                       <div class="campo-form">
                         <input
                           type="text"
-                          [value]="ind.provincia"
+                          placeholder=" "
+                          formControlName="provincia"
                           maxlength="2"
                           class="provincia-profilo-input"
                           [class.cf-flash]="statoComuneModifica(i).provinciaFlash"
-                          readonly
+                          [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['provincia'].invalid && formsModifica[i]!.controls['provincia'].touched }"
                         />
                         <label>
                           {{ 'ui.registrazione.step2.provincia.input_label' | translate }}
                         </label>
                       </div>
+
+                      <div class="errori-stack">
+                        <p class="errore-campo" *ngIf="formsModifica[i]!.controls['provincia'].touched && formsModifica[i]!.controls['provincia'].errors?.['required']">
+                          {{ 'ui.registrazione.provincia.error.required' | translate }}
+                        </p>
+                        <p class="errore-campo" *ngIf="formsModifica[i]!.controls['provincia'].touched && formsModifica[i]!.controls['provincia'].errors?.['pattern']">
+                          {{ 'ui.registrazione.provincia.error.pattern' | translate }}
+                        </p>
+                      </div>
                     </div>
 
                     <div class="campo-wrapper">
-                      <p class="label-sopra">
+                      <p
+                        class="label-sopra"
+                        [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['cap'].invalid && formsModifica[i]!.controls['cap'].touched }"
+                      >
                         {{ 'ui.registrazione.step2.cap.label' | translate }} <span class="asterisco">*</span>
                       </p>
 
                       <div class="campo-form" *ngIf="!statoCapModifica(i).multiplo">
                         <input
                           type="text"
-                          [value]="statoCapModifica(i).valore || ind.cap"
+                          placeholder=" "
+                          formControlName="cap"
                           maxlength="5"
+                          inputmode="numeric"
                           [class.cf-flash]="statoCapModifica(i).capFlash"
-                          readonly
+                          [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['cap'].invalid && formsModifica[i]!.controls['cap'].touched }"
                         />
                         <label>
                           {{ 'ui.registrazione.step2.cap.label' | translate }}
@@ -679,6 +715,7 @@
                           (click)="selectIndirizzoItaliaService.toggleCap(statoCapModifica(i), $event, '.cap-modifica-input-' + i)"
                           [class.aperto]="statoCapModifica(i).aperto"
                           [class.compilato]="statoCapModifica(i).valore"
+                          [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['cap'].invalid && formsModifica[i]!.controls['cap'].touched }"
                         >
                           <span class="select-label-piccola">{{ 'ui.registrazione.step2.cap.label' | translate }}</span>
 
@@ -719,6 +756,15 @@
                           </div>
                         </div>
                       </div>
+
+                      <div class="errori-stack">
+                        <p class="errore-campo" *ngIf="formsModifica[i]!.controls['cap'].touched && formsModifica[i]!.controls['cap'].errors?.['required']">
+                          {{ 'ui.registrazione.cap.error.required' | translate }}
+                        </p>
+                        <p class="errore-campo" *ngIf="formsModifica[i]!.controls['cap'].touched && formsModifica[i]!.controls['cap'].errors?.['pattern']">
+                          {{ 'ui.registrazione.cap.error.pattern' | translate }}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -726,28 +772,41 @@
               </ng-container>
 
               <ng-container *ngIf="statoNazioneModifica(i).valore !== 'IT'">
-                <div class="campo-wrapper">
-                  <p class="label-sopra">
-                    {{ 'ui.registrazione.step2.citta_domicilio.label' | translate }} <span class="asterisco">*</span>
-                  </p>
+                <div class="riga-tre-campi-profilo">
+                  <div class="campo-wrapper">
+                    <p
+                      class="label-sopra"
+                      [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['citta'].invalid && formsModifica[i]!.controls['citta'].touched }"
+                    >
+                      {{ 'ui.registrazione.step2.citta_domicilio.label' | translate }} <span class="asterisco">*</span>
+                    </p>
 
-                  <div class="campo-form">
-                    <input
-                      type="text"
-                      placeholder=" "
-                      [value]="ind.citta"
-                      (input)="ind.citta = $any($event.target).value"
-                    />
-                    <label>
-                      {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
-                    </label>
+                    <div class="campo-form">
+                      <input
+                        type="text"
+                        placeholder=" "
+                        class="campo-profilo-medio"
+                        formControlName="citta"
+                        [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['citta'].invalid && formsModifica[i]!.controls['citta'].touched }"
+                      />
+                      <label>
+                        {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
+                      </label>
+                    </div>
+
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['citta'].invalid && formsModifica[i]!.controls['citta'].touched">
+                      {{ 'ui.registrazione.citta_domicilio.error.invalid' | translate }}
+                    </p>
                   </div>
                 </div>
               </ng-container>
 
               <div class="riga-via-civico-profilo">
                 <div class="campo-wrapper">
-                  <p class="label-sopra">
+                  <p
+                    class="label-sopra"
+                    [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['via'].invalid && formsModifica[i]!.controls['via'].touched }"
+                  >
                     {{ 'ui.registrazione.step2.via.label' | translate }} <span class="asterisco">*</span>
                   </p>
 
@@ -756,17 +815,37 @@
                       type="text"
                       placeholder=" "
                       class="via-profilo-input"
-                      [value]="ind.via"
-                      (input)="ind.via = $any($event.target).value"
+                      formControlName="via"
+                      [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['via'].invalid && formsModifica[i]!.controls['via'].touched }"
                     />
-                    <label>
+                    <label
+                      [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['via'].invalid && formsModifica[i]!.controls['via'].touched }"
+                    >
                       {{ 'ui.registrazione.step2.via.input_label' | translate }}
                     </label>
+                  </div>
+
+                  <div class="errori-stack">
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['via'].touched && formsModifica[i]!.controls['via'].errors?.['required']">
+                      {{ 'ui.registrazione.via.error.required' | translate }}
+                    </p>
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['via'].touched && formsModifica[i]!.controls['via'].errors?.['minlength']">
+                      {{ 'ui.registrazione.via.error.minlength' | translate }}
+                    </p>
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['via'].touched && formsModifica[i]!.controls['via'].errors?.['maxlength']">
+                      {{ 'ui.registrazione.via.error.maxlength' | translate }}
+                    </p>
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['via'].touched && formsModifica[i]!.controls['via'].errors?.['pattern']">
+                      {{ 'ui.registrazione.via.error.pattern' | translate }}
+                    </p>
                   </div>
                 </div>
 
                 <div class="campo-wrapper">
-                  <p class="label-sopra">
+                  <p
+                    class="label-sopra"
+                    [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['civico'].invalid && formsModifica[i]!.controls['civico'].touched }"
+                  >
                     {{ 'ui.registrazione.step2.civico.label' | translate }} <span class="asterisco">*</span>
                   </p>
 
@@ -775,12 +854,26 @@
                       type="text"
                       placeholder=" "
                       class="civico-profilo-input"
-                      [value]="ind.civico"
-                      (input)="ind.civico = $any($event.target).value"
+                      formControlName="civico"
+                      [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['civico'].invalid && formsModifica[i]!.controls['civico'].touched }"
                     />
-                    <label>
+                    <label
+                      [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['civico'].invalid && formsModifica[i]!.controls['civico'].touched }"
+                    >
                       {{ 'ui.registrazione.step2.civico.input_label' | translate }}
                     </label>
+                  </div>
+
+                  <div class="errori-stack">
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['civico'].touched && formsModifica[i]!.controls['civico'].errors?.['required']">
+                      {{ 'ui.registrazione.civico.error.required' | translate }}
+                    </p>
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['civico'].touched && formsModifica[i]!.controls['civico'].errors?.['maxlength']">
+                      {{ 'ui.registrazione.civico.error.maxlength' | translate }}
+                    </p>
+                    <p class="errore-campo" *ngIf="formsModifica[i]!.controls['civico'].touched && formsModifica[i]!.controls['civico'].errors?.['pattern']">
+                      {{ 'ui.registrazione.civico.error.pattern' | translate }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -796,21 +889,42 @@
                     type="text"
                     placeholder=" "
                     class="dettagli-profilo-input"
-                    [value]="ind.dettagli"
-                    (input)="ind.dettagli = $any($event.target).value"
+                    formControlName="dettagli"
+                    [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['dettagli'].invalid && formsModifica[i]!.controls['dettagli'].touched }"
                   />
                   <label>
                     {{ 'ui.registrazione.step2.dettagli.input_label' | translate }}
                   </label>
                 </div>
+
+                <div class="errori-stack">
+                  <p class="errore-campo" *ngIf="formsModifica[i]!.controls['dettagli'].touched && formsModifica[i]!.controls['dettagli'].errors?.['minlength']">
+                    {{ 'ui.registrazione.dettagli.error.minlength' | translate }}
+                  </p>
+                  <p class="errore-campo" *ngIf="formsModifica[i]!.controls['dettagli'].touched && formsModifica[i]!.controls['dettagli'].errors?.['maxlength']">
+                    {{ 'ui.registrazione.dettagli.error.maxlength' | translate }}
+                  </p>
+                </div>
               </div>
+
+              <p class="errore-campo" *ngIf="erroriCoerenzaModifica[i]" style="text-align: center;">
+                {{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}
+              </p>
 
               <div class="form-bottoni">
                 <button type="button" class="btn-annulla" (click)="chiudiForm(i)">
                   {{ 'ui.profilo.indirizzi.form.annulla' | translate }}
                 </button>
-                <button type="button" class="btn-salva">
-                  {{ 'ui.profilo.indirizzi.form.salva' | translate }}
+                <button
+                  type="button"
+                  class="btn-salva"
+                  [disabled]="salvataggioInCorso || formsModifica[i]!.invalid"
+                  (click)="salvaModificaIndirizzo(i)"
+                >
+                  <ng-container *ngIf="!salvataggioInCorso">
+                    {{ 'ui.profilo.indirizzi.form.salva' | translate }}
+                  </ng-container>
+                  <app-spinner *ngIf="salvataggioInCorso"></app-spinner>
                 </button>
               </div>
             </div>
@@ -832,195 +946,208 @@
 
         <div class="form-nuovo" *ngIf="formNuovoAperto" [formGroup]="formNuovoIndirizzo">
 
-  <div class="campo-wrapper">
-    <p
-      class="label-sopra"
-      [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['idTipoIndirizzo'].invalid && formNuovoIndirizzo.controls['idTipoIndirizzo'].touched }"
-    >
-      {{ 'ui.profilo.indirizzi.header.tipo' | translate }} <span class="asterisco">*</span>
-    </p>
-
-    <div class="select-custom-profilo">
-      <div
-        class="select-header"
-        tabindex="0"
-        (click)="selectTipiIndirizziService.toggle(statoTipoNuovo, $event, statiTipiModifica)"
-        (keydown)="selectTipiIndirizziService.naviga(statoTipoNuovo, $event, selezionaTipoNuovo.bind(this))"
-        [class.aperto]="statoTipoNuovo.aperto"
-        [class.compilato]="statoTipoNuovo.tipo"
+  <div class="riga-due-campi-profilo">
+    <div class="campo-wrapper">
+      <p
+        class="label-sopra"
         [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['idTipoIndirizzo'].invalid && formNuovoIndirizzo.controls['idTipoIndirizzo'].touched }"
       >
-        <span class="select-label-piccola">{{ 'ui.profilo.indirizzi.header.tipo' | translate }}</span>
+        {{ 'ui.profilo.indirizzi.header.tipo' | translate }} <span class="asterisco">*</span>
+      </p>
 
-        <span [class.placeholder]="!statoTipoNuovo.tipo">
-          {{ statoTipoNuovo.tipo ? selectTipiIndirizziService.labelStato(statoTipoNuovo) : ('ui.profilo.indirizzi.form.tipo_placeholder' | translate) }}
-        </span>
-
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-          <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
-        </svg>
-      </div>
-
-      <div class="select-dropdown-profilo" *ngIf="statoTipoNuovo.aperto">
+      <div class="select-custom-profilo">
         <div
-          class="select-opzione"
-          *ngFor="let tipo of selectTipiIndirizziService.tipi; let i = index"
-          [class.attivo]="i === statoTipoNuovo.indice"
-          (mousedown)="$event.preventDefault()"
-          (click)="selezionaTipoNuovo(tipo)"
+          class="select-header"
+          tabindex="0"
+          (click)="selectTipiIndirizziService.toggle(statoTipoNuovo, $event, statiTipiModifica)"
+          (keydown)="selectTipiIndirizziService.naviga(statoTipoNuovo, $event, selezionaTipoNuovo.bind(this))"
+          [class.aperto]="statoTipoNuovo.aperto"
+          [class.compilato]="statoTipoNuovo.tipo"
+          [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['idTipoIndirizzo'].invalid && formNuovoIndirizzo.controls['idTipoIndirizzo'].touched }"
         >
-          {{ selectTipiIndirizziService.label(tipo.tipo) }}
+          <span class="select-label-piccola">{{ 'ui.profilo.indirizzi.header.tipo' | translate }}</span>
+
+          <span [class.placeholder]="!statoTipoNuovo.tipo">
+            {{ statoTipoNuovo.tipo ? selectTipiIndirizziService.labelStato(statoTipoNuovo) : ('ui.profilo.indirizzi.form.tipo_placeholder' | translate) }}
+          </span>
+
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+            <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+          </svg>
+        </div>
+
+        <div class="select-dropdown-profilo" *ngIf="statoTipoNuovo.aperto">
+          <div
+            class="select-opzione"
+            *ngFor="let tipo of selectTipiIndirizziService.tipi; let i = index"
+            [class.attivo]="i === statoTipoNuovo.indice"
+            (mousedown)="$event.preventDefault()"
+            (click)="selezionaTipoNuovo(tipo)"
+          >
+            {{ selectTipiIndirizziService.label(tipo.tipo) }}
+          </div>
         </div>
       </div>
+
+      <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['idTipoIndirizzo'].invalid && formNuovoIndirizzo.controls['idTipoIndirizzo'].touched">
+        {{ 'ui.profilo.indirizzi.form.tipo_placeholder' | translate }}
+      </p>
     </div>
 
-    <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['idTipoIndirizzo'].invalid && formNuovoIndirizzo.controls['idTipoIndirizzo'].touched">
-      {{ 'ui.profilo.indirizzi.form.tipo_placeholder' | translate }}
-    </p>
-  </div>
+    <div class="campo-wrapper">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['nazione'].invalid && formNuovoIndirizzo.controls['nazione'].touched }"
+      >
+        {{ 'ui.registrazione.step2.paese_domicilio.label' | translate }} <span class="asterisco">*</span>
+      </p>
 
-  <div class="campo-wrapper">
-    <p
-      class="label-sopra"
-      [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['nazione'].invalid && formNuovoIndirizzo.controls['nazione'].touched }"
-    >
-              {{ 'ui.registrazione.step2.paese_domicilio.label' | translate }} <span class="asterisco">*</span>
-            </p>
+      <div class="select-custom-profilo">
+        <div
+          class="select-header"
+          (click)="selectNazioniService.toggle(statoNazioneNuovo, $event, statiNazioniModifica, '.paese-nuovo-input')"
+          [class.aperto]="statoNazioneNuovo.aperto"
+          [class.compilato]="statoNazioneNuovo.valore"
+          [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['nazione'].invalid && formNuovoIndirizzo.controls['nazione'].touched }"
+        >
+          <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
 
-            <div class="select-custom-profilo">
-              <div
-                class="select-header"
-                (click)="selectNazioniService.toggle(statoNazioneNuovo, $event, statiNazioniModifica, '.paese-nuovo-input')"
-                [class.aperto]="statoNazioneNuovo.aperto"
-                [class.compilato]="statoNazioneNuovo.valore"
-                [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['nazione'].invalid && formNuovoIndirizzo.controls['nazione'].touched }"
-              >
-                <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
+          <input
+            class="select-input-testo paese-nuovo-input"
+            type="text"
+            [placeholder]="'ui.registrazione.placeholder.seleziona_paese' | translate"
+            [value]="statoNazioneNuovo.aperto ? statoNazioneNuovo.filtro : (statoNazioneNuovo.valore ? selectNazioniService.label(statoNazioneNuovo) : '')"
+            (click)="selectNazioniService.toggle(statoNazioneNuovo, $event, statiNazioniModifica, '.paese-nuovo-input')"
+            (input)="selectNazioniService.aggiornaFiltro(statoNazioneNuovo, $event)"
+            (keydown)="selectNazioniService.naviga(statoNazioneNuovo, $event, selezionaNazioneNuovo.bind(this))"
+            (blur)="selectNazioniService.blur(statoNazioneNuovo, $event, selezionaNazioneNuovo.bind(this))"
+          />
 
-                <input
-                  class="select-input-testo paese-nuovo-input"
-                  type="text"
-                  [placeholder]="'ui.registrazione.placeholder.seleziona_paese' | translate"
-                  [value]="statoNazioneNuovo.aperto ? statoNazioneNuovo.filtro : (statoNazioneNuovo.valore ? selectNazioniService.label(statoNazioneNuovo) : '')"
-                  (click)="selectNazioniService.toggle(statoNazioneNuovo, $event, statiNazioniModifica, '.paese-nuovo-input')"
-                  (input)="selectNazioniService.aggiornaFiltro(statoNazioneNuovo, $event)"
-                  (keydown)="selectNazioniService.naviga(statoNazioneNuovo, $event, selezionaNazioneNuovo.bind(this))"
-                  (blur)="selectNazioniService.blur(statoNazioneNuovo, $event, selezionaNazioneNuovo.bind(this))"
-                />
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+            <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+          </svg>
+        </div>
 
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-                  <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
-                </svg>
-              </div>
-
-              <div class="select-dropdown-profilo" *ngIf="statoNazioneNuovo.aperto">
-                <div
-                  class="select-opzione"
-                  *ngFor="let n of selectNazioniService.nazioniFiltrate(statoNazioneNuovo); let i = index"
-                  [class.attivo]="i === statoNazioneNuovo.indice"
-                  (mousedown)="$event.preventDefault()"
-                  (click)="selezionaNazioneNuovo(n.iso)"
-                >
-                  {{ selectNazioniService.cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
-                </div>
-              </div>
-            </div>
-
-            <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['nazione'].invalid && formNuovoIndirizzo.controls['nazione'].touched">
-              {{ 'ui.registrazione.paese_domicilio.error.required' | translate }}
-            </p>
+        <div class="select-dropdown-profilo" *ngIf="statoNazioneNuovo.aperto">
+          <div
+            class="select-opzione"
+            *ngFor="let n of selectNazioniService.nazioniFiltrate(statoNazioneNuovo); let i = index"
+            [class.attivo]="i === statoNazioneNuovo.indice"
+            (mousedown)="$event.preventDefault()"
+            (click)="selezionaNazioneNuovo(n.iso)"
+          >
+            {{ selectNazioniService.cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
           </div>
+        </div>
+      </div>
+
+      <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['nazione'].invalid && formNuovoIndirizzo.controls['nazione'].touched">
+        {{ 'ui.registrazione.paese_domicilio.error.required' | translate }}
+      </p>
+    </div>
+  </div>
 
           <ng-container *ngIf="statoNazioneNuovo.valore === 'IT'">
 
-            <div class="campo-wrapper">
-              <p
-                class="label-sopra"
-                [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['comune'].invalid && formNuovoIndirizzo.controls['comune'].touched }"
-              >
-                {{ 'ui.registrazione.step2.comune_domicilio.label' | translate }} <span class="asterisco">*</span>
-              </p>
-
-              <div class="select-custom-profilo">
-                <div
-                  class="select-header"
-                  (click)="selectIndirizzoItaliaService.toggleComune(statoComuneNuovo, $event, statiComuniModifica, '.comune-nuovo-input')"
-                  [class.aperto]="statoComuneNuovo.aperto"
-                  [class.compilato]="statoComuneNuovo.valore"
+            <div class="riga-tre-campi-profilo">
+              <div class="campo-wrapper">
+                <p
+                  class="label-sopra"
                   [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['comune'].invalid && formNuovoIndirizzo.controls['comune'].touched }"
                 >
-                  <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
+                  {{ 'ui.registrazione.step2.comune_domicilio.label' | translate }} <span class="asterisco">*</span>
+                </p>
 
-                  <input
-                    class="select-input-testo comune-nuovo-input"
-                    type="text"
-                    [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
-                    [value]="statoComuneNuovo.aperto ? statoComuneNuovo.filtro : statoComuneNuovo.valore"
-                    (click)="selectIndirizzoItaliaService.toggleComune(statoComuneNuovo, $event, statiComuniModifica, '.comune-nuovo-input')"
-                    (input)="selectIndirizzoItaliaService.aggiornaFiltroComune(statoComuneNuovo, $event)"
-                    (keydown)="selectIndirizzoItaliaService.navigaComune(statoComuneNuovo, $event, selezionaComuneNuovo.bind(this))"
-                    (blur)="selectIndirizzoItaliaService.blurComune(statoComuneNuovo, $event, selezionaComuneNuovo.bind(this))"
-                  />
-                </div>
-
-                <div class="select-dropdown-profilo" *ngIf="statoComuneNuovo.aperto">
+                <div class="select-custom-profilo">
                   <div
-                    class="select-opzione"
-                    *ngFor="let c of selectIndirizzoItaliaService.comuniFiltrati(statoComuneNuovo); let i = index"
-                    [class.attivo]="i === statoComuneNuovo.indice"
-                    (mousedown)="$event.preventDefault()"
-                    (click)="selezionaComuneNuovo(c.comune)"
+                    class="select-header"
+                    (click)="selectIndirizzoItaliaService.toggleComune(statoComuneNuovo, $event, statiComuniModifica, '.comune-nuovo-input')"
+                    [class.aperto]="statoComuneNuovo.aperto"
+                    [class.compilato]="statoComuneNuovo.valore"
+                    [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['comune'].invalid && formNuovoIndirizzo.controls['comune'].touched }"
                   >
-                    {{ c.comune }}
+                    <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
+
+                    <input
+                      class="select-input-testo comune-nuovo-input"
+                      type="text"
+                      [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
+                      [value]="statoComuneNuovo.aperto ? statoComuneNuovo.filtro : statoComuneNuovo.valore"
+                      (click)="selectIndirizzoItaliaService.toggleComune(statoComuneNuovo, $event, statiComuniModifica, '.comune-nuovo-input')"
+                      (input)="selectIndirizzoItaliaService.aggiornaFiltroComune(statoComuneNuovo, $event)"
+                      (keydown)="selectIndirizzoItaliaService.navigaComune(statoComuneNuovo, $event, selezionaComuneNuovo.bind(this))"
+                      (blur)="selectIndirizzoItaliaService.blurComune(statoComuneNuovo, $event, selezionaComuneNuovo.bind(this))"
+                    />
+                  </div>
+
+                  <div class="select-dropdown-profilo" *ngIf="statoComuneNuovo.aperto">
+                    <div
+                      class="select-opzione"
+                      *ngFor="let c of selectIndirizzoItaliaService.comuniFiltrati(statoComuneNuovo); let i = index"
+                      [class.attivo]="i === statoComuneNuovo.indice"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="selezionaComuneNuovo(c.comune)"
+                    >
+                      {{ c.comune }}
+                    </div>
                   </div>
                 </div>
+
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['comune'].invalid && formNuovoIndirizzo.controls['comune'].touched">
+                  {{ 'ui.registrazione.comune_domicilio.error.required' | translate }}
+                </p>
               </div>
 
-              <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['comune'].invalid && formNuovoIndirizzo.controls['comune'].touched">
-                {{ 'ui.registrazione.comune_domicilio.error.required' | translate }}
-              </p>
-            </div>
-
-            <div class="riga-mini-indirizzo-profilo">
-              <div class="campo-wrapper">
-                <p
-                  class="label-sopra"
-                  [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['provincia'].invalid && formNuovoIndirizzo.controls['provincia'].touched }"
-                >
-                  {{ 'ui.registrazione.step2.provincia.label' | translate }} <span class="asterisco">*</span>
-                </p>
-
-                <div class="campo-form">
-                  <input
-                    type="text"
-                    formControlName="provincia"
-                    maxlength="2"
-                    class="provincia-profilo-input"
-                    [class.cf-flash]="statoComuneNuovo.provinciaFlash"
-                    readonly
+              <div class="riga-mini-indirizzo-profilo">
+                <div class="campo-wrapper">
+                  <p
+                    class="label-sopra"
                     [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['provincia'].invalid && formNuovoIndirizzo.controls['provincia'].touched }"
-                  />
-                  <label>
-                    {{ 'ui.registrazione.step2.provincia.input_label' | translate }}
-                  </label>
+                  >
+                    {{ 'ui.registrazione.step2.provincia.label' | translate }} <span class="asterisco">*</span>
+                  </p>
+
+                  <div class="campo-form">
+                    <input
+                      type="text"
+                      placeholder=" "
+                      formControlName="provincia"
+                      maxlength="2"
+                      class="provincia-profilo-input"
+                      [class.cf-flash]="statoComuneNuovo.provinciaFlash"
+                      [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['provincia'].invalid && formNuovoIndirizzo.controls['provincia'].touched }"
+                    />
+                    <label>
+                      {{ 'ui.registrazione.step2.provincia.input_label' | translate }}
+                    </label>
+                  </div>
+
+                  <div class="errori-stack">
+                    <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['provincia'].touched && formNuovoIndirizzo.controls['provincia'].errors?.['required']">
+                      {{ 'ui.registrazione.provincia.error.required' | translate }}
+                    </p>
+                    <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['provincia'].touched && formNuovoIndirizzo.controls['provincia'].errors?.['pattern']">
+                      {{ 'ui.registrazione.provincia.error.pattern' | translate }}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div class="campo-wrapper">
-                <p
-                  class="label-sopra"
-                  [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['cap'].invalid && formNuovoIndirizzo.controls['cap'].touched }"
-                >
-                  {{ 'ui.registrazione.step2.cap.label' | translate }} <span class="asterisco">*</span>
-                </p>
+                  <div class="campo-wrapper">
+                  <p
+                    class="label-sopra"
+                    [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['cap'].invalid && formNuovoIndirizzo.controls['cap'].touched }"
+                  >
+                    {{ 'ui.registrazione.step2.cap.label' | translate }} <span class="asterisco">*</span>
+                  </p>
 
-                <div class="campo-form" *ngIf="!statoCapNuovo.multiplo">
+                  <div class="campo-form" *ngIf="!statoCapNuovo.multiplo">
                   <input
                     type="text"
+                    placeholder=" "
                     formControlName="cap"
                     maxlength="5"
+                    inputmode="numeric"
                     [class.cf-flash]="statoCapNuovo.capFlash"
-                    readonly
                     [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['cap'].invalid && formNuovoIndirizzo.controls['cap'].touched }"
                   />
                   <label>
@@ -1076,44 +1203,56 @@
                   </div>
                 </div>
 
-                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['cap'].invalid && formNuovoIndirizzo.controls['cap'].touched">
-                  {{ 'ui.registrazione.cap.error.required' | translate }}
-                </p>
+                  <div class="errori-stack">
+                    <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['cap'].touched && formNuovoIndirizzo.controls['cap'].errors?.['required']">
+                      {{ 'ui.registrazione.cap.error.required' | translate }}
+                    </p>
+                    <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['cap'].touched && formNuovoIndirizzo.controls['cap'].errors?.['pattern']">
+                      {{ 'ui.registrazione.cap.error.pattern' | translate }}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
           </ng-container>
 
-          <ng-container *ngIf="statoNazioneNuovo.valore !== 'IT'">
-            <div class="campo-wrapper">
-              <p
-                class="label-sopra"
-                [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['citta'].invalid && formNuovoIndirizzo.controls['citta'].touched }"
-              >
-                {{ 'ui.registrazione.step2.citta_domicilio.label' | translate }} <span class="asterisco">*</span>
-              </p>
-
-              <div class="campo-form">
-                <input
-                  type="text"
-                  placeholder=" "
-                  formControlName="citta"
+          <ng-container *ngIf="statoNazioneNuovo.valore && statoNazioneNuovo.valore !== 'IT'">
+            <div class="riga-tre-campi-profilo">
+              <div class="campo-wrapper">
+                <p
+                  class="label-sopra"
                   [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['citta'].invalid && formNuovoIndirizzo.controls['citta'].touched }"
-                />
-                <label>
-                  {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
-                </label>
-              </div>
+                >
+                  {{ 'ui.registrazione.step2.citta_domicilio.label' | translate }} <span class="asterisco">*</span>
+                </p>
 
-              <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['citta'].invalid && formNuovoIndirizzo.controls['citta'].touched">
-                {{ 'ui.registrazione.citta_domicilio.error.invalid' | translate }}
-              </p>
+                <div class="campo-form">
+                  <input
+                    type="text"
+                    placeholder=" "
+                    class="campo-profilo-medio"
+                    formControlName="citta"
+                    [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['citta'].invalid && formNuovoIndirizzo.controls['citta'].touched }"
+                  />
+                  <label>
+                    {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
+                  </label>
+                </div>
+
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['citta'].invalid && formNuovoIndirizzo.controls['citta'].touched">
+                  {{ 'ui.registrazione.citta_domicilio.error.invalid' | translate }}
+                </p>
+              </div>
             </div>
           </ng-container>
 
           <div class="riga-via-civico-profilo">
             <div class="campo-wrapper">
-              <p class="label-sopra">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['via'].invalid && formNuovoIndirizzo.controls['via'].touched }"
+              >
                 {{ 'ui.registrazione.step2.via.label' | translate }} <span class="asterisco">*</span>
               </p>
 
@@ -1123,15 +1262,36 @@
                   placeholder=" "
                   class="via-profilo-input"
                   formControlName="via"
+                  [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['via'].invalid && formNuovoIndirizzo.controls['via'].touched }"
                 />
-                <label>
+                <label
+                  [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['via'].invalid && formNuovoIndirizzo.controls['via'].touched }"
+                >
                   {{ 'ui.registrazione.step2.via.input_label' | translate }}
                 </label>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['via'].touched && formNuovoIndirizzo.controls['via'].errors?.['required']">
+                  {{ 'ui.registrazione.via.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['via'].touched && formNuovoIndirizzo.controls['via'].errors?.['minlength']">
+                  {{ 'ui.registrazione.via.error.minlength' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['via'].touched && formNuovoIndirizzo.controls['via'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.via.error.maxlength' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['via'].touched && formNuovoIndirizzo.controls['via'].errors?.['pattern']">
+                  {{ 'ui.registrazione.via.error.pattern' | translate }}
+                </p>
               </div>
             </div>
 
             <div class="campo-wrapper">
-              <p class="label-sopra">
+              <p
+                class="label-sopra"
+                [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['civico'].invalid && formNuovoIndirizzo.controls['civico'].touched }"
+              >
                 {{ 'ui.registrazione.step2.civico.label' | translate }} <span class="asterisco">*</span>
               </p>
 
@@ -1141,10 +1301,25 @@
                   placeholder=" "
                   class="civico-profilo-input"
                   formControlName="civico"
+                  [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['civico'].invalid && formNuovoIndirizzo.controls['civico'].touched }"
                 />
-                <label>
+                <label
+                  [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['civico'].invalid && formNuovoIndirizzo.controls['civico'].touched }"
+                >
                   {{ 'ui.registrazione.step2.civico.input_label' | translate }}
                 </label>
+              </div>
+
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['civico'].touched && formNuovoIndirizzo.controls['civico'].errors?.['required']">
+                  {{ 'ui.registrazione.civico.error.required' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['civico'].touched && formNuovoIndirizzo.controls['civico'].errors?.['maxlength']">
+                  {{ 'ui.registrazione.civico.error.maxlength' | translate }}
+                </p>
+                <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['civico'].touched && formNuovoIndirizzo.controls['civico'].errors?.['pattern']">
+                  {{ 'ui.registrazione.civico.error.pattern' | translate }}
+                </p>
               </div>
             </div>
           </div>
@@ -1161,19 +1336,41 @@
                 placeholder=" "
                 class="dettagli-profilo-input"
                 formControlName="dettagli"
+                [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['dettagli'].invalid && formNuovoIndirizzo.controls['dettagli'].touched }"
               />
               <label>
                 {{ 'ui.registrazione.step2.dettagli.input_label' | translate }}
               </label>
             </div>
+
+            <div class="errori-stack">
+              <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['dettagli'].touched && formNuovoIndirizzo.controls['dettagli'].errors?.['minlength']">
+                {{ 'ui.registrazione.dettagli.error.minlength' | translate }}
+              </p>
+              <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['dettagli'].touched && formNuovoIndirizzo.controls['dettagli'].errors?.['maxlength']">
+                {{ 'ui.registrazione.dettagli.error.maxlength' | translate }}
+              </p>
+            </div>
           </div>
+
+          <p class="errore-campo" *ngIf="erroreCoerenzaNuovo" style="text-align: center;">
+            {{ 'ui.registrazione.indirizzo.error.coerenza' | translate }}
+          </p>
 
           <div class="form-bottoni">
             <button type="button" class="btn-annulla" (click)="chiudiFormNuovo()">
               {{ 'ui.profilo.indirizzi.form.annulla' | translate }}
             </button>
-            <button type="button" class="btn-salva">
-              {{ 'ui.profilo.indirizzi.form.aggiungi' | translate }}
+            <button
+              type="button"
+              class="btn-salva"
+              [disabled]="salvataggioInCorso || formNuovoIndirizzo.invalid"
+              (click)="salvaNuovoIndirizzo()"
+            >
+              <ng-container *ngIf="!salvataggioInCorso">
+                {{ 'ui.profilo.indirizzi.form.aggiungi' | translate }}
+              </ng-container>
+              <app-spinner *ngIf="salvataggioInCorso"></app-spinner>
             </button>
           </div>
         </div>
@@ -1203,5 +1400,25 @@
           ) | translate
         }}
       </button>
+    </div>
+
+    <div class="modale-overlay" *ngIf="indirizzoDaEliminare" (click)="chiudiModaleEliminazione()">
+      <div class="modale-contenuto" (click)="$event.stopPropagation()">
+        <p class="modale-messaggio">
+          {{ 'ui.profilo.indirizzi.elimina.conferma' | translate: { via: indirizzoDaEliminare.via + ' ' + indirizzoDaEliminare.civico } }}
+        </p>
+
+        <div class="modale-bottoni">
+          <button type="button" class="btn-annulla" (click)="chiudiModaleEliminazione()" [disabled]="eliminazioneInCorso">
+            {{ 'ui.profilo.indirizzi.form.annulla' | translate }}
+          </button>
+          <button type="button" class="btn-elimina-conferma" (click)="confermaEliminazione()" [disabled]="eliminazioneInCorso">
+            <ng-container *ngIf="!eliminazioneInCorso">
+              {{ 'ui.profilo.indirizzi.azioni.elimina' | translate }}
+            </ng-container>
+            <app-spinner *ngIf="eliminazioneInCorso"></app-spinner>
+          </button>
+        </div>
+      </div>
     </div>
   </section>

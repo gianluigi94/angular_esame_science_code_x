@@ -390,6 +390,48 @@ export class ApiService {
     return this.richiestaGenerica(risorsa, 'GET'); // faccio la GET dei dati personali
   }
 
+  public getMieiIndirizzi(lingua: string): Observable<IRispostaServer> {
+    const risorsa: string[] = ['miei-indirizzi'];
+    const parametri = { lingua: String(lingua) };
+    return this.richiestaGenerica(risorsa, 'GET', parametri);
+  }
+
+
+  public creaIndirizzo(dati: {
+    id_tipo_indirizzo: number;
+    id_nazione: number;
+    id_comune: number | null;
+    citta: string | null;
+    cap: string | null;
+    indirizzo: string | null;
+    civico: string | null;
+    dettagli: string | null;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['indirizzi']);
+    return this.http.post<IRispostaServer>(url, dati);
+  }
+
+
+  public updateIndirizzo(idIndirizzo: number, dati: {
+    id_tipo_indirizzo: number;
+    id_nazione: number;
+    id_comune: number | null;
+    citta: string | null;
+    cap: string | null;
+    indirizzo: string | null;
+    civico: string | null;
+    dettagli: string | null;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['indirizzi', idIndirizzo]);
+    return this.http.put<IRispostaServer>(url, dati);
+  }
+
+
+  public eliminaIndirizzo(idIndirizzo: number): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['indirizzi', idIndirizzo]);
+    return this.http.delete<IRispostaServer>(url);
+  }
+
   /**
    * Recupera l'elenco delle stagioni di una serie.
    *

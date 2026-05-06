@@ -32,11 +32,10 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   mostraNuovaPassword = false;
   mostraConfermaNuovaPassword = false;
 
-  indirizziMock: any[] = [
-  { id_tipo_indirizzo: 1, tipo: 'domicilio',    iso: 'IT', paese: 'Italia',  citta: 'Barge',  provincia: 'CN', cap: '12032', via: 'Via Castello', civico: '2',  dettagli: '', aperta: false },
-  { id_tipo_indirizzo: 5, tipo: 'fatturazione', iso: 'FR', paese: 'Francia', citta: 'Parigi', provincia: '',   cap: '',      via: 'Rue de Rivoli', civico: '15', dettagli: '', aperta: false },
-];
+  indirizziMock: any[] = [];
   formNuovoAperto = false;
+  indirizzoDaEliminare: any | null = null;
+  eliminazioneInCorso = false;
   statoNazioneNuovo!: StatoSelectNazioni;
   statiNazioniModifica: StatoSelectNazioni[] = [];
   statoComuneNuovo!: StatoSelectComuneItalia;
@@ -46,6 +45,10 @@ statiCapModifica: StatoSelectCapItalia[] = [];
 statoTipoNuovo!: StatoSelectTipoIndirizzo;
 statiTipiModifica: StatoSelectTipoIndirizzo[] = [];
 formNuovoIndirizzo: FormGroup;
+formsModifica: (FormGroup | null)[] = [];
+salvataggioInCorso = false;
+erroriCoerenzaModifica: boolean[] = [];
+erroreCoerenzaNuovo = false;
 
   passwordRobustezza: 0 | 1 | 2 | 3 = 0;
   passwordEntropyPerc = 0;
@@ -110,30 +113,31 @@ public selectTipiIndirizziService: SelectTipiIndirizziService,
   citta: [''],
   provincia: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
   cap: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
-  via: [''],
-  civico: [''],
-  dettagli: [''],
+  via: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s'.,°\/\-]+$/)]],
+  civico: ['', [Validators.required, Validators.maxLength(10), Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/)]],
+  dettagli: ['', [Validators.minLength(3), Validators.maxLength(200)]],
 });
 
     this.statoNazioneNuovo = this.selectNazioniService.creaStato('IT');
-    this.statiNazioniModifica = this.indirizziMock.map((ind) => this.selectNazioniService.creaStato(ind.iso ?? 'IT'));
+    this.statiNazioniModifica = [];
 
     this.statoComuneNuovo = this.selectIndirizzoItaliaService.creaStatoComune('');
-    this.statiComuniModifica = this.indirizziMock.map((ind) => this.selectIndirizzoItaliaService.creaStatoComune(ind.iso === 'IT' ? ind.citta : ''));
+    this.statiComuniModifica = [];
 
     this.statoCapNuovo = this.selectIndirizzoItaliaService.creaStatoCap('');
-this.statiCapModifica = this.indirizziMock.map((ind) => this.selectIndirizzoItaliaService.creaStatoCap(ind.iso === 'IT' ? ind.cap : ''));
+    this.statiCapModifica = [];
 
-this.statoTipoNuovo = this.selectTipiIndirizziService.creaStato(null, '');
-this.statiTipiModifica = this.indirizziMock.map((ind) => this.selectTipiIndirizziService.creaStato(ind.id_tipo_indirizzo ?? null, ind.tipo ?? ''));
+    this.statoTipoNuovo = this.selectTipiIndirizziService.creaStato(null, '');
+    this.statiTipiModifica = [];
   }
 
   ngOnInit(): void {
     sessionStorage.setItem('vengo_da_profilo', 'true');
     this.cambioProfilo.spinnerVisibile$.next(false);
     this.selectNazioniService.caricaNazioni();
-this.selectIndirizzoItaliaService.caricaComuni();
-this.selectTipiIndirizziService.caricaTipiIndirizzi();
+    this.selectIndirizzoItaliaService.caricaComuni();
+    this.selectTipiIndirizziService.caricaTipiIndirizzi();
+    this.caricaIndirizzi();
     setTimeout(() => this.avviaAnimazioniIngresso(), 0);
 
     fetch('assets/common_words.json')
@@ -144,6 +148,34 @@ this.selectTipiIndirizziService.caricaTipiIndirizzi();
       .catch(() => {
         this.paroleComuni = [];
       });
+  }
+
+  private caricaIndirizzi(): void {
+    const lingua = this.translate.currentLang || 'it';
+    this.api.getMieiIndirizzi(lingua).pipe(take(1)).subscribe({
+      next: (rit) => {
+        const dati = rit.data ?? [];
+        this.indirizziMock = dati.map((ind: any) => ({ ...ind, aperta: false }));
+
+        this.statiNazioniModifica = this.indirizziMock.map((ind) =>
+          this.selectNazioniService.creaStato(ind.iso ?? 'IT'),
+        );
+        this.statiComuniModifica = this.indirizziMock.map((ind) =>
+          this.selectIndirizzoItaliaService.creaStatoComune(ind.iso === 'IT' ? ind.citta : ''),
+        );
+        this.statiCapModifica = this.indirizziMock.map((ind) =>
+          this.selectIndirizzoItaliaService.creaStatoCap(ind.iso === 'IT' ? ind.cap : ''),
+        );
+        this.statiTipiModifica = this.indirizziMock.map((ind) =>
+          this.selectTipiIndirizziService.creaStato(ind.id_tipo_indirizzo ?? null, ind.tipo ?? ''),
+        );
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.indirizziMock = [];
+      },
+    });
   }
 
   ngAfterViewInit(): void {}
@@ -409,10 +441,44 @@ this.selectTipiIndirizziService.caricaTipiIndirizzi();
     });
     this.formNuovoAperto = false;
     this.indirizziMock[i].aperta = !this.indirizziMock[i].aperta;
+
+    if (this.indirizziMock[i].aperta) {
+      this.formsModifica[i] = this.creaFormModifica(this.indirizziMock[i]);
+    } else {
+      this.formsModifica[i] = null;
+    }
+  }
+
+  private creaFormModifica(ind: any): FormGroup {
+    const isIT = ind.iso === 'IT';
+
+    const form = this.fb.group({
+      idTipoIndirizzo: [ind.id_tipo_indirizzo ?? null, Validators.required],
+      nazione: [ind.iso ?? 'IT', Validators.required],
+      comune: [isIT ? (ind.citta ?? '') : '', isIT ? Validators.required : []],
+      citta: [
+        !isIT ? (ind.citta ?? '') : '',
+        !isIT ? [Validators.required, Validators.minLength(2), Validators.maxLength(80)] : [],
+      ],
+      provincia: [
+        ind.provincia ?? '',
+        isIT ? [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)] : [],
+      ],
+      cap: [
+        ind.cap ?? '',
+        isIT ? [Validators.required, Validators.pattern(/^\d{5}$/)] : [],
+      ],
+      via: [ind.via ?? '', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s'.,°\/\-]+$/)]],
+      civico: [ind.civico ?? '', [Validators.required, Validators.maxLength(10), Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/)]],
+      dettagli: [ind.dettagli ?? '', [Validators.minLength(3), Validators.maxLength(200)]],
+    });
+
+    return form;
   }
 
   chiudiForm(i: number): void {
     this.indirizziMock[i].aperta = false;
+    this.formsModifica[i] = null;
   }
 
   apriFormNuovo(): void {
@@ -453,8 +519,11 @@ selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
 
   this.selectTipiIndirizziService.seleziona(stato, tipo);
 
-  this.indirizziMock[i].id_tipo_indirizzo = tipo.id_tipo_indirizzo;
-  this.indirizziMock[i].tipo = tipo.tipo;
+  const form = this.formsModifica[i];
+  if (form) {
+    form.get('idTipoIndirizzo')!.setValue(tipo.id_tipo_indirizzo);
+    form.get('idTipoIndirizzo')!.markAsTouched();
+  }
 }
   statoComuneModifica(i: number): StatoSelectComuneItalia {
     if (!this.statiComuniModifica[i]) {
@@ -508,20 +577,35 @@ selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
 
     this.selectNazioniService.seleziona(stato, valore);
 
-    this.indirizziMock[i].iso = valore;
-
-    const label = this.selectNazioniService.label(stato);
-
-    if (label) {
-      this.indirizziMock[i].paese = label;
-    }
-
     this.statiComuniModifica[i] = this.selectIndirizzoItaliaService.creaStatoComune('');
     this.statiCapModifica[i] = this.selectIndirizzoItaliaService.creaStatoCap('');
 
-    this.indirizziMock[i].citta = '';
-    this.indirizziMock[i].provincia = '';
-    this.indirizziMock[i].cap = '';
+    const form = this.formsModifica[i];
+    if (form) {
+      form.get('nazione')!.setValue(valore);
+      form.get('nazione')!.markAsTouched();
+      form.get('comune')!.setValue('');
+      form.get('citta')!.setValue('');
+      form.get('provincia')!.setValue('');
+      form.get('cap')!.setValue('');
+
+      if (valore === 'IT') {
+        form.get('comune')!.setValidators(Validators.required);
+        form.get('citta')!.clearValidators();
+        form.get('provincia')!.setValidators([Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]);
+        form.get('cap')!.setValidators([Validators.required, Validators.pattern(/^\d{5}$/)]);
+      } else {
+        form.get('citta')!.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(80)]);
+        form.get('comune')!.clearValidators();
+        form.get('provincia')!.clearValidators();
+        form.get('cap')!.clearValidators();
+      }
+
+      form.get('comune')!.updateValueAndValidity();
+      form.get('citta')!.updateValueAndValidity();
+      form.get('provincia')!.updateValueAndValidity();
+      form.get('cap')!.updateValueAndValidity();
+    }
   }
     selezionaComuneNuovo(valore: string): void {
     const comune = this.selectIndirizzoItaliaService.selezionaComune(this.statoComuneNuovo, this.statoCapNuovo, valore);
@@ -538,6 +622,8 @@ selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
         this.formNuovoIndirizzo.get('cap')!.markAsTouched();
       }
     }
+
+    this.erroreCoerenzaNuovo = false;
   }
 
   selezionaComuneModifica(i: number, valore: string): void {
@@ -545,11 +631,20 @@ selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
     const statoCap = this.statoCapModifica(i);
     const comune = this.selectIndirizzoItaliaService.selezionaComune(statoComune, statoCap, valore);
 
-    this.indirizziMock[i].citta = valore;
+    this.erroriCoerenzaModifica[i] = false;
 
-    if (comune) {
-      this.indirizziMock[i].provincia = (comune.sigla_automobilistica ?? '').toUpperCase();
-      this.indirizziMock[i].cap = statoCap.valore;
+    const form = this.formsModifica[i];
+    if (form) {
+      form.get('comune')!.setValue(valore);
+      form.get('comune')!.markAsTouched();
+      if (comune) {
+        form.get('provincia')!.setValue((comune.sigla_automobilistica ?? '').toUpperCase());
+        form.get('provincia')!.markAsTouched();
+        form.get('cap')!.setValue(statoCap.valore);
+        if (statoCap.valore) {
+          form.get('cap')!.markAsTouched();
+        }
+      }
     }
   }
 
@@ -565,8 +660,135 @@ selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
 
     this.selectIndirizzoItaliaService.selezionaCap(statoCap, valore);
 
-    this.indirizziMock[i].cap = valore;
+    const form = this.formsModifica[i];
+    if (form) {
+      form.get('cap')!.setValue(valore);
+      form.get('cap')!.markAsTouched();
+    }
   }
+
+  salvaModificaIndirizzo(i: number): void {
+    const form = this.formsModifica[i];
+    if (!form) return;
+
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.saturnoService.flashErrorLight();
+      return;
+    }
+
+    const ind = this.indirizziMock[i];
+    const isIT = form.get('nazione')!.value === 'IT';
+
+    if (isIT) {
+      const ok = this.selectIndirizzoItaliaService.verificaCoerenza(
+        form.get('comune')!.value,
+        form.get('provincia')!.value,
+        form.get('cap')!.value,
+      );
+      if (!ok) {
+        this.erroriCoerenzaModifica[i] = true;
+        this.saturnoService.flashErrorLight();
+        return;
+      }
+    }
+    this.erroriCoerenzaModifica[i] = false;
+
+    const idNazione = this.selectNazioniService.idDaIso(form.get('nazione')!.value);
+    if (idNazione === null) {
+      this.saturnoService.flashErrorLight();
+      return;
+    }
+    const idComune = isIT ? this.selectIndirizzoItaliaService.idDaNomeComune(form.get('comune')!.value) : null;
+
+    const dati = {
+      id_tipo_indirizzo: form.get('idTipoIndirizzo')!.value,
+      id_nazione: idNazione,
+      id_comune: idComune,
+      citta: isIT ? null : (form.get('citta')!.value || null),
+      cap: isIT ? (form.get('cap')!.value || null) : null,
+      indirizzo: form.get('via')!.value || null,
+      civico: form.get('civico')!.value || null,
+      dettagli: form.get('dettagli')!.value || null,
+    };
+
+    this.salvataggioInCorso = true;
+    this.api.updateIndirizzo(ind.id_indirizzo, dati).pipe(take(1)).subscribe({
+      next: () => {
+        this.salvataggioInCorso = false;
+        this.toastService.successo(this.translate.instant('ui.profilo.indirizzi.salvataggio.successo'));
+        this.formsModifica[i] = null;
+        this.indirizziMock[i].aperta = false;
+        this.caricaIndirizzi();
+      },
+      error: () => {
+        this.salvataggioInCorso = false;
+        this.saturnoService.flashErrorLight();
+      },
+    });
+  }
+
+  salvaNuovoIndirizzo(): void {
+    if (this.formNuovoIndirizzo.invalid) {
+      this.formNuovoIndirizzo.markAllAsTouched();
+      this.saturnoService.flashErrorLight();
+      return;
+    }
+
+    const isIT = this.formNuovoIndirizzo.get('nazione')!.value === 'IT';
+
+    if (isIT) {
+      const ok = this.selectIndirizzoItaliaService.verificaCoerenza(
+        this.formNuovoIndirizzo.get('comune')!.value,
+        this.formNuovoIndirizzo.get('provincia')!.value,
+        this.formNuovoIndirizzo.get('cap')!.value,
+      );
+      if (!ok) {
+        this.erroreCoerenzaNuovo = true;
+        this.saturnoService.flashErrorLight();
+        return;
+      }
+    }
+    this.erroreCoerenzaNuovo = false;
+
+    const idNazione = this.selectNazioniService.idDaIso(this.formNuovoIndirizzo.get('nazione')!.value);
+    if (idNazione === null) {
+      this.saturnoService.flashErrorLight();
+      return;
+    }
+    const idComune = isIT ? this.selectIndirizzoItaliaService.idDaNomeComune(this.formNuovoIndirizzo.get('comune')!.value) : null;
+
+    const dati = {
+      id_tipo_indirizzo: this.formNuovoIndirizzo.get('idTipoIndirizzo')!.value,
+      id_nazione: idNazione,
+      id_comune: idComune,
+      citta: isIT ? null : (this.formNuovoIndirizzo.get('citta')!.value || null),
+      cap: isIT ? (this.formNuovoIndirizzo.get('cap')!.value || null) : null,
+      indirizzo: this.formNuovoIndirizzo.get('via')!.value || null,
+      civico: this.formNuovoIndirizzo.get('civico')!.value || null,
+      dettagli: this.formNuovoIndirizzo.get('dettagli')!.value || null,
+    };
+
+    this.salvataggioInCorso = true;
+    this.api.creaIndirizzo(dati).pipe(take(1)).subscribe({
+      next: () => {
+        this.salvataggioInCorso = false;
+        this.toastService.successo(this.translate.instant('ui.profilo.indirizzi.creazione.successo'));
+        this.formNuovoAperto = false;
+        this.formNuovoIndirizzo.reset({ nazione: 'IT' });
+        this.statoNazioneNuovo = this.selectNazioniService.creaStato('IT');
+        this.statoComuneNuovo = this.selectIndirizzoItaliaService.creaStatoComune('');
+        this.statoCapNuovo = this.selectIndirizzoItaliaService.creaStatoCap('');
+        this.statoTipoNuovo = this.selectTipiIndirizziService.creaStato(null, '');
+        this.caricaIndirizzi();
+      },
+      error: () => {
+        this.salvataggioInCorso = false;
+        this.saturnoService.flashErrorLight();
+      },
+    });
+  }
+
 chiudiSelectNazioni(): void {
   this.selectNazioniService.chiudi(this.statoNazioneNuovo);
   this.statiNazioniModifica.forEach((stato) => this.selectNazioniService.chiudi(stato));
@@ -580,12 +802,31 @@ chiudiSelectNazioni(): void {
   this.selectTipiIndirizziService.chiudi(this.statoTipoNuovo);
   this.statiTipiModifica.forEach((stato) => this.selectTipiIndirizziService.chiudi(stato));
 }
-  eliminaIndirizzo(i: number): void {
-    this.indirizziMock.splice(i, 1);
-    this.statiNazioniModifica.splice(i, 1);
-    this.statiComuniModifica.splice(i, 1);
-    this.statiCapModifica.splice(i, 1);
-this.statiTipiModifica.splice(i, 1);
+  apriModaleEliminazione(ind: any): void {
+    this.indirizzoDaEliminare = ind;
+  }
+
+  chiudiModaleEliminazione(): void {
+    if (this.eliminazioneInCorso) return;
+    this.indirizzoDaEliminare = null;
+  }
+
+  confermaEliminazione(): void {
+    if (!this.indirizzoDaEliminare) return;
+
+    this.eliminazioneInCorso = true;
+    this.api.eliminaIndirizzo(this.indirizzoDaEliminare.id_indirizzo).pipe(take(1)).subscribe({
+      next: () => {
+        this.eliminazioneInCorso = false;
+        this.indirizzoDaEliminare = null;
+        this.toastService.successo(this.translate.instant('ui.profilo.indirizzi.eliminazione.successo'));
+        this.caricaIndirizzi();
+      },
+      error: () => {
+        this.eliminazioneInCorso = false;
+        this.saturnoService.flashErrorLight();
+      },
+    });
   }
 
   tornaAScelta(): void {

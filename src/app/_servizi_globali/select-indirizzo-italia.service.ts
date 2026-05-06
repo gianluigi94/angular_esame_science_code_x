@@ -78,6 +78,14 @@ export class SelectIndirizzoItaliaService {
       .slice(0, 50);
   }
 
+  idDaNomeComune(nomeComune: string): number | null {
+    if (!nomeComune) return null;
+
+    const comune = this.comuni.find((c) => c.comune === nomeComune);
+
+    return comune ? comune.id_comune : null;
+  }
+
   toggleComune(
     stato: StatoSelectComuneItalia,
     event: Event,
@@ -388,5 +396,28 @@ export class SelectIndirizzoItaliaService {
     stato.aperto = false;
     stato.filtro = '';
     stato.indice = -1;
+  }
+
+  verificaCoerenza(nomeComune: string, provinciaInserita: string, capInserito: string): boolean {
+    if (!nomeComune) return true;
+
+    const comune = this.comuni.find((c) => c.comune === nomeComune);
+    if (!comune) return true;
+
+    const provinciaAttesa = (comune.sigla_automobilistica ?? '').toUpperCase();
+    const provinciaNorm = (provinciaInserita ?? '').toUpperCase();
+
+    let capOk: boolean;
+
+    if (comune.cap_inizio && comune.cap_fine && String(comune.cap_inizio) !== String(comune.cap_fine)) {
+      const inizio = parseInt(String(comune.cap_inizio), 10);
+      const fine = parseInt(String(comune.cap_fine), 10);
+      const capNum = parseInt(capInserito, 10);
+      capOk = !isNaN(capNum) && capNum >= inizio && capNum <= fine;
+    } else {
+      capOk = capInserito === String(comune.cap).padStart(5, '0');
+    }
+
+    return provinciaNorm === provinciaAttesa && capOk;
   }
 }

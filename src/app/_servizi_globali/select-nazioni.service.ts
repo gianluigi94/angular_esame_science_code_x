@@ -74,6 +74,14 @@ export class SelectNazioniService {
       : nazione.nazione_en;
   }
 
+  idDaIso(iso: string): number | null {
+    if (!iso) return null;
+
+    const nazione = this.nazioni.find((n) => n.iso === iso);
+
+    return nazione ? nazione.id_nazione : null;
+  }
+
   toggle(stato: StatoSelectNazioni, event: Event, statiDaChiudere: StatoSelectNazioni[] = [], classeInput: string = ''): void {
     event.stopPropagation();
 

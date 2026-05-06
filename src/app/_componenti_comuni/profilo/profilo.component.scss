@@ -198,7 +198,7 @@
 }
 
 .errore-campo {
-  font-size: 16px;
+  font-size: 15px;
   color: #b41414;
   text-shadow: 1px 1px 3px #14110a;
   font-family: "Quantico", serif;
@@ -445,6 +445,7 @@
   border-radius: 4px;
   padding: 2px 6px;
   display: inline-block;
+  width: min-content;
 }
 
 .tag-tipo.fatturazione {
@@ -499,7 +500,7 @@
 
 .btn-aggiungi {
   background: transparent;
-  border: 1px dashed rgba(231, 156, 80, 0.4);
+  border: 3px dashed rgba(231, 156, 80, 0.4);
   border-radius: 50%;
   color: #e79c50;
   width: 44px;
@@ -519,7 +520,6 @@
 .btn-aggiungi:hover {
   background: rgba(231, 156, 80, 0.08);
   border-color: #e79c50;
-  transform: scale(1.05);
 }
 
 .form-nuovo {
@@ -531,6 +531,7 @@
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
   animation: apriFormIndirizzo 0.25s ease;
+  box-sizing: border-box;
 }
 
 .form-mock-placeholder {
@@ -575,13 +576,23 @@
   background: linear-gradient(135deg, #e79c50, #c97a2b);
   border: none;
   color: white;
-  box-shadow: 0 0 8px #999da0;
   font-weight: 600;
+  width: 95px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-salva:hover {
+.btn-salva:not(:disabled):hover {
   transform: scale(1.06) translateZ(0);
   box-shadow: 0 0 14px #e79c5088;
+}
+
+.btn-salva:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: auto;
 }
 
 .nessun-indirizzo {
@@ -753,11 +764,7 @@
   font-size: 18px;
   color: #4f5050;
 }
-.riga-mini-indirizzo-profilo .campo-form input[readonly] ~ label {
-  top: 4px;
-  transform: translateY(0);
-  font-size: 12px;
-}
+
 
 .opzionale {
   font-size: 14px;
@@ -819,6 +826,10 @@
 
 .riga-tre-campi-profilo > .campo-wrapper .select-custom-profilo {
   width: 280px;
+}
+
+.campo-profilo-medio {
+  width: 280px !important;
 }
 
 .riga-tre-campi-profilo .riga-mini-indirizzo-profilo {
@@ -888,4 +899,117 @@
   .cap-placeholder-fake {
     color: #6a6a6a;
   }
+
+  .campo-form label {
+    font-size: 15px;
+    font-weight: normal;
+  }
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: rgb(205, 205, 205) !important;
+  caret-color: rgb(205, 205, 205) !important;
+  border-radius: 7px !important;
+  transition: background-color 9999s ease-in-out 0s !important;
+}
+
+.profilo-box input:-webkit-autofill,
+.profilo-box input:-webkit-autofill:hover,
+.profilo-box input:-webkit-autofill:focus,
+.profilo-box input:-webkit-autofill:active {
+  box-shadow: 0 0 0 1000px #000000df inset, 0 0 8px #999da0 !important;
+}
+
+.riga-form input:-webkit-autofill,
+.riga-form input:-webkit-autofill:hover,
+.riga-form input:-webkit-autofill:focus,
+.riga-form input:-webkit-autofill:active,
+.form-nuovo input:-webkit-autofill,
+.form-nuovo input:-webkit-autofill:hover,
+.form-nuovo input:-webkit-autofill:focus,
+.form-nuovo input:-webkit-autofill:active {
+  box-shadow: 0 0 0 1000px #261e18b1 inset !important;
+}
+
+.modale-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modaleApri 0.2s ease;
+}
+
+@keyframes modaleApri {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modale-contenuto {
+  background: rgba(20, 17, 10, 0.95);
+  border: 1px solid rgba(231, 156, 80, 0.3);
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  animation: modaleScala 0.25s ease;
+}
+
+@keyframes modaleScala {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modale-messaggio {
+  font-family: "Quantico", serif;
+  font-size: 18px;
+  color: aliceblue;
+  text-align: center;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.modale-bottoni {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.btn-elimina-conferma {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+  border: none;
+  color: white;
+  font-weight: 600;
+  width: 100px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-elimina-conferma:not(:disabled):hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 14px rgba(185, 28, 28, 0.5);
+}
+
+.btn-elimina-conferma:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: auto;
 }
