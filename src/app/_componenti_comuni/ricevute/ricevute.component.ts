@@ -112,8 +112,8 @@ export class RicevuteComponent implements AfterViewInit, OnInit {
     anno: data.getFullYear(),
     importo: Number(d.importo),
     imposte: Number(d.imposte),
-    valuta: riga.valuta,
-    piano: d.piano,
+    valuta: d.valuta_simbolo || riga.valuta,
+            piano: d.piano,
   };
 });
           riga.giorniCaricati = true;
