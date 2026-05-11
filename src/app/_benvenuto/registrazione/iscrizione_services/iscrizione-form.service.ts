@@ -158,15 +158,15 @@ export class IscrizioneFormService {
     });
 
     this.reactiveFormStep3 = this.fb.group({
-      // costruisco il form del terzo step con contatti e credenziali
+      prefisso: ['+39', Validators.required],
       telefono: [
         '',
         [
           Validators.minLength(6),
           Validators.maxLength(20),
-          Validators.pattern(/^\+?[\d\s\-().]{6,20}$/),
+          Validators.pattern(/^\d{6,20}$/),
         ],
-      ], // definisco il telefono con lunghezze minime e massime e pattern flessibile
+      ],
       emailSecondaria: [
         '',
         [
@@ -174,7 +174,7 @@ export class IscrizioneFormService {
           Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/),
           Validators.maxLength(40),
         ],
-      ], // definisco l'email secondaria con validazione email e lunghezza massima
+      ],
       password: [
         '',
         [
@@ -183,8 +183,8 @@ export class IscrizioneFormService {
           Validators.maxLength(30),
           Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/),
         ],
-      ], // definisco la password come obbligatoria con requisiti minimi di sicurezza
-      confermaPassword: ['', Validators.required], // definisco il campo di conferma password come obbligatorio
+      ],
+      confermaPassword: ['', Validators.required],
     });
   }
 

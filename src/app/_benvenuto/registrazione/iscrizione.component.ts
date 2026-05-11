@@ -65,6 +65,12 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
   passwordRobustezza: 0 | 1 | 2 | 3 = 0; // il livello di robustezza calcolato per la password
   passwordEntropyPerc = 0; // la percentuale di entropia calcolata per la password
 
+  prefissoAperto = false;
+  prefissoValore = '+39';
+  filtroPrefissi = '';
+  indicePrefisso = -1;
+  prefissoModificatoManualmente = false;
+
   private paroleComuni: string[] = []; // conservo l'elenco di parole comuni usate per penalizzare la robustezza della password
   private subLingua?: Subscription; // la sottoscrizione al cambio lingua per poterla chiudere in destroy
 
@@ -142,8 +148,11 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   @HostListener('document:click')
   chiudiDropdown(): void {
-    this.step1.chiudiDropdown(); // chiedo al service del primo step di chiudere i suoi dropdown
-    this.step2.chiudiDropdown(); // chiedo al service del secondo step di chiudere i suoi dropdown
+    this.step1.chiudiDropdown();
+    this.step2.chiudiDropdown();
+    this.prefissoAperto = false;
+    this.filtroPrefissi = '';
+    this.indicePrefisso = -1;
   }
 
   /**
@@ -259,10 +268,11 @@ export class IscrizioneComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.step2.erroreCoerenzaIndirizzo = false; // se la verifica passa spengo l'eventuale errore precedente
     animaUscita().then(() => {
-      this.stepAttuale = 3; // porto l'interfaccia al terzo step
-      this.cdr.detectChanges(); // aggiorno la view per renderizzare il nuovo step
-      resetElementiStep(); // riporto gli elementi allo stato iniziale prima della nuova entrata
-      setTimeout(() => animaEntrataStep2(), 16); // avvio l'animazione di entrata del nuovo step
+      this.stepAttuale = 3;
+      this.aggiornaDefaultPrefisso();
+      this.cdr.detectChanges();
+      resetElementiStep();
+      setTimeout(() => animaEntrataStep2(), 16);
     });
   }
 
@@ -363,7 +373,7 @@ async avanti4(): Promise<void> {
       civico:           f2.civico,
       cap:              f2.cap      || null,
       dettagli:         f2.dettagli || null,
-      telefono:         f3.telefono         || null,
+      telefono:         f3.telefono ? `${f3.prefisso} ${f3.telefono}` : null,
       email_secondaria: f3.emailSecondaria  || null,
       piano:            this.pianoSelezionato!,
     }).subscribe({
@@ -478,6 +488,122 @@ async avanti4(): Promise<void> {
     this.passwordEntropyPerc = rit.entropyPerc; // salvo la percentuale di entropia
   }
 
+
+  get prefissiFiltrati(): any[] {
+    const espansi: any[] = [];
+    for (const n of this.forms.nazioni) {
+      if (!n.prefisso_tel) continue;
+      const parti = n.prefisso_tel.split('/');
+      const primo = parti[0];
+      const match = primo.match(/^(\+\d+-)/);
+      const base = match ? match[1] : '';
+      espansi.push({ ...n, prefisso_tel: primo });
+      for (let i = 1; i < parti.length; i++) {
+        espansi.push({ ...n, prefisso_tel: base + parti[i] });
+      }
+    }
+    const unici = new Map<string, any>();
+    for (const n of espansi) {
+      if (!unici.has(n.prefisso_tel)) unici.set(n.prefisso_tel, n);
+    }
+    const lista = Array.from(unici.values()).sort((a, b) => {
+      const parsA = (a.prefisso_tel ?? '').replace('+', '').split('-');
+      const parsB = (b.prefisso_tel ?? '').replace('+', '').split('-');
+      const mainA = parseInt(parsA[0] || '0', 10);
+      const mainB = parseInt(parsB[0] || '0', 10);
+      if (mainA !== mainB) return mainA - mainB;
+      const subA = parseInt(parsA[1] || '0', 10);
+      const subB = parseInt(parsB[1] || '0', 10);
+      return subA - subB;
+    });
+    if (!this.filtroPrefissi.trim()) return lista;
+    const f = this.filtroPrefissi.replace('+', '');
+    return lista.filter((n) => (n.prefisso_tel ?? '').replace('+', '').startsWith(f));
+  }
+
+  togglePrefisso(event: Event): void {
+    event.stopPropagation();
+    this.prefissoAperto = !this.prefissoAperto;
+    if (this.prefissoAperto) {
+      this.step1.chiudiDropdown();
+      this.step2.chiudiDropdown();
+      this.indicePrefisso = -1;
+      this.filtroPrefissi = '';
+      setTimeout(() => {
+        const i = document.querySelector('.prefisso-input') as HTMLInputElement;
+        if (i) { i.focus(); i.select(); }
+      }, 0);
+    } else {
+      this.filtroPrefissi = '';
+      this.indicePrefisso = -1;
+    }
+  }
+
+  onInputPrefisso(event: Event): void {
+    this.filtroPrefissi = (event.target as HTMLInputElement).value;
+    this.indicePrefisso = -1;
+    if (!this.prefissoAperto) this.prefissoAperto = true;
+  }
+
+  navigaPrefisso(event: KeyboardEvent): void {
+    if (!this.prefissoAperto) return;
+    const lista = this.prefissiFiltrati;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.indicePrefisso = Math.min(this.indicePrefisso + 1, lista.length - 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.indicePrefisso = Math.max(this.indicePrefisso - 1, -1);
+    } else if (event.key === 'Enter' && this.indicePrefisso >= 0) {
+      event.preventDefault();
+      this.selezionaPrefisso(lista[this.indicePrefisso].prefisso_tel);
+    } else if (event.key === 'Escape') {
+      this.prefissoAperto = false;
+      this.filtroPrefissi = '';
+      this.indicePrefisso = -1;
+    }
+  }
+
+  onBlurPrefisso(event: FocusEvent): void {
+    const dest = event.relatedTarget as HTMLElement | null;
+    if (dest?.closest('.select-dropdown')) return;
+    const val = (event.target as HTMLInputElement).value.trim();
+    if (!val) return;
+    const valNorm = val.toLowerCase().replace('+', '');
+    if (this.prefissoValore && this.prefissoValore.replace('+', '') === valNorm) return;
+    const trovato = this.forms.nazioni.find(
+      (n) =>
+        n.prefisso_tel &&
+        ((n.prefisso_tel ?? '').replace('+', '') === valNorm ||
+          (n.nazione_it ?? '').toLowerCase() === valNorm ||
+          (n.nazione_en ?? '').toLowerCase() === valNorm),
+    );
+    if (trovato) this.selezionaPrefisso(trovato.prefisso_tel);
+  }
+
+  selezionaPrefisso(valore: string): void {
+    this.prefissoValore = valore;
+    this.prefissoAperto = false;
+    this.filtroPrefissi = '';
+    this.indicePrefisso = -1;
+    this.prefissoModificatoManualmente = true;
+    this.forms.reactiveFormStep3.get('prefisso')!.setValue(valore);
+    this.forms.reactiveFormStep3.get('prefisso')!.markAsTouched();
+  }
+
+  trackByPrefisso(_index: number, n: any): string {
+    return n.prefisso_tel;
+  }
+
+  aggiornaDefaultPrefisso(): void {
+    if (this.prefissoModificatoManualmente) return;
+    const iso = this.step2.paeseDomValore;
+    const nazione = this.forms.nazioni.find((n) => n.iso === iso);
+    const raw = nazione?.prefisso_tel ?? '+39';
+    const prefisso = raw.split('/')[0];
+    this.prefissoValore = prefisso;
+    this.forms.reactiveFormStep3.get('prefisso')!.setValue(prefisso);
+  }
   /**
    * Mostra o nasconde la password oppure la conferma password.
    * - Decide quale input gestire in base al parametro

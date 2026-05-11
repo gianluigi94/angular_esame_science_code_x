@@ -750,3 +750,36 @@ input[type="text"].is-invalid {
     margin-top: 6px;
     color: #e79c50;
   }
+
+  .campo-telefono-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+.select-prefisso {
+  width: 110px !important;
+  flex-shrink: 0;
+
+  .select-header {
+    padding: 0 8px;
+  }
+
+  .select-input-testo {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+}
+
+.campo-telefono {
+  flex: 1;
+  min-width: 0;
+
+  input {
+    width: 100% !important;
+  }
+}

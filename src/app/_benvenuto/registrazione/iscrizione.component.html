@@ -636,7 +636,10 @@
 
       <!-- campo via: opzionale -->
       <div class="campo-wrapper">
-        <p class="label-sopra">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['via'].invalid && sf.reactiveFormStep2.controls['via'].touched }"
+        >
           {{ 'ui.registrazione.step2.via.label' | translate }} <span class="asterisco">*</span>
         </p>
         <div class="campo-form">
@@ -654,6 +657,9 @@
         </div>
         <!-- errori via: minlength, maxlength, pattern -->
         <div class="errori-stack">
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['via'].touched && sf.reactiveFormStep2.controls['via'].errors?.['required']">
+            {{ 'ui.registrazione.via.error.required' | translate }}
+          </p>
           <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['via'].touched && sf.reactiveFormStep2.controls['via'].errors?.['minlength']">
             {{ 'ui.registrazione.via.error.minlength' | translate }}
           </p>
@@ -668,7 +674,10 @@
 
       <!-- campo numero civico: opzionale -->
       <div class="campo-wrapper">
-        <p class="label-sopra">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['civico'].invalid && sf.reactiveFormStep2.controls['civico'].touched }"
+        >
           {{ 'ui.registrazione.step2.civico.label' | translate }} <span class="asterisco">*</span>
         </p>
         <div class="campo-form">
@@ -686,6 +695,9 @@
         </div>
         <!-- errori civico: maxlength, pattern -->
         <div class="errori-stack">
+          <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['civico'].touched && sf.reactiveFormStep2.controls['civico'].errors?.['required']">
+            {{ 'ui.registrazione.civico.error.required' | translate }}
+          </p>
           <p class="errore-campo" *ngIf="sf.reactiveFormStep2.controls['civico'].touched && sf.reactiveFormStep2.controls['civico'].errors?.['maxlength']">
             {{ 'ui.registrazione.civico.error.maxlength' | translate }}
           </p>
@@ -830,7 +842,10 @@
 
     <!-- campo dettagli indirizzo (scala, interno, ecc.): opzionale, centrato, entra animato -->
     <div class="campo-wrapper campo-centrato campo-animato">
-      <p class="label-sopra">
+      <p
+        class="label-sopra"
+        [ngClass]="{ 'is-invalid': sf.reactiveFormStep2.controls['dettagli'].invalid && sf.reactiveFormStep2.controls['dettagli'].touched }"
+      >
         {{ 'ui.registrazione.step2.dettagli.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
       </p>
       <div class="campo-form">
@@ -908,23 +923,68 @@
 
       <!-- campo telefono: opzionale, inputmode tel per aprire tastiera numerica su mobile -->
       <div class="campo-wrapper">
-        <p class="label-sopra">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['telefono'].invalid && sf.reactiveFormStep3.controls['telefono'].touched }"
+        >
           {{ 'ui.registrazione.step3.telefono.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
         </p>
-        <div class="campo-form">
-          <input
-            type="text"
-            placeholder=" "
-            id="telefono"
-            formControlName="telefono"
-            inputmode="tel"
-            [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['telefono'].invalid && sf.reactiveFormStep3.controls['telefono'].touched }"
-          />
-          <!-- label flottante telefono -->
-          <label for="telefono" [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['telefono'].invalid && sf.reactiveFormStep3.controls['telefono'].touched }">
-            {{ 'ui.registrazione.step3.telefono.input_label' | translate }}
-          </label>
+
+        <div class="campo-telefono-wrapper">
+
+          <div class="select-custom select-prefisso">
+            <div
+              class="select-header"
+              (click)="togglePrefisso($event)"
+              [class.aperto]="prefissoAperto"
+              [class.compilato]="prefissoValore"
+            >
+              <span class="select-label-piccola">{{ 'ui.registrazione.step3.prefisso.label' | translate }}</span>
+              <input
+                class="select-input-testo prefisso-input"
+                type="text"
+                placeholder="+39"
+                [value]="prefissoAperto ? filtroPrefissi : prefissoValore"
+                (click)="togglePrefisso($event)"
+                (input)="onInputPrefisso($event)"
+                (keydown)="navigaPrefisso($event)"
+                (blur)="onBlurPrefisso($event)"
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+              </svg>
+            </div>
+
+            <div class="select-dropdown" *ngIf="prefissoAperto">
+              <div
+                class="select-opzione"
+                *ngFor="let n of prefissiFiltrati; let i = index; trackBy: trackByPrefisso"
+                [class.attivo]="i === indicePrefisso"
+                (mousedown)="$event.preventDefault()"
+                (click)="selezionaPrefisso(n.prefisso_tel)"
+              >
+                {{ n.prefisso_tel }}
+              </div>
+            </div>
+          </div>
+
+          <div class="campo-form campo-telefono">
+            <input
+              type="text"
+              placeholder=" "
+              id="telefono"
+              formControlName="telefono"
+              inputmode="tel"
+              [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['telefono'].invalid && sf.reactiveFormStep3.controls['telefono'].touched }"
+            />
+            <!-- label flottante telefono -->
+            <label for="telefono" [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['telefono'].invalid && sf.reactiveFormStep3.controls['telefono'].touched }">
+              {{ 'ui.registrazione.step3.telefono.input_label' | translate }}
+            </label>
+          </div>
+
         </div>
+
         <!-- errori telefono: minlength, maxlength, pattern -->
         <div class="errori-stack">
           <p class="errore-campo" *ngIf="sf.reactiveFormStep3.controls['telefono'].touched && sf.reactiveFormStep3.controls['telefono'].errors?.['minlength']">
@@ -941,7 +1001,10 @@
 
       <!-- campo email secondaria: opzionale, autocomplete disattivato per evitare suggerimenti indesiderati -->
       <div class="campo-wrapper">
-        <p class="label-sopra">
+        <p
+          class="label-sopra"
+          [ngClass]="{ 'is-invalid': sf.reactiveFormStep3.controls['emailSecondaria'].invalid && sf.reactiveFormStep3.controls['emailSecondaria'].touched }"
+        >
           {{ 'ui.registrazione.step3.email_secondaria.label' | translate }} <span class="opzionale">{{ 'ui.registrazione.opzionale' | translate }}</span>
         </p>
         <div class="campo-form">
