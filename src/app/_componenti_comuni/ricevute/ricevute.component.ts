@@ -31,6 +31,7 @@ interface RigaMese {
   giorniCaricati: boolean;
   caricamentoGiorni: boolean;
   aperta: boolean;
+  scaricando: boolean;
 }
 
 @Component({
@@ -128,6 +129,22 @@ export class RicevuteComponent implements AfterViewInit, OnInit {
 
   scarica(riga: RigaMese, event: Event): void {
     event.stopPropagation();
+    if (riga.scaricando) return;
+    riga.scaricando = true;
+    this.api.scaricaRicevutaPdf(riga.idRicevuta, this.linguaCorrente).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ricevuta_${riga.idRicevuta}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        riga.scaricando = false;
+      },
+      error: () => {
+        riga.scaricando = false;
+      },
+    });
   }
 tornaIndietro(): void {
     window.history.back();
@@ -152,6 +169,7 @@ tornaIndietro(): void {
       giorniCaricati: false,
       caricamentoGiorni: false,
       aperta: false,
+      scaricando: false,
     };
   }
 }

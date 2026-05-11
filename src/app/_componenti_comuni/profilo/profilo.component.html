@@ -7,7 +7,15 @@
 
   <section class="profilo-contenuto">
     <div class="profilo-blocco">
-      <h2 class="profilo-titolo">{{ "ui.profilo.titolo" | translate }}</h2>
+      <h2 class="profilo-titolo">
+        {{
+          (vistaCorrente === 'email' ? 'ui.profilo.email.bottone'
+            : vistaCorrente === 'password' ? 'ui.profilo.password.bottone'
+            : vistaCorrente === 'indirizzi' ? 'ui.profilo.indirizzi.bottone'
+            : 'ui.profilo.titolo'
+          ) | translate
+        }}
+      </h2>
 
       <div class="profilo-box">
         <div
@@ -480,12 +488,12 @@
             <div class="riga-indirizzo-header">
 
               <span class="col-tipo">
-                <span class="tag-tipo" [class.fatturazione]="ind.tipo === 'fatturazione'">
+                <span class="tag-tipo" [class.fatturazione]="ind.tipo === 'fatturazione'" [class.domicilio]="ind.tipo === 'domicilio'">
   {{ selectTipiIndirizziService.label(ind.tipo) }}
 </span>
               </span>
 
-              <span class="col-paese">{{ selectNazioniService.label(statoNazioneModifica(i)) }}</span>
+              <span class="col-paese">{{ labelPaese(ind.iso) }}</span>
               <span class="col-citta">{{ ind.citta }}</span>
               <span class="col-via">{{ ind.via }} {{ ind.civico }}</span>
 
@@ -515,7 +523,7 @@
         {{ 'ui.profilo.indirizzi.header.tipo' | translate }} <span class="asterisco">*</span>
       </p>
 
-      <div class="select-custom-profilo">
+      <div class="select-custom-profilo" *ngIf="indirizziMock[i]?.tipo !== 'domicilio'">
         <div
           class="select-header"
           tabindex="0"
@@ -539,13 +547,23 @@
         <div class="select-dropdown-profilo" *ngIf="statoTipoModifica(i).aperto">
           <div
             class="select-opzione"
-            *ngFor="let tipo of selectTipiIndirizziService.tipi; let ix = index"
+            *ngFor="let tipo of tipiFiltrati(i); let ix = index"
             [class.attivo]="ix === statoTipoModifica(i).indice"
             (mousedown)="$event.preventDefault()"
             (click)="selezionaTipoModifica(i, tipo)"
           >
             {{ selectTipiIndirizziService.label(tipo.tipo) }}
           </div>
+        </div>
+      </div>
+      <div class="select-custom-profilo select-bloccata" *ngIf="indirizziMock[i]?.tipo === 'domicilio'">
+        <div class="select-header compilato">
+          <span class="select-label-piccola">{{ 'ui.profilo.indirizzi.header.tipo' | translate }}</span>
+          <span>{{ selectTipiIndirizziService.labelStato(statoTipoModifica(i)) }}</span>
+          <svg class="icona-lucchetto" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#5b9bd5">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" fill="none" stroke="#5b9bd5" stroke-width="2"/>
+          </svg>
         </div>
       </div>
     </div>
@@ -979,7 +997,7 @@
         <div class="select-dropdown-profilo" *ngIf="statoTipoNuovo.aperto">
           <div
             class="select-opzione"
-            *ngFor="let tipo of selectTipiIndirizziService.tipi; let i = index"
+            *ngFor="let tipo of tipiFiltrati(); let i = index"
             [class.attivo]="i === statoTipoNuovo.indice"
             (mousedown)="$event.preventDefault()"
             (click)="selezionaTipoNuovo(tipo)"
@@ -1394,7 +1412,7 @@
           <path d="M15 18l-6-6 6-6" />
         </svg>
         {{
-          (vistaCorrente === "email" || vistaCorrente === "password"
+          (vistaCorrente === "email" || vistaCorrente === "password" || vistaCorrente === "indirizzi"
             ? "ui.main.tornaIndietro"
             : "ui.torna.log.contatti"
           ) | translate

@@ -53,7 +53,7 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
           return throwError(() => err); // rilancio l'errore così com'è
         }
 
-        if (err.status === 422) {
+        if (err.status === 422 || err.status === 429) {
           return throwError(() => err);
         }
 

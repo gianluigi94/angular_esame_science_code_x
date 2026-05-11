@@ -604,4 +604,9 @@ public inviaMessaggio(dati: {
     const risorsa: (string | number)[] = ['ricevute', idRicevuta, 'dettagli'];
     return this.richiestaGenerica(risorsa, 'GET');
   }
+
+  public scaricaRicevutaPdf(idRicevuta: number | string, lingua: string): Observable<Blob> {
+    const url = this.calcolaRisorsa(['ricevute', idRicevuta, 'pdf']);
+    return this.http.get(url, { responseType: 'blob', params: { lingua } });
+  }
 }

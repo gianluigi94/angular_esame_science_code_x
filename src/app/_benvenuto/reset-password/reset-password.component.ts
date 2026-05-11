@@ -94,7 +94,7 @@ export class ResetPasswordComponent implements OnInit, AfterViewInit {
         this.paroleComuni = [];
       });
 
-    const ridSalvato = localStorage.getItem('reset_pw_rid');
+    const ridSalvato = sessionStorage.getItem('reset_pw_rid');
     if (ridSalvato) {
       this.rid = ridSalvato;
       this.visibile = true;
@@ -140,14 +140,14 @@ export class ResetPasswordComponent implements OnInit, AfterViewInit {
     this.apiService.resetPassword(this.rid, passwordHash).pipe(take(1)).subscribe({
       next: () => {
         this.invioInCorso = false;
-        localStorage.removeItem('reset_pw_rid');
+        sessionStorage.removeItem('reset_pw_rid');
         this.rid = null;
         this.translate.get('ui.login.reset.successo').pipe(take(1)).subscribe(t => this.toastService.successo(t));
         this.chiudi();
       },
       error: () => {
         this.invioInCorso = false;
-        localStorage.removeItem('reset_pw_rid');
+        sessionStorage.removeItem('reset_pw_rid');
         this.rid = null;
         this.translate.get('ui.login.reset.errore').pipe(take(1)).subscribe(t => this.toastService.errore(t));
         this.chiudi();

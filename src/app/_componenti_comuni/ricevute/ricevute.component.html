@@ -57,12 +57,14 @@
           <button
             *ngIf="riga.stato === 'saldato'"
             class="btn-scarica"
+            [disabled]="riga.scaricando"
             (click)="scarica(riga, $event)"
             [title]="'ui.ricevute.azioni.scarica' | translate"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg *ngIf="!riga.scaricando" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 3v13M7 11l5 5 5-5M4 20h16"/>
             </svg>
+            <app-spinner *ngIf="riga.scaricando"></app-spinner>
           </button>
           <span *ngIf="riga.stato === 'corrente'" class="no-download" [title]="'ui.ricevute.azioni.non_disponibile' | translate">—</span>
         </span>

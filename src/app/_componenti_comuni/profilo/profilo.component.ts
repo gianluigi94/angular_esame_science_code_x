@@ -489,6 +489,23 @@ public selectTipiIndirizziService: SelectTipiIndirizziService,
   chiudiFormNuovo(): void {
     this.formNuovoAperto = false;
   }
+  tipiFiltrati(indiceModifica?: number): any[] {
+    return this.selectTipiIndirizziService.tipi.filter((tipo: any) => {
+      if (tipo.tipo === 'domicilio') return false;
+      if (tipo.tipo === 'fatturazione') {
+        if (indiceModifica !== undefined && this.indirizziMock[indiceModifica]?.tipo === 'fatturazione') return true;
+        return !this.indirizziMock.some((ind: any) => ind.tipo === 'fatturazione');
+      }
+      return true;
+    });
+  }
+
+  labelPaese(iso: string): string {
+    const n = this.selectNazioniService.nazioni.find((x: any) => x.iso === iso);
+    if (!n) return '';
+    return this.selectNazioniService.cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en;
+  }
+
   statoNazioneModifica(i: number): StatoSelectNazioni {
     if (!this.statiNazioniModifica[i]) {
       this.statiNazioniModifica[i] = this.selectNazioniService.creaStato(this.indirizziMock[i]?.iso ?? 'IT');
@@ -721,8 +738,11 @@ selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
         this.indirizziMock[i].aperta = false;
         this.caricaIndirizzi();
       },
-      error: () => {
+      error: (err: any) => {
         this.salvataggioInCorso = false;
+        if (err?.status === 429) {
+          this.toastService.allarm(this.translate.instant('ui.toast.limite.cambio_domicilio'));
+        }
         this.saturnoService.flashErrorLight();
       },
     });
@@ -782,8 +802,11 @@ selezionaTipoModifica(i: number, tipo: TipoIndirizzo): void {
         this.statoTipoNuovo = this.selectTipiIndirizziService.creaStato(null, '');
         this.caricaIndirizzi();
       },
-      error: () => {
+      error: (err: any) => {
         this.salvataggioInCorso = false;
+        if (err?.status === 429) {
+          this.toastService.allarm(this.translate.instant('ui.toast.limite.cambio_domicilio'));
+        }
         this.saturnoService.flashErrorLight();
       },
     });

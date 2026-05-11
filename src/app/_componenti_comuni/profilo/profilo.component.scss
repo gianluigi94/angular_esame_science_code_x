@@ -1013,3 +1013,20 @@ input:-webkit-autofill:active {
   cursor: not-allowed;
   pointer-events: auto;
 }
+.tag-tipo.domicilio {
+  color: #5b9bd5;
+  border-color: rgba(91, 155, 213, 0.4);
+}
+.select-bloccata .select-header {
+  position: relative;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icona-lucchetto {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+}
+
+

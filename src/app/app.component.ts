@@ -261,14 +261,14 @@ private appLoader: AppLoaderService;
     const resetParam = params.get('reset');
     const rid = params.get('rid');
      if (resetParam === 'scaduto') {
-      localStorage.removeItem('reset_pw_rid');
+      sessionStorage.removeItem('reset_pw_rid');
       const testo = codiceV === 'it'
         ? 'Il link per il reset della password è scaduto. Richiedine uno nuovo.'
         : 'The password reset link has expired. Please request a new one.';
       this.toastService.errore(testo);
     }
     if (resetParam === 'ok' && rid) {
-      localStorage.setItem('reset_pw_rid', rid);
+      sessionStorage.setItem('reset_pw_rid', rid);
     }
     if (resetParam) {
       window.history.replaceState({}, '', window.location.pathname);
@@ -548,7 +548,13 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
         this.translate.get('ui.piano.toast.successo').pipe(take(1)).subscribe(t => this.toastService.successo(t));
         window.history.back();
       },
-      error: () => { this.confermaPianoInCorso = false; },
+      error: (err: any) => {
+        this.confermaPianoInCorso = false;
+        if (err?.status === 429) {
+          this.pianoSelezionatoApp = this.pianoCorrente;
+          this.translate.get('ui.toast.limite.cambio_piano').pipe(take(1)).subscribe(t => this.toastService.allarm(t));
+        }
+      },
     });
   }
 

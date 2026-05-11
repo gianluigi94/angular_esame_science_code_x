@@ -136,6 +136,9 @@
   justify-content: center;
   width: 48px;
   flex-shrink: 0;
+  app-spinner{
+    transform: scale(0.63);
+  }
 }
 
 .expand-icon {
