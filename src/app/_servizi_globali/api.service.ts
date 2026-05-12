@@ -20,9 +20,9 @@ export class ApiService {
    */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    // const server: string = 'http://localhost/science_codex/public/api';
+    const server: string = 'http://localhost/science_codex/public/api';
     // const server: string = 'http://192.168.1.38/science_codex/public/api';
-    const server: string = 'https://api.sciencecodex.net/api';
+    // const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
 
     const segments = [server, versione, ...risorsa.map(String)]; // Unisco server, versione e parametri della risorsa in un array
@@ -70,6 +70,37 @@ export class ApiService {
   const risorsa: string[] = ['tipi-indirizzi'];
   return this.richiestaGenerica(risorsa, 'GET');
 }
+
+  public getTipiRecapiti(): Observable<IRispostaServer> {
+    const risorsa: string[] = ['tipi-recapiti'];
+    return this.richiestaGenerica(risorsa, 'GET');
+  }
+
+  public getMieiRecapiti(): Observable<IRispostaServer> {
+    const risorsa: string[] = ['miei-recapiti'];
+    return this.richiestaGenerica(risorsa, 'GET');
+  }
+
+  public creaRecapito(dati: {
+    id_tipo_recapito: number;
+    recapito: string;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['recapiti']);
+    return this.http.post<IRispostaServer>(url, dati);
+  }
+
+  public updateRecapito(idRecapito: number, dati: {
+    id_tipo_recapito: number;
+    recapito: string;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['recapiti', idRecapito]);
+    return this.http.put<IRispostaServer>(url, dati);
+  }
+
+  public eliminaRecapito(idRecapito: number): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['recapiti', idRecapito]);
+    return this.http.delete<IRispostaServer>(url);
+  }
 
   /**
    * Recupera una categoria specifica tramite id.

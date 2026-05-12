@@ -14,6 +14,16 @@ import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscr
 import { SelectNazioniService, StatoSelectNazioni } from 'src/app/_servizi_globali/select-nazioni.service';
 import { SelectIndirizzoItaliaService, StatoSelectComuneItalia, StatoSelectCapItalia } from 'src/app/_servizi_globali/select-indirizzo-italia.service';
 import { SelectTipiIndirizziService,  StatoSelectTipoIndirizzo, TipoIndirizzo } from './select-tipi-indirizzi.service';
+import { SelectTipiRecapitiService, StatoSelectTipoRecapito, TipoRecapito } from 'src/app/_servizi_globali/select-tipi-recapiti.service';
+
+interface StatoPrefissoRecapito {
+  aperto: boolean;
+  valore: string;
+  filtro: string;
+  indice: number;
+  modificatoManualmente: boolean;
+}
+
 @Component({
   selector: 'app-profilo',
   templateUrl: './profilo.component.html',
@@ -24,7 +34,7 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   formEmail: FormGroup;
   formPassword: FormGroup;
   formInviato = false;
-  vistaCorrente: 'scelta' | 'email' | 'password' | 'indirizzi' = 'scelta';
+  vistaCorrente: 'scelta' | 'email' | 'password' | 'indirizzi' | 'contatti' = 'scelta';
   animazioneInCorso = false;
   stoVerificando = false;
   mostraPassword = false;
@@ -49,6 +59,18 @@ formsModifica: (FormGroup | null)[] = [];
 salvataggioInCorso = false;
 erroriCoerenzaModifica: boolean[] = [];
 erroreCoerenzaNuovo = false;
+
+recapitiMock: any[] = [];
+formNuovoRecapitoAperto = false;
+recapitoDaEliminare: any | null = null;
+eliminazioneRecapitoInCorso = false;
+salvataggioRecapitoInCorso = false;
+statoTipoRecapitoNuovo!: StatoSelectTipoRecapito;
+statiTipiRecapitoModifica: StatoSelectTipoRecapito[] = [];
+statoPrefissoNuovo: StatoPrefissoRecapito = { aperto: false, valore: '+39', filtro: '', indice: -1, modificatoManualmente: false };
+statiPrefissoModifica: StatoPrefissoRecapito[] = [];
+formNuovoRecapito: FormGroup;
+formsModificaRecapito: (FormGroup | null)[] = [];
 
   passwordRobustezza: 0 | 1 | 2 | 3 = 0;
   passwordEntropyPerc = 0;
@@ -90,8 +112,9 @@ get pwdColore(): string {
     private saturnoService: SaturnoService,
     private authService: Authservice,
     public selectNazioniService: SelectNazioniService,
-public selectIndirizzoItaliaService: SelectIndirizzoItaliaService,
-public selectTipiIndirizziService: SelectTipiIndirizziService,
+    public selectIndirizzoItaliaService: SelectIndirizzoItaliaService,
+    public selectTipiIndirizziService: SelectTipiIndirizziService,
+    public selectTipiRecapitiService: SelectTipiRecapitiService,
   ) {
     this.formEmail = this.fb.group({
       vecchiaEmail: ['', [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.minLength(5), Validators.maxLength(40)]],
@@ -107,16 +130,22 @@ public selectTipiIndirizziService: SelectTipiIndirizziService,
     }, { validators: this.confermaNuovaPasswordValidator });
 
     this.formNuovoIndirizzo = this.fb.group({
-  idTipoIndirizzo: [null, Validators.required],
-  nazione: ['IT', Validators.required],
-  comune: ['', Validators.required],
-  citta: [''],
-  provincia: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
-  cap: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
-  via: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s'.,°\/\-]+$/)]],
-  civico: ['', [Validators.required, Validators.maxLength(10), Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/)]],
-  dettagli: ['', [Validators.minLength(3), Validators.maxLength(200)]],
-});
+      idTipoIndirizzo: [null, Validators.required],
+      nazione: ['IT', Validators.required],
+      comune: ['', Validators.required],
+      citta: [''],
+      provincia: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}$/)]],
+      cap: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+      via: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[A-Za-zÀ-ÿ0-9\s'.,°\/\-]+$/)]],
+      civico: ['', [Validators.required, Validators.maxLength(10), Validators.pattern(/^\d+[A-Za-z0-9\/\-]*$/)]],
+      dettagli: ['', [Validators.minLength(3), Validators.maxLength(200)]],
+    });
+
+    this.formNuovoRecapito = this.fb.group({
+      idTipoRecapito: [null, Validators.required],
+      prefisso: ['+39'],
+      recapito: ['', Validators.required],
+    });
 
     this.statoNazioneNuovo = this.selectNazioniService.creaStato('IT');
     this.statiNazioniModifica = [];
@@ -129,6 +158,9 @@ public selectTipiIndirizziService: SelectTipiIndirizziService,
 
     this.statoTipoNuovo = this.selectTipiIndirizziService.creaStato(null, '');
     this.statiTipiModifica = [];
+
+    this.statoTipoRecapitoNuovo = this.selectTipiRecapitiService.creaStato(null, '');
+    this.statiTipiRecapitoModifica = [];
   }
 
   ngOnInit(): void {
@@ -137,7 +169,9 @@ public selectTipiIndirizziService: SelectTipiIndirizziService,
     this.selectNazioniService.caricaNazioni();
     this.selectIndirizzoItaliaService.caricaComuni();
     this.selectTipiIndirizziService.caricaTipiIndirizzi();
+    this.selectTipiRecapitiService.caricaTipiRecapiti();
     this.caricaIndirizzi();
+    this.caricaRecapiti();
     setTimeout(() => this.avviaAnimazioniIngresso(), 0);
 
     fetch('assets/common_words.json')
@@ -824,6 +858,18 @@ chiudiSelectNazioni(): void {
 
   this.selectTipiIndirizziService.chiudi(this.statoTipoNuovo);
   this.statiTipiModifica.forEach((stato) => this.selectTipiIndirizziService.chiudi(stato));
+
+  this.selectTipiRecapitiService.chiudi(this.statoTipoRecapitoNuovo);
+  this.statiTipiRecapitoModifica.forEach((stato) => this.selectTipiRecapitiService.chiudi(stato));
+
+  this.statoPrefissoNuovo.aperto = false;
+  this.statoPrefissoNuovo.filtro = '';
+  this.statoPrefissoNuovo.indice = -1;
+  this.statiPrefissoModifica.forEach((stato) => {
+    stato.aperto = false;
+    stato.filtro = '';
+    stato.indice = -1;
+  });
 }
   apriModaleEliminazione(ind: any): void {
     this.indirizzoDaEliminare = ind;
@@ -857,7 +903,7 @@ chiudiSelectNazioni(): void {
 
     this.animazioneInCorso = true;
 
-    const contenutoUscita = document.querySelector('.form-profilo, .indirizzi-contenuto') as HTMLElement | null;
+    const contenutoUscita = document.querySelector('.form-profilo, .indirizzi-contenuto, .contatti-contenuto') as HTMLElement | null;
     const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
 
     if (contenutoUscita) {
@@ -924,11 +970,409 @@ chiudiSelectNazioni(): void {
       }, 0);
     }
   }
+private caricaRecapiti(): void {
+    this.api.getMieiRecapiti().pipe(take(1)).subscribe({
+      next: (rit) => {
+        const dati = rit.data ?? [];
+        this.recapitiMock = dati.map((rec: any) => ({ ...rec, aperta: false }));
+        this.formsModificaRecapito = this.recapitiMock.map(() => null);
+        this.statiTipiRecapitoModifica = this.recapitiMock.map((rec) =>
+          this.selectTipiRecapitiService.creaStato(rec.id_tipo_recapito ?? null, rec.tipo ?? ''),
+        );
+        this.statiPrefissoModifica = this.recapitiMock.map((rec) => {
+          const parti = (rec.tipo === 'email' ? '' : (rec.recapito ?? '')).split(' ');
+          const prefisso = parti[0]?.startsWith('+') ? parti[0] : this.leggiPrefissoConsigliato();
+          return { aperto: false, valore: prefisso, filtro: '', indice: -1, modificatoManualmente: true };
+        });
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.recapitiMock = [];
+      },
+    });
+  }
 
+  leggiPrefissoConsigliato(): string {
+    const domicilio = this.indirizziMock.find((i) => i.tipo === 'domicilio');
+    const iso = domicilio?.iso ?? 'IT';
+    const nazione = this.selectNazioniService.nazioni.find((n) => n.iso === iso);
+    const raw = nazione?.prefisso_tel ?? '+39';
+    return raw.split('/')[0];
+  }
+
+  vaiAContatti(): void {
+    if (this.animazioneInCorso) return;
+    this.animazioneInCorso = true;
+
+    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
+    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+    if (contenutoScelta) gsap.killTweensOf(contenutoScelta);
+    if (bottoneIndietro) gsap.killTweensOf(bottoneIndietro);
+
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        this.ngZone.run(() => {
+          this.vistaCorrente = 'contatti';
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            const contenutoContatti = document.querySelector('.contatti-contenuto') as HTMLElement | null;
+            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+            if (contenutoContatti) {
+              gsap.set(contenutoContatti, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+              gsap.to(contenutoContatti, { opacity: 1, scaleX: 1, duration: 0.45, ease: 'power2.out' });
+            }
+
+            if (nuovoBottoneIndietro) {
+              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
+              gsap.to(nuovoBottoneIndietro, {
+                opacity: 1, duration: 0.35, delay: 0.08, ease: 'power2.out',
+                onComplete: () => { this.animazioneInCorso = false; },
+              });
+            } else {
+              this.animazioneInCorso = false;
+            }
+          }, 0);
+        });
+      },
+    });
+
+    if (contenutoScelta) {
+      timeline.to(contenutoScelta, { opacity: 0, scaleX: 0, duration: 0.35, ease: 'power2.in', transformOrigin: 'center center' }, 0);
+    }
+    if (bottoneIndietro) {
+      timeline.to(bottoneIndietro, { opacity: 0, duration: 0.2, ease: 'power2.in' }, 0);
+    }
+  }
+
+  apriFormModificaRecapito(i: number): void {
+    this.recapitiMock.forEach((rec, idx) => {
+      if (idx !== i) rec.aperta = false;
+    });
+    this.formNuovoRecapitoAperto = false;
+    this.recapitiMock[i].aperta = !this.recapitiMock[i].aperta;
+
+    if (this.recapitiMock[i].aperta) {
+      this.formsModificaRecapito[i] = this.creaFormModificaRecapito(this.recapitiMock[i]);
+    } else {
+      this.formsModificaRecapito[i] = null;
+    }
+  }
+
+  private creaFormModificaRecapito(rec: any): FormGroup {
+    const tipo = rec.tipo;
+    let valore = '';
+
+    if (tipo === 'email') {
+      valore = rec.recapito ?? '';
+    } else {
+      const parti = (rec.recapito ?? '').split(' ');
+      if (parti.length >= 2 && parti[0].startsWith('+')) {
+        valore = parti.slice(1).join(' ').replace(/[^0-9]/g, '');
+      } else {
+        valore = (rec.recapito ?? '').replace(/[^0-9]/g, '');
+      }
+    }
+
+    const validatori = tipo === 'email'
+      ? [Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.maxLength(40)]
+      : [Validators.required, Validators.pattern(/^\d{6,20}$/)];
+
+    return this.fb.group({
+      idTipoRecapito: [rec.id_tipo_recapito, Validators.required],
+      prefisso: [this.statiPrefissoModifica[this.recapitiMock.indexOf(rec)]?.valore ?? '+39'],
+      recapito: [valore, validatori],
+    });
+  }
+
+  chiudiFormRecapito(i: number): void {
+    this.recapitiMock[i].aperta = false;
+    this.formsModificaRecapito[i] = null;
+  }
+
+  apriFormNuovoRecapito(): void {
+    this.recapitiMock.forEach((rec) => (rec.aperta = false));
+    this.formNuovoRecapitoAperto = !this.formNuovoRecapitoAperto;
+
+    if (this.formNuovoRecapitoAperto) {
+      this.formNuovoRecapito.reset({ idTipoRecapito: null, prefisso: this.leggiPrefissoConsigliato(), recapito: '' });
+      this.statoTipoRecapitoNuovo = this.selectTipiRecapitiService.creaStato(null, '');
+      this.statoPrefissoNuovo = { aperto: false, valore: this.leggiPrefissoConsigliato(), filtro: '', indice: -1, modificatoManualmente: false };
+      this.formNuovoRecapito.get('recapito')!.clearValidators();
+      this.formNuovoRecapito.get('recapito')!.setValidators(Validators.required);
+      this.formNuovoRecapito.get('recapito')!.updateValueAndValidity();
+    }
+  }
+
+  chiudiFormNuovoRecapito(): void {
+    this.formNuovoRecapitoAperto = false;
+  }
+
+  statoTipoRecapitoMod(i: number): StatoSelectTipoRecapito {
+    if (!this.statiTipiRecapitoModifica[i]) {
+      this.statiTipiRecapitoModifica[i] = this.selectTipiRecapitiService.creaStato(
+        this.recapitiMock[i]?.id_tipo_recapito ?? null,
+        this.recapitiMock[i]?.tipo ?? '',
+      );
+    }
+    return this.statiTipiRecapitoModifica[i];
+  }
+
+  statoPrefissoMod(i: number): StatoPrefissoRecapito {
+    if (!this.statiPrefissoModifica[i]) {
+      this.statiPrefissoModifica[i] = { aperto: false, valore: this.leggiPrefissoConsigliato(), filtro: '', indice: -1, modificatoManualmente: false };
+    }
+    return this.statiPrefissoModifica[i];
+  }
+
+  selezionaTipoRecapitoNuovo(tipo: TipoRecapito): void {
+    this.selectTipiRecapitiService.seleziona(this.statoTipoRecapitoNuovo, tipo);
+    this.formNuovoRecapito.get('idTipoRecapito')!.setValue(tipo.id_tipo_recapito);
+    this.formNuovoRecapito.get('idTipoRecapito')!.markAsTouched();
+    this.aggiornaValidatoriRecapito(this.formNuovoRecapito, tipo.tipo);
+    this.formNuovoRecapito.get('recapito')!.setValue('');
+  }
+
+  selezionaTipoRecapitoModifica(i: number, tipo: TipoRecapito): void {
+    const stato = this.statoTipoRecapitoMod(i);
+    this.selectTipiRecapitiService.seleziona(stato, tipo);
+    const form = this.formsModificaRecapito[i];
+    if (form) {
+      form.get('idTipoRecapito')!.setValue(tipo.id_tipo_recapito);
+      form.get('idTipoRecapito')!.markAsTouched();
+      this.aggiornaValidatoriRecapito(form, tipo.tipo);
+      form.get('recapito')!.setValue('');
+    }
+  }
+
+  private aggiornaValidatoriRecapito(form: FormGroup, tipo: string): void {
+    const ctrl = form.get('recapito')!;
+    ctrl.clearValidators();
+    if (tipo === 'email') {
+      ctrl.setValidators([Validators.required, Validators.email, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/), Validators.maxLength(40)]);
+    } else {
+      ctrl.setValidators([Validators.required, Validators.pattern(/^\d{6,20}$/)]);
+    }
+    ctrl.updateValueAndValidity();
+  }
+
+  prefissiFiltrati(stato: StatoPrefissoRecapito): any[] {
+    const espansi: any[] = [];
+    for (const n of this.selectNazioniService.nazioni) {
+      if (!n.prefisso_tel) continue;
+      const parti = n.prefisso_tel.split('/');
+      const primo = parti[0];
+      const match = primo.match(/^(\+\d+-)/);
+      const base = match ? match[1] : '';
+      espansi.push({ ...n, prefisso_tel: primo });
+      for (let i = 1; i < parti.length; i++) {
+        espansi.push({ ...n, prefisso_tel: base + parti[i] });
+      }
+    }
+    const unici = new Map<string, any>();
+    for (const n of espansi) {
+      if (!unici.has(n.prefisso_tel)) unici.set(n.prefisso_tel, n);
+    }
+    const lista = Array.from(unici.values()).sort((a, b) => {
+      const parsA = (a.prefisso_tel ?? '').replace('+', '').split('-');
+      const parsB = (b.prefisso_tel ?? '').replace('+', '').split('-');
+      const mainA = parseInt(parsA[0] || '0', 10);
+      const mainB = parseInt(parsB[0] || '0', 10);
+      if (mainA !== mainB) return mainA - mainB;
+      const subA = parseInt(parsA[1] || '0', 10);
+      const subB = parseInt(parsB[1] || '0', 10);
+      return subA - subB;
+    });
+    if (!stato.filtro.trim()) return lista;
+    const f = stato.filtro.replace('+', '');
+    return lista.filter((n) => (n.prefisso_tel ?? '').replace('+', '').startsWith(f));
+  }
+
+  togglePrefissoRecapito(stato: StatoPrefissoRecapito, event: Event, classeInput: string): void {
+    event.stopPropagation();
+    stato.aperto = !stato.aperto;
+    if (stato.aperto) {
+      stato.indice = -1;
+      stato.filtro = '';
+      setTimeout(() => {
+        const i = document.querySelector(classeInput) as HTMLInputElement;
+        if (i) { i.focus(); i.select(); }
+      }, 0);
+    } else {
+      stato.filtro = '';
+      stato.indice = -1;
+    }
+  }
+
+  onInputPrefissoRecapito(stato: StatoPrefissoRecapito, event: Event): void {
+    stato.filtro = (event.target as HTMLInputElement).value;
+    stato.indice = -1;
+    if (!stato.aperto) stato.aperto = true;
+  }
+
+  navigaPrefissoRecapito(stato: StatoPrefissoRecapito, event: KeyboardEvent, form: FormGroup): void {
+    if (!stato.aperto) return;
+    const lista = this.prefissiFiltrati(stato);
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      stato.indice = Math.min(stato.indice + 1, lista.length - 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      stato.indice = Math.max(stato.indice - 1, -1);
+    } else if (event.key === 'Enter' && stato.indice >= 0) {
+      event.preventDefault();
+      this.selezionaPrefissoRecapito(stato, lista[stato.indice].prefisso_tel, form);
+    } else if (event.key === 'Escape') {
+      stato.aperto = false;
+      stato.filtro = '';
+      stato.indice = -1;
+    }
+  }
+
+  onBlurPrefissoRecapito(stato: StatoPrefissoRecapito, event: FocusEvent, form: FormGroup): void {
+    const dest = event.relatedTarget as HTMLElement | null;
+    if (dest?.closest('.select-dropdown-profilo')) return;
+    const val = (event.target as HTMLInputElement).value.trim();
+    if (!val) return;
+    const valNorm = val.toLowerCase().replace('+', '');
+    if (stato.valore && stato.valore.replace('+', '') === valNorm) return;
+    const trovato = this.selectNazioniService.nazioni.find(
+      (n) => n.prefisso_tel && (n.prefisso_tel ?? '').replace('+', '') === valNorm,
+    );
+    if (trovato) this.selezionaPrefissoRecapito(stato, trovato.prefisso_tel, form);
+  }
+
+  selezionaPrefissoRecapito(stato: StatoPrefissoRecapito, valore: string, form: FormGroup): void {
+    stato.valore = valore;
+    stato.aperto = false;
+    stato.filtro = '';
+    stato.indice = -1;
+    stato.modificatoManualmente = true;
+    form.get('prefisso')!.setValue(valore);
+  }
+
+  trackByPrefisso(_index: number, n: any): string {
+    return n.prefisso_tel;
+  }
+
+  salvaNuovoRecapito(): void {
+    if (this.formNuovoRecapito.invalid) {
+      this.formNuovoRecapito.markAllAsTouched();
+      this.saturnoService.flashErrorLight();
+      return;
+    }
+
+    const tipo = this.statoTipoRecapitoNuovo.tipo;
+    let recapito: string;
+    if (tipo === 'email') {
+      recapito = this.formNuovoRecapito.get('recapito')!.value;
+    } else {
+      const prefisso = this.formNuovoRecapito.get('prefisso')!.value;
+      const numero = this.formNuovoRecapito.get('recapito')!.value;
+      recapito = `${prefisso} ${numero}`;
+    }
+
+    const dati = {
+      id_tipo_recapito: this.formNuovoRecapito.get('idTipoRecapito')!.value,
+      recapito,
+    };
+
+    this.salvataggioRecapitoInCorso = true;
+    this.api.creaRecapito(dati).pipe(take(1)).subscribe({
+      next: () => {
+        this.salvataggioRecapitoInCorso = false;
+        this.toastService.successo(this.translate.instant('ui.profilo.contatti.creazione.successo'));
+        this.formNuovoRecapitoAperto = false;
+        this.formNuovoRecapito.reset({ idTipoRecapito: null, prefisso: this.leggiPrefissoConsigliato(), recapito: '' });
+        this.statoTipoRecapitoNuovo = this.selectTipiRecapitiService.creaStato(null, '');
+        this.caricaRecapiti();
+      },
+      error: () => {
+        this.salvataggioRecapitoInCorso = false;
+        this.saturnoService.flashErrorLight();
+      },
+    });
+  }
+
+  salvaModificaRecapito(i: number): void {
+    const form = this.formsModificaRecapito[i];
+    if (!form) return;
+
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.saturnoService.flashErrorLight();
+      return;
+    }
+
+    const stato = this.statoTipoRecapitoMod(i);
+    const tipo = stato.tipo;
+    const rec = this.recapitiMock[i];
+
+    let recapito: string;
+    if (tipo === 'email') {
+      recapito = form.get('recapito')!.value;
+    } else {
+      const prefisso = form.get('prefisso')!.value;
+      const numero = form.get('recapito')!.value;
+      recapito = `${prefisso} ${numero}`;
+    }
+
+    const dati = {
+      id_tipo_recapito: form.get('idTipoRecapito')!.value,
+      recapito,
+    };
+
+    this.salvataggioRecapitoInCorso = true;
+    this.api.updateRecapito(rec.id_recapito, dati).pipe(take(1)).subscribe({
+      next: () => {
+        this.salvataggioRecapitoInCorso = false;
+        this.toastService.successo(this.translate.instant('ui.profilo.contatti.salvataggio.successo'));
+        this.formsModificaRecapito[i] = null;
+        this.recapitiMock[i].aperta = false;
+        this.caricaRecapiti();
+      },
+      error: () => {
+        this.salvataggioRecapitoInCorso = false;
+        this.saturnoService.flashErrorLight();
+      },
+    });
+  }
+
+  apriModaleEliminazioneRecapito(rec: any): void {
+    this.recapitoDaEliminare = rec;
+  }
+
+  chiudiModaleEliminazioneRecapito(): void {
+    if (this.eliminazioneRecapitoInCorso) return;
+    this.recapitoDaEliminare = null;
+  }
+
+  confermaEliminazioneRecapito(): void {
+    if (!this.recapitoDaEliminare) return;
+    this.eliminazioneRecapitoInCorso = true;
+    this.api.eliminaRecapito(this.recapitoDaEliminare.id_recapito).pipe(take(1)).subscribe({
+      next: () => {
+        this.eliminazioneRecapitoInCorso = false;
+        this.recapitoDaEliminare = null;
+        this.toastService.successo(this.translate.instant('ui.profilo.contatti.eliminazione.successo'));
+        this.caricaRecapiti();
+      },
+      error: () => {
+        this.eliminazioneRecapitoInCorso = false;
+        this.saturnoService.flashErrorLight();
+      },
+    });
+  }
+
+  mostraPrefisso(tipo: string): boolean {
+    return tipo === 'telefono' || tipo === 'fax';
+  }
   onClickIndietro(): void {
     if (this.animazioneInCorso) return;
 
-    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password' || this.vistaCorrente === 'indirizzi') {
+    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password' || this.vistaCorrente === 'indirizzi' || this.vistaCorrente === 'contatti') {
       this.tornaAScelta();
       return;
     }

@@ -12,6 +12,7 @@
           (vistaCorrente === 'email' ? 'ui.profilo.email.bottone'
             : vistaCorrente === 'password' ? 'ui.profilo.password.bottone'
             : vistaCorrente === 'indirizzi' ? 'ui.profilo.indirizzi.bottone'
+            : vistaCorrente === 'contatti' ? 'ui.profilo.contatti.bottone'
             : 'ui.profilo.titolo'
           ) | translate
         }}
@@ -37,6 +38,10 @@
 
           <button type="button" class="azione-btn" (click)="vaiAIndirizzi()">
             {{ 'ui.profilo.indirizzi.bottone' | translate }}
+          </button>
+
+          <button type="button" class="azione-btn" (click)="vaiAContatti()">
+            {{ 'ui.profilo.contatti.bottone' | translate }}
           </button>
         </div>
 
@@ -1394,6 +1399,354 @@
         </div>
 
         </div>
+
+        <div *ngIf="vistaCorrente === 'contatti'" class="contatti-contenuto campo-animato">
+
+          <div class="indirizzi-tabella">
+
+            <div class="riga-header">
+              <span class="col-tipo">{{ 'ui.profilo.contatti.header.tipo' | translate }}</span>
+              <span class="col-recapito-contatto">{{ 'ui.profilo.contatti.header.recapito' | translate }}</span>
+              <span class="col-azioni"></span>
+            </div>
+
+            <div *ngIf="recapitiMock.length === 0" class="nessun-indirizzo">
+              {{ 'ui.profilo.contatti.vuoto' | translate }}
+            </div>
+
+            <div
+              class="riga-indirizzo"
+              *ngFor="let rec of recapitiMock; let i = index"
+              [class.aperta]="rec.aperta"
+            >
+              <div class="riga-indirizzo-header">
+                <span class="col-tipo">
+                  <span class="tag-tipo"
+                    [class.tag-email]="rec.tipo === 'email'"
+                    [class.tag-telefono]="rec.tipo === 'telefono'"
+                    [class.tag-fax]="rec.tipo === 'fax'">
+                    {{ 'ui.profilo.contatti.tipo.' + rec.tipo | translate }}
+                  </span>
+                </span>
+
+                <span class="col-recapito-contatto">{{ rec.recapito }}</span>
+
+                <span class="col-azioni">
+                  <button class="btn-icona" (click)="apriFormModificaRecapito(i)" [title]="'ui.profilo.contatti.azioni.modifica' | translate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icona btn-elimina" (click)="apriModaleEliminazioneRecapito(rec)" [title]="'ui.profilo.contatti.azioni.elimina' | translate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                  </button>
+                </span>
+              </div>
+
+              <div class="riga-form" *ngIf="rec.aperta && formsModificaRecapito[i]" [formGroup]="formsModificaRecapito[i]!">
+
+                <div class="riga-tipo-prefisso-recapito">
+
+                  <div class="campo-wrapper">
+                    <p
+                      class="label-sopra"
+                      [ngClass]="{ 'is-invalid': formsModificaRecapito[i]!.controls['idTipoRecapito'].invalid && formsModificaRecapito[i]!.controls['idTipoRecapito'].touched }"
+                    >
+                      {{ 'ui.profilo.contatti.header.tipo' | translate }} <span class="asterisco">*</span>
+                    </p>
+
+                    <div class="select-custom-profilo">
+                      <div
+                        class="select-header"
+                        tabindex="0"
+                        (click)="selectTipiRecapitiService.toggle(statoTipoRecapitoMod(i), $event, [statoTipoRecapitoNuovo])"
+                        (keydown)="selectTipiRecapitiService.naviga(statoTipoRecapitoMod(i), $event, selezionaTipoRecapitoModifica.bind(this, i))"
+                        [class.aperto]="statoTipoRecapitoMod(i).aperto"
+                        [class.compilato]="statoTipoRecapitoMod(i).tipo"
+                        [ngClass]="{ 'is-invalid': formsModificaRecapito[i]!.controls['idTipoRecapito'].invalid && formsModificaRecapito[i]!.controls['idTipoRecapito'].touched }"
+                      >
+                        <span class="select-label-piccola">{{ 'ui.profilo.contatti.header.tipo' | translate }}</span>
+                        <span [class.placeholder]="!statoTipoRecapitoMod(i).tipo">
+                          {{ statoTipoRecapitoMod(i).tipo ? selectTipiRecapitiService.labelStato(statoTipoRecapitoMod(i)) : ('ui.profilo.contatti.form.tipo_placeholder' | translate) }}
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                          <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+                        </svg>
+                      </div>
+
+                      <div class="select-dropdown-profilo" *ngIf="statoTipoRecapitoMod(i).aperto">
+                        <div
+                          class="select-opzione"
+                          *ngFor="let tipo of selectTipiRecapitiService.tipi; let ix = index"
+                          [class.attivo]="ix === statoTipoRecapitoMod(i).indice"
+                          (mousedown)="$event.preventDefault()"
+                          (click)="selezionaTipoRecapitoModifica(i, tipo)"
+                        >
+                          {{ selectTipiRecapitiService.label(tipo.tipo) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="campo-wrapper" *ngIf="mostraPrefisso(statoTipoRecapitoMod(i).tipo)">
+                    <p class="label-sopra">
+                      {{ 'ui.registrazione.step3.prefisso.label' | translate }} <span class="asterisco">*</span>
+                    </p>
+
+                    <div class="select-custom-profilo select-prefisso-profilo">
+                      <div
+                        class="select-header"
+                        (click)="togglePrefissoRecapito(statoPrefissoMod(i), $event, '.prefisso-mod-input-' + i)"
+                        [class.aperto]="statoPrefissoMod(i).aperto"
+                        [class.compilato]="statoPrefissoMod(i).valore"
+                      >
+                        <span class="select-label-piccola">{{ 'ui.registrazione.step3.prefisso.label' | translate }}</span>
+                        <input
+                          class="select-input-testo prefisso-mod-input-{{ i }}"
+                          type="text"
+                          placeholder="+39"
+                          [value]="statoPrefissoMod(i).aperto ? statoPrefissoMod(i).filtro : statoPrefissoMod(i).valore"
+                          (click)="togglePrefissoRecapito(statoPrefissoMod(i), $event, '.prefisso-mod-input-' + i)"
+                          (input)="onInputPrefissoRecapito(statoPrefissoMod(i), $event)"
+                          (keydown)="navigaPrefissoRecapito(statoPrefissoMod(i), $event, formsModificaRecapito[i]!)"
+                          (blur)="onBlurPrefissoRecapito(statoPrefissoMod(i), $event, formsModificaRecapito[i]!)"
+                        />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                          <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+                        </svg>
+                      </div>
+
+                      <div class="select-dropdown-profilo" *ngIf="statoPrefissoMod(i).aperto">
+                        <div
+                          class="select-opzione"
+                          *ngFor="let n of prefissiFiltrati(statoPrefissoMod(i)); let ix = index; trackBy: trackByPrefisso"
+                          [class.attivo]="ix === statoPrefissoMod(i).indice"
+                          (mousedown)="$event.preventDefault()"
+                          (click)="selezionaPrefissoRecapito(statoPrefissoMod(i), n.prefisso_tel, formsModificaRecapito[i]!)"
+                        >
+                          {{ n.prefisso_tel }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="campo-wrapper">
+                    <p
+                      class="label-sopra"
+                      [ngClass]="{ 'is-invalid': formsModificaRecapito[i]!.controls['recapito'].invalid && formsModificaRecapito[i]!.controls['recapito'].touched }"
+                    >
+                      {{ 'ui.profilo.contatti.form.recapito_label' | translate }} <span class="asterisco">*</span>
+                    </p>
+
+                    <div class="campo-form">
+                      <input
+                        type="text"
+                        placeholder=" "
+                        formControlName="recapito"
+                        autocomplete="off"
+                        [attr.inputmode]="statoTipoRecapitoMod(i).tipo === 'email' ? 'email' : 'tel'"
+                        [ngClass]="{ 'is-invalid': formsModificaRecapito[i]!.controls['recapito'].invalid && formsModificaRecapito[i]!.controls['recapito'].touched }"
+                      />
+                      <label
+                        [ngClass]="{ 'is-invalid': formsModificaRecapito[i]!.controls['recapito'].invalid && formsModificaRecapito[i]!.controls['recapito'].touched }"
+                      >
+                        {{ 'ui.profilo.contatti.form.recapito_label' | translate }}
+                      </label>
+                    </div>
+
+                    <div class="errori-stack">
+                      <p class="errore-campo" *ngIf="formsModificaRecapito[i]!.controls['recapito'].touched && formsModificaRecapito[i]!.controls['recapito'].errors?.['required']">
+                        {{ 'ui.profilo.contatti.recapito.error.required' | translate }}
+                      </p>
+                      <p class="errore-campo" *ngIf="formsModificaRecapito[i]!.controls['recapito'].touched && (formsModificaRecapito[i]!.controls['recapito'].errors?.['email'] || (formsModificaRecapito[i]!.controls['recapito'].errors?.['pattern'] && statoTipoRecapitoMod(i).tipo === 'email'))">
+                        {{ 'ui.profilo.contatti.recapito.error.email' | translate }}
+                      </p>
+                      <p class="errore-campo" *ngIf="formsModificaRecapito[i]!.controls['recapito'].touched && formsModificaRecapito[i]!.controls['recapito'].errors?.['pattern'] && statoTipoRecapitoMod(i).tipo !== 'email'">
+                        {{ 'ui.profilo.contatti.recapito.error.telefono' | translate }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-bottoni">
+                  <button type="button" class="btn-annulla" (click)="chiudiFormRecapito(i)">
+                    {{ 'ui.profilo.contatti.form.annulla' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-salva"
+                    [disabled]="salvataggioRecapitoInCorso || formsModificaRecapito[i]!.invalid"
+                    (click)="salvaModificaRecapito(i)"
+                  >
+                    <ng-container *ngIf="!salvataggioRecapitoInCorso">
+                      {{ 'ui.profilo.contatti.form.salva' | translate }}
+                    </ng-container>
+                    <app-spinner *ngIf="salvataggioRecapitoInCorso"></app-spinner>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            class="btn-aggiungi"
+            (click)="apriFormNuovoRecapito()"
+            [title]="'ui.profilo.contatti.azioni.aggiungi' | translate"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+
+          <div class="form-nuovo" *ngIf="formNuovoRecapitoAperto" [formGroup]="formNuovoRecapito">
+
+            <div class="riga-tipo-prefisso-recapito">
+
+              <div class="campo-wrapper">
+                <p
+                  class="label-sopra"
+                  [ngClass]="{ 'is-invalid': formNuovoRecapito.controls['idTipoRecapito'].invalid && formNuovoRecapito.controls['idTipoRecapito'].touched }"
+                >
+                  {{ 'ui.profilo.contatti.header.tipo' | translate }} <span class="asterisco">*</span>
+                </p>
+
+                <div class="select-custom-profilo">
+                  <div
+                    class="select-header"
+                    tabindex="0"
+                    (click)="selectTipiRecapitiService.toggle(statoTipoRecapitoNuovo, $event, statiTipiRecapitoModifica)"
+                    (keydown)="selectTipiRecapitiService.naviga(statoTipoRecapitoNuovo, $event, selezionaTipoRecapitoNuovo.bind(this))"
+                    [class.aperto]="statoTipoRecapitoNuovo.aperto"
+                    [class.compilato]="statoTipoRecapitoNuovo.tipo"
+                    [ngClass]="{ 'is-invalid': formNuovoRecapito.controls['idTipoRecapito'].invalid && formNuovoRecapito.controls['idTipoRecapito'].touched }"
+                  >
+                    <span class="select-label-piccola">{{ 'ui.profilo.contatti.header.tipo' | translate }}</span>
+                    <span [class.placeholder]="!statoTipoRecapitoNuovo.tipo">
+                      {{ statoTipoRecapitoNuovo.tipo ? selectTipiRecapitiService.labelStato(statoTipoRecapitoNuovo) : ('ui.profilo.contatti.form.tipo_placeholder' | translate) }}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                      <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+                    </svg>
+                  </div>
+
+                  <div class="select-dropdown-profilo" *ngIf="statoTipoRecapitoNuovo.aperto">
+                    <div
+                      class="select-opzione"
+                      *ngFor="let tipo of selectTipiRecapitiService.tipi; let i = index"
+                      [class.attivo]="i === statoTipoRecapitoNuovo.indice"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="selezionaTipoRecapitoNuovo(tipo)"
+                    >
+                      {{ selectTipiRecapitiService.label(tipo.tipo) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="campo-wrapper" *ngIf="mostraPrefisso(statoTipoRecapitoNuovo.tipo)">
+                <p class="label-sopra">
+                  {{ 'ui.registrazione.step3.prefisso.label' | translate }} <span class="asterisco">*</span>
+                </p>
+
+                <div class="select-custom-profilo select-prefisso-profilo">
+                  <div
+                    class="select-header"
+                    (click)="togglePrefissoRecapito(statoPrefissoNuovo, $event, '.prefisso-nuovo-input')"
+                    [class.aperto]="statoPrefissoNuovo.aperto"
+                    [class.compilato]="statoPrefissoNuovo.valore"
+                  >
+                    <span class="select-label-piccola">{{ 'ui.registrazione.step3.prefisso.label' | translate }}</span>
+                    <input
+                      class="select-input-testo prefisso-nuovo-input"
+                      type="text"
+                      placeholder="+39"
+                      [value]="statoPrefissoNuovo.aperto ? statoPrefissoNuovo.filtro : statoPrefissoNuovo.valore"
+                      (click)="togglePrefissoRecapito(statoPrefissoNuovo, $event, '.prefisso-nuovo-input')"
+                      (input)="onInputPrefissoRecapito(statoPrefissoNuovo, $event)"
+                      (keydown)="navigaPrefissoRecapito(statoPrefissoNuovo, $event, formNuovoRecapito)"
+                      (blur)="onBlurPrefissoRecapito(statoPrefissoNuovo, $event, formNuovoRecapito)"
+                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                      <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+                    </svg>
+                  </div>
+
+                  <div class="select-dropdown-profilo" *ngIf="statoPrefissoNuovo.aperto">
+                    <div
+                      class="select-opzione"
+                      *ngFor="let n of prefissiFiltrati(statoPrefissoNuovo); let i = index; trackBy: trackByPrefisso"
+                      [class.attivo]="i === statoPrefissoNuovo.indice"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="selezionaPrefissoRecapito(statoPrefissoNuovo, n.prefisso_tel, formNuovoRecapito)"
+                    >
+                      {{ n.prefisso_tel }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="campo-wrapper">
+                <p
+                  class="label-sopra"
+                  [ngClass]="{ 'is-invalid': formNuovoRecapito.controls['recapito'].invalid && formNuovoRecapito.controls['recapito'].touched }"
+                >
+                  {{ 'ui.profilo.contatti.form.recapito_label' | translate }} <span class="asterisco">*</span>
+                </p>
+
+                <div class="campo-form">
+                  <input
+                    type="text"
+                    placeholder=" "
+                    formControlName="recapito"
+                    autocomplete="off"
+                    [attr.inputmode]="statoTipoRecapitoNuovo.tipo === 'email' ? 'email' : 'tel'"
+                    [ngClass]="{ 'is-invalid': formNuovoRecapito.controls['recapito'].invalid && formNuovoRecapito.controls['recapito'].touched }"
+                  />
+                  <label
+                    [ngClass]="{ 'is-invalid': formNuovoRecapito.controls['recapito'].invalid && formNuovoRecapito.controls['recapito'].touched }"
+                  >
+                    {{ 'ui.profilo.contatti.form.recapito_label' | translate }}
+                  </label>
+                </div>
+
+                <div class="errori-stack">
+                  <p class="errore-campo" *ngIf="formNuovoRecapito.controls['recapito'].touched && formNuovoRecapito.controls['recapito'].errors?.['required']">
+                    {{ 'ui.profilo.contatti.recapito.error.required' | translate }}
+                  </p>
+                  <p class="errore-campo" *ngIf="formNuovoRecapito.controls['recapito'].touched && (formNuovoRecapito.controls['recapito'].errors?.['email'] || (formNuovoRecapito.controls['recapito'].errors?.['pattern'] && statoTipoRecapitoNuovo.tipo === 'email'))">
+                    {{ 'ui.profilo.contatti.recapito.error.email' | translate }}
+                  </p>
+                  <p class="errore-campo" *ngIf="formNuovoRecapito.controls['recapito'].touched && formNuovoRecapito.controls['recapito'].errors?.['pattern'] && statoTipoRecapitoNuovo.tipo !== 'email'">
+                    {{ 'ui.profilo.contatti.recapito.error.telefono' | translate }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-bottoni">
+              <button type="button" class="btn-annulla" (click)="chiudiFormNuovoRecapito()">
+                {{ 'ui.profilo.contatti.form.annulla' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn-salva"
+                [disabled]="salvataggioRecapitoInCorso || formNuovoRecapito.invalid"
+                (click)="salvaNuovoRecapito()"
+              >
+                <ng-container *ngIf="!salvataggioRecapitoInCorso">
+                  {{ 'ui.profilo.contatti.form.aggiungi' | translate }}
+                </ng-container>
+                <app-spinner *ngIf="salvataggioRecapitoInCorso"></app-spinner>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
       </div>
 
       <button
@@ -1412,7 +1765,7 @@
           <path d="M15 18l-6-6 6-6" />
         </svg>
         {{
-          (vistaCorrente === "email" || vistaCorrente === "password" || vistaCorrente === "indirizzi"
+          (vistaCorrente === "email" || vistaCorrente === "password" || vistaCorrente === "indirizzi" || vistaCorrente === "contatti"
             ? "ui.main.tornaIndietro"
             : "ui.torna.log.contatti"
           ) | translate
@@ -1435,6 +1788,26 @@
               {{ 'ui.profilo.indirizzi.azioni.elimina' | translate }}
             </ng-container>
             <app-spinner *ngIf="eliminazioneInCorso"></app-spinner>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modale-overlay" *ngIf="recapitoDaEliminare" (click)="chiudiModaleEliminazioneRecapito()">
+      <div class="modale-contenuto" (click)="$event.stopPropagation()">
+        <p class="modale-messaggio">
+          {{ 'ui.profilo.contatti.elimina.conferma' | translate: { recapito: recapitoDaEliminare.recapito } }}
+        </p>
+
+        <div class="modale-bottoni">
+          <button type="button" class="btn-annulla" (click)="chiudiModaleEliminazioneRecapito()" [disabled]="eliminazioneRecapitoInCorso">
+            {{ 'ui.profilo.contatti.form.annulla' | translate }}
+          </button>
+          <button type="button" class="btn-elimina-conferma" (click)="confermaEliminazioneRecapito()" [disabled]="eliminazioneRecapitoInCorso">
+            <ng-container *ngIf="!eliminazioneRecapitoInCorso">
+              {{ 'ui.profilo.contatti.azioni.elimina' | translate }}
+            </ng-container>
+            <app-spinner *ngIf="eliminazioneRecapitoInCorso"></app-spinner>
           </button>
         </div>
       </div>
