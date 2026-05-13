@@ -21,6 +21,12 @@ import { IscrizioneStep1Service } from './iscrizione_services/iscrizione-step1.s
 import { IscrizioneStep2Service } from './iscrizione_services/iscrizione-step2.service';
 import { calcolaRobustezzaPassword } from './iscrizione_helpers/password.helper';
 import {
+  prefissiFiltratiCondivisi,
+  primoPrefissoDaIso,
+  trackByPrefissoCondiviso,
+  trovaPrefissoDaInput,
+} from './iscrizione_helpers/prefissi.helper';
+import {
   animaEntrata,
   animaEntrataStep2,
   animaUscita,
@@ -493,35 +499,7 @@ async avanti4(): Promise<void> {
 
 
   get prefissiFiltrati(): any[] {
-    const espansi: any[] = [];
-    for (const n of this.forms.nazioni) {
-      if (!n.prefisso_tel) continue;
-      const parti = n.prefisso_tel.split('/');
-      const primo = parti[0];
-      const match = primo.match(/^(\+\d+-)/);
-      const base = match ? match[1] : '';
-      espansi.push({ ...n, prefisso_tel: primo });
-      for (let i = 1; i < parti.length; i++) {
-        espansi.push({ ...n, prefisso_tel: base + parti[i] });
-      }
-    }
-    const unici = new Map<string, any>();
-    for (const n of espansi) {
-      if (!unici.has(n.prefisso_tel)) unici.set(n.prefisso_tel, n);
-    }
-    const lista = Array.from(unici.values()).sort((a, b) => {
-      const parsA = (a.prefisso_tel ?? '').replace('+', '').split('-');
-      const parsB = (b.prefisso_tel ?? '').replace('+', '').split('-');
-      const mainA = parseInt(parsA[0] || '0', 10);
-      const mainB = parseInt(parsB[0] || '0', 10);
-      if (mainA !== mainB) return mainA - mainB;
-      const subA = parseInt(parsA[1] || '0', 10);
-      const subB = parseInt(parsB[1] || '0', 10);
-      return subA - subB;
-    });
-    if (!this.filtroPrefissi.trim()) return lista;
-    const f = this.filtroPrefissi.replace('+', '');
-    return lista.filter((n) => (n.prefisso_tel ?? '').replace('+', '').startsWith(f));
+    return prefissiFiltratiCondivisi(this.forms.nazioni, this.filtroPrefissi);
   }
 
   togglePrefisso(event: Event): void {
@@ -570,18 +548,15 @@ async avanti4(): Promise<void> {
   onBlurPrefisso(event: FocusEvent): void {
     const dest = event.relatedTarget as HTMLElement | null;
     if (dest?.closest('.select-dropdown')) return;
-    const val = (event.target as HTMLInputElement).value.trim();
-    if (!val) return;
-    const valNorm = val.toLowerCase().replace('+', '');
-    if (this.prefissoValore && this.prefissoValore.replace('+', '') === valNorm) return;
-    const trovato = this.forms.nazioni.find(
-      (n) =>
-        n.prefisso_tel &&
-        ((n.prefisso_tel ?? '').replace('+', '') === valNorm ||
-          (n.nazione_it ?? '').toLowerCase() === valNorm ||
-          (n.nazione_en ?? '').toLowerCase() === valNorm),
+
+    const valore = trovaPrefissoDaInput(
+      this.forms.nazioni,
+      (event.target as HTMLInputElement).value,
+      this.prefissoValore,
+      true,
     );
-    if (trovato) this.selezionaPrefisso(trovato.prefisso_tel);
+
+    if (valore) this.selezionaPrefisso(valore);
   }
 
   selezionaPrefisso(valore: string): void {
@@ -595,15 +570,14 @@ async avanti4(): Promise<void> {
   }
 
   trackByPrefisso(_index: number, n: any): string {
-    return n.prefisso_tel;
+    return trackByPrefissoCondiviso(_index, n);
   }
 
   aggiornaDefaultPrefisso(): void {
     if (this.prefissoModificatoManualmente) return;
-    const iso = this.step2.paeseDomValore;
-    const nazione = this.forms.nazioni.find((n) => n.iso === iso);
-    const raw = nazione?.prefisso_tel ?? '+39';
-    const prefisso = raw.split('/')[0];
+
+    const prefisso = primoPrefissoDaIso(this.forms.nazioni, this.step2.paeseDomValore);
+
     this.prefissoValore = prefisso;
     this.forms.reactiveFormStep3.get('prefisso')!.setValue(prefisso);
   }

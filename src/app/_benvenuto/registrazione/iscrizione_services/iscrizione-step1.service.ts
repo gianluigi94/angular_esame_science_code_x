@@ -6,10 +6,7 @@ import { Datepicker } from 'vanillajs-datepicker';
 import { TranslateService } from '@ngx-translate/core';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
 import { IscrizioneFormService } from './iscrizione-form.service';
-import {
-  cfLettere,
-  cfControllo,
-} from '../iscrizione_helpers/codice-fiscale.helper';
+import { calcolaCodiceFiscaleAnagrafica } from '../iscrizione_helpers/anagrafica-codice-fiscale.helper';
 
 @Injectable()
 export class IscrizioneStep1Service {
@@ -558,47 +555,20 @@ export class IscrizioneStep1Service {
     const aaaa =
       (document.getElementById('data_aaaa') as HTMLInputElement)?.value ?? ''; // leggo l'anno di nascita
 
-    if (
-      !nome ||
-      !cognome ||
-      gg.length < 2 ||
-      mm.length < 2 ||
-      aaaa.length < 4 ||
-      !this.sessoValore
-    )
-      return; // se mancano i dati minimi anagrafici non posso calcolare nulla
-    if (!this.paeseValore) return; // se non ho il paese di nascita non posso proseguire
-    if (this.isItalia && !this.comuneValore) return; // se sono in Italia ma non ho il comune non posso proseguire
+    const cf = calcolaCodiceFiscaleAnagrafica(
+      nome,
+      cognome,
+      gg,
+      mm,
+      aaaa,
+      this.sessoValore,
+      this.paeseValore,
+      this.comuneValore,
+      this.fs.comuni,
+      this.fs.nazioni,
+    );
 
-    let codiceCatastale = ''; // preparo il codice catastale o belfiore da usare nel calcolo
-    if (this.isItalia) {
-      codiceCatastale =
-        this.fs.comuni.find((c) => c.comune === this.comuneValore)
-          ?.codice_belfiore ?? ''; // se sono in Italia cerco il codice del comune selezionato
-    } else {
-      codiceCatastale =
-        this.fs.nazioni.find((n) => n.iso === this.paeseValore)
-          ?.codice_belfiore ?? ''; // se sono all'estero cerco il codice del paese selezionato
-    }
-    if (!codiceCatastale) return; // se non trovo il codice catastale interrompo il calcolo
-
-    const meseCodici = [
-      'A','B','C','D','E','H','L','M','P','R', 'S', 'T',
-    ]; // preparo la mappatura dei mesi usata nel codice fiscale
-    const giornoNum = parseInt(gg, 10) + (this.sessoValore === 'F' ? 40 : 0); // calcolo il giorno numerico aggiungendo 40 se il sesso e' femmina
-    const parziale = (
-      cfLettere(cognome, false) + // ricavo le tre lettere dal cognome
-      cfLettere(nome, true) + // ricavo le tre lettere dal nome con eventuale regola speciale
-      aaaa.slice(-2) + // prendo le ultime due cifre dell'anno
-      (meseCodici[parseInt(mm, 10) - 1] ?? '') + // trasformo il mese nel suo codice lettera
-      String(giornoNum).padStart(2, '0') + // trasformo il giorno in due cifre
-      codiceCatastale
-    ) // aggiungo il codice catastale o belfiore del luogo di nascita
-      .toUpperCase(); // porto tutto in maiuscolo per uniformare il risultato
-
-    if (parziale.length !== 15) return; // se il parziale non ha 15 caratteri non posso calcolare il controllo finale
-
-    const cf = parziale + cfControllo(parziale); // completo il codice fiscale aggiungendo il carattere di controllo
+    if (!cf) return;
     if (cf === this.cfValore || this.cfModificatoManualmente) return; // se il valore e' gia' quello corrente o l'utente l'ha modificato a mano non sovrascrivo nulla
 
     this.cfValore = cf; // salvo il nuovo codice fiscale calcolato

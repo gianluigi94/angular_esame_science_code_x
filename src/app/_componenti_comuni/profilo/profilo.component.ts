@@ -11,19 +11,19 @@ import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_ut
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { Auth } from 'src/app/_type/auth.type';
 import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/password.helper';
-import { cfLettere, cfControllo } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/codice-fiscale.helper';
+import { calcolaCodiceFiscaleAnagrafica } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/anagrafica-codice-fiscale.helper';
 import { SelectNazioniService, StatoSelectNazioni } from 'src/app/_servizi_globali/select-nazioni.service';
 import { SelectIndirizzoItaliaService, StatoSelectComuneItalia, StatoSelectCapItalia } from 'src/app/_servizi_globali/select-indirizzo-italia.service';
 import { SelectTipiIndirizziService,  StatoSelectTipoIndirizzo, TipoIndirizzo } from './select-tipi-indirizzi.service';
 import { SelectTipiRecapitiService, StatoSelectTipoRecapito, TipoRecapito } from 'src/app/_servizi_globali/select-tipi-recapiti.service';
-
-interface StatoPrefissoRecapito {
-  aperto: boolean;
-  valore: string;
-  filtro: string;
-  indice: number;
-  modificatoManualmente: boolean;
-}
+import {
+  StatoPrefissoRecapito,
+  chiudiStatoPrefisso,
+  prefissiFiltratiCondivisi,
+  primoPrefissoDaIso,
+  trackByPrefissoCondiviso,
+  trovaPrefissoDaInput,
+} from 'src/app/_benvenuto/registrazione/iscrizione_helpers/prefissi.helper';
 
 @Component({
   selector: 'app-profilo',
@@ -890,14 +890,8 @@ chiudiSelectNazioni(): void {
   this.selectTipiRecapitiService.chiudi(this.statoTipoRecapitoNuovo);
   this.statiTipiRecapitoModifica.forEach((stato) => this.selectTipiRecapitiService.chiudi(stato));
 
-  this.statoPrefissoNuovo.aperto = false;
-  this.statoPrefissoNuovo.filtro = '';
-  this.statoPrefissoNuovo.indice = -1;
-  this.statiPrefissoModifica.forEach((stato) => {
-    stato.aperto = false;
-    stato.filtro = '';
-    stato.indice = -1;
-  });
+  chiudiStatoPrefisso(this.statoPrefissoNuovo);
+  this.statiPrefissoModifica.forEach((stato) => chiudiStatoPrefisso(stato));
 
   this.sessoAnagAperto = false;
   this.indiceSessoAnag = -1;
@@ -1027,10 +1021,8 @@ private caricaRecapiti(): void {
 
   leggiPrefissoConsigliato(): string {
     const domicilio = this.indirizziMock.find((i) => i.tipo === 'domicilio');
-    const iso = domicilio?.iso ?? 'IT';
-    const nazione = this.selectNazioniService.nazioni.find((n) => n.iso === iso);
-    const raw = nazione?.prefisso_tel ?? '+39';
-    return raw.split('/')[0];
+
+    return primoPrefissoDaIso(this.selectNazioniService.nazioni, domicilio?.iso ?? 'IT');
   }
 
   vaiAContatti(): void {
@@ -1192,35 +1184,7 @@ private caricaRecapiti(): void {
   }
 
   prefissiFiltrati(stato: StatoPrefissoRecapito): any[] {
-    const espansi: any[] = [];
-    for (const n of this.selectNazioniService.nazioni) {
-      if (!n.prefisso_tel) continue;
-      const parti = n.prefisso_tel.split('/');
-      const primo = parti[0];
-      const match = primo.match(/^(\+\d+-)/);
-      const base = match ? match[1] : '';
-      espansi.push({ ...n, prefisso_tel: primo });
-      for (let i = 1; i < parti.length; i++) {
-        espansi.push({ ...n, prefisso_tel: base + parti[i] });
-      }
-    }
-    const unici = new Map<string, any>();
-    for (const n of espansi) {
-      if (!unici.has(n.prefisso_tel)) unici.set(n.prefisso_tel, n);
-    }
-    const lista = Array.from(unici.values()).sort((a, b) => {
-      const parsA = (a.prefisso_tel ?? '').replace('+', '').split('-');
-      const parsB = (b.prefisso_tel ?? '').replace('+', '').split('-');
-      const mainA = parseInt(parsA[0] || '0', 10);
-      const mainB = parseInt(parsB[0] || '0', 10);
-      if (mainA !== mainB) return mainA - mainB;
-      const subA = parseInt(parsA[1] || '0', 10);
-      const subB = parseInt(parsB[1] || '0', 10);
-      return subA - subB;
-    });
-    if (!stato.filtro.trim()) return lista;
-    const f = stato.filtro.replace('+', '');
-    return lista.filter((n) => (n.prefisso_tel ?? '').replace('+', '').startsWith(f));
+    return prefissiFiltratiCondivisi(this.selectNazioniService.nazioni, stato.filtro);
   }
 
   togglePrefissoRecapito(stato: StatoPrefissoRecapito, event: Event, classeInput: string): void {
@@ -1267,14 +1231,14 @@ private caricaRecapiti(): void {
   onBlurPrefissoRecapito(stato: StatoPrefissoRecapito, event: FocusEvent, form: FormGroup): void {
     const dest = event.relatedTarget as HTMLElement | null;
     if (dest?.closest('.select-dropdown-profilo')) return;
-    const val = (event.target as HTMLInputElement).value.trim();
-    if (!val) return;
-    const valNorm = val.toLowerCase().replace('+', '');
-    if (stato.valore && stato.valore.replace('+', '') === valNorm) return;
-    const trovato = this.selectNazioniService.nazioni.find(
-      (n) => n.prefisso_tel && (n.prefisso_tel ?? '').replace('+', '') === valNorm,
+
+    const valore = trovaPrefissoDaInput(
+      this.selectNazioniService.nazioni,
+      (event.target as HTMLInputElement).value,
+      stato.valore,
     );
-    if (trovato) this.selezionaPrefissoRecapito(stato, trovato.prefisso_tel, form);
+
+    if (valore) this.selezionaPrefissoRecapito(stato, valore, form);
   }
 
   selezionaPrefissoRecapito(stato: StatoPrefissoRecapito, valore: string, form: FormGroup): void {
@@ -1286,8 +1250,8 @@ private caricaRecapiti(): void {
     form.get('prefisso')!.setValue(valore);
   }
 
-  trackByPrefisso(_index: number, n: any): string {
-    return n.prefisso_tel;
+    trackByPrefisso(_index: number, n: any): string {
+    return trackByPrefissoCondiviso(_index, n);
   }
 
   salvaNuovoRecapito(): void {
@@ -1524,41 +1488,20 @@ onBlurAnagCF(): void {
 }
 
 calcolaCFAnag(): void {
-    const nome = this.formAnagrafica.get('nome')!.value?.trim() ?? '';
-    const cognome = this.formAnagrafica.get('cognome')!.value?.trim() ?? '';
-    const gg = this.formAnagrafica.get('dataGg')!.value ?? '';
-    const mm = this.formAnagrafica.get('dataMm')!.value ?? '';
-    const aaaa = this.formAnagrafica.get('dataAaaa')!.value ?? '';
-    const sesso = this.sessoAnagValore;
-    const paese = this.statoNazioneAnagrafica.valore;
-    const comune = this.formAnagrafica.get('comune')!.value ?? '';
+    const cf = calcolaCodiceFiscaleAnagrafica(
+      this.formAnagrafica.get('nome')!.value?.trim() ?? '',
+      this.formAnagrafica.get('cognome')!.value?.trim() ?? '',
+      this.formAnagrafica.get('dataGg')!.value ?? '',
+      this.formAnagrafica.get('dataMm')!.value ?? '',
+      this.formAnagrafica.get('dataAaaa')!.value ?? '',
+      this.sessoAnagValore,
+      this.statoNazioneAnagrafica.valore,
+      this.formAnagrafica.get('comune')!.value ?? '',
+      this.selectIndirizzoItaliaService.comuni,
+      this.selectNazioniService.nazioni,
+    );
 
-    if (!nome || !cognome || gg.length < 2 || mm.length < 2 || aaaa.length < 4 || !sesso) return;
-    if (!paese) return;
-    if (paese === 'IT' && !comune) return;
-
-    let codiceCatastale = '';
-    if (paese === 'IT') {
-      codiceCatastale = this.selectIndirizzoItaliaService.comuni.find((c: any) => c.comune === comune)?.codice_belfiore ?? '';
-    } else {
-      codiceCatastale = this.selectNazioniService.nazioni.find((n: any) => n.iso === paese)?.codice_belfiore ?? '';
-    }
-    if (!codiceCatastale) return;
-
-    const meseCodici = ['A','B','C','D','E','H','L','M','P','R','S','T'];
-    const giornoNum = parseInt(gg, 10) + (sesso === 'F' ? 40 : 0);
-    const parziale = (
-      cfLettere(cognome, false) +
-      cfLettere(nome, true) +
-      aaaa.slice(-2) +
-      (meseCodici[parseInt(mm, 10) - 1] ?? '') +
-      String(giornoNum).padStart(2, '0') +
-      codiceCatastale
-    ).toUpperCase();
-
-    if (parziale.length !== 15) return;
-
-    const cf = parziale + cfControllo(parziale);
+    if (!cf) return;
     if (cf === this.cfAnagValore || this.cfAnagModificatoManualmente) return;
 
     this.cfAnagValore = cf;
