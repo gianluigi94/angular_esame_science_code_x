@@ -1098,3 +1098,115 @@ input:-webkit-autofill:active {
     }
   }
 }
+.anagrafica-contenuto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 720px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: center center;
+
+  .riga-due-campi-profilo {
+    justify-content: center;
+    margin-left: 0;
+    margin-bottom: 12px;
+  }
+
+  .campo-wrapper {
+    gap: 4px;
+  }
+
+  .select-custom-profilo {
+    width: 280px;
+  }
+
+  .campo-form input[type="text"] {
+    width: 280px;
+  }
+}
+
+.data-custom-profilo {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 280px;
+  height: 47px;
+  background: #000000df;
+  border-radius: 7px;
+  box-shadow: 0 0 8px #999da0;
+  padding: 0 10px;
+  gap: 4px;
+
+  &:focus-within { box-shadow: 0 0 4px orange; }
+
+  .data-label-piccola {
+    display: none;
+    position: absolute;
+    left: 10px;
+    top: 3px;
+    font-size: 12px;
+    color: #4f5050;
+    font-family: "Quantico", serif;
+    font-weight: bolder;
+    pointer-events: none;
+  }
+
+  &.data-compilata .data-label-piccola { display: block; }
+  &.data-compilata .data-parte,
+  &.data-compilata .data-sep { margin-top: 16px; }
+
+  .data-sep {
+    color: #6b6e6e;
+    font-family: "Quantico", serif;
+    font-size: 18px;
+    font-weight: bold;
+    user-select: none;
+  }
+
+  .data-parte {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none !important;
+    font-family: "Quantico", serif;
+    font-size: 17px;
+    color: #4f5050;
+    width: 28px;
+    padding: 0;
+    text-align: center;
+    caret-color: aliceblue;
+    transition: margin-top 0.15s ease;
+
+    &::placeholder { color: #4f5050; }
+    &:focus, &:not(:placeholder-shown) {
+      color: rgb(205, 205, 205);
+      box-shadow: none !important;
+      outline: none !important;
+    }
+  }
+
+  .data-anno { width: 48px; }
+}
+
+.btn-clear-cf-profilo {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+
+  &:hover { opacity: 1; }
+}

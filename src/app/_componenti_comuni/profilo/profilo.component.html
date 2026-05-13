@@ -13,6 +13,7 @@
             : vistaCorrente === 'password' ? 'ui.profilo.password.bottone'
             : vistaCorrente === 'indirizzi' ? 'ui.profilo.indirizzi.bottone'
             : vistaCorrente === 'contatti' ? 'ui.profilo.contatti.bottone'
+            : vistaCorrente === 'anagrafica' ? 'ui.profilo.anagrafica.bottone'
             : 'ui.profilo.titolo'
           ) | translate
         }}
@@ -42,6 +43,10 @@
 
           <button type="button" class="azione-btn" (click)="vaiAContatti()">
             {{ 'ui.profilo.contatti.bottone' | translate }}
+          </button>
+
+          <button type="button" class="azione-btn" (click)="vaiAAnagrafica()">
+            {{ 'ui.profilo.anagrafica.bottone' | translate }}
           </button>
         </div>
 
@@ -1746,7 +1751,197 @@
           </div>
 
         </div>
+<div *ngIf="vistaCorrente === 'anagrafica'" class="anagrafica-contenuto campo-animato" [formGroup]="formAnagrafica">
 
+          <div class="riga-due-campi-profilo">
+            <div class="campo-wrapper">
+              <p class="label-sopra" [ngClass]="{ 'is-invalid': formAnagrafica.controls['nome'].invalid && formAnagrafica.controls['nome'].touched }">
+                {{ 'ui.registrazione.nome.label' | translate }} <span class="asterisco">*</span>
+              </p>
+              <div class="campo-form">
+                <input type="text" placeholder=" " formControlName="nome" (blur)="onBlurAnagCF()"
+                  [ngClass]="{ 'is-invalid': formAnagrafica.controls['nome'].invalid && formAnagrafica.controls['nome'].touched }" />
+                <label [ngClass]="{ 'is-invalid': formAnagrafica.controls['nome'].invalid && formAnagrafica.controls['nome'].touched }">
+                  {{ 'ui.registrazione.nome.input_label' | translate }}
+                </label>
+              </div>
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="formAnagrafica.controls['nome'].touched && formAnagrafica.controls['nome'].errors?.['required']">{{ 'ui.registrazione.nome.error.required' | translate }}</p>
+                <p class="errore-campo" *ngIf="formAnagrafica.controls['nome'].touched && formAnagrafica.controls['nome'].errors?.['minlength']">{{ 'ui.registrazione.nome.error.minlength' | translate }}</p>
+                <p class="errore-campo" *ngIf="formAnagrafica.controls['nome'].touched && formAnagrafica.controls['nome'].errors?.['pattern']">{{ 'ui.registrazione.nome.error.pattern' | translate }}</p>
+              </div>
+            </div>
+
+            <div class="campo-wrapper">
+              <p class="label-sopra" [ngClass]="{ 'is-invalid': formAnagrafica.controls['cognome'].invalid && formAnagrafica.controls['cognome'].touched }">
+                {{ 'ui.registrazione.cognome.label' | translate }} <span class="asterisco">*</span>
+              </p>
+              <div class="campo-form">
+                <input type="text" placeholder=" " formControlName="cognome" (blur)="onBlurAnagCF()"
+                  [ngClass]="{ 'is-invalid': formAnagrafica.controls['cognome'].invalid && formAnagrafica.controls['cognome'].touched }" />
+                <label [ngClass]="{ 'is-invalid': formAnagrafica.controls['cognome'].invalid && formAnagrafica.controls['cognome'].touched }">
+                  {{ 'ui.registrazione.cognome.input_label' | translate }}
+                </label>
+              </div>
+              <div class="errori-stack">
+                <p class="errore-campo" *ngIf="formAnagrafica.controls['cognome'].touched && formAnagrafica.controls['cognome'].errors?.['required']">{{ 'ui.registrazione.cognome.error.required' | translate }}</p>
+                <p class="errore-campo" *ngIf="formAnagrafica.controls['cognome'].touched && formAnagrafica.controls['cognome'].errors?.['minlength']">{{ 'ui.registrazione.cognome.error.minlength' | translate }}</p>
+                <p class="errore-campo" *ngIf="formAnagrafica.controls['cognome'].touched && formAnagrafica.controls['cognome'].errors?.['pattern']">{{ 'ui.registrazione.cognome.error.pattern' | translate }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="riga-due-campi-profilo">
+            <div class="campo-wrapper">
+              <p class="label-sopra" [ngClass]="{ 'is-invalid': formAnagrafica.controls['sesso'].invalid && formAnagrafica.controls['sesso'].touched }">
+                {{ 'ui.registrazione.sesso.label' | translate }} <span class="asterisco">*</span>
+              </p>
+              <div class="select-custom-profilo">
+                <div class="select-header" tabindex="0"
+                  (click)="toggleSessoAnag($event)" (keydown)="navigaSessoAnag($event)"
+                  [class.aperto]="sessoAnagAperto" [class.compilato]="sessoAnagValore"
+                  [ngClass]="{ 'is-invalid': formAnagrafica.controls['sesso'].invalid && formAnagrafica.controls['sesso'].touched }">
+                  <span class="select-label-piccola">{{ 'ui.registrazione.sesso.piccola' | translate }}</span>
+                  <span [class.placeholder]="!sessoAnagValore">{{ sessoAnagLabel() }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z"/></svg>
+                </div>
+                <div class="select-dropdown-profilo" *ngIf="sessoAnagAperto">
+                  <div class="select-opzione" [class.attivo]="indiceSessoAnag === 0" (mousedown)="$event.preventDefault()" (click)="selezionaSessoAnag('M')">{{ 'ui.registrazione.sesso.maschio' | translate }}</div>
+                  <div class="select-opzione" [class.attivo]="indiceSessoAnag === 1" (mousedown)="$event.preventDefault()" (click)="selezionaSessoAnag('F')">{{ 'ui.registrazione.sesso.femmina' | translate }}</div>
+                  <div class="select-opzione" [class.attivo]="indiceSessoAnag === 2" (mousedown)="$event.preventDefault()" (click)="selezionaSessoAnag('NS')">{{ 'ui.registrazione.sesso.non_specificato' | translate }}</div>
+                </div>
+              </div>
+              <p class="errore-campo" *ngIf="formAnagrafica.controls['sesso'].invalid && formAnagrafica.controls['sesso'].touched">{{ 'ui.registrazione.sesso.error.required' | translate }}</p>
+            </div>
+
+            <div class="campo-wrapper">
+              <p class="label-sopra" [ngClass]="{ 'is-invalid': (formAnagrafica.controls['dataGg'].invalid || formAnagrafica.controls['dataMm'].invalid || formAnagrafica.controls['dataAaaa'].invalid) && formAnagrafica.controls['dataAaaa'].touched }">
+                {{ 'ui.registrazione.data_nascita.label' | translate }} <span class="asterisco">*</span>
+              </p>
+              <div class="data-custom-profilo" [class.data-compilata]="dataAnagCompilata()" (click)="focusDataAnag($event)">
+                <span class="data-label-piccola">{{ 'ui.registrazione.data_nascita.piccola' | translate }}</span>
+                <input type="text" class="data-parte" id="anag_data_gg" [placeholder]="'ui.registrazione.data_nascita.placeholder_gg' | translate"
+                  maxlength="2" inputmode="numeric" formControlName="dataGg"
+                  (input)="avanzaDataAnag($event, 'gg')" (keydown)="soloNumeriAnag($event, 'gg')" (blur)="onBlurAnagCF()" />
+                <span class="data-sep">/</span>
+                <input type="text" class="data-parte" id="anag_data_mm" [placeholder]="'ui.registrazione.data_nascita.placeholder_mm' | translate"
+                  maxlength="2" inputmode="numeric" formControlName="dataMm"
+                  (input)="avanzaDataAnag($event, 'mm')" (keydown)="soloNumeriAnag($event, 'mm')" (blur)="onBlurAnagCF()" />
+                <span class="data-sep">/</span>
+                <input type="text" class="data-parte data-anno" id="anag_data_aaaa" [placeholder]="'ui.registrazione.data_nascita.placeholder_aaaa' | translate"
+                  maxlength="4" inputmode="numeric" formControlName="dataAaaa"
+                  (keydown)="soloNumeriAnag($event, 'aaaa')" (blur)="onBlurAnagCF()" />
+              </div>
+              <p class="errore-campo" *ngIf="(formAnagrafica.controls['dataGg'].invalid || formAnagrafica.controls['dataMm'].invalid || formAnagrafica.controls['dataAaaa'].invalid || formAnagrafica.errors?.['dataNascitaNonValida']) && formAnagrafica.controls['dataAaaa'].touched">
+                {{ 'ui.registrazione.data_nascita.error.invalid' | translate }}
+              </p>
+            </div>
+          </div>
+
+          <div class="riga-due-campi-profilo">
+            <div class="campo-wrapper">
+              <p class="label-sopra" [ngClass]="{ 'is-invalid': formAnagrafica.controls['paese'].invalid && formAnagrafica.controls['paese'].touched }">
+                {{ 'ui.registrazione.paese_nascita.label' | translate }} <span class="asterisco">*</span>
+              </p>
+              <div class="select-custom-profilo">
+                <div class="select-header"
+                  (click)="selectNazioniService.toggle(statoNazioneAnagrafica, $event, [], '.paese-anag-input')"
+                  [class.aperto]="statoNazioneAnagrafica.aperto" [class.compilato]="statoNazioneAnagrafica.valore"
+                  [ngClass]="{ 'is-invalid': formAnagrafica.controls['paese'].invalid && formAnagrafica.controls['paese'].touched }">
+                  <span class="select-label-piccola">{{ 'ui.registrazione.paese.piccola' | translate }}</span>
+                  <input class="select-input-testo paese-anag-input" type="text"
+                    [placeholder]="'ui.registrazione.placeholder.seleziona_paese' | translate"
+                    [value]="statoNazioneAnagrafica.aperto ? statoNazioneAnagrafica.filtro : (statoNazioneAnagrafica.valore ? selectNazioniService.label(statoNazioneAnagrafica) : '')"
+                    (click)="selectNazioniService.toggle(statoNazioneAnagrafica, $event, [], '.paese-anag-input')"
+                    (input)="selectNazioniService.aggiornaFiltro(statoNazioneAnagrafica, $event)"
+                    (keydown)="selectNazioniService.naviga(statoNazioneAnagrafica, $event, selezionaNazioneAnagrafica.bind(this))"
+                    (blur)="selectNazioniService.blur(statoNazioneAnagrafica, $event, selezionaNazioneAnagrafica.bind(this))" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z"/></svg>
+                </div>
+                <div class="select-dropdown-profilo" *ngIf="statoNazioneAnagrafica.aperto">
+                  <div class="select-opzione" *ngFor="let n of selectNazioniService.nazioniFiltrate(statoNazioneAnagrafica); let ix = index"
+                    [class.attivo]="ix === statoNazioneAnagrafica.indice" (mousedown)="$event.preventDefault()" (click)="selezionaNazioneAnagrafica(n.iso)">
+                    {{ selectNazioniService.cambioLinguaService.leggiCodiceLingua() === 'it' ? n.nazione_it : n.nazione_en }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="campo-wrapper" *ngIf="isItaliaNascitaAnag">
+              <p class="label-sopra" [ngClass]="{ 'is-invalid': formAnagrafica.controls['comune'].invalid && formAnagrafica.controls['comune'].touched }">
+                {{ 'ui.registrazione.comune_nascita.label' | translate }} <span class="asterisco">*</span>
+              </p>
+              <div class="select-custom-profilo">
+                <div class="select-header"
+                  (click)="selectIndirizzoItaliaService.toggleComune(statoComuneAnagrafica, $event, [], '.comune-anag-input')"
+                  [class.aperto]="statoComuneAnagrafica.aperto" [class.compilato]="statoComuneAnagrafica.valore"
+                  [ngClass]="{ 'is-invalid': formAnagrafica.controls['comune'].invalid && formAnagrafica.controls['comune'].touched }">
+                  <span class="select-label-piccola">{{ 'ui.registrazione.comune.piccola' | translate }}</span>
+                  <input class="select-input-testo comune-anag-input" type="text"
+                    [placeholder]="'ui.registrazione.placeholder.cerca_comune' | translate"
+                    [value]="statoComuneAnagrafica.aperto ? statoComuneAnagrafica.filtro : statoComuneAnagrafica.valore"
+                    (click)="selectIndirizzoItaliaService.toggleComune(statoComuneAnagrafica, $event, [], '.comune-anag-input')"
+                    (input)="selectIndirizzoItaliaService.aggiornaFiltroComune(statoComuneAnagrafica, $event)"
+                    (keydown)="selectIndirizzoItaliaService.navigaComune(statoComuneAnagrafica, $event, selezionaComuneAnagrafica.bind(this))"
+                    (blur)="selectIndirizzoItaliaService.blurComune(statoComuneAnagrafica, $event, selezionaComuneAnagrafica.bind(this))" />
+                </div>
+                <div class="select-dropdown-profilo" *ngIf="statoComuneAnagrafica.aperto">
+                  <div class="select-opzione" *ngFor="let c of selectIndirizzoItaliaService.comuniFiltrati(statoComuneAnagrafica); let ix = index"
+                    [class.attivo]="ix === statoComuneAnagrafica.indice" (mousedown)="$event.preventDefault()" (click)="selezionaComuneAnagrafica(c.comune)">
+                    {{ c.comune }}
+                  </div>
+                </div>
+              </div>
+              <p class="errore-campo" *ngIf="formAnagrafica.controls['comune'].invalid && formAnagrafica.controls['comune'].touched">{{ 'ui.registrazione.comune_nascita.error.required' | translate }}</p>
+            </div>
+
+            <div class="campo-wrapper" *ngIf="!isItaliaNascitaAnag">
+              <p class="label-sopra" [ngClass]="{ 'is-invalid': formAnagrafica.controls['citta'].invalid && formAnagrafica.controls['citta'].touched }">
+                {{ 'ui.registrazione.citta_nascita.label' | translate }} <span class="asterisco">*</span>
+              </p>
+              <div class="campo-form">
+                <input type="text" placeholder=" " formControlName="citta" spellcheck="false"
+                  [ngClass]="{ 'is-invalid': formAnagrafica.controls['citta'].invalid && formAnagrafica.controls['citta'].touched }" />
+                <label [ngClass]="{ 'is-invalid': formAnagrafica.controls['citta'].invalid && formAnagrafica.controls['citta'].touched }">
+                  {{ 'ui.registrazione.citta_nascita.input_label' | translate }}
+                </label>
+              </div>
+              <p class="errore-campo" *ngIf="formAnagrafica.controls['citta'].invalid && formAnagrafica.controls['citta'].touched">{{ 'ui.registrazione.citta_nascita.error.invalid' | translate }}</p>
+            </div>
+          </div>
+
+          <div class="campo-wrapper" style="align-self: center;">
+            <p class="label-sopra" [ngClass]="{ 'is-invalid': formAnagrafica.controls['codiceFiscale'].invalid && formAnagrafica.controls['codiceFiscale'].touched }">
+              {{ 'ui.registrazione.codice_fiscale.label' | translate }}
+              <span class="asterisco" *ngIf="isItaliaNascitaAnag">*</span>
+              <span class="opzionale" *ngIf="!isItaliaNascitaAnag">{{ 'ui.registrazione.opzionale' | translate }}</span>
+            </p>
+            <div class="campo-form" style="position: relative;">
+              <input type="text" placeholder=" " maxlength="16" formControlName="codiceFiscale"
+                [class.cf-flash]="cfAnagFlash"
+                [ngClass]="{ 'is-invalid': formAnagrafica.controls['codiceFiscale'].invalid && formAnagrafica.controls['codiceFiscale'].touched }"
+                (input)="cfAnagValore = $any($event.target).value; cfAnagFlash = false; cfAnagModificatoManualmente = true" />
+              <label [ngClass]="{ 'is-invalid': formAnagrafica.controls['codiceFiscale'].invalid && formAnagrafica.controls['codiceFiscale'].touched }">
+                {{ 'ui.registrazione.codice_fiscale.input_label' | translate }}
+              </label>
+              <button *ngIf="cfAnagValore" type="button" class="btn-clear-cf-profilo" tabindex="-1" (click)="svuotaCFAnag()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#e79c50">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="#e79c50" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <p class="errore-campo" *ngIf="formAnagrafica.controls['codiceFiscale'].invalid && formAnagrafica.controls['codiceFiscale'].touched">
+              {{ 'ui.registrazione.codice_fiscale.error.invalid' | translate }}
+            </p>
+          </div>
+
+          <div class="form-bottoni" style="margin-top: 20px;">
+            <button type="button" class="btn-salva" [disabled]="salvataggioAnagInCorso || formAnagrafica.invalid" (click)="salvaAnagrafica()">
+              <ng-container *ngIf="!salvataggioAnagInCorso">{{ 'ui.profilo.indirizzi.form.salva' | translate }}</ng-container>
+              <app-spinner *ngIf="salvataggioAnagInCorso"></app-spinner>
+            </button>
+          </div>
+        </div>
       </div>
 
       <button
@@ -1765,7 +1960,7 @@
           <path d="M15 18l-6-6 6-6" />
         </svg>
         {{
-          (vistaCorrente === "email" || vistaCorrente === "password" || vistaCorrente === "indirizzi" || vistaCorrente === "contatti"
+          (vistaCorrente === "email" || vistaCorrente === "password" || vistaCorrente === "indirizzi" || vistaCorrente === "contatti" || vistaCorrente === "anagrafica"
             ? "ui.main.tornaIndietro"
             : "ui.torna.log.contatti"
           ) | translate

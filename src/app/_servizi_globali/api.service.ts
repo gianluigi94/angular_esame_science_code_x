@@ -585,6 +585,9 @@ export class ApiService {
     data_nascita:     string;
     sesso:            string;
     codice_fiscale:   string;
+    iso_nascita:      string;
+    comune_nascita:   string | null;
+    citta_nascita:    string | null;
     iso_domicilio:    string;
     comune_domicilio: string | null;
     citta_domicilio:  string | null;
@@ -640,4 +643,22 @@ public inviaMessaggio(dati: {
     const url = this.calcolaRisorsa(['ricevute', idRicevuta, 'pdf']);
     return this.http.get(url, { responseType: 'blob', params: { lingua } });
   }
+
+  public getMieiDatiAnagrafici(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['miei-dati-anagrafici'], 'GET');
+}
+
+public aggiornaDatiAnagrafici(dati: {
+    nome:             string;
+    cognome:          string;
+    sesso:            string;
+    data_nascita:     string;
+    codice_fiscale:   string;
+    iso_nascita:      string;
+    comune_nascita:   string | null;
+    citta_nascita:    string | null;
+}): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['miei-dati-anagrafici']);
+    return this.http.put<IRispostaServer>(url, dati);
+}
 }

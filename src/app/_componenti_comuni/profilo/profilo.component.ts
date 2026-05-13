@@ -11,6 +11,7 @@ import { UtilityService } from 'src/app/_benvenuto/login/_login_service/login_ut
 import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { Auth } from 'src/app/_type/auth.type';
 import { calcolaRobustezzaPassword } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/password.helper';
+import { cfLettere, cfControllo } from 'src/app/_benvenuto/registrazione/iscrizione_helpers/codice-fiscale.helper';
 import { SelectNazioniService, StatoSelectNazioni } from 'src/app/_servizi_globali/select-nazioni.service';
 import { SelectIndirizzoItaliaService, StatoSelectComuneItalia, StatoSelectCapItalia } from 'src/app/_servizi_globali/select-indirizzo-italia.service';
 import { SelectTipiIndirizziService,  StatoSelectTipoIndirizzo, TipoIndirizzo } from './select-tipi-indirizzi.service';
@@ -34,7 +35,7 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   formEmail: FormGroup;
   formPassword: FormGroup;
   formInviato = false;
-  vistaCorrente: 'scelta' | 'email' | 'password' | 'indirizzi' | 'contatti' = 'scelta';
+  vistaCorrente: 'scelta' | 'email' | 'password' | 'indirizzi' | 'contatti' | 'anagrafica' = 'scelta';
   animazioneInCorso = false;
   stoVerificando = false;
   mostraPassword = false;
@@ -71,6 +72,17 @@ statoPrefissoNuovo: StatoPrefissoRecapito = { aperto: false, valore: '+39', filt
 statiPrefissoModifica: StatoPrefissoRecapito[] = [];
 formNuovoRecapito: FormGroup;
 formsModificaRecapito: (FormGroup | null)[] = [];
+
+formAnagrafica: FormGroup;
+statoNazioneAnagrafica!: StatoSelectNazioni;
+statoComuneAnagrafica!: StatoSelectComuneItalia;
+sessoAnagAperto = false;
+sessoAnagValore = '';
+indiceSessoAnag = -1;
+cfAnagValore = '';
+cfAnagFlash = false;
+cfAnagModificatoManualmente = false;
+salvataggioAnagInCorso = false;
 
   passwordRobustezza: 0 | 1 | 2 | 3 = 0;
   passwordEntropyPerc = 0;
@@ -146,6 +158,22 @@ get pwdColore(): string {
       prefisso: ['+39'],
       recapito: ['', Validators.required],
     });
+
+    this.formAnagrafica = this.fb.group({
+      nome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+      cognome: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
+      sesso: ['', Validators.required],
+      dataGg: ['', [Validators.required, Validators.pattern(/^(0[1-9]|[12]\d|3[01])$/)]],
+      dataMm: ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])$/)]],
+      dataAaaa: ['', [Validators.required, Validators.pattern(/^\d{4}$/), this.validaAnnoNascita()]],
+      paese: ['IT', Validators.required],
+      comune: [''],
+      citta: [''],
+      codiceFiscale: [''],
+    }, { validators: this.validaDataNascitaProfilo });
+
+    this.statoNazioneAnagrafica = this.selectNazioniService.creaStato('IT');
+    this.statoComuneAnagrafica = this.selectIndirizzoItaliaService.creaStatoComune('');
 
     this.statoNazioneNuovo = this.selectNazioniService.creaStato('IT');
     this.statiNazioniModifica = [];
@@ -870,6 +898,11 @@ chiudiSelectNazioni(): void {
     stato.filtro = '';
     stato.indice = -1;
   });
+
+  this.sessoAnagAperto = false;
+  this.indiceSessoAnag = -1;
+  this.selectNazioniService.chiudi(this.statoNazioneAnagrafica);
+  this.selectIndirizzoItaliaService.chiudiComune(this.statoComuneAnagrafica);
 }
   apriModaleEliminazione(ind: any): void {
     this.indirizzoDaEliminare = ind;
@@ -903,7 +936,7 @@ chiudiSelectNazioni(): void {
 
     this.animazioneInCorso = true;
 
-    const contenutoUscita = document.querySelector('.form-profilo, .indirizzi-contenuto, .contatti-contenuto') as HTMLElement | null;
+    const contenutoUscita = document.querySelector('.form-profilo, .indirizzi-contenuto, .contatti-contenuto, .anagrafica-contenuto') as HTMLElement | null;
     const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
 
     if (contenutoUscita) {
@@ -1369,10 +1402,311 @@ private caricaRecapiti(): void {
   mostraPrefisso(tipo: string): boolean {
     return tipo === 'telefono' || tipo === 'fax';
   }
+
+  get isItaliaNascitaAnag(): boolean {
+    return this.statoNazioneAnagrafica.valore === 'IT';
+}
+
+sessoAnagLabel(): string {
+    const map: Record<string, string> = {
+      M: this.translate.instant('ui.registrazione.sesso.maschio'),
+      F: this.translate.instant('ui.registrazione.sesso.femmina'),
+      NS: this.translate.instant('ui.registrazione.sesso.non_specificato'),
+    };
+    return this.sessoAnagValore ? (map[this.sessoAnagValore] ?? '') : this.translate.instant('ui.registrazione.sesso.placeholder');
+}
+
+toggleSessoAnag(event: Event): void {
+    event.stopPropagation();
+    this.sessoAnagAperto = !this.sessoAnagAperto;
+    if (!this.sessoAnagAperto) this.indiceSessoAnag = -1;
+}
+
+selezionaSessoAnag(valore: string): void {
+    this.sessoAnagValore = valore;
+    this.sessoAnagAperto = false;
+    this.indiceSessoAnag = -1;
+    this.formAnagrafica.get('sesso')!.setValue(valore);
+    this.formAnagrafica.get('sesso')!.markAsTouched();
+    this.calcolaCFAnag();
+}
+
+navigaSessoAnag(event: KeyboardEvent): void {
+    const opzioni = ['M', 'F', 'NS'];
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!this.sessoAnagAperto) this.sessoAnagAperto = true;
+      this.indiceSessoAnag = Math.min(this.indiceSessoAnag + 1, opzioni.length - 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.indiceSessoAnag = Math.max(this.indiceSessoAnag - 1, 0);
+    } else if (event.key === 'Enter' && this.sessoAnagAperto && this.indiceSessoAnag >= 0) {
+      event.preventDefault();
+      this.selezionaSessoAnag(opzioni[this.indiceSessoAnag]);
+    } else if (event.key === 'Escape') {
+      this.sessoAnagAperto = false;
+      this.indiceSessoAnag = -1;
+    }
+}
+
+selezionaNazioneAnagrafica(valore: string): void {
+    const cambiaTipo = (valore === 'IT') !== (this.statoNazioneAnagrafica.valore === 'IT');
+    this.selectNazioniService.seleziona(this.statoNazioneAnagrafica, valore);
+    this.formAnagrafica.get('paese')!.setValue(valore);
+    this.formAnagrafica.get('paese')!.markAsTouched();
+
+    if (cambiaTipo) {
+      this.statoComuneAnagrafica = this.selectIndirizzoItaliaService.creaStatoComune('');
+      this.formAnagrafica.get('comune')!.setValue('');
+      this.formAnagrafica.get('citta')!.setValue('');
+      this.cfAnagValore = '';
+      this.cfAnagFlash = false;
+      this.cfAnagModificatoManualmente = false;
+      this.formAnagrafica.get('codiceFiscale')!.setValue('');
+
+      if (valore === 'IT') {
+        this.formAnagrafica.get('comune')!.setValidators(Validators.required);
+        this.formAnagrafica.get('citta')!.clearValidators();
+        this.formAnagrafica.get('codiceFiscale')!.setValidators([Validators.required, Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]);
+      } else {
+        this.formAnagrafica.get('citta')!.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(80)]);
+        this.formAnagrafica.get('comune')!.clearValidators();
+        this.formAnagrafica.get('codiceFiscale')!.setValidators([Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]);
+      }
+      this.formAnagrafica.get('comune')!.updateValueAndValidity();
+      this.formAnagrafica.get('citta')!.updateValueAndValidity();
+      this.formAnagrafica.get('codiceFiscale')!.updateValueAndValidity();
+    }
+    this.calcolaCFAnag();
+}
+
+selezionaComuneAnagrafica(valore: string): void {
+    this.selectIndirizzoItaliaService.selezionaComune(this.statoComuneAnagrafica, this.selectIndirizzoItaliaService.creaStatoCap(''), valore);
+    this.statoComuneAnagrafica.valore = valore;
+    this.formAnagrafica.get('comune')!.setValue(valore);
+    this.formAnagrafica.get('comune')!.markAsTouched();
+    this.calcolaCFAnag();
+}
+
+soloNumeriAnag(event: KeyboardEvent, campo: 'gg' | 'mm' | 'aaaa'): void {
+    if (event.key === 'Tab' || event.key === 'Backspace' || event.key === 'Delete' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') return;
+    if (!/^\d$/.test(event.key)) event.preventDefault();
+}
+
+avanzaDataAnag(event: Event, campo: 'gg' | 'mm'): void {
+    const input = event.target as HTMLInputElement;
+    if (input.value.length >= 2) {
+      const prossimo = campo === 'gg'
+        ? document.getElementById('anag_data_mm')
+        : document.getElementById('anag_data_aaaa');
+      prossimo?.focus();
+    }
+}
+
+dataAnagCompilata(): boolean {
+    return !!(this.formAnagrafica.get('dataGg')!.value || this.formAnagrafica.get('dataMm')!.value || this.formAnagrafica.get('dataAaaa')!.value);
+}
+
+focusDataAnag(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT') return;
+    const gg = document.getElementById('anag_data_gg') as HTMLInputElement;
+    const mm = document.getElementById('anag_data_mm') as HTMLInputElement;
+    const aaaa = document.getElementById('anag_data_aaaa') as HTMLInputElement;
+    if (!gg?.value) { gg?.focus(); return; }
+    if (!mm?.value) { mm?.focus(); return; }
+    if (!aaaa?.value || aaaa.value.length < 4) { aaaa?.focus(); return; }
+    gg?.focus();
+}
+
+onBlurAnagCF(): void {
+    this.calcolaCFAnag();
+}
+
+calcolaCFAnag(): void {
+    const nome = this.formAnagrafica.get('nome')!.value?.trim() ?? '';
+    const cognome = this.formAnagrafica.get('cognome')!.value?.trim() ?? '';
+    const gg = this.formAnagrafica.get('dataGg')!.value ?? '';
+    const mm = this.formAnagrafica.get('dataMm')!.value ?? '';
+    const aaaa = this.formAnagrafica.get('dataAaaa')!.value ?? '';
+    const sesso = this.sessoAnagValore;
+    const paese = this.statoNazioneAnagrafica.valore;
+    const comune = this.formAnagrafica.get('comune')!.value ?? '';
+
+    if (!nome || !cognome || gg.length < 2 || mm.length < 2 || aaaa.length < 4 || !sesso) return;
+    if (!paese) return;
+    if (paese === 'IT' && !comune) return;
+
+    let codiceCatastale = '';
+    if (paese === 'IT') {
+      codiceCatastale = this.selectIndirizzoItaliaService.comuni.find((c: any) => c.comune === comune)?.codice_belfiore ?? '';
+    } else {
+      codiceCatastale = this.selectNazioniService.nazioni.find((n: any) => n.iso === paese)?.codice_belfiore ?? '';
+    }
+    if (!codiceCatastale) return;
+
+    const meseCodici = ['A','B','C','D','E','H','L','M','P','R','S','T'];
+    const giornoNum = parseInt(gg, 10) + (sesso === 'F' ? 40 : 0);
+    const parziale = (
+      cfLettere(cognome, false) +
+      cfLettere(nome, true) +
+      aaaa.slice(-2) +
+      (meseCodici[parseInt(mm, 10) - 1] ?? '') +
+      String(giornoNum).padStart(2, '0') +
+      codiceCatastale
+    ).toUpperCase();
+
+    if (parziale.length !== 15) return;
+
+    const cf = parziale + cfControllo(parziale);
+    if (cf === this.cfAnagValore || this.cfAnagModificatoManualmente) return;
+
+    this.cfAnagValore = cf;
+    this.formAnagrafica.get('codiceFiscale')!.setValue(cf);
+    this.formAnagrafica.get('codiceFiscale')!.markAsTouched();
+    this.cfAnagFlash = false;
+    setTimeout(() => { this.cfAnagFlash = true; }, 10);
+    setTimeout(() => { this.cfAnagFlash = false; }, 1510);
+}
+
+svuotaCFAnag(): void {
+    this.cfAnagValore = '';
+    this.cfAnagFlash = false;
+    this.cfAnagModificatoManualmente = false;
+    this.formAnagrafica.get('codiceFiscale')!.setValue('');
+    this.formAnagrafica.get('codiceFiscale')!.markAsTouched();
+}
+
+vaiAAnagrafica(): void {
+    if (this.animazioneInCorso) return;
+    this.animazioneInCorso = true;
+
+    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
+    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+    if (contenutoScelta) gsap.killTweensOf(contenutoScelta);
+    if (bottoneIndietro) gsap.killTweensOf(bottoneIndietro);
+
+    const timeline = gsap.timeline({
+      onComplete: () => {
+        this.ngZone.run(() => {
+          this.vistaCorrente = 'anagrafica';
+          this.caricaDatiAnagrafici();
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            const contenuto = document.querySelector('.anagrafica-contenuto') as HTMLElement | null;
+            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
+
+            if (contenuto) {
+              gsap.set(contenuto, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+              gsap.to(contenuto, { opacity: 1, scaleX: 1, duration: 0.45, ease: 'power2.out' });
+            }
+
+            if (nuovoBottoneIndietro) {
+              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
+              gsap.to(nuovoBottoneIndietro, {
+                opacity: 1, duration: 0.35, delay: 0.08, ease: 'power2.out',
+                onComplete: () => { this.animazioneInCorso = false; },
+              });
+            } else {
+              this.animazioneInCorso = false;
+            }
+          }, 0);
+        });
+      },
+    });
+
+    if (contenutoScelta) {
+      timeline.to(contenutoScelta, { opacity: 0, scaleX: 0, duration: 0.35, ease: 'power2.in', transformOrigin: 'center center' }, 0);
+    }
+    if (bottoneIndietro) {
+      timeline.to(bottoneIndietro, { opacity: 0, duration: 0.2, ease: 'power2.in' }, 0);
+    }
+}
+
+caricaDatiAnagrafici(): void {
+    this.api.getMieiDatiAnagrafici().pipe(take(1)).subscribe({
+      next: (rit) => {
+        const d = rit.data;
+        this.formAnagrafica.get('nome')!.setValue(d.nome ?? '');
+        this.formAnagrafica.get('cognome')!.setValue(d.cognome ?? '');
+
+        this.sessoAnagValore = d.sesso ?? '';
+        this.formAnagrafica.get('sesso')!.setValue(d.sesso ?? '');
+
+        if (d.data_nascita) {
+          const parti = d.data_nascita.split('/');
+          this.formAnagrafica.get('dataGg')!.setValue(parti[0] ?? '');
+          this.formAnagrafica.get('dataMm')!.setValue(parti[1] ?? '');
+          this.formAnagrafica.get('dataAaaa')!.setValue(parti[2] ?? '');
+        }
+
+        const iso = d.iso_nascita || 'IT';
+        this.statoNazioneAnagrafica = this.selectNazioniService.creaStato(iso);
+        this.formAnagrafica.get('paese')!.setValue(iso);
+
+        if (iso === 'IT') {
+          this.statoComuneAnagrafica = this.selectIndirizzoItaliaService.creaStatoComune(d.comune_nascita ?? '');
+          this.formAnagrafica.get('comune')!.setValue(d.comune_nascita ?? '');
+          this.formAnagrafica.get('comune')!.setValidators(Validators.required);
+          this.formAnagrafica.get('citta')!.clearValidators();
+          this.formAnagrafica.get('codiceFiscale')!.setValidators([Validators.required, Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]);
+        } else {
+          this.statoComuneAnagrafica = this.selectIndirizzoItaliaService.creaStatoComune('');
+          this.formAnagrafica.get('citta')!.setValue(d.citta_nascita ?? '');
+          this.formAnagrafica.get('citta')!.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(80)]);
+          this.formAnagrafica.get('comune')!.clearValidators();
+          this.formAnagrafica.get('codiceFiscale')!.setValidators([Validators.pattern(/^[A-Za-z]{6}\d{2}[AaBbCcDdEeHhLlMmPpRrSsTt](0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])[A-Za-z]\d{3}[A-Za-z]$/)]);
+        }
+        this.formAnagrafica.get('comune')!.updateValueAndValidity();
+        this.formAnagrafica.get('citta')!.updateValueAndValidity();
+        this.formAnagrafica.get('codiceFiscale')!.updateValueAndValidity();
+
+        this.cfAnagValore = d.codice_fiscale ?? '';
+        this.cfAnagModificatoManualmente = !!d.codice_fiscale;
+        this.formAnagrafica.get('codiceFiscale')!.setValue(d.codice_fiscale ?? '');
+
+        this.cdr.detectChanges();
+      },
+    });
+}
+
+salvaAnagrafica(): void {
+    if (this.formAnagrafica.invalid) {
+      this.formAnagrafica.markAllAsTouched();
+      this.saturnoService.flashErrorLight();
+      return;
+    }
+
+    const f = this.formAnagrafica.value;
+    const isIT = this.statoNazioneAnagrafica.valore === 'IT';
+
+    this.salvataggioAnagInCorso = true;
+    this.api.aggiornaDatiAnagrafici({
+      nome:             f.nome,
+      cognome:          f.cognome,
+      sesso:            f.sesso,
+      data_nascita:     `${f.dataGg}/${f.dataMm}/${f.dataAaaa}`,
+      codice_fiscale:   f.codiceFiscale,
+      iso_nascita:      this.statoNazioneAnagrafica.valore,
+      comune_nascita:   isIT ? f.comune : null,
+      citta_nascita:    !isIT ? f.citta : null,
+    }).pipe(take(1)).subscribe({
+      next: () => {
+        this.salvataggioAnagInCorso = false;
+        this.toastService.successo(this.translate.instant('ui.profilo.anagrafica.salvataggio.successo'));
+      },
+      error: () => {
+        this.salvataggioAnagInCorso = false;
+        this.saturnoService.flashErrorLight();
+      },
+    });
+}
   onClickIndietro(): void {
     if (this.animazioneInCorso) return;
 
-    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password' || this.vistaCorrente === 'indirizzi' || this.vistaCorrente === 'contatti') {
+    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password' || this.vistaCorrente === 'indirizzi' || this.vistaCorrente === 'contatti' || this.vistaCorrente === 'anagrafica') {
       this.tornaAScelta();
       return;
     }
@@ -1551,4 +1885,40 @@ private caricaRecapiti(): void {
       },
     });
   }
+
+  validaAnnoNascita() {
+    return (control: any) => {
+      const anno = parseInt(control.value, 10);
+
+      if (isNaN(anno)) return null;
+
+      const oggi = new Date().getFullYear();
+
+      if (anno < oggi - 200) return { annoTroppoVecchio: true };
+      if (anno > oggi - 5) return { annoTroppoGiovane: true };
+
+      return null;
+    };
+}
+
+validaDataNascitaProfilo(group: any) {
+    const gg = group.get('dataGg')?.value;
+    const mm = group.get('dataMm')?.value;
+    const aaaa = group.get('dataAaaa')?.value;
+
+    if (!gg || !mm || !aaaa) return null;
+
+    const giorno = parseInt(gg, 10);
+    const mese = parseInt(mm, 10);
+    const anno = parseInt(aaaa, 10);
+
+    const data = new Date(anno, mese - 1, giorno);
+
+    const dataValida =
+      data.getFullYear() === anno &&
+      data.getMonth() === mese - 1 &&
+      data.getDate() === giorno;
+
+    return dataValida ? null : { dataNascitaNonValida: true };
+}
 }
