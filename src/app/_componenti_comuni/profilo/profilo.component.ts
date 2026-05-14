@@ -35,7 +35,7 @@ export class ProfiloComponent implements AfterViewInit, OnInit {
   formEmail: FormGroup;
   formPassword: FormGroup;
   formInviato = false;
-  vistaCorrente: 'scelta' | 'email' | 'password' | 'indirizzi' | 'contatti' | 'anagrafica' = 'scelta';
+  vistaCorrente: 'email' | 'password' | 'indirizzi' | 'contatti' | 'anagrafica' = 'anagrafica';
   animazioneInCorso = false;
   stoVerificando = false;
   mostraPassword = false;
@@ -200,6 +200,7 @@ get pwdColore(): string {
     this.selectTipiRecapitiService.caricaTipiRecapiti();
     this.caricaIndirizzi();
     this.caricaRecapiti();
+    this.caricaDatiAnagrafici();
     setTimeout(() => this.avviaAnimazioniIngresso(), 0);
 
     fetch('assets/common_words.json')
@@ -255,246 +256,35 @@ get pwdColore(): string {
   avviaAnimazioniIngresso(): void {
     const titolo = document.querySelector('.profilo-titolo') as HTMLElement | null;
     const box = document.querySelector('.profilo-box') as HTMLElement | null;
-    const titoloSezione = document.querySelector('.titolo-sezione') as HTMLElement | null;
+    const menu = document.querySelector('.profilo-menu') as HTMLElement | null;
     const contenutoAttivo = document.querySelector('.campo-animato') as HTMLElement | null;
     const sfocatura = document.querySelector('.sfocatura') as HTMLElement | null;
-    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
 
     if (titolo) gsap.set(titolo, { opacity: 0 });
-    if (box) gsap.set(box, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-    if (titoloSezione) gsap.set(titoloSezione, { opacity: 0 });
+    if (box) gsap.set(box, { opacity: 0 });
+    if (menu) gsap.set(menu, { opacity: 0, scaleX: 0, transformOrigin: 'left center' });
     if (sfocatura) gsap.set(sfocatura, { opacity: 0 });
-    if (bottoneIndietro) gsap.set(bottoneIndietro, { opacity: 0 });
     if (contenutoAttivo) gsap.set(contenutoAttivo, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
 
     if (sfocatura) gsap.to(sfocatura, { opacity: 1, duration: 0.7, ease: 'power2.out' });
     if (titolo) gsap.to(titolo, { opacity: 1, duration: 0.6, ease: 'power2.out' });
-    if (box) gsap.to(box, { opacity: 1, scaleX: 1, duration: 0.6, ease: 'power2.out' });
-    if (titoloSezione) gsap.to(titoloSezione, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+    if (box) gsap.to(box, { opacity: 1, duration: 0.4, ease: 'power2.out' });
+    if (menu) gsap.to(menu, { opacity: 1, scaleX: 1, duration: 0.55, ease: 'power2.out' });
     if (contenutoAttivo) {
-      gsap.to(contenutoAttivo, { opacity: 1, scaleX: 1, duration: 0.6, delay: 0.12, ease: 'power2.out' });
-    }
-    if (bottoneIndietro) gsap.to(bottoneIndietro, { opacity: 1, duration: 0.6, ease: 'power2.out' });
-  }
-
-  vaiAEmail(): void {
-    if (this.animazioneInCorso) return;
-
-    this.animazioneInCorso = true;
-
-    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
-    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-    if (contenutoScelta) {
-      gsap.killTweensOf(contenutoScelta);
-    }
-    if (bottoneIndietro) {
-      gsap.killTweensOf(bottoneIndietro);
-    }
-
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        this.ngZone.run(() => {
-          this.vistaCorrente = 'email';
-          this.formInviato = false;
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            const formEmail = document.querySelector('.form-profilo') as HTMLElement | null;
-            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-            if (formEmail) {
-              gsap.set(formEmail, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-              gsap.to(formEmail, {
-                opacity: 1,
-                scaleX: 1,
-                duration: 0.45,
-                ease: 'power2.out',
-              });
-            }
-
-            if (nuovoBottoneIndietro) {
-              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
-              gsap.to(nuovoBottoneIndietro, {
-                opacity: 1,
-                duration: 0.35,
-                delay: 0.08,
-                ease: 'power2.out',
-                onComplete: () => {
-                  this.animazioneInCorso = false;
-                },
-              });
-            } else {
-              this.animazioneInCorso = false;
-            }
-          }, 0);
-        });
-      },
-    });
-
-    if (contenutoScelta) {
-      timeline.to(contenutoScelta, {
-        opacity: 0,
-        scaleX: 0,
-        duration: 0.35,
-        ease: 'power2.in',
-        transformOrigin: 'center center',
-      }, 0);
-    }
-
-    if (bottoneIndietro) {
-      timeline.to(bottoneIndietro, {
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.in',
-      }, 0);
+      gsap.to(contenutoAttivo, { opacity: 1, scaleX: 1, duration: 0.55, delay: 0.12, ease: 'power2.out' });
     }
   }
 
-  vaiAPassword(): void {
-    if (this.animazioneInCorso) return;
-
-    this.animazioneInCorso = true;
-
-    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
-    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-    if (contenutoScelta) {
-      gsap.killTweensOf(contenutoScelta);
-    }
-    if (bottoneIndietro) {
-      gsap.killTweensOf(bottoneIndietro);
-    }
-
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        this.ngZone.run(() => {
-          this.vistaCorrente = 'password';
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            const formPassword = document.querySelector('.form-profilo') as HTMLElement | null;
-            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-            if (formPassword) {
-              gsap.set(formPassword, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-              gsap.to(formPassword, {
-                opacity: 1,
-                scaleX: 1,
-                duration: 0.45,
-                ease: 'power2.out',
-              });
-            }
-
-            if (nuovoBottoneIndietro) {
-              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
-              gsap.to(nuovoBottoneIndietro, {
-                opacity: 1,
-                duration: 0.35,
-                delay: 0.08,
-                ease: 'power2.out',
-                onComplete: () => {
-                  this.animazioneInCorso = false;
-                },
-              });
-            } else {
-              this.animazioneInCorso = false;
-            }
-          }, 0);
-        });
-      },
-    });
-
-    if (contenutoScelta) {
-      timeline.to(contenutoScelta, {
-        opacity: 0,
-        scaleX: 0,
-        duration: 0.35,
-        ease: 'power2.in',
-        transformOrigin: 'center center',
-      }, 0);
-    }
-
-    if (bottoneIndietro) {
-      timeline.to(bottoneIndietro, {
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.in',
-      }, 0);
-    }
+    vaiAEmail(): void {
+    this.cambiaVistaProfilo('email');
   }
 
-  vaiAIndirizzi(): void {
-    if (this.animazioneInCorso) return;
+    vaiAPassword(): void {
+    this.cambiaVistaProfilo('password');
+  }
 
-    this.animazioneInCorso = true;
-
-    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
-    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-    if (contenutoScelta) {
-      gsap.killTweensOf(contenutoScelta);
-    }
-    if (bottoneIndietro) {
-      gsap.killTweensOf(bottoneIndietro);
-    }
-
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        this.ngZone.run(() => {
-          this.vistaCorrente = 'indirizzi';
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            const contenutoIndirizzi = document.querySelector('.indirizzi-contenuto') as HTMLElement | null;
-            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-            if (contenutoIndirizzi) {
-              gsap.set(contenutoIndirizzi, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-              gsap.to(contenutoIndirizzi, {
-                opacity: 1,
-                scaleX: 1,
-                duration: 0.45,
-                ease: 'power2.out',
-              });
-            }
-
-            if (nuovoBottoneIndietro) {
-              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
-              gsap.to(nuovoBottoneIndietro, {
-                opacity: 1,
-                duration: 0.35,
-                delay: 0.08,
-                ease: 'power2.out',
-                onComplete: () => {
-                  this.animazioneInCorso = false;
-                },
-              });
-            } else {
-              this.animazioneInCorso = false;
-            }
-          }, 0);
-        });
-      },
-    });
-
-    if (contenutoScelta) {
-      timeline.to(contenutoScelta, {
-        opacity: 0,
-        scaleX: 0,
-        duration: 0.35,
-        ease: 'power2.in',
-        transformOrigin: 'center center',
-      }, 0);
-    }
-
-    if (bottoneIndietro) {
-      timeline.to(bottoneIndietro, {
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.in',
-      }, 0);
-    }
+    vaiAIndirizzi(): void {
+    this.cambiaVistaProfilo('indirizzi');
   }
 
   apriFormModifica(i: number): void {
@@ -925,78 +715,7 @@ chiudiSelectNazioni(): void {
     });
   }
 
-  tornaAScelta(): void {
-    if (this.animazioneInCorso) return;
 
-    this.animazioneInCorso = true;
-
-    const contenutoUscita = document.querySelector('.form-profilo, .indirizzi-contenuto, .contatti-contenuto, .anagrafica-contenuto') as HTMLElement | null;
-    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-    if (contenutoUscita) {
-      gsap.killTweensOf(contenutoUscita);
-    }
-    if (bottoneIndietro) {
-      gsap.killTweensOf(bottoneIndietro);
-    }
-
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        this.ngZone.run(() => {
-          this.vistaCorrente = 'scelta';
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
-            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-            if (contenutoScelta) {
-              gsap.set(contenutoScelta, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-              gsap.to(contenutoScelta, {
-                opacity: 1,
-                scaleX: 1,
-                duration: 0.45,
-                ease: 'power2.out',
-              });
-            }
-
-            if (nuovoBottoneIndietro) {
-              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
-              gsap.to(nuovoBottoneIndietro, {
-                opacity: 1,
-                duration: 0.35,
-                delay: 0.08,
-                ease: 'power2.out',
-                onComplete: () => {
-                  this.animazioneInCorso = false;
-                },
-              });
-            } else {
-              this.animazioneInCorso = false;
-            }
-          }, 0);
-        });
-      },
-    });
-
-    if (contenutoUscita) {
-      timeline.to(contenutoUscita, {
-        opacity: 0,
-        scaleX: 0,
-        duration: 0.35,
-        ease: 'power2.in',
-        transformOrigin: 'center center',
-      }, 0);
-    }
-
-    if (bottoneIndietro) {
-      timeline.to(bottoneIndietro, {
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.in',
-      }, 0);
-    }
-  }
 private caricaRecapiti(): void {
     this.api.getMieiRecapiti().pipe(take(1)).subscribe({
       next: (rit) => {
@@ -1025,51 +744,8 @@ private caricaRecapiti(): void {
     return primoPrefissoDaIso(this.selectNazioniService.nazioni, domicilio?.iso ?? 'IT');
   }
 
-  vaiAContatti(): void {
-    if (this.animazioneInCorso) return;
-    this.animazioneInCorso = true;
-
-    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
-    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-    if (contenutoScelta) gsap.killTweensOf(contenutoScelta);
-    if (bottoneIndietro) gsap.killTweensOf(bottoneIndietro);
-
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        this.ngZone.run(() => {
-          this.vistaCorrente = 'contatti';
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            const contenutoContatti = document.querySelector('.contatti-contenuto') as HTMLElement | null;
-            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-            if (contenutoContatti) {
-              gsap.set(contenutoContatti, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-              gsap.to(contenutoContatti, { opacity: 1, scaleX: 1, duration: 0.45, ease: 'power2.out' });
-            }
-
-            if (nuovoBottoneIndietro) {
-              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
-              gsap.to(nuovoBottoneIndietro, {
-                opacity: 1, duration: 0.35, delay: 0.08, ease: 'power2.out',
-                onComplete: () => { this.animazioneInCorso = false; },
-              });
-            } else {
-              this.animazioneInCorso = false;
-            }
-          }, 0);
-        });
-      },
-    });
-
-    if (contenutoScelta) {
-      timeline.to(contenutoScelta, { opacity: 0, scaleX: 0, duration: 0.35, ease: 'power2.in', transformOrigin: 'center center' }, 0);
-    }
-    if (bottoneIndietro) {
-      timeline.to(bottoneIndietro, { opacity: 0, duration: 0.2, ease: 'power2.in' }, 0);
-    }
+   vaiAContatti(): void {
+    this.cambiaVistaProfilo('contatti');
   }
 
   apriFormModificaRecapito(i: number): void {
@@ -1520,53 +1196,9 @@ svuotaCFAnag(): void {
     this.formAnagrafica.get('codiceFiscale')!.markAsTouched();
 }
 
-vaiAAnagrafica(): void {
-    if (this.animazioneInCorso) return;
-    this.animazioneInCorso = true;
-
-    const contenutoScelta = document.querySelector('.scelta-contenuto') as HTMLElement | null;
-    const bottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-    if (contenutoScelta) gsap.killTweensOf(contenutoScelta);
-    if (bottoneIndietro) gsap.killTweensOf(bottoneIndietro);
-
-    const timeline = gsap.timeline({
-      onComplete: () => {
-        this.ngZone.run(() => {
-          this.vistaCorrente = 'anagrafica';
-          this.caricaDatiAnagrafici();
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            const contenuto = document.querySelector('.anagrafica-contenuto') as HTMLElement | null;
-            const nuovoBottoneIndietro = document.querySelector('.profilo-indietro-btn') as HTMLElement | null;
-
-            if (contenuto) {
-              gsap.set(contenuto, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-              gsap.to(contenuto, { opacity: 1, scaleX: 1, duration: 0.45, ease: 'power2.out' });
-            }
-
-            if (nuovoBottoneIndietro) {
-              gsap.set(nuovoBottoneIndietro, { opacity: 0 });
-              gsap.to(nuovoBottoneIndietro, {
-                opacity: 1, duration: 0.35, delay: 0.08, ease: 'power2.out',
-                onComplete: () => { this.animazioneInCorso = false; },
-              });
-            } else {
-              this.animazioneInCorso = false;
-            }
-          }, 0);
-        });
-      },
-    });
-
-    if (contenutoScelta) {
-      timeline.to(contenutoScelta, { opacity: 0, scaleX: 0, duration: 0.35, ease: 'power2.in', transformOrigin: 'center center' }, 0);
-    }
-    if (bottoneIndietro) {
-      timeline.to(bottoneIndietro, { opacity: 0, duration: 0.2, ease: 'power2.in' }, 0);
-    }
-}
+  vaiAAnagrafica(): void {
+    this.cambiaVistaProfilo('anagrafica');
+  }
 
 caricaDatiAnagrafici(): void {
     this.api.getMieiDatiAnagrafici().pipe(take(1)).subscribe({
@@ -1636,7 +1268,25 @@ salvaAnagrafica(): void {
       comune_nascita:   isIT ? f.comune : null,
       citta_nascita:    !isIT ? f.citta : null,
     }).pipe(take(1)).subscribe({
-      next: () => {
+      next: (rit: any) => {
+        const nuovoTk = rit.tk ?? rit.data?.tk;
+
+        if (nuovoTk) {
+          const p = UtilityService.leggiToken(nuovoTk)?.data || {};
+          const authCorrente = this.authService.leggiObsAuth().value;
+          const restaCollegato = !!localStorage.getItem('auth');
+
+          const nuovaAuth: Auth = {
+            ...authCorrente,
+            tk: nuovoTk,
+            nome: p.nome ?? authCorrente.nome,
+            minorenne: p.minorenne ?? authCorrente.minorenne,
+          };
+
+          this.authService.settaObsAuth(nuovaAuth);
+          this.authService.scriviAuthSuStorage(nuovaAuth, restaCollegato);
+        }
+
         this.salvataggioAnagInCorso = false;
         this.toastService.successo(this.translate.instant('ui.profilo.anagrafica.salvataggio.successo'));
       },
@@ -1646,16 +1296,7 @@ salvaAnagrafica(): void {
       },
     });
 }
-  onClickIndietro(): void {
-    if (this.animazioneInCorso) return;
 
-    if (this.vistaCorrente === 'email' || this.vistaCorrente === 'password' || this.vistaCorrente === 'indirizzi' || this.vistaCorrente === 'contatti' || this.vistaCorrente === 'anagrafica') {
-      this.tornaAScelta();
-      return;
-    }
-
-    this.tornaIndietro();
-  }
 
   inviaEmail(): void {
     this.formInviato = true;
@@ -1681,7 +1322,7 @@ salvaAnagrafica(): void {
               this.stoVerificando = false;
               this.toastService.chiudi('login_errore');
               this.toastService.successo(this.translate.instant('ui.profilo.cambio_email.successo'));
-              this.tornaAScelta();
+              this.cambiaVistaProfilo('anagrafica');
             },
             error: () => {
               this.stoVerificando = false;
@@ -1800,7 +1441,7 @@ salvaAnagrafica(): void {
               this.toastService.chiudi('login_errore');
               this.toastService.chiudi('password_preavviso');
               this.toastService.successo(this.translate.instant('ui.profilo.cambio_password.successo'));
-              this.tornaAScelta();
+              this.cambiaVistaProfilo('anagrafica');
             },
             error: (err) => {
               this.stoVerificando = false;
@@ -1864,4 +1505,55 @@ validaDataNascitaProfilo(group: any) {
 
     return dataValida ? null : { dataNascitaNonValida: true };
 }
+
+  cambiaVistaProfilo(vista: 'email' | 'password' | 'indirizzi' | 'contatti' | 'anagrafica'): void {
+    if (this.animazioneInCorso || this.vistaCorrente === vista) return;
+
+    this.animazioneInCorso = true;
+
+    const contenutoUscita = document.querySelector('.campo-animato') as HTMLElement | null;
+
+    if (contenutoUscita) {
+      gsap.killTweensOf(contenutoUscita);
+    }
+
+    gsap.to(contenutoUscita, {
+      opacity: 0,
+      scaleX: 0,
+      duration: 0.35,
+      ease: 'power2.in',
+      transformOrigin: 'center center',
+      onComplete: () => {
+        this.ngZone.run(() => {
+          this.vistaCorrente = vista;
+          this.formInviato = false;
+
+          if (vista === 'anagrafica') {
+            this.caricaDatiAnagrafici();
+          }
+
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            const contenutoEntrata = document.querySelector('.campo-animato') as HTMLElement | null;
+
+            if (contenutoEntrata) {
+              gsap.set(contenutoEntrata, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+              gsap.to(contenutoEntrata, {
+                opacity: 1,
+                scaleX: 1,
+                duration: 0.45,
+                ease: 'power2.out',
+                onComplete: () => {
+                  this.animazioneInCorso = false;
+                },
+              });
+            } else {
+              this.animazioneInCorso = false;
+            }
+          }, 0);
+        });
+      },
+    });
+  }
 }

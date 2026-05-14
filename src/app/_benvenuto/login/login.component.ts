@@ -311,6 +311,7 @@ apriFormReset(): void {
             idUtente: p.id_contatto ?? null,
             abilita: Array.isArray(p.abilita) ? p.abilita : null,
             isoNazione: p.iso_nazione ?? null,
+            minorenne: p.minorenne ?? false,
             preavvisoPsw: p.preavviso_psw ?? null,
             giorniScadenzaPsw: p.giorni_scadenza_psw ?? null,
           };
@@ -405,6 +406,7 @@ apriFormReset(): void {
           idUtente: null,
           abilita: null,
           isoNazione: null,
+          minorenne: false,
           preavvisoPsw: null,
           giorniScadenzaPsw: null,
         };

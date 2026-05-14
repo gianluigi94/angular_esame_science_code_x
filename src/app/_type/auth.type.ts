@@ -6,6 +6,7 @@ export type Auth={
   abilita: number[] | null,
   idUtente: number | null,
   isoNazione: string | null,
+  minorenne?: boolean,
   preavvisoPsw: boolean | null,
   giorniScadenzaPsw: number | null
 }

@@ -71,6 +71,7 @@ export class Authservice {
         nome: null,
         abilita: null,
         isoNazione: null,
+        minorenne: false,
         preavvisoPsw: null,
         giorniScadenzaPsw: null,
       };
@@ -100,6 +101,7 @@ export class Authservice {
       nome: null,
       abilita: null,
       isoNazione: null,
+      minorenne: false,
       preavvisoPsw: null,
       giorniScadenzaPsw: null,
     };

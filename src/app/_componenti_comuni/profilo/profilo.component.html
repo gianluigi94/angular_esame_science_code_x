@@ -7,28 +7,34 @@
 
   <section class="profilo-contenuto">
     <div class="profilo-blocco">
-      <h2 class="profilo-titolo">
-        {{
-          (vistaCorrente === 'email' ? 'ui.profilo.email.bottone'
-            : vistaCorrente === 'password' ? 'ui.profilo.password.bottone'
-            : vistaCorrente === 'indirizzi' ? 'ui.profilo.indirizzi.bottone'
-            : vistaCorrente === 'contatti' ? 'ui.profilo.contatti.bottone'
-            : vistaCorrente === 'anagrafica' ? 'ui.profilo.anagrafica.bottone'
-            : 'ui.profilo.titolo'
-          ) | translate
-        }}
-      </h2>
+
 
       <div class="profilo-box">
-        <div
-          *ngIf="vistaCorrente === 'scelta'"
-          class="scelta-contenuto campo-animato"
-        >
-          <button type="button" class="azione-btn" (click)="vaiAEmail()">
-  {{ 'ui.profilo.email.bottone' | translate }}
-</button>
+        <nav class="profilo-menu campo-menu-animato">
+          <button
+            type="button"
+            class="azione-btn"
+            [class.selezionato]="vistaCorrente === 'anagrafica'"
+            (click)="cambiaVistaProfilo('anagrafica')"
+          >
+            {{ 'ui.profilo.anagrafica.bottone' | translate }}
+          </button>
 
-          <button type="button" class="azione-btn azione-password-btn" (click)="vaiAPassword()">
+          <button
+            type="button"
+            class="azione-btn"
+            [class.selezionato]="vistaCorrente === 'email'"
+            (click)="cambiaVistaProfilo('email')"
+          >
+            {{ 'ui.profilo.email.bottone' | translate }}
+          </button>
+
+          <button
+            type="button"
+            class="azione-btn azione-password-btn"
+            [class.selezionato]="vistaCorrente === 'password'"
+            (click)="cambiaVistaProfilo('password')"
+          >
             {{ 'ui.profilo.password.bottone' | translate }}
             <span
               *ngIf="mostraIconaPreavvisoPassword"
@@ -37,18 +43,49 @@
             >!</span>
           </button>
 
-          <button type="button" class="azione-btn" (click)="vaiAIndirizzi()">
+          <button
+            type="button"
+            class="azione-btn"
+            [class.selezionato]="vistaCorrente === 'indirizzi'"
+            (click)="cambiaVistaProfilo('indirizzi')"
+          >
             {{ 'ui.profilo.indirizzi.bottone' | translate }}
           </button>
 
-          <button type="button" class="azione-btn" (click)="vaiAContatti()">
+          <button
+            type="button"
+            class="azione-btn"
+            [class.selezionato]="vistaCorrente === 'contatti'"
+            (click)="cambiaVistaProfilo('contatti')"
+          >
             {{ 'ui.profilo.contatti.bottone' | translate }}
           </button>
 
-          <button type="button" class="azione-btn" (click)="vaiAAnagrafica()">
-            {{ 'ui.profilo.anagrafica.bottone' | translate }}
+          <button type="button" class="torna-catalogo-btn" (click)="tornaIndietro()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="#c4c4c4"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            {{ 'ui.torna.log.contatti' | translate }}
           </button>
-        </div>
+        </nav>
+
+        <div class="profilo-pannello">
+          <h2 class="profilo-titolo">
+            {{
+              (vistaCorrente === 'email' ? 'ui.profilo.email.bottone'
+                : vistaCorrente === 'password' ? 'ui.profilo.password.bottone'
+                : vistaCorrente === 'indirizzi' ? 'ui.profilo.indirizzi.bottone'
+                : vistaCorrente === 'contatti' ? 'ui.profilo.contatti.bottone'
+                : 'ui.profilo.anagrafica.bottone'
+              ) | translate
+            }}
+          </h2>
 
         <form
           *ngIf="vistaCorrente === 'email'"
@@ -950,7 +987,7 @@
                   (click)="salvaModificaIndirizzo(i)"
                 >
                   <ng-container *ngIf="!salvataggioInCorso">
-                    {{ 'ui.profilo.indirizzi.form.salva' | translate }}
+                    {{ 'ui.profilo.email.invia' | translate }}
                   </ng-container>
                   <app-spinner *ngIf="salvataggioInCorso"></app-spinner>
                 </button>
@@ -1586,7 +1623,7 @@
                     (click)="salvaModificaRecapito(i)"
                   >
                     <ng-container *ngIf="!salvataggioRecapitoInCorso">
-                      {{ 'ui.profilo.contatti.form.salva' | translate }}
+                      {{ 'ui.profilo.email.invia' | translate }}
                     </ng-container>
                     <app-spinner *ngIf="salvataggioRecapitoInCorso"></app-spinner>
                   </button>
@@ -1935,37 +1972,20 @@
             </p>
           </div>
 
-          <div class="form-bottoni" style="margin-top: 20px;">
-            <button type="button" class="btn-salva" [disabled]="salvataggioAnagInCorso || formAnagrafica.invalid" (click)="salvaAnagrafica()">
-              <ng-container *ngIf="!salvataggioAnagInCorso">{{ 'ui.profilo.indirizzi.form.salva' | translate }}</ng-container>
+          <div class="form-bottoni form-bottoni-anagrafica">
+            <button
+  class="invia_btn"
+  type="button"
+  [disabled]="salvataggioAnagInCorso || formAnagrafica.invalid"
+  (click)="salvaAnagrafica()"
+>
+              <ng-container *ngIf="!salvataggioAnagInCorso">{{ 'ui.profilo.email.invia' | translate }}</ng-container>
               <app-spinner *ngIf="salvataggioAnagInCorso"></app-spinner>
             </button>
           </div>
         </div>
+        </div>
       </div>
-
-      <button
-        type="button"
-        class="profilo-indietro-btn"
-        (click)="onClickIndietro()"
-        [disabled]="animazioneInCorso"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="#c4c4c4"
-        >
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-        {{
-          (vistaCorrente === "email" || vistaCorrente === "password" || vistaCorrente === "indirizzi" || vistaCorrente === "contatti" || vistaCorrente === "anagrafica"
-            ? "ui.main.tornaIndietro"
-            : "ui.torna.log.contatti"
-          ) | translate
-        }}
-      </button>
     </div>
 
     <div class="modale-overlay" *ngIf="indirizzoDaEliminare" (click)="chiudiModaleEliminazione()">
