@@ -57,6 +57,7 @@
       *ngIf="tipoContenuto === 'film'"
       type="button"
       class="riproduci"
+      [class.bloccato]="pagamentoFallito"
       [title]="labelRiproduciTitle"
       (click)="onRiproduci()"
     >
@@ -181,6 +182,7 @@
             );
             let i = index
           "
+          [class.bloccato]="pagamentoFallito"
           [title]="
             ('ui.scheda.episodio.tittle.button' | translate) +
             ': ' +

@@ -2,24 +2,30 @@
   <div
     class="toast"
     *ngFor="let t of toasts"
-    [ngClass]="[t.tipo, t.mostraSpinner === true ? 'con-spinner' : '']"
+    [ngClass]="[t.tipo, t.mostraSpinner === true ? 'con-spinner' : '', t.caricamentoInCorso ? 'solo-spinner' : '']"
   >
-    <app-spinner *ngIf="t.mostraSpinner === true"></app-spinner>
+    <app-spinner *ngIf="t.mostraSpinner === true || t.caricamentoInCorso"></app-spinner>
 
-    <span class="toast-testo">
-      {{ t.testo }}
-    </span>
+    <ng-container *ngIf="!t.caricamentoInCorso">
+      <span class="toast-testo">
+        {{ t.testo }}
+      </span>
 
-    <a *ngIf="t.azione === 'ripeti_accesso'" href="javascript:void(0)" (click)="onRipetiAccesso($event)" class="toast-link">
-      {{ 'ui.toast.sessione.link' | translate }}
-    </a>
+      <a *ngIf="t.azione === 'ripeti_accesso'" href="javascript:void(0)" (click)="onRipetiAccesso($event)" class="toast-link">
+        {{ 'ui.toast.sessione.link' | translate }}
+      </a>
 
-    <a *ngIf="t.azione === 'apri_reset'" href="javascript:void(0)" (click)="onApriReset($event, t.chiave)" class="toast-link">
-      {{ 'ui.toast.password_scaduta.link' | translate }}
-    </a>
+      <a *ngIf="t.azione === 'apri_reset'" href="javascript:void(0)" (click)="onApriReset($event, t.chiave)" class="toast-link">
+        {{ 'ui.toast.password_scaduta.link' | translate }}
+      </a>
 
-    <a *ngIf="t.azione === 'cambio_password'" href="javascript:void(0)" (click)="onCambioPassword($event, t.chiave)" class="toast-link toast-link-preavviso-password">
-      {{ 'ui.toast.password_preavviso.link' | translate }}
-    </a>
+      <a *ngIf="t.azione === 'cambio_password'" href="javascript:void(0)" (click)="onCambioPassword($event, t.chiave)" class="toast-link toast-link-preavviso-password">
+        {{ 'ui.toast.password_preavviso.link' | translate }}
+      </a>
+
+      <a *ngIf="t.azione === 'correggi_pagamento'" href="javascript:void(0)" (click)="onCorreggiPagamento($event, t)" class="toast-link toast-link-preavviso-password">
+        {{ 'ui.toast.pagamento_fallito.link' | translate }}
+      </a>
+    </ng-container>
   </div>
 </div>

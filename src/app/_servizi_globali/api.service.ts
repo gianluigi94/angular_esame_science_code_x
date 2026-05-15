@@ -20,9 +20,9 @@ export class ApiService {
    */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    // const server: string = 'http://localhost/science_codex/public/api';
+    const server: string = 'http://localhost/science_codex/public/api';
     // const server: string = 'http://192.168.1.38/science_codex/public/api';
-    const server: string = 'https://api.sciencecodex.net/api';
+    // const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
 
     const segments = [server, versione, ...risorsa.map(String)]; // Unisco server, versione e parametri della risorsa in un array
@@ -661,4 +661,13 @@ public aggiornaDatiAnagrafici(dati: {
     const url = this.calcolaRisorsa(['miei-dati-anagrafici']);
     return this.http.put<IRispostaServer>(url, dati);
 }
+
+public correggiPagamento(): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['correggi-pagamento']);
+    return this.http.put<IRispostaServer>(url, {});
+  }
+
+  public verificaPagamento(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['verifica-pagamento'], 'GET');
+  }
 }

@@ -79,3 +79,15 @@ app-spinner{
   margin-bottom: 15px;
   font-weight: bolder;
 }
+.toast.solo-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+}
+
+.toast.solo-spinner app-spinner {
+  transform: scale(1.5);
+  margin-bottom: 18px!important;
+  margin-top: 18px!important;
+}

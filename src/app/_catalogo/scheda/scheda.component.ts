@@ -8,6 +8,8 @@ import { take } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { CambioLinguaService } from 'src/app/_servizi_globali/cambio-lingua.service';
+import { StatoPagamentoService } from 'src/app/_servizi_globali/stato-pagamento.service';
+import { ToastService } from 'src/app/_servizi_globali/toast.service';
 import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.service';
 import { TitoloPaginaService } from 'src/app/_servizi_globali/titolo-pagina.service';
 import { SchedaProntaService } from './scheda_service/scheda-pronta.service';
@@ -58,7 +60,8 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
   startAnim = false; // segno se devo avviare l'animazione generale
   startAnimTitolo = false; // segno se devo avviare l'animazione del titolo
   startAnimDescrizione = false; // segno se devo avviare l'animazione della descrizione
-  segnale_cambio = false; // segno se e' avvenuto un cambio da propagare alla UI
+  segnale_cambio = false;
+  pagamentoFallito = false; // segno se e' avvenuto un cambio da propagare alla UI
 
   private _loaderNascosto = false; // segno se il loader globale e' gia' sparito
   private _sfondoPronto = false; // segno se lo sfondo e' pronto
@@ -214,6 +217,8 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
     private transizioneTitolo: SchedaPlayerTransizioneTitoloService,
     private titoloPagina: TitoloPaginaService,
     private cdr: ChangeDetectorRef,
+    private statoPagamento: StatoPagamentoService,
+    private toastService: ToastService,
   ) {
     this.ctx = new SchedaStateContext(); // creo il contesto condiviso della scheda
 
@@ -365,19 +370,15 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
    *
    * @returns void
    */
-  onRiproduci(): void {
+onRiproduci(): void {
+    if (this.pagamentoFallito) return;
     this.avviaTransizionePlayer();
-  } // delego l'avvio del player principale
+  }
 
-  /**
-   * Avvia la transizione verso il player principale per un episodio specifico.
-   *
-   * @param n Numero episodio selezionato.
-   * @returns void
-   */
   onClicEpisodio(n: number): void {
+    if (this.pagamentoFallito) return;
     this.avviaTransizionePlayer(n);
-  } // delego l'avvio del player episodio
+  }
 
   /**
    * Seleziona una stagione della serie.
@@ -487,7 +488,11 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
     if (tabellaDaState) this.applicaTabellaDaState(tabellaDaState); // applico subito i dati tabellari ricevuti
 
     this.setupCambioLinguaSubscriptions(); // collego le subscription del cambio lingua
-    this.setupParamMapSubscription(); // collego la subscription ai parametri route
+    this.setupParamMapSubscription();
+
+    this.subs.add(
+      this.statoPagamento.fallito$.subscribe(v => this.pagamentoFallito = v)
+    );
 
     this.subs.add(
       this.stopVideoGlobale
@@ -803,8 +808,33 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
    * @returns void
    */
   private avviaTransizionePlayer(episodio?: number): void {
-    if (!this.ctx.slugCorrente) return; // esco se non ho lo slug del contenuto corrente
-    const BASE = 'https://d2kd3i5q9rl184.cloudfront.net/streaming'; // definisco la base degli stream HLS
+    if (this.pagamentoFallito) return;
+    if (!this.ctx.slugCorrente) return;
+
+    this.eseguiTransizionePlayer(episodio);
+
+    this.api.verificaPagamento().pipe(take(1)).subscribe({
+      next: (ris) => {
+        if (!ris.data?.pagamento_ok) {
+          this.statoPagamento.aggiorna(true);
+          this.mostraPlayerVideo = false;
+          this.transitioneVersoPLayer = false;
+          this.schedaPronta.impostaPlayerAperto(false);
+          this.schedaPronta.impostaHeaderNascosto(false);
+          this.transizioneTitolo.ripristinaTitoloOrigineScheda();
+          const pathPulito = this.location.path(true).split('?')[0];
+          this.location.replaceState(pathPulito);
+          this.translate.get('ui.toast.pagamento_bloccato').pipe(take(1)).subscribe(testo => {
+            this.toastService.errorePersistente(testo);
+          });
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  private eseguiTransizionePlayer(episodio?: number): void {
+    const BASE = 'https://d2kd3i5q9rl184.cloudfront.net/streaming';
     const slug = this.ctx.slugCorrente; // mi salvo lo slug del contenuto
 
     if (this.ctx.tipoContenuto === 'film') {

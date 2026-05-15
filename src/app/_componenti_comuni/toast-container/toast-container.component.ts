@@ -2,9 +2,13 @@
 
   import { Component, OnDestroy, OnInit } from '@angular/core';
   import { Subscription } from 'rxjs';
+  import { take } from 'rxjs/operators';
+  import { TranslateService } from '@ngx-translate/core';
   import { ToastService} from 'src/app/_servizi_globali/toast.service';
   import { ToastMessage } from 'src/app/_type/toast-messaggio.type';
   import { CambioProfiloAnimazioneService } from 'src/app/_servizi_globali/cambio-profilo-animazione.service';
+  import { ApiService } from 'src/app/_servizi_globali/api.service';
+  import { StatoPagamentoService } from 'src/app/_servizi_globali/stato-pagamento.service';
   @Component({
     selector: 'app-toast-container',
     templateUrl: './toast-container.component.html',
@@ -16,9 +20,11 @@
     subChiudi?: Subscription; // mi tengo la sottoscrizione che ascolta la richiesta di chiusura di un singolo toast
     subChiudiTutti?: Subscription; // mi tengo la sottoscrizione che ascolta la richiesta di chiusura di tutti i toast
     constructor(
-      // preparo il componente ricevendo i servizi necessari
       private toastService: ToastService,
-      private cambioProfiloAnimazione: CambioProfiloAnimazioneService
+      private cambioProfiloAnimazione: CambioProfiloAnimazioneService,
+      private api: ApiService,
+      private translate: TranslateService,
+      private statoPagamento: StatoPagamentoService,
     ) {}
 
     /**
@@ -84,6 +90,29 @@
       event.preventDefault();
       if (chiave) this.toastService.chiudi(chiave);
       this.cambioProfiloAnimazione.apriProfilo();
+    }
+
+    onCorreggiPagamento(event: MouseEvent, toast: ToastMessage): void {
+      event.preventDefault();
+      toast.caricamentoInCorso = true;
+
+      const minWait = new Promise<void>(r => setTimeout(r, 2000));
+      const apiCall = new Promise<void>((resolve, reject) => {
+        this.api.correggiPagamento().pipe(take(1)).subscribe({
+          next: () => resolve(),
+          error: () => reject(),
+        });
+      });
+
+      Promise.all([minWait, apiCall]).then(() => {
+        this.toastService.chiudi('toast_pagamento_fallito');
+        this.statoPagamento.aggiorna(false);
+        this.translate.get('ui.toast.pagamento_corretto').pipe(take(1)).subscribe(testo => {
+          this.toastService.successo(testo);
+        });
+      }).catch(() => {
+        toast.caricamentoInCorso = false;
+      });
     }
 
     /**

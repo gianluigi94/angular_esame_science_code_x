@@ -26,7 +26,7 @@ interface RigaMese {
   giornoEmissione: number;
   totale: number;
   valuta: string;
-  stato: 'corrente' | 'saldato';
+  stato: 'corrente' | 'saldato' | 'rifiutato';
   giorni: RigaGiorno[];
   giorniCaricati: boolean;
   caricamentoGiorni: boolean;
@@ -154,7 +154,7 @@ tornaIndietro(): void {
     const mese = this.chiaviMesi[dataRif.getMonth()];
     const anno = dataRif.getFullYear();
     const giornoEmissione = r.data_emissione ? new Date(r.data_emissione).getDate() : dataRif.getDate();
-    const stato: 'corrente' | 'saldato' = r.stato === 'saldato' ? 'saldato' : 'corrente';
+    const stato: 'corrente' | 'saldato' | 'rifiutato' = r.stato === 'saldato' ? 'saldato' : r.stato === 'rifiutato' ? 'rifiutato' : 'corrente';
 
     return {
       id: r.id_ricevuta,

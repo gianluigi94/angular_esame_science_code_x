@@ -31,7 +31,7 @@
 
         <span class="col-mese">
           <span class="expand-icon" [class.ruotato]="riga.aperta">▶</span>
-          <ng-container *ngIf="riga.stato === 'saldato'">
+          <ng-container *ngIf="riga.stato === 'saldato' || riga.stato === 'rifiutato'">
             <ng-container *ngIf="linguaCorrente === 'it'">
               {{ riga.giornoEmissione }} {{ riga.mese | translate }} {{ riga.anno }}
             </ng-container>
@@ -49,13 +49,13 @@
         <span class="col-sconto">100%</span>
 
         <span class="col-stato">
-          <span class="pallino" [class.saldato]="riga.stato === 'saldato'" [class.corrente]="riga.stato === 'corrente'"></span>
-          {{ (riga.stato === 'saldato' ? 'ui.ricevute.stato.saldato' : 'ui.ricevute.stato.in_corso') | translate }}
+          <span class="pallino" [class.saldato]="riga.stato === 'saldato'" [class.corrente]="riga.stato === 'corrente'" [class.rifiutato]="riga.stato === 'rifiutato'"></span>
+          {{ (riga.stato === 'saldato' ? 'ui.ricevute.stato.saldato' : riga.stato === 'rifiutato' ? 'ui.ricevute.stato.rifiutato' : 'ui.ricevute.stato.in_corso') | translate }}
         </span>
 
         <span class="col-azioni">
           <button
-            *ngIf="riga.stato === 'saldato'"
+            *ngIf="riga.stato === 'saldato' || riga.stato === 'rifiutato'"
             class="btn-scarica"
             [disabled]="riga.scaricando"
             (click)="scarica(riga, $event)"
