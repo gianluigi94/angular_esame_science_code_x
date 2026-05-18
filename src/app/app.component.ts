@@ -80,6 +80,7 @@ export class AppComponent implements OnInit {
   spinnerRicevuteVisibile = false;
 spinnerProfiloVisibile = false;
 formAggiungiMediaVisibile = false;
+idCategoriaFormAggiungiMedia = '';
 private appLoader: AppLoaderService;
  private onApriPannelloPiano = () => {
     this.pannelloPianoVisibile = true;
@@ -182,7 +183,10 @@ private appLoader: AppLoaderService;
 
     window.addEventListener('apri-pannello-piano', this.onApriPannelloPiano);
 
-    window.addEventListener('apri-form-aggiungi-media', () => {
+    window.addEventListener('apri-form-aggiungi-media', (evento: Event) => {
+      const dettaglio = (evento as CustomEvent).detail;
+
+      this.idCategoriaFormAggiungiMedia = dettaglio?.idCategoria || '';
       this.formAggiungiMediaVisibile = true;
       this.cdr.detectChanges();
       requestAnimationFrame(() => {
@@ -538,6 +542,7 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
     const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
     if (!pannello) {
       this.formAggiungiMediaVisibile = false;
+      this.idCategoriaFormAggiungiMedia = '';
       return;
     }
     gsap.to(pannello, {
@@ -548,6 +553,7 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
       transformOrigin: 'center center',
       onComplete: () => {
         this.formAggiungiMediaVisibile = false;
+        this.idCategoriaFormAggiungiMedia = '';
         this.cdr.detectChanges();
       },
     });

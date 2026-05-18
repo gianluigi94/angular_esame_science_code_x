@@ -6,7 +6,23 @@
     <div class="form-media-scroll">
 
       <div class="sezione-form">
-        <h3 class="sezione-label">Scorciatoia testi <span class="formati-permessi-media">JSON opzionale</span></h3>
+        <h3 class="sezione-label">Tipologia</h3>
+
+        <div class="radio-novita radio-tipologia-media">
+          <label>
+            <input type="radio" name="tipoMedia" value="film" [(ngModel)]="tipoMedia" />
+            Film
+          </label>
+
+          <label>
+            <input type="radio" name="tipoMedia" value="serie" [(ngModel)]="tipoMedia" />
+            Serie
+          </label>
+        </div>
+      </div>
+
+      <div class="sezione-form">
+        <h3 class="sezione-label">Scorciatoia testi <span class="formati-permessi-media">JSON opzionale {{ tipoMedia === 'film' ? 'film' : 'serie' }}</span></h3>
 
         <div class="riga-uno">
           <div class="campo-wrapper-media campo-largo">
@@ -57,12 +73,82 @@
                   (click)="selezionaCategoria(cat)"
                   (mouseenter)="indiceCategoriaAttivo = i"
                 >
-                  {{ cat }}
+                  {{ cat.label }}
                 </div>
               </div>
             </div>
             <div class="errori-stack-media">
               <p class="errore-campo-media" *ngIf="formInviato && !categoriaSelezionata">La categoria è obbligatoria.</p>
+            </div>
+          </div>
+
+          <div class="campo-wrapper-media">
+            <p class="label-media">Seconda categoria <span class="formati-permessi-media">opzionale</span></p>
+            <div class="select-media">
+              <div
+                class="select-header-media"
+                [class.aperto]="categoriaSecondariaAperta"
+                [class.compilato]="categoriaSecondariaSelezionata"
+                [class.is-invalid]="formInviato && categoriaSecondariaSelezionata === categoriaSelezionata"
+                (click)="categoriaSecondariaAperta = !categoriaSecondariaAperta"
+              >
+                <span class="select-label-piccola-media">Seconda categoria</span>
+
+                <span [class.placeholder-media]="!categoriaSecondariaSelezionata">
+                  {{ categoriaSecondariaSelezionata || 'Seleziona seconda categoria' }}
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+                  <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+                </svg>
+              </div>
+              <div class="select-dropdown-media" *ngIf="categoriaSecondariaAperta">
+                <div
+                  class="select-opzione-media"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="rimuoviCategoriaSecondaria()"
+                >
+                  Nessuna
+                </div>
+
+                <div
+                  class="select-opzione-media"
+                  *ngFor="let cat of categorieSecondarieDisponibili(); let i = index"
+                  [class.attivo]="i === indiceCategoriaSecondariaAttivo"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="selezionaCategoriaSecondaria(cat)"
+                  (mouseenter)="indiceCategoriaSecondariaAttivo = i"
+                >
+                  {{ cat.label }}
+                </div>
+              </div>
+            </div>
+            <div class="errori-stack-media">
+              <p class="errore-campo-media" *ngIf="formInviato && categoriaSecondariaSelezionata === categoriaSelezionata">La seconda categoria deve essere diversa dalla categoria principale.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="riga-due">
+          <div class="campo-wrapper-media">
+            <p class="label-media">Regista <span class="asterisco-media">*</span></p>
+            <div class="campo-form-media">
+              <input
+                type="text"
+                placeholder=" "
+                name="regista"
+                [(ngModel)]="regista"
+                #registaCtrl="ngModel"
+                required
+                minlength="3"
+                maxlength="50"
+                [class.is-invalid]="registaCtrl.invalid && (registaCtrl.touched || formInviato)"
+              />
+              <label [class.is-invalid]="registaCtrl.invalid && (registaCtrl.touched || formInviato)">Regista</label>
+            </div>
+            <div class="errori-stack-media">
+              <p class="errore-campo-media" *ngIf="(registaCtrl.touched || formInviato) && registaCtrl.errors?.['required']">Il regista è obbligatorio.</p>
+              <p class="errore-campo-media" *ngIf="(registaCtrl.touched || formInviato) && registaCtrl.errors?.['minlength']">Il regista deve avere almeno 3 caratteri.</p>
+              <p class="errore-campo-media" *ngIf="(registaCtrl.touched || formInviato) && registaCtrl.errors?.['maxlength']">Il regista non può superare 50 caratteri.</p>
             </div>
           </div>
 
@@ -356,8 +442,185 @@
         </div>
       </div>
 
+      <div class="sezione-form" *ngIf="tipoMedia === 'serie'">
+        <h3 class="sezione-label">Stagioni</h3>
+
+        <div class="blocco-serie">
+          <div class="stagione-box" *ngFor="let stagione of stagioniSerie; let indiceStagione = index">
+            <div class="stagione-header" (click)="stagione.aperta = !stagione.aperta">
+              <span>Stagione {{ indiceStagione + 1 }}</span>
+
+              <div class="stagione-azioni">
+                <button type="button" class="btn-rimuovi-stagione" (click)="$event.stopPropagation(); rimuoviStagione(indiceStagione)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4h8v2" />
+                    <path d="M6 6l1 14h10l1-14" />
+                    <path d="M10 10v6" />
+                    <path d="M14 10v6" />
+                  </svg>
+                </button>
+
+                <span class="freccia-stagione" [class.aperta]="stagione.aperta">▾</span>
+              </div>
+            </div>
+
+            <div class="stagione-contenuto" *ngIf="stagione.aperta">
+              <p class="errore-campo-media" *ngIf="formInviato && stagione.episodi.length === 0">La stagione deve avere almeno un episodio.</p>
+
+              <div class="episodio-box" *ngFor="let episodio of stagione.episodi; let indiceEpisodio = index">
+                <div class="episodio-header" (click)="episodio.aperto = !episodio.aperto">
+                  <span>Episodio {{ indiceEpisodio + 1 }}</span>
+
+                  <div class="stagione-azioni">
+                    <button type="button" class="btn-rimuovi-stagione" (click)="$event.stopPropagation(); rimuoviEpisodio(indiceStagione, indiceEpisodio)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4h8v2" />
+                        <path d="M6 6l1 14h10l1-14" />
+                        <path d="M10 10v6" />
+                        <path d="M14 10v6" />
+                      </svg>
+                    </button>
+
+                    <span class="freccia-stagione" [class.aperta]="episodio.aperto">▾</span>
+                  </div>
+                </div>
+
+                <div class="episodio-contenuto" *ngIf="episodio.aperto">
+                  <div class="riga-due">
+                    <div class="campo-wrapper-media">
+                      <p class="label-media">Titolo italiano <span class="asterisco-media">*</span></p>
+                      <div class="campo-form-media">
+                        <input
+                          type="text"
+                          placeholder=" "
+                          [(ngModel)]="episodio.titoloIt"
+                          [name]="'episodio_titolo_it_' + indiceStagione + '_' + indiceEpisodio"
+                          #episodioTitoloItCtrl="ngModel"
+                          required
+                          minlength="3"
+                          maxlength="30"
+                          [class.is-invalid]="episodioTitoloItCtrl.invalid && (episodioTitoloItCtrl.touched || formInviato)"
+                        />
+                        <label [class.is-invalid]="episodioTitoloItCtrl.invalid && (episodioTitoloItCtrl.touched || formInviato)">Titolo</label>
+                      </div>
+                      <div class="errori-stack-media">
+                        <p class="errore-campo-media" *ngIf="(episodioTitoloItCtrl.touched || formInviato) && episodioTitoloItCtrl.errors?.['required']">Il titolo italiano è obbligatorio.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioTitoloItCtrl.touched || formInviato) && episodioTitoloItCtrl.errors?.['minlength']">Il titolo italiano deve avere almeno 3 caratteri.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioTitoloItCtrl.touched || formInviato) && episodioTitoloItCtrl.errors?.['maxlength']">Il titolo italiano non può superare 30 caratteri.</p>
+                      </div>
+                    </div>
+
+                    <div class="campo-wrapper-media">
+                      <p class="label-media">Titolo inglese <span class="asterisco-media">*</span></p>
+                      <div class="campo-form-media">
+                        <input
+                          type="text"
+                          placeholder=" "
+                          [(ngModel)]="episodio.titoloEn"
+                          [name]="'episodio_titolo_en_' + indiceStagione + '_' + indiceEpisodio"
+                          #episodioTitoloEnCtrl="ngModel"
+                          required
+                          minlength="3"
+                          maxlength="30"
+                          [class.is-invalid]="episodioTitoloEnCtrl.invalid && (episodioTitoloEnCtrl.touched || formInviato)"
+                        />
+                        <label [class.is-invalid]="episodioTitoloEnCtrl.invalid && (episodioTitoloEnCtrl.touched || formInviato)">Titolo</label>
+                      </div>
+                      <div class="errori-stack-media">
+                        <p class="errore-campo-media" *ngIf="(episodioTitoloEnCtrl.touched || formInviato) && episodioTitoloEnCtrl.errors?.['required']">Il titolo inglese è obbligatorio.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioTitoloEnCtrl.touched || formInviato) && episodioTitoloEnCtrl.errors?.['minlength']">Il titolo inglese deve avere almeno 3 caratteri.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioTitoloEnCtrl.touched || formInviato) && episodioTitoloEnCtrl.errors?.['maxlength']">Il titolo inglese non può superare 30 caratteri.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="riga-uno">
+                    <div class="campo-wrapper-media campo-largo">
+                      <p class="label-media">Descrizione italiana <span class="asterisco-media">*</span></p>
+                      <div class="campo-form-media">
+                        <textarea
+                          rows="3"
+                          placeholder=" "
+                          [(ngModel)]="episodio.descrizioneIt"
+                          [name]="'episodio_descrizione_it_' + indiceStagione + '_' + indiceEpisodio"
+                          #episodioDescrizioneItCtrl="ngModel"
+                          required
+                          minlength="10"
+                          [class.is-invalid]="(episodioDescrizioneItCtrl.invalid || episodio.descrizioneIt.trim().length > 3000) && (episodioDescrizioneItCtrl.touched || formInviato)"
+                        ></textarea>
+                        <label [class.is-invalid]="(episodioDescrizioneItCtrl.invalid || episodio.descrizioneIt.trim().length > 3000) && (episodioDescrizioneItCtrl.touched || formInviato)">Descrizione</label>
+                      </div>
+                      <div class="errori-stack-media">
+                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneItCtrl.touched || formInviato) && episodioDescrizioneItCtrl.errors?.['required']">La descrizione italiana è obbligatoria.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneItCtrl.touched || formInviato) && episodioDescrizioneItCtrl.errors?.['minlength']">La descrizione italiana deve avere almeno 10 caratteri.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneItCtrl.touched || formInviato) && episodio.descrizioneIt.trim().length > 3000">La descrizione italiana non può superare 3000 caratteri.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="riga-uno">
+                    <div class="campo-wrapper-media campo-largo">
+                      <p class="label-media">Descrizione inglese <span class="asterisco-media">*</span></p>
+                      <div class="campo-form-media">
+                        <textarea
+                          rows="3"
+                          placeholder=" "
+                          [(ngModel)]="episodio.descrizioneEn"
+                          [name]="'episodio_descrizione_en_' + indiceStagione + '_' + indiceEpisodio"
+                          #episodioDescrizioneEnCtrl="ngModel"
+                          required
+                          minlength="10"
+                          [class.is-invalid]="(episodioDescrizioneEnCtrl.invalid || episodio.descrizioneEn.trim().length > 3000) && (episodioDescrizioneEnCtrl.touched || formInviato)"
+                        ></textarea>
+                        <label [class.is-invalid]="(episodioDescrizioneEnCtrl.invalid || episodio.descrizioneEn.trim().length > 3000) && (episodioDescrizioneEnCtrl.touched || formInviato)">Descrizione</label>
+                      </div>
+                      <div class="errori-stack-media">
+                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneEnCtrl.touched || formInviato) && episodioDescrizioneEnCtrl.errors?.['required']">La descrizione inglese è obbligatoria.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneEnCtrl.touched || formInviato) && episodioDescrizioneEnCtrl.errors?.['minlength']">La descrizione inglese deve avere almeno 10 caratteri.</p>
+                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneEnCtrl.touched || formInviato) && episodio.descrizioneEn.trim().length > 3000">La descrizione inglese non può superare 3000 caratteri.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="riga-uno riga-centrata">
+                    <div class="campo-wrapper-media campo-copertina">
+                      <p class="label-media">Immagine anteprima <span class="asterisco-media">*</span></p>
+                      <div class="zona-drop" dragdrop (alRilascio)="onFileAnteprimaEpisodioDrop(indiceStagione, indiceEpisodio, $event)" (click)="inputAnteprimaEpisodio.click()">
+                        <input type="file" #inputAnteprimaEpisodio accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif" (change)="onFileAnteprimaEpisodioSelezionato(indiceStagione, indiceEpisodio, $event)" />
+                        <svg *ngIf="episodio.anteprima.length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
+                        <span *ngIf="episodio.anteprima.length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
+                        <span *ngIf="episodio.anteprima.length > 0" class="drop-nome">{{ episodio.anteprima[0].name }}</span>
+                        <button *ngIf="episodio.anteprima.length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviAnteprimaEpisodio(indiceStagione, indiceEpisodio)">✕</button>
+                      </div>
+                      <div class="errori-stack-media">
+                        <p class="errore-campo-media" *ngIf="formInviato && episodio.anteprima.length === 0 && !episodio.erroreAnteprima">L'immagine anteprima è obbligatoria.</p>
+                        <p class="errore-campo-media" *ngIf="episodio.erroreAnteprima">{{ episodio.erroreAnteprima }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="btn-aggiungi-episodio" (click)="aggiungiEpisodio(indiceStagione)">
+                <span>+</span>
+                Aggiungi episodio
+              </button>
+            </div>
+          </div>
+
+          <button type="button" class="btn-aggiungi-stagione" (click)="aggiungiStagione()">
+            <span>+</span>
+            Aggiungi stagione
+          </button>
+
+          <p class="errore-campo-media" *ngIf="formInviato && stagioniSerie.length === 0">Aggiungi almeno una stagione.</p>
+        </div>
+      </div>
+
       <div class="sezione-form">
-        <h3 class="sezione-label">Pacchetto HLS <span class="formati-permessi-media">cartella completa</span></h3>
+        <h3 class="sezione-label">Pacchetto HLS <span class="formati-permessi-media">{{ tipoMedia === 'film' ? 'cartella completa film' : 'cartella completa serie' }}</span></h3>
 
         <div class="riga-uno">
           <div class="campo-wrapper-media campo-largo">
@@ -376,32 +639,32 @@
 
                 <div class="riga-riepilogo-hls">
                   <span>master.m3u8</span>
-                  <strong>{{ fileHlsPresente('master.m3u8') ? 'presente' : 'mancante' }}</strong>
+                  <strong>{{ testoRiepilogoFileHls('master.m3u8') }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
-                  <span>360</span>
-                  <strong>{{ contaFileHls('360') }} file</strong>
+                  <span>360p.m3u8</span>
+                  <strong>{{ testoRiepilogoFileHls('360/360p.m3u8') }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
-                  <span>720</span>
-                  <strong>{{ contaFileHls('720') }} file</strong>
+                  <span>720p.m3u8</span>
+                  <strong>{{ testoRiepilogoFileHls('720/720p.m3u8') }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
-                  <span>1080</span>
-                  <strong>{{ contaFileHls('1080') }} file</strong>
+                  <span>1080p.m3u8</span>
+                  <strong>{{ testoRiepilogoFileHls('1080/1080p.m3u8') }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
-                  <span>Italiano</span>
-                  <strong>{{ contaFileHls('it') }} file</strong>
+                  <span>audio_it.m3u8</span>
+                  <strong>{{ testoRiepilogoFileHls('it/audio_it.m3u8') }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
-                  <span>Inglese</span>
-                  <strong>{{ contaFileHls('en') }} file</strong>
+                  <span>audio_en.m3u8</span>
+                  <strong>{{ testoRiepilogoFileHls('en/audio_en.m3u8') }}</strong>
                 </div>
 
                 <button type="button" class="btn-svuota-hls" aria-label="Svuota pacchetto" (click)="svuotaPacchettoHls($event)">
@@ -416,8 +679,8 @@
               </div>
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['pacchetto_hls'].length === 0 && !erroriFiles['pacchetto_hls']">Il pacchetto HLS è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['pacchetto_hls']">{{ erroriFiles['pacchetto_hls'] }}</p>
+              <p class="errore-campo-media" *ngIf="formInviato && files['pacchetto_hls'].length === 0 && !errorePacchettoHls()">Il pacchetto HLS è obbligatorio.</p>
+              <p class="errore-campo-media" *ngIf="errorePacchettoHls()">{{ errorePacchettoHls() }}</p>
             </div>
           </div>
         </div>

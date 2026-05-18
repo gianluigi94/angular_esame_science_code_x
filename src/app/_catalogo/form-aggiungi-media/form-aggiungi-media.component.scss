@@ -492,6 +492,112 @@
   &:hover { color: #ff4444; }
 }
 
+.blocco-serie {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-aggiungi-stagione,
+.btn-aggiungi-episodio {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #e79c50, #c97a2b);
+  color: white;
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 0 8px #999da0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  span {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  &:hover {
+    transform: scale(1.04) translateZ(0);
+    box-shadow: 0 0 14px #e79c5088;
+  }
+}
+
+.stagione-box,
+.episodio-box {
+  border: 1px solid rgba(231, 156, 80, 0.18);
+  border-radius: 8px;
+  background: rgba(38, 30, 24, 0.25);
+  overflow: hidden;
+}
+
+.stagione-header,
+.episodio-header {
+  min-height: 44px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "Quantico", serif;
+  color: #e79c50;
+  cursor: pointer;
+  background: rgba(231, 156, 80, 0.06);
+}
+
+.episodio-header {
+  color: rgba(231, 156, 80, 0.85);
+}
+
+.stagione-azioni {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-rimuovi-stagione {
+  background: transparent;
+  border: none;
+  color: #e07a7a;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: #e07a7a;
+  }
+
+  &:hover svg {
+    stroke: #ff4444;
+  }
+}
+
+.freccia-stagione {
+  display: inline-block;
+  transition: transform 0.2s ease;
+
+  &.aperta {
+    transform: rotate(180deg);
+  }
+}
+
+.stagione-contenuto,
+.episodio-contenuto {
+  padding: 14px;
+}
+
+.stagione-contenuto {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .radio-novita {
   display: flex;
   justify-content: flex-start;
@@ -508,6 +614,7 @@
 
   input {
     accent-color: #e79c50;
+    cursor: pointer;
   }
 }
 

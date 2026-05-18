@@ -1,17 +1,30 @@
-import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef, Input, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { ApiService } from 'src/app/_servizi_globali/api.service';
 
 @Component({
   selector: 'app-form-aggiungi-media',
   templateUrl: './form-aggiungi-media.component.html',
   styleUrls: ['./form-aggiungi-media.component.scss'],
 })
-export class FormAggiungiMediaComponent {
+export class FormAggiungiMediaComponent implements OnInit {
+  @Input() idCategoria = '';
   @Output() chiudi = new EventEmitter<void>();
+
+  constructor(public api: ApiService) {}
 
   categoriaAperta = false;
   categoriaSelezionata = '';
-  categorie = ['Azione', 'Commedia', 'Drammatico', 'Horror', 'Fantascienza', 'Thriller', 'Animazione'];
+  categoriaSecondariaAperta = false;
+  categoriaSecondariaSelezionata = '';
+  categorie: {
+    idCategoria: string;
+    codice: string;
+    label: string;
+  }[] = [];
   indiceCategoriaAttivo = -1;
+  indiceCategoriaSecondariaAttivo = -1;
 
   titoloIt = '';
   titoloEn = '';
@@ -20,6 +33,8 @@ export class FormAggiungiMediaComponent {
   descrizioneIt = '';
   descrizioneEn = '';
   anno = '';
+  regista = '';
+  tipoMedia: 'film' | 'serie' = 'film';
   novita = false;
   formInviato = false;
   formatiImmaginePermessi = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
@@ -58,9 +73,180 @@ export class FormAggiungiMediaComponent {
     pacchetto_hls: [],
   };
 
-  selezionaCategoria(cat: string): void {
-    this.categoriaSelezionata = cat;
+  stagioniSerie: {
+    aperta: boolean;
+    episodi: {
+      aperto: boolean;
+      titoloIt: string;
+      titoloEn: string;
+      descrizioneIt: string;
+      descrizioneEn: string;
+      anteprima: File[];
+      erroreAnteprima: string;
+    }[];
+  }[] = [];
+
+  ngOnInit(): void {
+    this.caricaCategorieItaliane();
+  }
+
+    caricaCategorieItaliane(): void {
+    forkJoin([
+      this.api.getCategorieCatalogo().pipe(take(1)),
+      this.api.getCategorieTraduzioni().pipe(take(1)),
+    ]).subscribe({
+      next: ([categorie, traduzioni]) => {
+        const listaCategorie = Array.isArray((categorie as any)?.data?.items)
+          ? (categorie as any).data.items
+          : Array.isArray((categorie as any)?.data) ? (categorie as any).data : [];
+
+        const listaTraduzioni = Array.isArray((traduzioni as any)?.data?.items)
+          ? (traduzioni as any).data.items
+          : Array.isArray((traduzioni as any)?.data) ? (traduzioni as any).data : [];
+
+        const mappaNome: Record<string, string> = {};
+
+        for (const tr of listaTraduzioni) {
+          if (String(tr?.id_lingua) !== '1') continue;
+
+          const idCat = String(tr?.id_categoria || '');
+          const nome = String(tr?.nome || '');
+
+          if (idCat && nome) mappaNome[idCat] = nome;
+        }
+
+        const categorieFinali: Array<{ idCategoria: string; codice: string; label: string }> = [];
+
+        for (const c of listaCategorie) {
+          const idCategoria = String(c?.id_categoria || c?.idCategoria || '');
+          const codice = String(c?.codice || c?.code || '');
+
+          if (!idCategoria) continue;
+
+          categorieFinali.push({
+            idCategoria,
+            codice,
+            label: mappaNome[idCategoria] || codice || idCategoria,
+          });
+        }
+
+        this.categorie = categorieFinali;
+        this.precompilaCategoriaDaId();
+      },
+      error: () => {
+        this.categorie = [];
+      },
+    });
+  }
+
+  precompilaCategoriaDaId(): void {
+    if (!this.idCategoria) return;
+
+    const categoria = this.categorie.find(
+      (cat) => cat.idCategoria === String(this.idCategoria),
+    );
+
+    if (!categoria) return;
+
+    this.selezionaCategoria(categoria);
+  }
+
+  selezionaCategoria(cat: { idCategoria: string; codice: string; label: string }): void {
+    this.categoriaSelezionata = cat.label;
     this.categoriaAperta = false;
+
+    if (this.categoriaSecondariaSelezionata === cat.label) {
+      this.categoriaSecondariaSelezionata = '';
+    }
+  }
+
+  selezionaCategoriaSecondaria(cat: { idCategoria: string; codice: string; label: string }): void {
+    this.categoriaSecondariaSelezionata = cat.label;
+    this.categoriaSecondariaAperta = false;
+  }
+
+  rimuoviCategoriaSecondaria(): void {
+    this.categoriaSecondariaSelezionata = '';
+    this.categoriaSecondariaAperta = false;
+  }
+
+  aggiungiStagione(): void {
+    this.stagioniSerie.push({
+      aperta: true,
+      episodi: [],
+    });
+
+    this.aggiornaErrorePacchettoHls();
+  }
+
+  rimuoviStagione(indiceStagione: number): void {
+    this.stagioniSerie.splice(indiceStagione, 1);
+    this.aggiornaErrorePacchettoHls();
+  }
+
+  aggiungiEpisodio(indiceStagione: number): void {
+    this.stagioniSerie[indiceStagione].episodi.push({
+      aperto: true,
+      titoloIt: '',
+      titoloEn: '',
+      descrizioneIt: '',
+      descrizioneEn: '',
+      anteprima: [],
+      erroreAnteprima: '',
+    });
+
+    this.aggiornaErrorePacchettoHls();
+  }
+
+  rimuoviEpisodio(indiceStagione: number, indiceEpisodio: number): void {
+    this.stagioniSerie[indiceStagione].episodi.splice(indiceEpisodio, 1);
+    this.aggiornaErrorePacchettoHls();
+  }
+
+  onFileAnteprimaEpisodioSelezionato(indiceStagione: number, indiceEpisodio: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+    this.aggiungiAnteprimaEpisodio(indiceStagione, indiceEpisodio, Array.from(input.files));
+    input.value = '';
+  }
+
+  onFileAnteprimaEpisodioDrop(indiceStagione: number, indiceEpisodio: number, fileList: FileList | File[]): void {
+    this.aggiungiAnteprimaEpisodio(indiceStagione, indiceEpisodio, Array.from(fileList));
+  }
+
+  aggiungiAnteprimaEpisodio(indiceStagione: number, indiceEpisodio: number, nuovi: File[]): void {
+    const episodio = this.stagioniSerie[indiceStagione].episodi[indiceEpisodio];
+    episodio.erroreAnteprima = '';
+
+    if (nuovi.length > 1) {
+      episodio.anteprima = [];
+      episodio.erroreAnteprima = 'Puoi caricare un solo file.';
+      return;
+    }
+
+    const file = nuovi[0];
+
+    if (!file) return;
+
+    if (!this.formatoImmagineValido(file)) {
+      episodio.anteprima = [];
+      episodio.erroreAnteprima = 'Formato non valido. Usa PNG, JPG, WEBP o AVIF.';
+      return;
+    }
+
+    if (file.size > this.pesoMassimoImmagine) {
+      episodio.anteprima = [];
+      episodio.erroreAnteprima = 'Il file non può superare 500 KB.';
+      return;
+    }
+
+    episodio.anteprima = [file];
+  }
+
+  rimuoviAnteprimaEpisodio(indiceStagione: number, indiceEpisodio: number): void {
+    const episodio = this.stagioniSerie[indiceStagione].episodi[indiceEpisodio];
+    episodio.anteprima = [];
+    episodio.erroreAnteprima = '';
   }
 
   onFileSelezionato(chiave: string, event: Event): void {
@@ -180,13 +366,14 @@ export class FormAggiungiMediaComponent {
         return;
       }
 
-      if (!this.pacchettoHlsValido(nuovi)) {
+      if (this.tipoMedia === 'film' && !this.pacchettoHlsValido(nuovi)) {
         this.files[chiave] = [];
         this.erroriFiles[chiave] = 'Pacchetto HLS incompleto. Controlla master, cartelle 360/720/1080/it/en e file m3u8/ts.';
         return;
       }
 
       this.files[chiave] = nuovi;
+      this.aggiornaErrorePacchettoHls();
       return;
     }
 
@@ -253,7 +440,10 @@ export class FormAggiungiMediaComponent {
 
   applicaJsonFilm(dati: any): void {
     if (typeof dati.categoria === 'string' && this.categorie.includes(dati.categoria)) this.categoriaSelezionata = dati.categoria;
+    if (typeof dati.categoriaSecondaria === 'string' && this.categorie.includes(dati.categoriaSecondaria) && dati.categoriaSecondaria !== dati.categoria) this.categoriaSecondariaSelezionata = dati.categoriaSecondaria;
     if (typeof dati.anno === 'string' || typeof dati.anno === 'number') this.anno = String(dati.anno).replace(/\D/g, '').slice(0, 4);
+    if (typeof dati.regista === 'string') this.regista = dati.regista;
+    if (dati.tipoMedia === 'film' || dati.tipoMedia === 'serie') this.tipoMedia = dati.tipoMedia;
     if (typeof dati.titoloIt === 'string') this.titoloIt = dati.titoloIt;
     if (typeof dati.titoloEn === 'string') this.titoloEn = dati.titoloEn;
     if (typeof dati.sottotitoloIt === 'string') this.sottotitoloIt = dati.sottotitoloIt;
@@ -261,6 +451,30 @@ export class FormAggiungiMediaComponent {
     if (typeof dati.descrizioneIt === 'string') this.descrizioneIt = dati.descrizioneIt;
     if (typeof dati.descrizioneEn === 'string') this.descrizioneEn = dati.descrizioneEn;
     if (typeof dati.novita === 'boolean') this.novita = dati.novita;
+
+    if (Array.isArray(dati.stagioni)) {
+      this.tipoMedia = 'serie';
+      this.applicaJsonStagioni(dati.stagioni);
+    }
+  }
+
+  applicaJsonStagioni(stagioni: any[]): void {
+    this.stagioniSerie = stagioni.map(stagione => ({
+      aperta: true,
+      episodi: Array.isArray(stagione.episodi)
+        ? stagione.episodi.map((episodio: any) => ({
+            aperto: true,
+            titoloIt: typeof episodio.titoloIt === 'string' ? episodio.titoloIt : '',
+            titoloEn: typeof episodio.titoloEn === 'string' ? episodio.titoloEn : '',
+            descrizioneIt: typeof episodio.descrizioneIt === 'string' ? episodio.descrizioneIt : '',
+            descrizioneEn: typeof episodio.descrizioneEn === 'string' ? episodio.descrizioneEn : '',
+            anteprima: [],
+            erroreAnteprima: '',
+          }))
+        : [],
+    }));
+
+    this.aggiornaErrorePacchettoHls();
   }
 
   percorsoFile(file: File): string {
@@ -314,6 +528,111 @@ export class FormAggiungiMediaComponent {
       .some(file => this.percorsoFile(file).endsWith(nomeFile));
   }
 
+  contaFileHlsPerNome(nomeFile: string): number {
+    return this.files['pacchetto_hls']
+      .filter(file => this.percorsoFile(file).endsWith(nomeFile))
+      .length;
+  }
+
+  testoRiepilogoFileHls(nomeFile: string): string {
+    if (this.tipoMedia === 'film') {
+      return this.fileHlsPresente(nomeFile) ? 'presente' : 'mancante';
+    }
+
+    return `${this.contaFileHlsPerNome(nomeFile)} file`;
+  }
+
+  aggiornaErrorePacchettoHls(): void {
+    if (this.files['pacchetto_hls'].length === 0) return;
+
+    if (this.tipoMedia === 'serie') {
+      this.erroriFiles['pacchetto_hls'] = this.messaggioErroreHlsSerie();
+    }
+  }
+
+  errorePacchettoHls(): string {
+    if (this.files['pacchetto_hls'].length === 0) return '';
+    if (this.tipoMedia === 'serie') return this.messaggioErroreHlsSerie();
+
+    return this.erroriFiles['pacchetto_hls'];
+  }
+
+  messaggioErroreHlsSerie(): string {
+    if (this.tipoMedia !== 'serie') return '';
+    if (this.files['pacchetto_hls'].length === 0) return '';
+    if (this.stagioniSerie.length === 0) return 'Aggiungi almeno una stagione prima di validare il pacchetto HLS.';
+
+    const percorsi = this.files['pacchetto_hls'].map(file => this.percorsoFile(file).toLowerCase());
+    const stagioniTrovate = this.stagioniTrovateNelPacchetto(percorsi);
+    const stagioniAttese = this.stagioniSerie.map((_, indice) => indice + 1);
+
+    const stagioniMancanti = stagioniAttese.filter(numero => !stagioniTrovate.includes(numero));
+    const stagioniExtra = stagioniTrovate.filter(numero => !stagioniAttese.includes(numero));
+
+    if (stagioniMancanti.length > 0) return `Nel pacchetto HLS mancano le stagioni: ${stagioniMancanti.join(', ')}.`;
+    if (stagioniExtra.length > 0) return `Nel pacchetto HLS ci sono stagioni non presenti nel form: ${stagioniExtra.join(', ')}.`;
+
+    for (let indiceStagione = 0; indiceStagione < this.stagioniSerie.length; indiceStagione++) {
+      const numeroStagione = indiceStagione + 1;
+      const episodiTrovati = this.episodiTrovatiNelPacchetto(percorsi, numeroStagione);
+      const episodiAttesi = this.stagioniSerie[indiceStagione].episodi.map((_, indice) => indice + 1);
+
+      const episodiMancanti = episodiAttesi.filter(numero => !episodiTrovati.includes(numero));
+      const episodiExtra = episodiTrovati.filter(numero => !episodiAttesi.includes(numero));
+
+      if (episodiMancanti.length > 0) return `Nella stagione ${numeroStagione} mancano gli episodi HLS: ${episodiMancanti.join(', ')}.`;
+      if (episodiExtra.length > 0) return `Nella stagione ${numeroStagione} ci sono episodi HLS non presenti nel form: ${episodiExtra.join(', ')}.`;
+
+      for (const numeroEpisodio of episodiAttesi) {
+        if (!this.strutturaHlsEpisodioValida(percorsi, numeroStagione, numeroEpisodio)) {
+          return `La struttura HLS della stagione ${numeroStagione}, episodio ${numeroEpisodio}, è incompleta.`;
+        }
+      }
+    }
+
+    return '';
+  }
+
+  stagioniTrovateNelPacchetto(percorsi: string[]): number[] {
+    const numeri = percorsi
+      .map(percorso => percorso.match(/\/stagione_(\d+)\//)?.[1])
+      .filter((numero): numero is string => !!numero)
+      .map(numero => Number(numero));
+
+    return [...new Set(numeri)].sort((a, b) => a - b);
+  }
+
+  episodiTrovatiNelPacchetto(percorsi: string[], numeroStagione: number): number[] {
+    const regex = new RegExp(`/stagione_${numeroStagione}/e(\\d+)/`);
+    const numeri = percorsi
+      .map(percorso => percorso.match(regex)?.[1])
+      .filter((numero): numero is string => !!numero)
+      .map(numero => Number(numero));
+
+    return [...new Set(numeri)].sort((a, b) => a - b);
+  }
+
+  strutturaHlsEpisodioValida(percorsi: string[], numeroStagione: number, numeroEpisodio: number): boolean {
+    const base = `stagione_${numeroStagione}/e${numeroEpisodio}`;
+    const contiene = (pezzo: string) => percorsi.some(percorso => percorso.endsWith(`${base}/${pezzo}`));
+    const contieneTsInCartella = (cartella: string) => percorsi.some(percorso => percorso.includes(`${base}/${cartella}/`) && percorso.endsWith('.ts'));
+
+    return contiene('master.m3u8')
+      && contiene('360/360p.m3u8')
+      && contiene('720/720p.m3u8')
+      && contiene('1080/1080p.m3u8')
+      && contiene('360/with-audio.m3u8')
+      && contiene('720/with-audio.m3u8')
+      && contiene('1080/with-audio.m3u8')
+      && contiene('it/audio_it.m3u8')
+      && contiene('en/audio_en.m3u8')
+      && contieneTsInCartella('360')
+      && contieneTsInCartella('720')
+      && contieneTsInCartella('1080')
+      && contieneTsInCartella('it')
+      && contieneTsInCartella('en');
+  }
+
   svuotaPacchettoHls(event: Event): void {
     event.stopPropagation();
     this.files['pacchetto_hls'] = [];
@@ -345,7 +664,30 @@ export class FormAggiungiMediaComponent {
   }
 
   pacchettoHlsCaricato(): boolean {
-    return this.files['pacchetto_hls'].length > 0 && !this.erroriFiles['pacchetto_hls'];
+    return this.files['pacchetto_hls'].length > 0 && !this.errorePacchettoHls();
+  }
+
+  episodioSerieValido(episodio: any): boolean {
+    return episodio.titoloIt.trim().length >= 3
+      && episodio.titoloIt.trim().length <= 30
+      && episodio.titoloEn.trim().length >= 3
+      && episodio.titoloEn.trim().length <= 30
+      && episodio.descrizioneIt.trim().length >= 10
+      && episodio.descrizioneIt.trim().length <= 3000
+      && episodio.descrizioneEn.trim().length >= 10
+      && episodio.descrizioneEn.trim().length <= 3000
+      && episodio.anteprima.length === 1
+      && !episodio.erroreAnteprima;
+  }
+
+  serieValida(): boolean {
+    if (this.tipoMedia === 'film') return true;
+
+    return this.stagioniSerie.length > 0
+      && this.stagioniSerie.every(stagione =>
+        stagione.episodi.length > 0
+        && stagione.episodi.every(episodio => this.episodioSerieValido(episodio))
+      );
   }
 
   formValido(): boolean {
@@ -353,6 +695,7 @@ export class FormAggiungiMediaComponent {
       && this.immaginiValide()
       && this.trailerValide()
       && this.jsonValido()
+      && this.serieValida()
       && this.pacchettoHlsCaricato();
   }
 
@@ -371,7 +714,10 @@ export class FormAggiungiMediaComponent {
 
   informazioniValide(): boolean {
     return !!this.categoriaSelezionata
+      && (!this.categoriaSecondariaSelezionata || this.categoriaSecondariaSelezionata !== this.categoriaSelezionata)
       && this.annoValido()
+      && this.regista.trim().length >= 3
+      && this.regista.trim().length <= 50
       && this.titoloIt.trim().length >= 3
       && this.titoloIt.trim().length <= 30
       && this.titoloEn.trim().length >= 3
@@ -394,5 +740,9 @@ export class FormAggiungiMediaComponent {
 
   onAnnulla(): void {
     this.chiudi.emit();
+  }
+
+    categorieSecondarieDisponibili(): { idCategoria: string; codice: string; label: string }[] {
+    return this.categorie.filter((cat) => cat.label !== this.categoriaSelezionata);
   }
 }
