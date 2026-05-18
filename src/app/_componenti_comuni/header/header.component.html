@@ -118,6 +118,12 @@
         class="scorolsp"
         *ngIf="spinnerScroll$ | async"
       ></app-spinner>
+      <app-bottone-aggiungi
+        *ngIf="authVisuale?.idRuolo === 4 || authVisuale?.idRuolo === 7"
+        [titolo]="isIt ? 'Aggiungi nuovo media' : 'Add new media'"
+        (azione)="onAggiungiMedia()"
+        class="btn-aggiungi-header"
+      ></app-bottone-aggiungi>
     </div>
   </div>
 

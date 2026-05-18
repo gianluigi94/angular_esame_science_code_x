@@ -192,6 +192,11 @@ app-footer {
       color: rgb(205, 205, 205);
 
       &.aperto { box-shadow: 0 0 4px orange; }
+
+  &.is-invalid {
+    color: red !important;
+    box-shadow: 0 0 4px red !important;
+  }
       .placeholder { color: #4f5050; }
       .select-label-piccola {
         display: none;

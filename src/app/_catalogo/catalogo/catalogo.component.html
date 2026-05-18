@@ -18,6 +18,8 @@
         [categoria]="riga.category"
         [locandine]="riga.locandine"
         [tickResetPagine]="tickResetPagine"
+        [mostraAggiungi]="isAmministratore"
+        (aggiungiMedia)="apriFormAggiungiMedia($event)"
       >
       </app-riga-categoria>
     </ng-container>

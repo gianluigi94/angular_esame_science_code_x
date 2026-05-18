@@ -135,3 +135,8 @@ app-piano-card{
   pointer-events: none;
   transform: scale(1.55);
 }
+app-form-aggiungi-media {
+  position: fixed;
+  inset: 0;
+  z-index: 23;
+}

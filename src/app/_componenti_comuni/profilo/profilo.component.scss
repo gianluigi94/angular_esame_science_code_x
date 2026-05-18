@@ -538,29 +538,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.btn-aggiungi {
-  background: transparent;
-  border: 3px dashed rgba(231, 156, 80, 0.4);
-  border-radius: 50%;
-  color: #e79c50;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s;
-}
-
-.btn-aggiungi svg {
-  width: 22px;
-  height: 22px;
-}
-
-.btn-aggiungi:hover {
-  background: rgba(231, 156, 80, 0.08);
-  border-color: #e79c50;
-}
 
 .form-nuovo {
   width: 100%;
@@ -940,6 +917,10 @@
   .select-custom-profilo .select-header .select-label-piccola,
   .cap-placeholder-fake {
     color: #6a6a6a;
+
+    &.is-invalid {
+      color: red !important;
+    }
   }
 
   .campo-form label {

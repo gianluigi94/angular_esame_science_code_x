@@ -613,3 +613,10 @@ header {
 .icona-preavviso-profilo {
   position: static;
 }
+
+.btn-aggiungi-header {
+  pointer-events: auto;
+}
+app-bottone-aggiungi{
+  transform: scale(0.7);
+}

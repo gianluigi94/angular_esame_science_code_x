@@ -1,6 +1,6 @@
 // Componente orchestratore della riga categoria che inizializza gli helper, collega gli eventi e delega la logica operativa.
 
-import { Component, Input, OnChanges, SimpleChanges, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, QueryList, ViewChildren} from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, QueryList, ViewChildren} from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { HoverLocandinaService } from './categoria_services/hover-locandina.service';
@@ -36,8 +36,10 @@ export class RigaCategoriaComponent implements OnChanges, OnInit, OnDestroy {
   @Input() ritardoClickLocandinaMs = 0; // il ritardo iniziale del click locandina
   @Input() attendiChiusuraPlayerSchedaPrimaDiNavigare = false; // se devo aspettare la chiusura completa del player
   @Input() abilitaSalvataggiSessionStorage = true; // se posso salvare dati temporanei in sessionStorage
-  @Input() titolo = ''; // il titolo della riga
-  @Input() locandineVisibili = 5; // quante locandine sono visibili per pagina
+  @Input() titolo = '';
+  @Input() locandineVisibili = 5;
+  @Input() mostraAggiungi = false;
+  @Output() aggiungiMedia = new EventEmitter<string>();
 
   @ViewChildren('elementoLocandina', { read: ElementRef })
   elementiLocandina!: QueryList<ElementRef>; // collego gli elementi locandina reali del template

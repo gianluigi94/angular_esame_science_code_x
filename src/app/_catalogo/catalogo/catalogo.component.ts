@@ -18,6 +18,7 @@ import { ScorrimentoCatalogoService } from '../riga-categoria/categoria_services
 import { CatalogoCacheService } from '../riga-categoria/categoria_services/catalogo-cache.service';
 import { RigaCategoriaComponent } from '../riga-categoria/riga-categoria.component';
 import { SchedaCacheService } from '../scheda/scheda_service/scheda-cache.service';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 
 @Component({
   selector: 'app-catalogo',
@@ -35,6 +36,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
     public cacheCatalogo: CatalogoCacheService,
     public servizioAnimazioni: AnimazioniScomparsaService,
     public scorrimentoCatalogo: ScorrimentoCatalogoService,
+    private authService: Authservice,
   ) {}
 
   tickResetPagine = 0; // contatore che uso per forzare il reset delle pagine interne delle righe
@@ -86,7 +88,16 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
       id_media: string;
     }[];
   }[] = []; // tengo qui l'elenco delle righe attualmente renderizzate nel catalogo
-  tipoSelezionato: TipoContenuto = 'film_serie'; // tengo il tipo contenuto corrente selezionato, inizialmente film_serie
+  tipoSelezionato: TipoContenuto = 'film_serie';
+
+  get isAmministratore(): boolean {
+    const id = this.authService.leggiObsAuth().value?.idRuolo;
+    return id === 4 || id === 7;
+  }
+
+  apriFormAggiungiMedia(idCategoria: string): void {
+    window.dispatchEvent(new CustomEvent('apri-form-aggiungi-media', { detail: { idCategoria } }));
+  } // tengo il tipo contenuto corrente selezionato, inizialmente film_serie
 
   @ViewChild('sentinella', { read: ElementRef })
   sentinella!: ElementRef; // collego il riferimento alla sentinella DOM usata per il lazy loading verticale

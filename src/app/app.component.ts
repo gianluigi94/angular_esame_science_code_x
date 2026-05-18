@@ -79,6 +79,7 @@ export class AppComponent implements OnInit {
   confermaPianoInCorso = false;
   spinnerRicevuteVisibile = false;
 spinnerProfiloVisibile = false;
+formAggiungiMediaVisibile = false;
 private appLoader: AppLoaderService;
  private onApriPannelloPiano = () => {
     this.pannelloPianoVisibile = true;
@@ -181,7 +182,16 @@ private appLoader: AppLoaderService;
 
     window.addEventListener('apri-pannello-piano', this.onApriPannelloPiano);
 
-
+    window.addEventListener('apri-form-aggiungi-media', () => {
+      this.formAggiungiMediaVisibile = true;
+      this.cdr.detectChanges();
+      requestAnimationFrame(() => {
+        const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+        if (!pannello) return;
+        gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+        gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
+      });
+    });
 
     window.addEventListener('loader-hidden', () => {
       if (!isRottaPiano(this.router.url)) return;
@@ -522,6 +532,25 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
 
   onIndietroPiano(): void {
     window.history.back();
+  }
+
+  chiudiFormAggiungiMedia(): void {
+    const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+    if (!pannello) {
+      this.formAggiungiMediaVisibile = false;
+      return;
+    }
+    gsap.to(pannello, {
+      opacity: 0,
+      scaleX: 0,
+      duration: 0.35,
+      ease: 'power2.in',
+      transformOrigin: 'center center',
+      onComplete: () => {
+        this.formAggiungiMediaVisibile = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   onConfermaPiano(): void {

@@ -459,15 +459,13 @@ onCambiaPianoClick(): void {
    * @returns void
    */
   tornaAllaScheda(): void {
-    this.schedaPronta.richiediFadeEChiudi(); // richiedo fade e chiusura della vista corrente
+    this.schedaPronta.richiediFadeEChiudi();
   }
 
-  /**
-   * Aggiorna i flag della pagina in base all'URL corrente.
-   *
-   * @param url URL da analizzare.
-   * @returns void
-   */
+  onAggiungiMedia(): void {
+    window.dispatchEvent(new CustomEvent('apri-form-aggiungi-media'));
+  }
+
   private aggiornaFlagPagina(url: string): void {
     this.paginaLogin =
       /^\/(it|en)\/(benvenuto|welcome)\/(login|accedi)(\/|$)/.test(url); // verifico se sono nella pagina login

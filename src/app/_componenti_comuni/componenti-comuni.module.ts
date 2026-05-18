@@ -17,9 +17,15 @@ import { PaginaCaricamentoComponent } from './pagina-caricamento/pagina-caricame
 import { DatiPersonaliComponent } from './dati-personali/dati-personali.component';
 import { BarraAvanzamentoComponent } from './barra-avanzamento/barra-avanzamento.component';
 import { PianoCardComponent } from './piano-card/piano-card.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { BottoneAggiungiComponent } from './bottone-aggiungi/bottone-aggiungi.component';
+import { DragdropDirective } from '../_direttive/dragdrop.directive';
+import { FormAggiungiMediaComponent } from '../_catalogo/form-aggiungi-media/form-aggiungi-media.component';
 @NgModule({
   declarations: [
+    DragdropDirective,
+    FormAggiungiMediaComponent,
+    BottoneAggiungiComponent,
     SfondoComponent,
     TitlesMainComponent,
     FooterComponent,
@@ -38,10 +44,14 @@ import { ReactiveFormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     RouterModule,
     TranslateModule,
   ],
   exports: [
+    DragdropDirective,
+    FormAggiungiMediaComponent,
+    BottoneAggiungiComponent,
     SfondoComponent,
     TitlesMainComponent,
     FooterComponent,

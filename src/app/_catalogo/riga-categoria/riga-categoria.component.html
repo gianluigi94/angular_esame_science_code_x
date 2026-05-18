@@ -6,8 +6,12 @@
   [ngClass]="{ piu_visti: categoria === 'i_piu_visti' }"
 >
   <div class="intestazione-categoria">
-    <!-- titolo della categoria -->
     <h3 class="titolo-categoria">{{ categoria }}</h3>
+    <app-bottone-aggiungi
+      *ngIf="mostraAggiungi"
+      [titolo]="'Aggiungi a ' + categoria"
+      (azione)="aggiungiMedia.emit(idCategoria)"
+    ></app-bottone-aggiungi>
   </div>
 
   <!-- nel catalogo sono visibili 5 categorie per riga(poi bisogna scrllare orizontalmente), ma nella scheda sono visibili 6 -->

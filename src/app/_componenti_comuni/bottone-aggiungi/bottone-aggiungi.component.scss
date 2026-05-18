@@ -1,0 +1,24 @@
+.btn-aggiungi {
+  background: transparent;
+  border: 4px dashed  #f6993d;
+;
+  border-radius: 50%;
+  color: #e79b50dd;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.btn-aggiungi svg {
+  width: 22px;
+  height: 22px;
+}
+
+.btn-aggiungi:hover {
+  background: rgba(80, 176, 231, 0.153);
+  transform: scale(1.3)
+}

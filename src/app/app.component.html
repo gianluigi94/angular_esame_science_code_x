@@ -37,6 +37,12 @@
     </button>
   </div>
 </div>
+
+<app-form-aggiungi-media
+  *ngIf="formAggiungiMediaVisibile"
+  (chiudi)="chiudiFormAggiungiMedia()"
+></app-form-aggiungi-media>
+
 <!-- importo i toast che possono comparire ovunque  -->
 <div *ngIf="spinnerRicevuteVisibile" class="spinner-ricevute-globale">
   <app-spinner></app-spinner>
