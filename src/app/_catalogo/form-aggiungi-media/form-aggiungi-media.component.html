@@ -441,7 +441,41 @@
           </div>
         </div>
       </div>
+      <div class="sezione-form">
+        <h3 class="sezione-label">Sottotitoli <span class="formati-permessi-media">VTT - max 2 MB</span></h3>
 
+        <div class="riga-due">
+          <div class="campo-wrapper-media">
+            <p class="label-media">Sottotitoli italiano <span class="asterisco-media">*</span></p>
+            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('sottotitoli_it', $event)" (click)="inputSottotitoliIt.click()">
+              <input type="file" #inputSottotitoliIt accept=".vtt,text/vtt,text/plain" (change)="onFileSelezionato('sottotitoli_it', $event)" />
+              <svg *ngIf="files['sottotitoli_it'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
+              <span *ngIf="files['sottotitoli_it'].length === 0" class="drop-testo">Trascina o clicca (file VTT)</span>
+              <span *ngIf="files['sottotitoli_it'].length > 0" class="drop-nome">{{ files['sottotitoli_it'][0].name }}</span>
+              <button *ngIf="files['sottotitoli_it'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('sottotitoli_it', 0)">✕</button>
+            </div>
+            <div class="errori-stack-media">
+              <p class="errore-campo-media" *ngIf="formInviato && files['sottotitoli_it'].length === 0 && !erroriFiles['sottotitoli_it']">I sottotitoli italiani sono obbligatori.</p>
+              <p class="errore-campo-media" *ngIf="erroriFiles['sottotitoli_it']">{{ erroriFiles['sottotitoli_it'] }}</p>
+            </div>
+          </div>
+
+          <div class="campo-wrapper-media">
+            <p class="label-media">Sottotitoli inglese <span class="asterisco-media">*</span></p>
+            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('sottotitoli_en', $event)" (click)="inputSottotitoliEn.click()">
+              <input type="file" #inputSottotitoliEn accept=".vtt,text/vtt,text/plain" (change)="onFileSelezionato('sottotitoli_en', $event)" />
+              <svg *ngIf="files['sottotitoli_en'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
+              <span *ngIf="files['sottotitoli_en'].length === 0" class="drop-testo">Trascina o clicca (file VTT)</span>
+              <span *ngIf="files['sottotitoli_en'].length > 0" class="drop-nome">{{ files['sottotitoli_en'][0].name }}</span>
+              <button *ngIf="files['sottotitoli_en'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('sottotitoli_en', 0)">✕</button>
+            </div>
+            <div class="errori-stack-media">
+              <p class="errore-campo-media" *ngIf="formInviato && files['sottotitoli_en'].length === 0 && !erroriFiles['sottotitoli_en']">I sottotitoli inglesi sono obbligatori.</p>
+              <p class="errore-campo-media" *ngIf="erroriFiles['sottotitoli_en']">{{ erroriFiles['sottotitoli_en'] }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="sezione-form" *ngIf="tipoMedia === 'serie'">
         <h3 class="sezione-label">Stagioni</h3>
 
@@ -704,9 +738,41 @@
 
     </div>
 
-    <div class="form-media-bottoni">
-      <button type="button" class="btn-annulla-media" (click)="onAnnulla()">Annulla</button>
-      <button type="button" class="btn-conferma-media" [disabled]="!formValido()" (click)="onConferma()">Conferma</button>
+    <div class="form-media-footer">
+      <div class="barra-upload-media" *ngIf="salvataggioInCorso">
+        <div class="barra-upload-media__testo">
+          <span>{{ testoProgressoUpload }}</span>
+          <span>{{ progressoUpload }}%</span>
+        </div>
+
+        <div class="barra-upload-media__traccia">
+          <div
+            class="barra-upload-media__riempimento"
+            [style.width.%]="progressoUpload"
+          ></div>
+        </div>
+      </div>
+
+      <div class="form-media-bottoni">
+        <button
+          type="button"
+          class="btn-annulla-media"
+          [disabled]="salvataggioInCorso"
+          (click)="onAnnulla()"
+        >
+          Annulla
+        </button>
+
+        <button
+          type="button"
+          class="btn-conferma-media"
+          [disabled]="!formValido() || salvataggioInCorso"
+          (click)="onConferma()"
+        >
+          <ng-container *ngIf="!salvataggioInCorso">Conferma</ng-container>
+          <app-spinner *ngIf="salvataggioInCorso"></app-spinner>
+        </button>
+      </div>
     </div>
 
   </div>

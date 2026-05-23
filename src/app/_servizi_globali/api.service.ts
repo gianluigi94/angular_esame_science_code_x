@@ -1,7 +1,7 @@
 // services dove centralizzo la chiamate api
 import { Injectable } from '@angular/core';
 import { ChiamataHTTP } from '../_type/chiamateHTTP.type';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent } from '@angular/common/http';
 import { concatMap, map, Observable, take, tap } from 'rxjs';
 import { IRispostaServer } from '../_interfacce/IRispostaServer.interface';
 import { UtilityService } from '../_benvenuto/login/_login_service/login_utility.service';
@@ -66,6 +66,24 @@ export class ApiService {
    *
    * @returns Observable con la risposta del server contenente l'elenco categorie.
    */
+  public creaMedia(dati: FormData): Observable<HttpEvent<IRispostaServer>> {
+  const url = this.calcolaRisorsa(['media']);
+
+  return this.http.post<IRispostaServer>(url, dati, {
+    reportProgress: true,
+    observe: 'events',
+  });
+}
+
+public processaUploadMedia(idUploadMediaJob: number): Observable<IRispostaServer> {
+  const url = this.calcolaRisorsa(['media-processa', idUploadMediaJob]);
+  return this.http.post<IRispostaServer>(url, {});
+}
+
+public getStatoUploadMedia(idUploadMediaJob: number): Observable<IRispostaServer> {
+  return this.richiestaGenerica(['media-upload-stato', idUploadMediaJob], 'GET');
+}
+
   public getTipologieIndirizzi(): Observable<IRispostaServer> {
   const risorsa: string[] = ['tipi-indirizzi'];
   return this.richiestaGenerica(risorsa, 'GET');

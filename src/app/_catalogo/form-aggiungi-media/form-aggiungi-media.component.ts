@@ -1,7 +1,10 @@
 import { Component, EventEmitter, Output, ViewChild, ElementRef, Input, OnInit } from '@angular/core';
+import { HttpEventType } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
+import { ToastService } from 'src/app/_servizi_globali/toast.service';
 
 @Component({
   selector: 'app-form-aggiungi-media',
@@ -12,12 +15,17 @@ export class FormAggiungiMediaComponent implements OnInit {
   @Input() idCategoria = '';
   @Output() chiudi = new EventEmitter<void>();
 
-  constructor(public api: ApiService) {}
+  constructor(
+    public api: ApiService,
+    private toastService: ToastService,
+  ) {}
 
   categoriaAperta = false;
   categoriaSelezionata = '';
+  idCategoriaSelezionata = '';
   categoriaSecondariaAperta = false;
   categoriaSecondariaSelezionata = '';
+  idCategoriaSecondariaSelezionata = '';
   categorie: {
     idCategoria: string;
     codice: string;
@@ -37,6 +45,12 @@ export class FormAggiungiMediaComponent implements OnInit {
   tipoMedia: 'film' | 'serie' = 'film';
   novita = false;
   formInviato = false;
+  salvataggioInCorso = false;
+  progressoUpload = 0;
+  testoProgressoUpload = '';
+  timerUploadMedia: any = null;
+  toastUploadMostrato = false;
+  controlloUploadAttivo = false;
   formatiImmaginePermessi = ['image/png', 'image/jpeg', 'image/webp', 'image/avif'];
   estensioniImmaginePermesse = ['.png', '.jpg', '.jpeg', '.webp', '.avif'];
   pesoMassimoImmagine = 500 * 1024;
@@ -44,6 +58,10 @@ export class FormAggiungiMediaComponent implements OnInit {
   formatiTrailerPermessi = ['video/mp4', 'video/webm', 'video/quicktime'];
   estensioniTrailerPermesse = ['.mp4', '.webm', '.mov'];
   pesoMassimoTrailer = 30 * 1024 * 1024;
+
+  formatiSottotitoliPermessi = ['text/vtt', 'text/plain'];
+  estensioniSottotitoliPermesse = ['.vtt'];
+  pesoMassimoSottotitoli = 2 * 1024 * 1024;
 
   formatiJsonPermessi = ['application/json'];
   estensioniJsonPermesse = ['.json'];
@@ -58,6 +76,8 @@ export class FormAggiungiMediaComponent implements OnInit {
     locandina_en: '',
     trailer_it: '',
     trailer_en: '',
+    sottotitoli_it: '',
+    sottotitoli_en: '',
     pacchetto_hls: '',
   };
 
@@ -70,6 +90,8 @@ export class FormAggiungiMediaComponent implements OnInit {
     locandina_en: [],
     trailer_it: [],
     trailer_en: [],
+    sottotitoli_it: [],
+    sottotitoli_en: [],
     pacchetto_hls: [],
   };
 
@@ -153,20 +175,24 @@ export class FormAggiungiMediaComponent implements OnInit {
 
   selezionaCategoria(cat: { idCategoria: string; codice: string; label: string }): void {
     this.categoriaSelezionata = cat.label;
+    this.idCategoriaSelezionata = cat.idCategoria;
     this.categoriaAperta = false;
 
     if (this.categoriaSecondariaSelezionata === cat.label) {
       this.categoriaSecondariaSelezionata = '';
+      this.idCategoriaSecondariaSelezionata = '';
     }
   }
 
   selezionaCategoriaSecondaria(cat: { idCategoria: string; codice: string; label: string }): void {
     this.categoriaSecondariaSelezionata = cat.label;
+    this.idCategoriaSecondariaSelezionata = cat.idCategoria;
     this.categoriaSecondariaAperta = false;
   }
 
   rimuoviCategoriaSecondaria(): void {
     this.categoriaSecondariaSelezionata = '';
+    this.idCategoriaSecondariaSelezionata = '';
     this.categoriaSecondariaAperta = false;
   }
 
@@ -357,6 +383,35 @@ export class FormAggiungiMediaComponent implements OnInit {
       return;
     }
 
+    if (this.isCampoSottotitoli(chiave)) {
+      this.erroriFiles[chiave] = '';
+
+      if (nuovi.length > 1) {
+        this.files[chiave] = [];
+        this.erroriFiles[chiave] = 'Puoi caricare un solo file sottotitoli.';
+        return;
+      }
+
+      const file = nuovi[0];
+
+      if (!file) return;
+
+      if (!this.formatoSottotitoliValido(file)) {
+        this.files[chiave] = [];
+        this.erroriFiles[chiave] = 'Formato non valido. Usa un file VTT.';
+        return;
+      }
+
+      if (file.size > this.pesoMassimoSottotitoli) {
+        this.files[chiave] = [];
+        this.erroriFiles[chiave] = 'Il file sottotitoli non può superare 2 MB.';
+        return;
+      }
+
+      this.files[chiave] = [file];
+      return;
+    }
+
     if (this.isCampoPacchettoHls(chiave)) {
       this.erroriFiles[chiave] = '';
 
@@ -396,6 +451,10 @@ export class FormAggiungiMediaComponent implements OnInit {
     return ['trailer_it', 'trailer_en'].includes(chiave);
   }
 
+  isCampoSottotitoli(chiave: string): boolean {
+    return ['sottotitoli_it', 'sottotitoli_en'].includes(chiave);
+  }
+
   isCampoJson(chiave: string): boolean {
     return chiave === 'json_testi';
   }
@@ -416,6 +475,13 @@ export class FormAggiungiMediaComponent implements OnInit {
 
     return this.formatiTrailerPermessi.includes(file.type)
       || this.estensioniTrailerPermesse.some(estensione => nome.endsWith(estensione));
+  }
+
+  formatoSottotitoliValido(file: File): boolean {
+    const nome = file.name.toLowerCase();
+
+    return this.formatiSottotitoliPermessi.includes(file.type)
+      || this.estensioniSottotitoliPermesse.some(estensione => nome.endsWith(estensione));
   }
 
   formatoJsonValido(file: File): boolean {
@@ -659,6 +725,13 @@ export class FormAggiungiMediaComponent implements OnInit {
       && !this.erroriFiles['trailer_en'];
   }
 
+  sottotitoliValidi(): boolean {
+    return this.files['sottotitoli_it'].length === 1
+      && this.files['sottotitoli_en'].length === 1
+      && !this.erroriFiles['sottotitoli_it']
+      && !this.erroriFiles['sottotitoli_en'];
+  }
+
   jsonValido(): boolean {
     return this.files['json_testi'].length === 0 || !this.erroriFiles['json_testi'];
   }
@@ -694,15 +767,249 @@ export class FormAggiungiMediaComponent implements OnInit {
     return this.informazioniValide()
       && this.immaginiValide()
       && this.trailerValide()
+      && this.sottotitoliValidi()
       && this.jsonValido()
       && this.serieValida()
       && this.pacchettoHlsCaricato();
   }
 
+  utentePuoAggiungereMedia(): boolean {
+    const abilita = Authservice.auth?.abilita ?? [];
+
+    return Array.isArray(abilita) && abilita.map(Number).includes(4);
+  }
+
+  uploadInProduzione(): boolean {
+    return window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  }
+
+  percentualeUploadVisibile(percentualeBackend: number): number {
+    if (!this.uploadInProduzione()) return percentualeBackend;
+
+    return Math.min(100, 80 + Math.round(percentualeBackend * 0.2));
+  }
+
   onConferma(): void {
     this.formInviato = true;
 
-    if (!this.formValido()) return;
+    if (!this.formValido() || this.salvataggioInCorso) return;
+
+    if (!this.utentePuoAggiungereMedia()) {
+      this.toastService.errore('ERRORE: non hai l\'abilità per aggiungere media.');
+      return;
+    }
+
+    const dati = this.creaFormDataMedia();
+
+    this.salvataggioInCorso = true;
+    this.toastUploadMostrato = false;
+    this.progressoUpload = 0;
+    this.testoProgressoUpload = 'Invio file al server...';
+
+    console.time('POST /media - durata totale');
+    console.log('[UPLOAD MEDIA] POST /media iniziato');
+
+    this.api.creaMedia(dati).subscribe({
+      next: (evento) => {
+        if (evento.type === HttpEventType.UploadProgress) {
+          if (evento.total) {
+            const percentualeRealeInvio = Math.round((evento.loaded / evento.total) * 100);
+
+            const massimoInvio = this.uploadInProduzione() ? 80 : 5;
+            this.progressoUpload = Math.min(massimoInvio, Math.round((evento.loaded / evento.total) * massimoInvio));
+
+            console.log('[UPLOAD MEDIA] invio browser -> Laravel', {
+              loaded: evento.loaded,
+              total: evento.total,
+              percentualeRealeInvio,
+              percentualeBarra: this.progressoUpload,
+            });
+          }
+
+          this.testoProgressoUpload = 'Invio file al server...';
+        }
+
+        if (evento.type === HttpEventType.Response) {
+          console.timeEnd('POST /media - durata totale');
+          console.log('[UPLOAD MEDIA] POST /media completato', evento.body);
+
+          const idUploadMediaJob = Number(evento.body?.data?.id_upload_media_job);
+
+          if (!idUploadMediaJob) {
+            this.salvataggioInCorso = false;
+            this.toastService.errore('ERRORE: job upload non creato.');
+            return;
+          }
+
+          this.progressoUpload = this.uploadInProduzione() ? 80 : 5;
+          this.testoProgressoUpload = 'Lavorazione avviata...';
+          this.avviaControlloStatoUpload(idUploadMediaJob);
+          this.avviaProcessamentoUpload(idUploadMediaJob);
+        }
+      },
+      error: (err) => {
+        console.timeEnd('POST /media - durata totale');
+        console.error('[UPLOAD MEDIA] POST /media errore', err);
+
+        this.salvataggioInCorso = false;
+        this.progressoUpload = 0;
+        this.testoProgressoUpload = '';
+        this.toastService.errore('ERRORE: salvataggio non riuscito.');
+        console.error('Errore salvataggio media', err);
+      },
+    });
+  }
+    avviaProcessamentoUpload(idUploadMediaJob: number): void {
+    console.time('POST /media-processa - durata totale');
+    console.log('[UPLOAD MEDIA] POST /media-processa iniziato', idUploadMediaJob);
+
+    this.api.processaUploadMedia(idUploadMediaJob).pipe(take(1)).subscribe({
+      next: (rit) => {
+        console.timeEnd('POST /media-processa - durata totale');
+        console.log('[UPLOAD MEDIA] POST /media-processa completato', rit);
+      },
+      error: (err) => {
+        console.timeEnd('POST /media-processa - durata totale');
+        console.error('[UPLOAD MEDIA] POST /media-processa errore', err);
+        this.fermaControlloStatoUpload();
+        this.salvataggioInCorso = false;
+        this.toastService.errore('ERRORE: salvataggio non riuscito.');
+        console.error('Errore processamento upload media', err);
+      },
+    });
+  }
+  avviaControlloStatoUpload(idUploadMediaJob: number): void {
+    this.fermaControlloStatoUpload();
+    this.controlloUploadAttivo = true;
+
+    const controlla = () => {
+      if (!this.controlloUploadAttivo) return;
+
+      this.api.getStatoUploadMedia(idUploadMediaJob).pipe(take(1)).subscribe({
+        next: (rit) => {
+          if (!this.controlloUploadAttivo) return;
+
+          const dati = rit.data;
+
+          const percentualeBackend = Number(dati?.percentuale ?? 0);
+
+          this.progressoUpload = this.percentualeUploadVisibile(percentualeBackend);
+          this.testoProgressoUpload = String(dati?.messaggio ?? '');
+
+          console.log('[UPLOAD MEDIA] stato upload', {
+            stato: dati?.stato,
+            percentuale: dati?.percentuale,
+            messaggio: dati?.messaggio,
+          });
+
+          if (dati?.stato === 'completato' && !this.toastUploadMostrato) {
+            this.toastUploadMostrato = true;
+            this.fermaControlloStatoUpload();
+            this.progressoUpload = 100;
+            this.toastService.successo('SUCCESSO: media salvato correttamente.');
+
+            setTimeout(() => {
+              this.salvataggioInCorso = false;
+              this.chiudi.emit();
+            }, 700);
+
+            return;
+          }
+
+          if (dati?.stato === 'errore' && !this.toastUploadMostrato) {
+            this.toastUploadMostrato = true;
+            this.fermaControlloStatoUpload();
+            this.salvataggioInCorso = false;
+            this.toastService.errore('ERRORE: salvataggio non riuscito.');
+            return;
+          }
+
+          this.timerUploadMedia = setTimeout(controlla, 1000);
+        },
+        error: (err) => {
+          if (!this.controlloUploadAttivo || this.toastUploadMostrato) return;
+
+          this.toastUploadMostrato = true;
+          this.fermaControlloStatoUpload();
+          this.salvataggioInCorso = false;
+          this.toastService.errore('ERRORE: impossibile leggere lo stato upload.');
+          console.error('Errore stato upload media', err);
+        },
+      });
+    };
+
+    controlla();
+  }
+
+  fermaControlloStatoUpload(): void {
+    this.controlloUploadAttivo = false;
+
+    if (this.timerUploadMedia) {
+      clearTimeout(this.timerUploadMedia);
+      this.timerUploadMedia = null;
+    }
+  }
+  creaFormDataMedia(): FormData {
+    const dati = new FormData();
+
+    dati.append('tipoMedia', this.tipoMedia);
+    dati.append('idCategoria', this.idCategoriaSelezionata);
+    dati.append('idCategoriaSecondaria', this.idCategoriaSecondariaSelezionata);
+    dati.append('anno', this.anno);
+    dati.append('regista', this.regista.trim());
+    dati.append('novita', this.novita ? '1' : '0');
+
+    dati.append('titoloIt', this.titoloIt.trim());
+    dati.append('titoloEn', this.titoloEn.trim());
+    dati.append('sottotitoloIt', this.sottotitoloIt.trim());
+    dati.append('sottotitoloEn', this.sottotitoloEn.trim());
+    dati.append('descrizioneIt', this.descrizioneIt.trim());
+    dati.append('descrizioneEn', this.descrizioneEn.trim());
+
+    this.aggiungiFileSingoloFormData(dati, 'img_titolo_it');
+    this.aggiungiFileSingoloFormData(dati, 'img_titolo_en');
+    this.aggiungiFileSingoloFormData(dati, 'img_copertina');
+    this.aggiungiFileSingoloFormData(dati, 'locandina_it');
+    this.aggiungiFileSingoloFormData(dati, 'locandina_en');
+    this.aggiungiFileSingoloFormData(dati, 'trailer_it');
+    this.aggiungiFileSingoloFormData(dati, 'trailer_en');
+    this.aggiungiFileSingoloFormData(dati, 'sottotitoli_it');
+    this.aggiungiFileSingoloFormData(dati, 'sottotitoli_en');
+
+    this.files['pacchetto_hls'].forEach((file) => {
+      dati.append('pacchetto_hls[]', file);
+      dati.append('percorsi_hls[]', this.percorsoFile(file));
+    });
+
+    dati.append('stagioni', JSON.stringify(
+      this.stagioniSerie.map((stagione) => ({
+        episodi: stagione.episodi.map((episodio) => ({
+          titoloIt: episodio.titoloIt.trim(),
+          titoloEn: episodio.titoloEn.trim(),
+          descrizioneIt: episodio.descrizioneIt.trim(),
+          descrizioneEn: episodio.descrizioneEn.trim(),
+        })),
+      })),
+    ));
+
+    this.stagioniSerie.forEach((stagione, indiceStagione) => {
+      stagione.episodi.forEach((episodio, indiceEpisodio) => {
+        if (episodio.anteprima[0]) {
+          dati.append(
+            `anteprime[${indiceStagione}][${indiceEpisodio}]`,
+            episodio.anteprima[0],
+          );
+        }
+      });
+    });
+
+    return dati;
+  }
+
+  aggiungiFileSingoloFormData(dati: FormData, chiave: string): void {
+    if (!this.files[chiave]?.[0]) return;
+
+    dati.append(chiave, this.files[chiave][0]);
   }
 
   annoValido(): boolean {
