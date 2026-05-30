@@ -1,7 +1,7 @@
 // Componente header che gestisce stato UI, navigazione e coordinamento tra servizi e helper.
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { Subject, takeUntil, filter, Observable } from 'rxjs';
+import { Subject, takeUntil, filter, Observable, take } from 'rxjs';
 import { Location } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
@@ -28,6 +28,10 @@ import { CambioProfiloAnimazioneService } from 'src/app/_servizi_globali/cambio-
 import { prefissoLinguaDaUrl, baseCatalogoDaUrl, pathCatalogoDaTipo, pathLoginDaLingua, isPaginaScheda} from './header_utility/header-url.utils';
 import { HeaderAuthHelper } from './header_helpers/header-auth.helper';
 import { HeaderCategorieHelper } from './header_helpers/header-categorie.helper';
+import { ToastService } from 'src/app/_servizi_globali/toast.service';
+import { InfoMediaCorrente } from 'src/app/_catalogo/scheda/scheda_service/scheda-pronta.service';
+import { CatalogoCacheService } from 'src/app/_catalogo/riga-categoria/categoria_services/catalogo-cache.service';
+import { SchedaCacheService } from 'src/app/_catalogo/scheda/scheda_service/scheda-cache.service';
 
 @Component({
   selector: 'app-header',
@@ -62,6 +66,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   authCorrente: Auth | null = null; // salvo lo stato auth corrente reale
   authVisuale: Auth | null = null; // salvo lo stato auth mostrato a schermo
 
+  infoMediaCorrente: InfoMediaCorrente | null = null;
+  eliminazioneInCorso = false;
+  mostraModaleElimina = false;
+
   spinnerScroll$!: Observable<boolean>; // espongo lo stato dello spinner di scroll
   iconaLingua$!: Observable<string>; // espongo l'icona della lingua corrente
 
@@ -93,6 +101,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private audioGlobaleService: AudioGlobaleService,
     private contattiNav: ContattiNavigazioneService,
     private stopVideoGlobale: StopVideoGlobaleService,
+    private toastService: ToastService,
+    private cacheCatalogo: CatalogoCacheService,
+    private cacheScheda: SchedaCacheService,
   ) {
     this.cambioLinguaService = cambioLinguaService; // salvo il servizio lingua per usarlo nel componente
     this.tipoSelezionato = this.tipoContenuto.leggiTipo(); // leggo il tipo contenuto iniziale
@@ -159,6 +170,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.linguaInCambio = false;
         }, restante + 1000); // spengo lo stato di cambio lingua con ritardo controllato
         if (this.authVisuale?.tk) this.categorie.carica(); // ricarico le categorie dopo il cambio lingua se sono loggato
+      });
+
+    this.schedaPronta.infoMediaCorrente$
+      .pipe(takeUntil(this.distruggi$))
+      .subscribe((info) => {
+        this.infoMediaCorrente = info;
       });
   }
 
@@ -463,7 +480,42 @@ onCambiaPianoClick(): void {
   }
 
   onAggiungiMedia(): void {
+    if (!this.authCorrente?.abilita?.includes(4)) return;
     window.dispatchEvent(new CustomEvent('apri-form-aggiungi-media'));
+  }
+
+  onEliminaMedia(): void {
+    if (this.eliminazioneInCorso || !this.infoMediaCorrente) return;
+    if (!this.authCorrente?.abilita?.includes(6)) return;
+    this.mostraModaleElimina = true;
+  }
+
+  chiudiModaleEliminaMedia(): void {
+    if (this.eliminazioneInCorso) return;
+    this.mostraModaleElimina = false;
+  }
+
+  confermaEliminaMedia(): void {
+    if (this.eliminazioneInCorso || !this.infoMediaCorrente) return;
+    if (!this.authCorrente?.abilita?.includes(6)) return;
+    this.eliminazioneInCorso = true;
+    const { tipo, id, titolo } = this.infoMediaCorrente;
+
+    this.api.eliminaMedia(tipo, id).pipe(take(1)).subscribe({
+      next: () => {
+        this.mostraModaleElimina = false;
+        this.eliminazioneInCorso = false;
+        this.cacheCatalogo.svuota();
+        this.cacheScheda.svuota();
+        this.toastService.successo(`"${titolo}" eliminato con SUCCESSO.`);
+        this.router.navigateByUrl(this.baseCatalogoDaUrl());
+      },
+      error: () => {
+        this.mostraModaleElimina = false;
+        this.eliminazioneInCorso = false;
+        this.toastService.errore('Errore durante l\'eliminazione del media.');
+      },
+    });
   }
 
   private aggiornaFlagPagina(url: string): void {

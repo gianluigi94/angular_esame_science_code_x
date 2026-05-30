@@ -66,13 +66,28 @@ export class ApiService {
    *
    * @returns Observable con la risposta del server contenente l'elenco categorie.
    */
-  public creaMedia(dati: FormData): Observable<HttpEvent<IRispostaServer>> {
-  const url = this.calcolaRisorsa(['media']);
+  public creaMediaJob(dati: any): Observable<IRispostaServer> {
+  const url = this.calcolaRisorsa(['media-crea-job']);
+
+  return this.http.post<IRispostaServer>(url, dati);
+}
+
+public caricaFileMedia(idUploadMediaJob: number, dati: FormData): Observable<HttpEvent<IRispostaServer>> {
+  const url = this.calcolaRisorsa(['media-carica-file', idUploadMediaJob]);
 
   return this.http.post<IRispostaServer>(url, dati, {
     reportProgress: true,
     observe: 'events',
+    headers: {
+      'X-No-Global-Error': '1',
+    },
   });
+}
+
+public annullaUploadMedia(idUploadMediaJob: number): Observable<IRispostaServer> {
+  const url = this.calcolaRisorsa(['media-annulla', idUploadMediaJob]);
+
+  return this.http.post<IRispostaServer>(url, {});
 }
 
 public processaUploadMedia(idUploadMediaJob: number): Observable<IRispostaServer> {
@@ -688,4 +703,24 @@ public correggiPagamento(): Observable<IRispostaServer> {
   public verificaPagamento(): Observable<IRispostaServer> {
     return this.richiestaGenerica(['verifica-pagamento'], 'GET');
   }
+
+  public eliminaMedia(tipo: 'film' | 'serie', id: number): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['media', tipo, id]);
+    return this.http.delete<IRispostaServer>(url);
+  }
+
+  public getPresignedUrls(idUploadMediaJob: number, files: any[], urlDiretti: any[] = []): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['media-presigned-urls', idUploadMediaJob]);
+    return this.http.post<IRispostaServer>(url, { files, url_diretti: urlDiretti });
+  }
+
+  public putFileSuS3(url: string, file: File): Observable<HttpEvent<unknown>> {
+  return this.http.put(url, file, {
+    reportProgress: true,
+    observe: 'events',
+    headers: {
+      'X-No-Global-Error': '1',
+    },
+  });
+}
 }

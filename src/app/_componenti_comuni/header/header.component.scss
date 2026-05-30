@@ -620,3 +620,123 @@ header {
 app-bottone-aggiungi{
   transform: scale(0.7);
 }
+.btn-elimina-header {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  margin-left: 6px;
+  margin-right: 13px;
+  &:hover:not(:disabled) {
+    opacity: 1;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.icona-cestino {
+  width: 22px;
+  height: 22px;
+  color: #e04040;
+}
+
+.modale-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modaleApri 0.2s ease;
+}
+
+@keyframes modaleApri {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modale-contenuto {
+  background: rgba(20, 17, 10, 0.95);
+  border: 1px solid rgba(231, 156, 80, 0.3);
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  animation: modaleScala 0.25s ease;
+}
+
+@keyframes modaleScala {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modale-messaggio {
+  font-family: "Quantico", serif;
+  font-size: 18px;
+  color: aliceblue;
+  text-align: center;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+
+  strong {
+    color: #e79c50;
+  }
+}
+
+.modale-bottoni {
+  pointer-events: auto;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.btn-annulla {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+
+  &:hover { border-color: rgba(255, 255, 255, 0.5); color: #ffffff; }
+}
+
+.btn-elimina-conferma {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+  border: none;
+  color: white;
+  font-weight: 600;
+  min-width: 100px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:not(:disabled):hover { transform: scale(1.06); box-shadow: 0 0 14px rgba(185, 28, 28, 0.5); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: auto; }
+}

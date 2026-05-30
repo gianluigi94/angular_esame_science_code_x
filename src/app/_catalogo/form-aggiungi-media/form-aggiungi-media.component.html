@@ -1,41 +1,85 @@
-<div class="form-media-overlay" (click)="onAnnulla()">
+<div class="form-media-overlay" (click)="onClickFuori()">
   <div class="form-media-pannello" (click)="$event.stopPropagation()">
-
     <h2 class="form-media-titolo">Aggiungi nuovo media</h2>
 
     <div class="form-media-scroll">
-
       <div class="sezione-form">
         <h3 class="sezione-label">Tipologia</h3>
 
         <div class="radio-novita radio-tipologia-media">
           <label>
-            <input type="radio" name="tipoMedia" value="film" [(ngModel)]="tipoMedia" />
+            <input
+              type="radio"
+              name="tipoMedia"
+              value="film"
+              [(ngModel)]="tipoMedia"
+            />
             Film
           </label>
 
           <label>
-            <input type="radio" name="tipoMedia" value="serie" [(ngModel)]="tipoMedia" />
+            <input
+              type="radio"
+              name="tipoMedia"
+              value="serie"
+              [(ngModel)]="tipoMedia"
+            />
             Serie
           </label>
         </div>
       </div>
 
       <div class="sezione-form">
-        <h3 class="sezione-label">Scorciatoia testi <span class="formati-permessi-media">JSON opzionale {{ tipoMedia === 'film' ? 'film' : 'serie' }}</span></h3>
+        <h3 class="sezione-label">
+          Scorciatoia testi
+          <span class="formati-permessi-media"
+            >JSON opzionale {{ tipoMedia === "film" ? "film" : "serie" }}</span
+          >
+        </h3>
 
         <div class="riga-uno">
           <div class="campo-wrapper-media campo-largo">
             <p class="label-media">Carica JSON testi</p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('json_testi', $event)" (click)="inputJsonTesti.click()">
-              <input type="file" #inputJsonTesti accept=".json,application/json" (change)="onFileSelezionato('json_testi', $event)" />
-              <svg *ngIf="files['json_testi'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['json_testi'].length === 0" class="drop-testo">Trascina o clicca (opzionale)</span>
-              <span *ngIf="files['json_testi'].length > 0" class="drop-nome">{{ files['json_testi'][0].name }}</span>
-              <button *ngIf="files['json_testi'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('json_testi', 0)">✕</button>
+            <div
+              class="zona-drop"
+              dragdrop
+              (alRilascio)="onFileDrop('json_testi', $event)"
+              (click)="inputJsonTesti.click()"
+            >
+              <input
+                type="file"
+                #inputJsonTesti
+                accept=".json,application/json"
+                (change)="onFileSelezionato('json_testi', $event)"
+              />
+              <svg
+                *ngIf="files['json_testi'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span *ngIf="files['json_testi'].length === 0" class="drop-testo"
+                >Trascina o clicca (opzionale)</span
+              >
+              <span *ngIf="files['json_testi'].length > 0" class="drop-nome">{{
+                files["json_testi"][0].name
+              }}</span>
+              <button
+                *ngIf="files['json_testi'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="$event.stopPropagation(); rimuoviFile('json_testi', 0)"
+              >
+                ✕
+              </button>
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="erroriFiles['json_testi']">{{ erroriFiles['json_testi'] }}</p>
+              <p class="errore-campo-media" *ngIf="erroriFiles['json_testi']">
+                {{ erroriFiles["json_testi"] }}
+              </p>
             </div>
           </div>
         </div>
@@ -46,7 +90,9 @@
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Categoria <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Categoria <span class="asterisco-media">*</span>
+            </p>
             <div class="select-media">
               <div
                 class="select-header-media"
@@ -58,10 +104,15 @@
                 <span class="select-label-piccola-media">Categoria</span>
 
                 <span [class.placeholder-media]="!categoriaSelezionata">
-                  {{ categoriaSelezionata || 'Seleziona categoria' }}
+                  {{ categoriaSelezionata || "Seleziona categoria" }}
                 </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-                  <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                >
+                  <path fill="#c4c4c4" d="M6 8L1 3h10z" />
                 </svg>
               </div>
               <div class="select-dropdown-media" *ngIf="categoriaAperta">
@@ -78,30 +129,56 @@
               </div>
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && !categoriaSelezionata">La categoria è obbligatoria.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !categoriaSelezionata"
+              >
+                La categoria è obbligatoria.
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Seconda categoria <span class="formati-permessi-media">opzionale</span></p>
+            <p class="label-media">
+              Seconda categoria
+              <span class="formati-permessi-media">opzionale</span>
+            </p>
             <div class="select-media">
               <div
                 class="select-header-media"
                 [class.aperto]="categoriaSecondariaAperta"
                 [class.compilato]="categoriaSecondariaSelezionata"
-                [class.is-invalid]="formInviato && categoriaSecondariaSelezionata === categoriaSelezionata"
+                [class.is-invalid]="
+                  formInviato &&
+                  categoriaSecondariaSelezionata === categoriaSelezionata
+                "
                 (click)="categoriaSecondariaAperta = !categoriaSecondariaAperta"
               >
-                <span class="select-label-piccola-media">Seconda categoria</span>
+                <span class="select-label-piccola-media"
+                  >Seconda categoria</span
+                >
 
-                <span [class.placeholder-media]="!categoriaSecondariaSelezionata">
-                  {{ categoriaSecondariaSelezionata || 'Seleziona seconda categoria' }}
+                <span
+                  [class.placeholder-media]="!categoriaSecondariaSelezionata"
+                >
+                  {{
+                    categoriaSecondariaSelezionata ||
+                      "Seleziona seconda categoria"
+                  }}
                 </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-                  <path fill="#c4c4c4" d="M6 8L1 3h10z"/>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                >
+                  <path fill="#c4c4c4" d="M6 8L1 3h10z" />
                 </svg>
               </div>
-              <div class="select-dropdown-media" *ngIf="categoriaSecondariaAperta">
+              <div
+                class="select-dropdown-media"
+                *ngIf="categoriaSecondariaAperta"
+              >
                 <div
                   class="select-opzione-media"
                   (mousedown)="$event.preventDefault()"
@@ -112,7 +189,10 @@
 
                 <div
                   class="select-opzione-media"
-                  *ngFor="let cat of categorieSecondarieDisponibili(); let i = index"
+                  *ngFor="
+                    let cat of categorieSecondarieDisponibili();
+                    let i = index
+                  "
                   [class.attivo]="i === indiceCategoriaSecondariaAttivo"
                   (mousedown)="$event.preventDefault()"
                   (click)="selezionaCategoriaSecondaria(cat)"
@@ -123,14 +203,25 @@
               </div>
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && categoriaSecondariaSelezionata === categoriaSelezionata">La seconda categoria deve essere diversa dalla categoria principale.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  formInviato &&
+                  categoriaSecondariaSelezionata === categoriaSelezionata
+                "
+              >
+                La seconda categoria deve essere diversa dalla categoria
+                principale.
+              </p>
             </div>
           </div>
         </div>
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Regista <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Regista <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <input
                 type="text"
@@ -141,19 +232,52 @@
                 required
                 minlength="3"
                 maxlength="50"
-                [class.is-invalid]="registaCtrl.invalid && (registaCtrl.touched || formInviato)"
+                [class.is-invalid]="
+                  registaCtrl.invalid && (registaCtrl.touched || formInviato)
+                "
               />
-              <label [class.is-invalid]="registaCtrl.invalid && (registaCtrl.touched || formInviato)">Regista</label>
+              <label
+                [class.is-invalid]="
+                  registaCtrl.invalid && (registaCtrl.touched || formInviato)
+                "
+                >Regista</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(registaCtrl.touched || formInviato) && registaCtrl.errors?.['required']">Il regista è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="(registaCtrl.touched || formInviato) && registaCtrl.errors?.['minlength']">Il regista deve avere almeno 3 caratteri.</p>
-              <p class="errore-campo-media" *ngIf="(registaCtrl.touched || formInviato) && registaCtrl.errors?.['maxlength']">Il regista non può superare 50 caratteri.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (registaCtrl.touched || formInviato) &&
+                  registaCtrl.errors?.['required']
+                "
+              >
+                Il regista è obbligatorio.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (registaCtrl.touched || formInviato) &&
+                  registaCtrl.errors?.['minlength']
+                "
+              >
+                Il regista deve avere almeno 3 caratteri.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (registaCtrl.touched || formInviato) &&
+                  registaCtrl.errors?.['maxlength']
+                "
+              >
+                Il regista non può superare 50 caratteri.
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Anno uscita <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Anno uscita <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <input
                 type="text"
@@ -165,20 +289,46 @@
                 #annoCtrl="ngModel"
                 required
                 (input)="filtraAnno($event)"
-                [class.is-invalid]="(annoCtrl.invalid || !annoValido()) && (annoCtrl.touched || formInviato)"
+                [class.is-invalid]="
+                  (annoCtrl.invalid || !annoValido()) &&
+                  (annoCtrl.touched || formInviato)
+                "
               />
-              <label [class.is-invalid]="(annoCtrl.invalid || !annoValido()) && (annoCtrl.touched || formInviato)">Anno</label>
+              <label
+                [class.is-invalid]="
+                  (annoCtrl.invalid || !annoValido()) &&
+                  (annoCtrl.touched || formInviato)
+                "
+                >Anno</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(annoCtrl.touched || formInviato) && annoCtrl.errors?.['required']">L'anno di uscita è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="(annoCtrl.touched || formInviato) && anno && !annoValido()">Inserisci un anno reale tra 1800 e l'anno corrente.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (annoCtrl.touched || formInviato) &&
+                  annoCtrl.errors?.['required']
+                "
+              >
+                L'anno di uscita è obbligatorio.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (annoCtrl.touched || formInviato) && anno && !annoValido()
+                "
+              >
+                Inserisci un anno reale tra 1800 e l'anno corrente.
+              </p>
             </div>
           </div>
         </div>
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Titolo italiano <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Titolo italiano <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <input
                 type="text"
@@ -189,19 +339,52 @@
                 required
                 minlength="3"
                 maxlength="30"
-                [class.is-invalid]="titoloItCtrl.invalid && (titoloItCtrl.touched || formInviato)"
+                [class.is-invalid]="
+                  titoloItCtrl.invalid && (titoloItCtrl.touched || formInviato)
+                "
               />
-              <label [class.is-invalid]="titoloItCtrl.invalid && (titoloItCtrl.touched || formInviato)">Titolo</label>
+              <label
+                [class.is-invalid]="
+                  titoloItCtrl.invalid && (titoloItCtrl.touched || formInviato)
+                "
+                >Titolo</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(titoloItCtrl.touched || formInviato) && titoloItCtrl.errors?.['required']">Il titolo italiano è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="(titoloItCtrl.touched || formInviato) && titoloItCtrl.errors?.['minlength']">Il titolo italiano deve avere almeno 3 caratteri.</p>
-              <p class="errore-campo-media" *ngIf="(titoloItCtrl.touched || formInviato) && titoloItCtrl.errors?.['maxlength']">Il titolo italiano non può superare 30 caratteri.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (titoloItCtrl.touched || formInviato) &&
+                  titoloItCtrl.errors?.['required']
+                "
+              >
+                Il titolo italiano è obbligatorio.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (titoloItCtrl.touched || formInviato) &&
+                  titoloItCtrl.errors?.['minlength']
+                "
+              >
+                Il titolo italiano deve avere almeno 3 caratteri.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (titoloItCtrl.touched || formInviato) &&
+                  titoloItCtrl.errors?.['maxlength']
+                "
+              >
+                Il titolo italiano non può superare 30 caratteri.
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Titolo inglese <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Titolo inglese <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <input
                 type="text"
@@ -212,21 +395,54 @@
                 required
                 minlength="3"
                 maxlength="30"
-                [class.is-invalid]="titoloEnCtrl.invalid && (titoloEnCtrl.touched || formInviato)"
+                [class.is-invalid]="
+                  titoloEnCtrl.invalid && (titoloEnCtrl.touched || formInviato)
+                "
               />
-              <label [class.is-invalid]="titoloEnCtrl.invalid && (titoloEnCtrl.touched || formInviato)">Titolo</label>
+              <label
+                [class.is-invalid]="
+                  titoloEnCtrl.invalid && (titoloEnCtrl.touched || formInviato)
+                "
+                >Titolo</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(titoloEnCtrl.touched || formInviato) && titoloEnCtrl.errors?.['required']">Il titolo inglese è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="(titoloEnCtrl.touched || formInviato) && titoloEnCtrl.errors?.['minlength']">Il titolo inglese deve avere almeno 3 caratteri.</p>
-              <p class="errore-campo-media" *ngIf="(titoloEnCtrl.touched || formInviato) && titoloEnCtrl.errors?.['maxlength']">Il titolo inglese non può superare 30 caratteri.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (titoloEnCtrl.touched || formInviato) &&
+                  titoloEnCtrl.errors?.['required']
+                "
+              >
+                Il titolo inglese è obbligatorio.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (titoloEnCtrl.touched || formInviato) &&
+                  titoloEnCtrl.errors?.['minlength']
+                "
+              >
+                Il titolo inglese deve avere almeno 3 caratteri.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (titoloEnCtrl.touched || formInviato) &&
+                  titoloEnCtrl.errors?.['maxlength']
+                "
+              >
+                Il titolo inglese non può superare 30 caratteri.
+              </p>
             </div>
           </div>
         </div>
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Sottotitolo italiano <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Sottotitolo italiano <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <input
                 type="text"
@@ -236,20 +452,55 @@
                 #sottotitoloItCtrl="ngModel"
                 required
                 minlength="3"
-                maxlength="30"
-                [class.is-invalid]="sottotitoloItCtrl.invalid && (sottotitoloItCtrl.touched || formInviato)"
+                maxlength="35"
+                [class.is-invalid]="
+                  sottotitoloItCtrl.invalid &&
+                  (sottotitoloItCtrl.touched || formInviato)
+                "
               />
-              <label [class.is-invalid]="sottotitoloItCtrl.invalid && (sottotitoloItCtrl.touched || formInviato)">Sottotitolo</label>
+              <label
+                [class.is-invalid]="
+                  sottotitoloItCtrl.invalid &&
+                  (sottotitoloItCtrl.touched || formInviato)
+                "
+                >Sottotitolo</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(sottotitoloItCtrl.touched || formInviato) && sottotitoloItCtrl.errors?.['required']">Il sottotitolo italiano è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="(sottotitoloItCtrl.touched || formInviato) && sottotitoloItCtrl.errors?.['minlength']">Il sottotitolo italiano deve avere almeno 3 caratteri.</p>
-              <p class="errore-campo-media" *ngIf="(sottotitoloItCtrl.touched || formInviato) && sottotitoloItCtrl.errors?.['maxlength']">Il sottotitolo italiano non può superare 30 caratteri.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (sottotitoloItCtrl.touched || formInviato) &&
+                  sottotitoloItCtrl.errors?.['required']
+                "
+              >
+                Il sottotitolo italiano è obbligatorio.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (sottotitoloItCtrl.touched || formInviato) &&
+                  sottotitoloItCtrl.errors?.['minlength']
+                "
+              >
+                Il sottotitolo italiano deve avere almeno 3 caratteri.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (sottotitoloItCtrl.touched || formInviato) &&
+                  sottotitoloItCtrl.errors?.['maxlength']
+                "
+              >
+                Il sottotitolo italiano non può superare 35 caratteri.
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Sottotitolo inglese <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Sottotitolo inglese <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <input
                 type="text"
@@ -259,22 +510,57 @@
                 #sottotitoloEnCtrl="ngModel"
                 required
                 minlength="3"
-                maxlength="30"
-                [class.is-invalid]="sottotitoloEnCtrl.invalid && (sottotitoloEnCtrl.touched || formInviato)"
+                maxlength="35"
+                [class.is-invalid]="
+                  sottotitoloEnCtrl.invalid &&
+                  (sottotitoloEnCtrl.touched || formInviato)
+                "
               />
-              <label [class.is-invalid]="sottotitoloEnCtrl.invalid && (sottotitoloEnCtrl.touched || formInviato)">Sottotitolo</label>
+              <label
+                [class.is-invalid]="
+                  sottotitoloEnCtrl.invalid &&
+                  (sottotitoloEnCtrl.touched || formInviato)
+                "
+                >Sottotitolo</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(sottotitoloEnCtrl.touched || formInviato) && sottotitoloEnCtrl.errors?.['required']">Il sottotitolo inglese è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="(sottotitoloEnCtrl.touched || formInviato) && sottotitoloEnCtrl.errors?.['minlength']">Il sottotitolo inglese deve avere almeno 3 caratteri.</p>
-              <p class="errore-campo-media" *ngIf="(sottotitoloEnCtrl.touched || formInviato) && sottotitoloEnCtrl.errors?.['maxlength']">Il sottotitolo inglese non può superare 30 caratteri.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (sottotitoloEnCtrl.touched || formInviato) &&
+                  sottotitoloEnCtrl.errors?.['required']
+                "
+              >
+                Il sottotitolo inglese è obbligatorio.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (sottotitoloEnCtrl.touched || formInviato) &&
+                  sottotitoloEnCtrl.errors?.['minlength']
+                "
+              >
+                Il sottotitolo inglese deve avere almeno 3 caratteri.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (sottotitoloEnCtrl.touched || formInviato) &&
+                  sottotitoloEnCtrl.errors?.['maxlength']
+                "
+              >
+                Il sottotitolo inglese non può superare 35 caratteri.
+              </p>
             </div>
           </div>
         </div>
 
         <div class="riga-uno">
           <div class="campo-wrapper-media campo-largo">
-            <p class="label-media">Descrizione italiana <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Descrizione italiana <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <textarea
                 rows="3"
@@ -284,21 +570,58 @@
                 #descrizioneItCtrl="ngModel"
                 required
                 minlength="10"
-                [class.is-invalid]="(descrizioneItCtrl.invalid || descrizioneIt.trim().length > 3000) && (descrizioneItCtrl.touched || formInviato)"
+                [class.is-invalid]="
+                  (descrizioneItCtrl.invalid ||
+                    descrizioneIt.trim().length > 3000) &&
+                  (descrizioneItCtrl.touched || formInviato)
+                "
               ></textarea>
-              <label [class.is-invalid]="(descrizioneItCtrl.invalid || descrizioneIt.trim().length > 3000) && (descrizioneItCtrl.touched || formInviato)">Descrizione</label>
+              <label
+                [class.is-invalid]="
+                  (descrizioneItCtrl.invalid ||
+                    descrizioneIt.trim().length > 3000) &&
+                  (descrizioneItCtrl.touched || formInviato)
+                "
+                >Descrizione</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(descrizioneItCtrl.touched || formInviato) && descrizioneItCtrl.errors?.['required']">La descrizione italiana è obbligatoria.</p>
-              <p class="errore-campo-media" *ngIf="(descrizioneItCtrl.touched || formInviato) && descrizioneItCtrl.errors?.['minlength']">La descrizione italiana deve avere almeno 10 caratteri.</p>
-              <p class="errore-campo-media" *ngIf="(descrizioneItCtrl.touched || formInviato) && descrizioneIt.trim().length > 3000">La descrizione italiana non può superare 3000 caratteri.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (descrizioneItCtrl.touched || formInviato) &&
+                  descrizioneItCtrl.errors?.['required']
+                "
+              >
+                La descrizione italiana è obbligatoria.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (descrizioneItCtrl.touched || formInviato) &&
+                  descrizioneItCtrl.errors?.['minlength']
+                "
+              >
+                La descrizione italiana deve avere almeno 10 caratteri.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (descrizioneItCtrl.touched || formInviato) &&
+                  descrizioneIt.trim().length > 3000
+                "
+              >
+                La descrizione italiana non può superare 3000 caratteri.
+              </p>
             </div>
           </div>
         </div>
 
         <div class="riga-uno">
           <div class="campo-wrapper-media campo-largo">
-            <p class="label-media">Descrizione inglese <span class="asterisco-media">*</span></p>
+            <p class="label-media">
+              Descrizione inglese <span class="asterisco-media">*</span>
+            </p>
             <div class="campo-form-media">
               <textarea
                 rows="3"
@@ -308,170 +631,791 @@
                 #descrizioneEnCtrl="ngModel"
                 required
                 minlength="10"
-                [class.is-invalid]="(descrizioneEnCtrl.invalid || descrizioneEn.trim().length > 3000) && (descrizioneEnCtrl.touched || formInviato)"
+                [class.is-invalid]="
+                  (descrizioneEnCtrl.invalid ||
+                    descrizioneEn.trim().length > 3000) &&
+                  (descrizioneEnCtrl.touched || formInviato)
+                "
               ></textarea>
-              <label [class.is-invalid]="(descrizioneEnCtrl.invalid || descrizioneEn.trim().length > 3000) && (descrizioneEnCtrl.touched || formInviato)">Descrizione</label>
+              <label
+                [class.is-invalid]="
+                  (descrizioneEnCtrl.invalid ||
+                    descrizioneEn.trim().length > 3000) &&
+                  (descrizioneEnCtrl.touched || formInviato)
+                "
+                >Descrizione</label
+              >
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="(descrizioneEnCtrl.touched || formInviato) && descrizioneEnCtrl.errors?.['required']">La descrizione inglese è obbligatoria.</p>
-              <p class="errore-campo-media" *ngIf="(descrizioneEnCtrl.touched || formInviato) && descrizioneEnCtrl.errors?.['minlength']">La descrizione inglese deve avere almeno 10 caratteri.</p>
-              <p class="errore-campo-media" *ngIf="(descrizioneEnCtrl.touched || formInviato) && descrizioneEn.trim().length > 3000">La descrizione inglese non può superare 3000 caratteri.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (descrizioneEnCtrl.touched || formInviato) &&
+                  descrizioneEnCtrl.errors?.['required']
+                "
+              >
+                La descrizione inglese è obbligatoria.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (descrizioneEnCtrl.touched || formInviato) &&
+                  descrizioneEnCtrl.errors?.['minlength']
+                "
+              >
+                La descrizione inglese deve avere almeno 10 caratteri.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="
+                  (descrizioneEnCtrl.touched || formInviato) &&
+                  descrizioneEn.trim().length > 3000
+                "
+              >
+                La descrizione inglese non può superare 3000 caratteri.
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       <div class="sezione-form">
-        <h3 class="sezione-label">Immagini <span class="formati-permessi-media">PNG, JPG, WEBP, AVIF - max 500 KB</span></h3>
+        <h3 class="sezione-label">
+          Immagini
+          <span class="formati-permessi-media"
+            >PNG, JPG, WEBP, AVIF - max 500 KB</span
+          >
+        </h3>
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Img titolo italiano <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('img_titolo_it', $event)" (click)="inputImgTitoloIt.click()">
-              <input type="file" #inputImgTitoloIt accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif" (change)="onFileSelezionato('img_titolo_it', $event)" />
-              <svg *ngIf="files['img_titolo_it'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['img_titolo_it'].length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-              <span *ngIf="files['img_titolo_it'].length > 0" class="drop-nome">{{ files['img_titolo_it'][0].name }}</span>
-              <button *ngIf="files['img_titolo_it'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('img_titolo_it', 0)">✕</button>
+            <p class="label-media">
+              Img titolo italiano <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div
+                class="select-header-modalita"
+                [class.aperto]="dropdownModalitaAperta === 'img_titolo_it'"
+                (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'img_titolo_it' ? '' : 'img_titolo_it'"
+              >
+                <span>{{ modalitaCaricamento['img_titolo_it'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12">
+                  <path fill="#c4c4c4" d="M6 8L1 3h10z" />
+                </svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'img_titolo_it'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['img_titolo_it'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('img_titolo_it', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['img_titolo_it'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('img_titolo_it', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['img_titolo_it'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('img_titolo_it', $event)"
+              (click)="inputImgTitoloIt.click()"
+            >
+              <input
+                type="file"
+                #inputImgTitoloIt
+                accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif"
+                (change)="onFileSelezionato('img_titolo_it', $event)"
+              />
+              <svg
+                *ngIf="files['img_titolo_it'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span
+                *ngIf="files['img_titolo_it'].length === 0"
+                class="drop-testo"
+                >Trascina o clicca (file singolo)</span
+              >
+              <span
+                *ngIf="files['img_titolo_it'].length > 0"
+                class="drop-nome"
+                >{{ files["img_titolo_it"][0].name }}</span
+              >
+              <button
+                *ngIf="files['img_titolo_it'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="
+                  $event.stopPropagation(); rimuoviFile('img_titolo_it', 0)
+                "
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['img_titolo_it'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['img_titolo_it']"
+                name="url_img_titolo_it"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['img_titolo_it'].length === 0 && !erroriFiles['img_titolo_it']">L'immagine titolo italiana è obbligatoria.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['img_titolo_it']">{{ erroriFiles['img_titolo_it'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('img_titolo_it')"
+              >
+                L'immagine titolo italiana è obbligatoria.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="erroriFiles['img_titolo_it']"
+              >
+                {{ erroriFiles["img_titolo_it"] }}
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Img titolo inglese <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('img_titolo_en', $event)" (click)="inputImgTitoloEn.click()">
-              <input type="file" #inputImgTitoloEn accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif" (change)="onFileSelezionato('img_titolo_en', $event)" />
-              <svg *ngIf="files['img_titolo_en'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['img_titolo_en'].length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-              <span *ngIf="files['img_titolo_en'].length > 0" class="drop-nome">{{ files['img_titolo_en'][0].name }}</span>
-              <button *ngIf="files['img_titolo_en'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('img_titolo_en', 0)">✕</button>
+            <p class="label-media">
+              Img titolo inglese <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'img_titolo_en'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'img_titolo_en' ? '' : 'img_titolo_en'">
+                <span>{{ modalitaCaricamento['img_titolo_en'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'img_titolo_en'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['img_titolo_en'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('img_titolo_en', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['img_titolo_en'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('img_titolo_en', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['img_titolo_en'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('img_titolo_en', $event)"
+              (click)="inputImgTitoloEn.click()"
+            >
+              <input
+                type="file"
+                #inputImgTitoloEn
+                accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif"
+                (change)="onFileSelezionato('img_titolo_en', $event)"
+              />
+              <svg
+                *ngIf="files['img_titolo_en'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span
+                *ngIf="files['img_titolo_en'].length === 0"
+                class="drop-testo"
+                >Trascina o clicca (file singolo)</span
+              >
+              <span
+                *ngIf="files['img_titolo_en'].length > 0"
+                class="drop-nome"
+                >{{ files["img_titolo_en"][0].name }}</span
+              >
+              <button
+                *ngIf="files['img_titolo_en'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="
+                  $event.stopPropagation(); rimuoviFile('img_titolo_en', 0)
+                "
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['img_titolo_en'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['img_titolo_en']"
+                name="url_img_titolo_en"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['img_titolo_en'].length === 0 && !erroriFiles['img_titolo_en']">L'immagine titolo inglese è obbligatoria.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['img_titolo_en']">{{ erroriFiles['img_titolo_en'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('img_titolo_en')"
+              >
+                L'immagine titolo inglese è obbligatoria.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="erroriFiles['img_titolo_en']"
+              >
+                {{ erroriFiles["img_titolo_en"] }}
+              </p>
             </div>
           </div>
         </div>
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Locandina italiana <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('locandina_it', $event)" (click)="inputLocIt.click()">
-              <input type="file" #inputLocIt accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif" (change)="onFileSelezionato('locandina_it', $event)" />
-              <svg *ngIf="files['locandina_it'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['locandina_it'].length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-              <span *ngIf="files['locandina_it'].length > 0" class="drop-nome">{{ files['locandina_it'][0].name }}</span>
-              <button *ngIf="files['locandina_it'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('locandina_it', 0)">✕</button>
+            <p class="label-media">
+              Locandina italiana <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'locandina_it'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'locandina_it' ? '' : 'locandina_it'">
+                <span>{{ modalitaCaricamento['locandina_it'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'locandina_it'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['locandina_it'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('locandina_it', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['locandina_it'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('locandina_it', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['locandina_it'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('locandina_it', $event)"
+              (click)="inputLocIt.click()"
+            >
+              <input
+                type="file"
+                #inputLocIt
+                accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif"
+                (change)="onFileSelezionato('locandina_it', $event)"
+              />
+              <svg
+                *ngIf="files['locandina_it'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span
+                *ngIf="files['locandina_it'].length === 0"
+                class="drop-testo"
+                >Trascina o clicca (file singolo)</span
+              >
+              <span
+                *ngIf="files['locandina_it'].length > 0"
+                class="drop-nome"
+                >{{ files["locandina_it"][0].name }}</span
+              >
+              <button
+                *ngIf="files['locandina_it'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="
+                  $event.stopPropagation(); rimuoviFile('locandina_it', 0)
+                "
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['locandina_it'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['locandina_it']"
+                name="url_locandina_it"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['locandina_it'].length === 0 && !erroriFiles['locandina_it']">La locandina italiana è obbligatoria.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['locandina_it']">{{ erroriFiles['locandina_it'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('locandina_it')"
+              >
+                La locandina italiana è obbligatoria.
+              </p>
+              <p class="errore-campo-media" *ngIf="erroriFiles['locandina_it']">
+                {{ erroriFiles["locandina_it"] }}
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Locandina inglese <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('locandina_en', $event)" (click)="inputLocEn.click()">
-              <input type="file" #inputLocEn accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif" (change)="onFileSelezionato('locandina_en', $event)" />
-              <svg *ngIf="files['locandina_en'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['locandina_en'].length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-              <span *ngIf="files['locandina_en'].length > 0" class="drop-nome">{{ files['locandina_en'][0].name }}</span>
-              <button *ngIf="files['locandina_en'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('locandina_en', 0)">✕</button>
+            <p class="label-media">
+              Locandina inglese <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'locandina_en'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'locandina_en' ? '' : 'locandina_en'">
+                <span>{{ modalitaCaricamento['locandina_en'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'locandina_en'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['locandina_en'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('locandina_en', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['locandina_en'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('locandina_en', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['locandina_en'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('locandina_en', $event)"
+              (click)="inputLocEn.click()"
+            >
+              <input
+                type="file"
+                #inputLocEn
+                accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif"
+                (change)="onFileSelezionato('locandina_en', $event)"
+              />
+              <svg
+                *ngIf="files['locandina_en'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span
+                *ngIf="files['locandina_en'].length === 0"
+                class="drop-testo"
+                >Trascina o clicca (file singolo)</span
+              >
+              <span
+                *ngIf="files['locandina_en'].length > 0"
+                class="drop-nome"
+                >{{ files["locandina_en"][0].name }}</span
+              >
+              <button
+                *ngIf="files['locandina_en'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="
+                  $event.stopPropagation(); rimuoviFile('locandina_en', 0)
+                "
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['locandina_en'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['locandina_en']"
+                name="url_locandina_en"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['locandina_en'].length === 0 && !erroriFiles['locandina_en']">La locandina inglese è obbligatoria.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['locandina_en']">{{ erroriFiles['locandina_en'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('locandina_en')"
+              >
+                La locandina inglese è obbligatoria.
+              </p>
+              <p class="errore-campo-media" *ngIf="erroriFiles['locandina_en']">
+                {{ erroriFiles["locandina_en"] }}
+              </p>
             </div>
           </div>
         </div>
 
         <div class="riga-uno riga-centrata">
           <div class="campo-wrapper-media campo-copertina">
-            <p class="label-media">Immagine copertina <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('img_copertina', $event)" (click)="inputCop.click()">
-              <input type="file" #inputCop accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif" (change)="onFileSelezionato('img_copertina', $event)" />
-              <svg *ngIf="files['img_copertina'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['img_copertina'].length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-              <span *ngIf="files['img_copertina'].length > 0" class="drop-nome">{{ files['img_copertina'][0].name }}</span>
-              <button *ngIf="files['img_copertina'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('img_copertina', 0)">✕</button>
+            <p class="label-media">
+              Immagine copertina <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'img_copertina'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'img_copertina' ? '' : 'img_copertina'">
+                <span>{{ modalitaCaricamento['img_copertina'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'img_copertina'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['img_copertina'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('img_copertina', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['img_copertina'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('img_copertina', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['img_copertina'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('img_copertina', $event)"
+              (click)="inputCop.click()"
+            >
+              <input
+                type="file"
+                #inputCop
+                accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif"
+                (change)="onFileSelezionato('img_copertina', $event)"
+              />
+              <svg
+                *ngIf="files['img_copertina'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span
+                *ngIf="files['img_copertina'].length === 0"
+                class="drop-testo"
+                >Trascina o clicca (file singolo)</span
+              >
+              <span
+                *ngIf="files['img_copertina'].length > 0"
+                class="drop-nome"
+                >{{ files["img_copertina"][0].name }}</span
+              >
+              <button
+                *ngIf="files['img_copertina'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="
+                  $event.stopPropagation(); rimuoviFile('img_copertina', 0)
+                "
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['img_copertina'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['img_copertina']"
+                name="url_img_copertina"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['img_copertina'].length === 0 && !erroriFiles['img_copertina']">L'immagine copertina è obbligatoria.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['img_copertina']">{{ erroriFiles['img_copertina'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('img_copertina')"
+              >
+                L'immagine copertina è obbligatoria.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="erroriFiles['img_copertina']"
+              >
+                {{ erroriFiles["img_copertina"] }}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       <div class="sezione-form">
-        <h3 class="sezione-label">Trailer <span class="formati-permessi-media">MP4, WEBM, MOV - max 30 MB</span></h3>
+        <h3 class="sezione-label">
+          Trailer
+          <span class="formati-permessi-media">MP4, WEBM, MOV - max 30 MB</span>
+        </h3>
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Trailer italiano <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('trailer_it', $event)" (click)="inputTrailerIt.click()">
-              <input type="file" #inputTrailerIt accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime" (change)="onFileSelezionato('trailer_it', $event)" />
-              <svg *ngIf="files['trailer_it'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['trailer_it'].length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-              <span *ngIf="files['trailer_it'].length > 0" class="drop-nome">{{ files['trailer_it'][0].name }}</span>
-              <button *ngIf="files['trailer_it'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('trailer_it', 0)">✕</button>
+            <p class="label-media">
+              Trailer italiano <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'trailer_it'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'trailer_it' ? '' : 'trailer_it'">
+                <span>{{ modalitaCaricamento['trailer_it'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'trailer_it'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['trailer_it'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('trailer_it', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['trailer_it'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('trailer_it', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['trailer_it'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('trailer_it', $event)"
+              (click)="inputTrailerIt.click()"
+            >
+              <input
+                type="file"
+                #inputTrailerIt
+                accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime"
+                (change)="onFileSelezionato('trailer_it', $event)"
+              />
+              <svg
+                *ngIf="files['trailer_it'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span *ngIf="files['trailer_it'].length === 0" class="drop-testo"
+                >Trascina o clicca (file singolo)</span
+              >
+              <span *ngIf="files['trailer_it'].length > 0" class="drop-nome">{{
+                files["trailer_it"][0].name
+              }}</span>
+              <button
+                *ngIf="files['trailer_it'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="$event.stopPropagation(); rimuoviFile('trailer_it', 0)"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['trailer_it'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['trailer_it']"
+                name="url_trailer_it"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['trailer_it'].length === 0 && !erroriFiles['trailer_it']">Il trailer italiano è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['trailer_it']">{{ erroriFiles['trailer_it'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('trailer_it')"
+              >
+                Il trailer italiano è obbligatorio.
+              </p>
+              <p class="errore-campo-media" *ngIf="erroriFiles['trailer_it']">
+                {{ erroriFiles["trailer_it"] }}
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Trailer inglese <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('trailer_en', $event)" (click)="inputTrailerEn.click()">
-              <input type="file" #inputTrailerEn accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime" (change)="onFileSelezionato('trailer_en', $event)" />
-              <svg *ngIf="files['trailer_en'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['trailer_en'].length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-              <span *ngIf="files['trailer_en'].length > 0" class="drop-nome">{{ files['trailer_en'][0].name }}</span>
-              <button *ngIf="files['trailer_en'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('trailer_en', 0)">✕</button>
+            <p class="label-media">
+              Trailer inglese <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'trailer_en'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'trailer_en' ? '' : 'trailer_en'">
+                <span>{{ modalitaCaricamento['trailer_en'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'trailer_en'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['trailer_en'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('trailer_en', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['trailer_en'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('trailer_en', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['trailer_en'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('trailer_en', $event)"
+              (click)="inputTrailerEn.click()"
+            >
+              <input
+                type="file"
+                #inputTrailerEn
+                accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime"
+                (change)="onFileSelezionato('trailer_en', $event)"
+              />
+              <svg
+                *ngIf="files['trailer_en'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span *ngIf="files['trailer_en'].length === 0" class="drop-testo"
+                >Trascina o clicca (file singolo)</span
+              >
+              <span *ngIf="files['trailer_en'].length > 0" class="drop-nome">{{
+                files["trailer_en"][0].name
+              }}</span>
+              <button
+                *ngIf="files['trailer_en'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="$event.stopPropagation(); rimuoviFile('trailer_en', 0)"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['trailer_en'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['trailer_en']"
+                name="url_trailer_en"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['trailer_en'].length === 0 && !erroriFiles['trailer_en']">Il trailer inglese è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['trailer_en']">{{ erroriFiles['trailer_en'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('trailer_en')"
+              >
+                Il trailer inglese è obbligatorio.
+              </p>
+              <p class="errore-campo-media" *ngIf="erroriFiles['trailer_en']">
+                {{ erroriFiles["trailer_en"] }}
+              </p>
             </div>
           </div>
         </div>
       </div>
       <div class="sezione-form">
-        <h3 class="sezione-label">Sottotitoli <span class="formati-permessi-media">VTT - max 2 MB</span></h3>
+        <h3 class="sezione-label">
+          Sottotitoli <span class="formati-permessi-media">VTT - max 2 MB</span>
+        </h3>
 
         <div class="riga-due">
           <div class="campo-wrapper-media">
-            <p class="label-media">Sottotitoli italiano <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('sottotitoli_it', $event)" (click)="inputSottotitoliIt.click()">
-              <input type="file" #inputSottotitoliIt accept=".vtt,text/vtt,text/plain" (change)="onFileSelezionato('sottotitoli_it', $event)" />
-              <svg *ngIf="files['sottotitoli_it'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['sottotitoli_it'].length === 0" class="drop-testo">Trascina o clicca (file VTT)</span>
-              <span *ngIf="files['sottotitoli_it'].length > 0" class="drop-nome">{{ files['sottotitoli_it'][0].name }}</span>
-              <button *ngIf="files['sottotitoli_it'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('sottotitoli_it', 0)">✕</button>
+            <p class="label-media">
+              Sottotitoli italiano <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'sottotitoli_it'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'sottotitoli_it' ? '' : 'sottotitoli_it'">
+                <span>{{ modalitaCaricamento['sottotitoli_it'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'sottotitoli_it'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['sottotitoli_it'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('sottotitoli_it', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['sottotitoli_it'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('sottotitoli_it', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['sottotitoli_it'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('sottotitoli_it', $event)"
+              (click)="inputSottotitoliIt.click()"
+            >
+              <input
+                type="file"
+                #inputSottotitoliIt
+                accept=".vtt,text/vtt,text/plain"
+                (change)="onFileSelezionato('sottotitoli_it', $event)"
+              />
+              <svg
+                *ngIf="files['sottotitoli_it'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span
+                *ngIf="files['sottotitoli_it'].length === 0"
+                class="drop-testo"
+                >Trascina o clicca (file VTT)</span
+              >
+              <span
+                *ngIf="files['sottotitoli_it'].length > 0"
+                class="drop-nome"
+                >{{ files["sottotitoli_it"][0].name }}</span
+              >
+              <button
+                *ngIf="files['sottotitoli_it'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="
+                  $event.stopPropagation(); rimuoviFile('sottotitoli_it', 0)
+                "
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['sottotitoli_it'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['sottotitoli_it']"
+                name="url_sottotitoli_it"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['sottotitoli_it'].length === 0 && !erroriFiles['sottotitoli_it']">I sottotitoli italiani sono obbligatori.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['sottotitoli_it']">{{ erroriFiles['sottotitoli_it'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('sottotitoli_it')"
+              >
+                I sottotitoli italiani sono obbligatori.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="erroriFiles['sottotitoli_it']"
+              >
+                {{ erroriFiles["sottotitoli_it"] }}
+              </p>
             </div>
           </div>
 
           <div class="campo-wrapper-media">
-            <p class="label-media">Sottotitoli inglese <span class="asterisco-media">*</span></p>
-            <div class="zona-drop" dragdrop (alRilascio)="onFileDrop('sottotitoli_en', $event)" (click)="inputSottotitoliEn.click()">
-              <input type="file" #inputSottotitoliEn accept=".vtt,text/vtt,text/plain" (change)="onFileSelezionato('sottotitoli_en', $event)" />
-              <svg *ngIf="files['sottotitoli_en'].length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-              <span *ngIf="files['sottotitoli_en'].length === 0" class="drop-testo">Trascina o clicca (file VTT)</span>
-              <span *ngIf="files['sottotitoli_en'].length > 0" class="drop-nome">{{ files['sottotitoli_en'][0].name }}</span>
-              <button *ngIf="files['sottotitoli_en'].length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviFile('sottotitoli_en', 0)">✕</button>
+            <p class="label-media">
+              Sottotitoli inglese <span class="asterisco-media">*</span>
+            </p>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'sottotitoli_en'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'sottotitoli_en' ? '' : 'sottotitoli_en'">
+                <span>{{ modalitaCaricamento['sottotitoli_en'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+              </div>
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'sottotitoli_en'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['sottotitoli_en'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('sottotitoli_en', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['sottotitoli_en'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('sottotitoli_en', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop"
+              *ngIf="modalitaCaricamento['sottotitoli_en'] === 'file'"
+              dragdrop
+              (alRilascio)="onFileDrop('sottotitoli_en', $event)"
+              (click)="inputSottotitoliEn.click()"
+            >
+              <input
+                type="file"
+                #inputSottotitoliEn
+                accept=".vtt,text/vtt,text/plain"
+                (change)="onFileSelezionato('sottotitoli_en', $event)"
+              />
+              <svg
+                *ngIf="files['sottotitoli_en'].length === 0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+              </svg>
+              <span
+                *ngIf="files['sottotitoli_en'].length === 0"
+                class="drop-testo"
+                >Trascina o clicca (file VTT)</span
+              >
+              <span
+                *ngIf="files['sottotitoli_en'].length > 0"
+                class="drop-nome"
+                >{{ files["sottotitoli_en"][0].name }}</span
+              >
+              <button
+                *ngIf="files['sottotitoli_en'].length > 0"
+                type="button"
+                class="btn-rimuovi-file"
+                (click)="
+                  $event.stopPropagation(); rimuoviFile('sottotitoli_en', 0)
+                "
+              >
+                ✕
+              </button>
+            </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['sottotitoli_en'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL del file su CloudFront"
+                [(ngModel)]="urlDiretti['sottotitoli_en']"
+                name="url_sottotitoli_en"
+              />
             </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['sottotitoli_en'].length === 0 && !erroriFiles['sottotitoli_en']">I sottotitoli inglesi sono obbligatori.</p>
-              <p class="errore-campo-media" *ngIf="erroriFiles['sottotitoli_en']">{{ erroriFiles['sottotitoli_en'] }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !campoFileValido('sottotitoli_en')"
+              >
+                I sottotitoli inglesi sono obbligatori.
+              </p>
+              <p
+                class="errore-campo-media"
+                *ngIf="erroriFiles['sottotitoli_en']"
+              >
+                {{ erroriFiles["sottotitoli_en"] }}
+              </p>
             </div>
           </div>
         </div>
@@ -480,13 +1424,30 @@
         <h3 class="sezione-label">Stagioni</h3>
 
         <div class="blocco-serie">
-          <div class="stagione-box" *ngFor="let stagione of stagioniSerie; let indiceStagione = index">
-            <div class="stagione-header" (click)="stagione.aperta = !stagione.aperta">
+          <div
+            class="stagione-box"
+            *ngFor="let stagione of stagioniSerie; let indiceStagione = index"
+          >
+            <div
+              class="stagione-header"
+              (click)="stagione.aperta = !stagione.aperta"
+            >
               <span>Stagione {{ indiceStagione + 1 }}</span>
 
               <div class="stagione-azioni">
-                <button type="button" class="btn-rimuovi-stagione" (click)="$event.stopPropagation(); rimuoviStagione(indiceStagione)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <button
+                  type="button"
+                  class="btn-rimuovi-stagione"
+                  (click)="
+                    $event.stopPropagation(); rimuoviStagione(indiceStagione)
+                  "
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                  >
                     <path d="M3 6h18" />
                     <path d="M8 6V4h8v2" />
                     <path d="M6 6l1 14h10l1-14" />
@@ -495,20 +1456,48 @@
                   </svg>
                 </button>
 
-                <span class="freccia-stagione" [class.aperta]="stagione.aperta">▾</span>
+                <span class="freccia-stagione" [class.aperta]="stagione.aperta"
+                  >▾</span
+                >
               </div>
             </div>
 
             <div class="stagione-contenuto" *ngIf="stagione.aperta">
-              <p class="errore-campo-media" *ngIf="formInviato && stagione.episodi.length === 0">La stagione deve avere almeno un episodio.</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && stagione.episodi.length === 0"
+              >
+                La stagione deve avere almeno un episodio.
+              </p>
 
-              <div class="episodio-box" *ngFor="let episodio of stagione.episodi; let indiceEpisodio = index">
-                <div class="episodio-header" (click)="episodio.aperto = !episodio.aperto">
+              <div
+                class="episodio-box"
+                *ngFor="
+                  let episodio of stagione.episodi;
+                  let indiceEpisodio = index
+                "
+              >
+                <div
+                  class="episodio-header"
+                  (click)="episodio.aperto = !episodio.aperto"
+                >
                   <span>Episodio {{ indiceEpisodio + 1 }}</span>
 
                   <div class="stagione-azioni">
-                    <button type="button" class="btn-rimuovi-stagione" (click)="$event.stopPropagation(); rimuoviEpisodio(indiceStagione, indiceEpisodio)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <button
+                      type="button"
+                      class="btn-rimuovi-stagione"
+                      (click)="
+                        $event.stopPropagation();
+                        rimuoviEpisodio(indiceStagione, indiceEpisodio)
+                      "
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                      >
                         <path d="M3 6h18" />
                         <path d="M8 6V4h8v2" />
                         <path d="M6 6l1 14h10l1-14" />
@@ -517,192 +1506,549 @@
                       </svg>
                     </button>
 
-                    <span class="freccia-stagione" [class.aperta]="episodio.aperto">▾</span>
+                    <span
+                      class="freccia-stagione"
+                      [class.aperta]="episodio.aperto"
+                      >▾</span
+                    >
                   </div>
                 </div>
 
                 <div class="episodio-contenuto" *ngIf="episodio.aperto">
                   <div class="riga-due">
                     <div class="campo-wrapper-media">
-                      <p class="label-media">Titolo italiano <span class="asterisco-media">*</span></p>
+                      <p class="label-media">
+                        Titolo italiano <span class="asterisco-media">*</span>
+                      </p>
                       <div class="campo-form-media">
                         <input
                           type="text"
                           placeholder=" "
                           [(ngModel)]="episodio.titoloIt"
-                          [name]="'episodio_titolo_it_' + indiceStagione + '_' + indiceEpisodio"
+                          [name]="
+                            'episodio_titolo_it_' +
+                            indiceStagione +
+                            '_' +
+                            indiceEpisodio
+                          "
                           #episodioTitoloItCtrl="ngModel"
                           required
                           minlength="3"
                           maxlength="30"
-                          [class.is-invalid]="episodioTitoloItCtrl.invalid && (episodioTitoloItCtrl.touched || formInviato)"
+                          [class.is-invalid]="
+                            episodioTitoloItCtrl.invalid &&
+                            (episodioTitoloItCtrl.touched || formInviato)
+                          "
                         />
-                        <label [class.is-invalid]="episodioTitoloItCtrl.invalid && (episodioTitoloItCtrl.touched || formInviato)">Titolo</label>
+                        <label
+                          [class.is-invalid]="
+                            episodioTitoloItCtrl.invalid &&
+                            (episodioTitoloItCtrl.touched || formInviato)
+                          "
+                          >Titolo</label
+                        >
                       </div>
                       <div class="errori-stack-media">
-                        <p class="errore-campo-media" *ngIf="(episodioTitoloItCtrl.touched || formInviato) && episodioTitoloItCtrl.errors?.['required']">Il titolo italiano è obbligatorio.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioTitoloItCtrl.touched || formInviato) && episodioTitoloItCtrl.errors?.['minlength']">Il titolo italiano deve avere almeno 3 caratteri.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioTitoloItCtrl.touched || formInviato) && episodioTitoloItCtrl.errors?.['maxlength']">Il titolo italiano non può superare 30 caratteri.</p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioTitoloItCtrl.touched || formInviato) &&
+                            episodioTitoloItCtrl.errors?.['required']
+                          "
+                        >
+                          Il titolo italiano è obbligatorio.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioTitoloItCtrl.touched || formInviato) &&
+                            episodioTitoloItCtrl.errors?.['minlength']
+                          "
+                        >
+                          Il titolo italiano deve avere almeno 3 caratteri.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioTitoloItCtrl.touched || formInviato) &&
+                            episodioTitoloItCtrl.errors?.['maxlength']
+                          "
+                        >
+                          Il titolo italiano non può superare 30 caratteri.
+                        </p>
                       </div>
                     </div>
 
                     <div class="campo-wrapper-media">
-                      <p class="label-media">Titolo inglese <span class="asterisco-media">*</span></p>
+                      <p class="label-media">
+                        Titolo inglese <span class="asterisco-media">*</span>
+                      </p>
                       <div class="campo-form-media">
                         <input
                           type="text"
                           placeholder=" "
                           [(ngModel)]="episodio.titoloEn"
-                          [name]="'episodio_titolo_en_' + indiceStagione + '_' + indiceEpisodio"
+                          [name]="
+                            'episodio_titolo_en_' +
+                            indiceStagione +
+                            '_' +
+                            indiceEpisodio
+                          "
                           #episodioTitoloEnCtrl="ngModel"
                           required
                           minlength="3"
                           maxlength="30"
-                          [class.is-invalid]="episodioTitoloEnCtrl.invalid && (episodioTitoloEnCtrl.touched || formInviato)"
+                          [class.is-invalid]="
+                            episodioTitoloEnCtrl.invalid &&
+                            (episodioTitoloEnCtrl.touched || formInviato)
+                          "
                         />
-                        <label [class.is-invalid]="episodioTitoloEnCtrl.invalid && (episodioTitoloEnCtrl.touched || formInviato)">Titolo</label>
+                        <label
+                          [class.is-invalid]="
+                            episodioTitoloEnCtrl.invalid &&
+                            (episodioTitoloEnCtrl.touched || formInviato)
+                          "
+                          >Titolo</label
+                        >
                       </div>
                       <div class="errori-stack-media">
-                        <p class="errore-campo-media" *ngIf="(episodioTitoloEnCtrl.touched || formInviato) && episodioTitoloEnCtrl.errors?.['required']">Il titolo inglese è obbligatorio.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioTitoloEnCtrl.touched || formInviato) && episodioTitoloEnCtrl.errors?.['minlength']">Il titolo inglese deve avere almeno 3 caratteri.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioTitoloEnCtrl.touched || formInviato) && episodioTitoloEnCtrl.errors?.['maxlength']">Il titolo inglese non può superare 30 caratteri.</p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioTitoloEnCtrl.touched || formInviato) &&
+                            episodioTitoloEnCtrl.errors?.['required']
+                          "
+                        >
+                          Il titolo inglese è obbligatorio.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioTitoloEnCtrl.touched || formInviato) &&
+                            episodioTitoloEnCtrl.errors?.['minlength']
+                          "
+                        >
+                          Il titolo inglese deve avere almeno 3 caratteri.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioTitoloEnCtrl.touched || formInviato) &&
+                            episodioTitoloEnCtrl.errors?.['maxlength']
+                          "
+                        >
+                          Il titolo inglese non può superare 30 caratteri.
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   <div class="riga-uno">
                     <div class="campo-wrapper-media campo-largo">
-                      <p class="label-media">Descrizione italiana <span class="asterisco-media">*</span></p>
+                      <p class="label-media">
+                        Descrizione italiana
+                        <span class="asterisco-media">*</span>
+                      </p>
                       <div class="campo-form-media">
                         <textarea
                           rows="3"
                           placeholder=" "
                           [(ngModel)]="episodio.descrizioneIt"
-                          [name]="'episodio_descrizione_it_' + indiceStagione + '_' + indiceEpisodio"
+                          [name]="
+                            'episodio_descrizione_it_' +
+                            indiceStagione +
+                            '_' +
+                            indiceEpisodio
+                          "
                           #episodioDescrizioneItCtrl="ngModel"
                           required
                           minlength="10"
-                          [class.is-invalid]="(episodioDescrizioneItCtrl.invalid || episodio.descrizioneIt.trim().length > 3000) && (episodioDescrizioneItCtrl.touched || formInviato)"
+                          [class.is-invalid]="
+                            (episodioDescrizioneItCtrl.invalid ||
+                              episodio.descrizioneIt.trim().length > 3000) &&
+                            (episodioDescrizioneItCtrl.touched || formInviato)
+                          "
                         ></textarea>
-                        <label [class.is-invalid]="(episodioDescrizioneItCtrl.invalid || episodio.descrizioneIt.trim().length > 3000) && (episodioDescrizioneItCtrl.touched || formInviato)">Descrizione</label>
+                        <label
+                          [class.is-invalid]="
+                            (episodioDescrizioneItCtrl.invalid ||
+                              episodio.descrizioneIt.trim().length > 3000) &&
+                            (episodioDescrizioneItCtrl.touched || formInviato)
+                          "
+                          >Descrizione</label
+                        >
                       </div>
                       <div class="errori-stack-media">
-                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneItCtrl.touched || formInviato) && episodioDescrizioneItCtrl.errors?.['required']">La descrizione italiana è obbligatoria.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneItCtrl.touched || formInviato) && episodioDescrizioneItCtrl.errors?.['minlength']">La descrizione italiana deve avere almeno 10 caratteri.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneItCtrl.touched || formInviato) && episodio.descrizioneIt.trim().length > 3000">La descrizione italiana non può superare 3000 caratteri.</p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioDescrizioneItCtrl.touched ||
+                              formInviato) &&
+                            episodioDescrizioneItCtrl.errors?.['required']
+                          "
+                        >
+                          La descrizione italiana è obbligatoria.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioDescrizioneItCtrl.touched ||
+                              formInviato) &&
+                            episodioDescrizioneItCtrl.errors?.['minlength']
+                          "
+                        >
+                          La descrizione italiana deve avere almeno 10
+                          caratteri.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioDescrizioneItCtrl.touched ||
+                              formInviato) &&
+                            episodio.descrizioneIt.trim().length > 3000
+                          "
+                        >
+                          La descrizione italiana non può superare 3000
+                          caratteri.
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   <div class="riga-uno">
                     <div class="campo-wrapper-media campo-largo">
-                      <p class="label-media">Descrizione inglese <span class="asterisco-media">*</span></p>
+                      <p class="label-media">
+                        Descrizione inglese
+                        <span class="asterisco-media">*</span>
+                      </p>
                       <div class="campo-form-media">
                         <textarea
                           rows="3"
                           placeholder=" "
                           [(ngModel)]="episodio.descrizioneEn"
-                          [name]="'episodio_descrizione_en_' + indiceStagione + '_' + indiceEpisodio"
+                          [name]="
+                            'episodio_descrizione_en_' +
+                            indiceStagione +
+                            '_' +
+                            indiceEpisodio
+                          "
                           #episodioDescrizioneEnCtrl="ngModel"
                           required
                           minlength="10"
-                          [class.is-invalid]="(episodioDescrizioneEnCtrl.invalid || episodio.descrizioneEn.trim().length > 3000) && (episodioDescrizioneEnCtrl.touched || formInviato)"
+                          [class.is-invalid]="
+                            (episodioDescrizioneEnCtrl.invalid ||
+                              episodio.descrizioneEn.trim().length > 3000) &&
+                            (episodioDescrizioneEnCtrl.touched || formInviato)
+                          "
                         ></textarea>
-                        <label [class.is-invalid]="(episodioDescrizioneEnCtrl.invalid || episodio.descrizioneEn.trim().length > 3000) && (episodioDescrizioneEnCtrl.touched || formInviato)">Descrizione</label>
+                        <label
+                          [class.is-invalid]="
+                            (episodioDescrizioneEnCtrl.invalid ||
+                              episodio.descrizioneEn.trim().length > 3000) &&
+                            (episodioDescrizioneEnCtrl.touched || formInviato)
+                          "
+                          >Descrizione</label
+                        >
                       </div>
                       <div class="errori-stack-media">
-                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneEnCtrl.touched || formInviato) && episodioDescrizioneEnCtrl.errors?.['required']">La descrizione inglese è obbligatoria.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneEnCtrl.touched || formInviato) && episodioDescrizioneEnCtrl.errors?.['minlength']">La descrizione inglese deve avere almeno 10 caratteri.</p>
-                        <p class="errore-campo-media" *ngIf="(episodioDescrizioneEnCtrl.touched || formInviato) && episodio.descrizioneEn.trim().length > 3000">La descrizione inglese non può superare 3000 caratteri.</p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioDescrizioneEnCtrl.touched ||
+                              formInviato) &&
+                            episodioDescrizioneEnCtrl.errors?.['required']
+                          "
+                        >
+                          La descrizione inglese è obbligatoria.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioDescrizioneEnCtrl.touched ||
+                              formInviato) &&
+                            episodioDescrizioneEnCtrl.errors?.['minlength']
+                          "
+                        >
+                          La descrizione inglese deve avere almeno 10 caratteri.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            (episodioDescrizioneEnCtrl.touched ||
+                              formInviato) &&
+                            episodio.descrizioneEn.trim().length > 3000
+                          "
+                        >
+                          La descrizione inglese non può superare 3000
+                          caratteri.
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   <div class="riga-uno riga-centrata">
                     <div class="campo-wrapper-media campo-copertina">
-                      <p class="label-media">Immagine anteprima <span class="asterisco-media">*</span></p>
-                      <div class="zona-drop" dragdrop (alRilascio)="onFileAnteprimaEpisodioDrop(indiceStagione, indiceEpisodio, $event)" (click)="inputAnteprimaEpisodio.click()">
-                        <input type="file" #inputAnteprimaEpisodio accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif" (change)="onFileAnteprimaEpisodioSelezionato(indiceStagione, indiceEpisodio, $event)" />
-                        <svg *ngIf="episodio.anteprima.length === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-                        <span *ngIf="episodio.anteprima.length === 0" class="drop-testo">Trascina o clicca (file singolo)</span>
-                        <span *ngIf="episodio.anteprima.length > 0" class="drop-nome">{{ episodio.anteprima[0].name }}</span>
-                        <button *ngIf="episodio.anteprima.length > 0" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); rimuoviAnteprimaEpisodio(indiceStagione, indiceEpisodio)">✕</button>
+                      <p class="label-media">
+                        Immagine anteprima
+                        <span class="asterisco-media">*</span>
+                      </p>
+                      <div class="select-modalita-upload">
+                        <div
+                          class="select-header-modalita"
+                          [class.aperto]="dropdownModalitaAperta === 'anteprima_' + indiceStagione + '_' + indiceEpisodio"
+                          (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'anteprima_' + indiceStagione + '_' + indiceEpisodio ? '' : 'anteprima_' + indiceStagione + '_' + indiceEpisodio"
+                        >
+                          <span>{{ episodio.modalitaAnteprima === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12">
+                            <path fill="#c4c4c4" d="M6 8L1 3h10z" />
+                          </svg>
+                        </div>
+                        <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'anteprima_' + indiceStagione + '_' + indiceEpisodio">
+                          <div class="select-opzione-modalita" [class.attivo]="episodio.modalitaAnteprima === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaAnteprima(indiceStagione, indiceEpisodio, 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                          <div class="select-opzione-modalita" [class.attivo]="episodio.modalitaAnteprima === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaAnteprima(indiceStagione, indiceEpisodio, 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+                        </div>
+                      </div>
+                      <div
+                        class="zona-drop"
+                        *ngIf="episodio.modalitaAnteprima === 'file'"
+                        dragdrop
+                        (alRilascio)="
+                          onFileAnteprimaEpisodioDrop(
+                            indiceStagione,
+                            indiceEpisodio,
+                            $event
+                          )
+                        "
+                        (click)="inputAnteprimaEpisodio.click()"
+                      >
+                        <input
+                          type="file"
+                          #inputAnteprimaEpisodio
+                          accept=".png,.jpg,.jpeg,.webp,.avif,image/png,image/jpeg,image/webp,image/avif"
+                          (change)="
+                            onFileAnteprimaEpisodioSelezionato(
+                              indiceStagione,
+                              indiceEpisodio,
+                              $event
+                            )
+                          "
+                        />
+                        <svg
+                          *ngIf="episodio.anteprima.length === 0"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                        >
+                          <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+                        </svg>
+                        <span
+                          *ngIf="episodio.anteprima.length === 0"
+                          class="drop-testo"
+                          >Trascina o clicca (file singolo)</span
+                        >
+                        <span
+                          *ngIf="episodio.anteprima.length > 0"
+                          class="drop-nome"
+                          >{{ episodio.anteprima[0].name }}</span
+                        >
+                        <button
+                          *ngIf="episodio.anteprima.length > 0"
+                          type="button"
+                          class="btn-rimuovi-file"
+                          (click)="
+                            $event.stopPropagation();
+                            rimuoviAnteprimaEpisodio(
+                              indiceStagione,
+                              indiceEpisodio
+                            )
+                          "
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div class="campo-url-diretto" *ngIf="episodio.modalitaAnteprima === 'url'">
+                        <input
+                          type="text"
+                          placeholder="URL anteprima su CloudFront"
+                          [(ngModel)]="episodio.urlAnteprima"
+                          [name]="'url_anteprima_' + indiceStagione + '_' + indiceEpisodio"
+                        />
                       </div>
                       <div class="errori-stack-media">
-                        <p class="errore-campo-media" *ngIf="formInviato && episodio.anteprima.length === 0 && !episodio.erroreAnteprima">L'immagine anteprima è obbligatoria.</p>
-                        <p class="errore-campo-media" *ngIf="episodio.erroreAnteprima">{{ episodio.erroreAnteprima }}</p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="
+                            formInviato &&
+                            (episodio.modalitaAnteprima === 'url'
+                              ? !episodio.urlAnteprima.trim()
+                              : episodio.anteprima.length === 0 && !episodio.erroreAnteprima)
+                          "
+                        >
+                          L'immagine anteprima è obbligatoria.
+                        </p>
+                        <p
+                          class="errore-campo-media"
+                          *ngIf="episodio.erroreAnteprima"
+                        >
+                          {{ episodio.erroreAnteprima }}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <button type="button" class="btn-aggiungi-episodio" (click)="aggiungiEpisodio(indiceStagione)">
+              <button
+                type="button"
+                class="btn-aggiungi-episodio"
+                (click)="aggiungiEpisodio(indiceStagione)"
+              >
                 <span>+</span>
                 Aggiungi episodio
               </button>
             </div>
           </div>
 
-          <button type="button" class="btn-aggiungi-stagione" (click)="aggiungiStagione()">
+          <button
+            type="button"
+            class="btn-aggiungi-stagione"
+            (click)="aggiungiStagione()"
+          >
             <span>+</span>
             Aggiungi stagione
           </button>
 
-          <p class="errore-campo-media" *ngIf="formInviato && stagioniSerie.length === 0">Aggiungi almeno una stagione.</p>
+          <p
+            class="errore-campo-media"
+            *ngIf="formInviato && stagioniSerie.length === 0"
+          >
+            Aggiungi almeno una stagione.
+          </p>
         </div>
       </div>
 
       <div class="sezione-form">
-        <h3 class="sezione-label">Pacchetto HLS <span class="formati-permessi-media">{{ tipoMedia === 'film' ? 'cartella completa film' : 'cartella completa serie' }}</span></h3>
+        <h3 class="sezione-label">
+          Pacchetto HLS
+          <span class="formati-permessi-media">{{
+            tipoMedia === "film"
+              ? "cartella completa film"
+              : "cartella completa serie"
+          }}</span>
+        </h3>
 
         <div class="riga-uno">
           <div class="campo-wrapper-media campo-largo">
             <p class="label-media">Carica cartella HLS</p>
-            <div class="zona-drop zona-multipla" dragdrop (alRilascio)="onFileDrop('pacchetto_hls', $event)" (click)="$event.stopPropagation()">
-              <input type="file" #inputPacchettoHls webkitdirectory directory multiple (change)="onFileSelezionato('pacchetto_hls', $event)" />
-              <div class="drop-interno" (click)="inputPacchettoHls.click()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>
-                <span class="drop-testo">Trascina o clicca la cartella HLS completa</span>
+            <div class="select-modalita-upload">
+              <div class="select-header-modalita" [class.aperto]="dropdownModalitaAperta === 'pacchetto_hls'" (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'pacchetto_hls' ? '' : 'pacchetto_hls'">
+                <span>{{ modalitaCaricamento['pacchetto_hls'] === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
               </div>
-              <div class="riepilogo-hls" *ngIf="files['pacchetto_hls'].length > 0">
+              <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'pacchetto_hls'">
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['pacchetto_hls'] === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('pacchetto_hls', 'file'); dropdownModalitaAperta = ''">Da PC</div>
+                <div class="select-opzione-modalita" [class.attivo]="modalitaCaricamento['pacchetto_hls'] === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalita('pacchetto_hls', 'url'); dropdownModalitaAperta = ''">URL diretto</div>
+              </div>
+            </div>
+            <div
+              class="zona-drop zona-multipla"
+              *ngIf="modalitaCaricamento['pacchetto_hls'] === 'file'"
+              dragdrop
+              (inizioLettura)="elaborazioneHlsInCorso = true"
+              (alRilascio)="onFileDrop('pacchetto_hls', $event)"
+              (click)="$event.stopPropagation()"
+            >
+              <input
+                type="file"
+                #inputPacchettoHls
+                webkitdirectory
+                directory
+                multiple
+                (change)="onFileSelezionato('pacchetto_hls', $event)"
+              />
+              <div
+                class="drop-interno"
+                (click)="inputPacchettoHls.click()"
+                *ngIf="!elaborazioneHlsInCorso"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" />
+                </svg>
+                <span class="drop-testo"
+                  >Trascina o clicca la cartella HLS completa</span
+                >
+              </div>
+              <div class="riepilogo-hls" *ngIf="elaborazioneHlsInCorso">
+                <app-spinner></app-spinner>
+              </div>
+              <div
+                class="riepilogo-hls"
+                *ngIf="!elaborazioneHlsInCorso && files['pacchetto_hls'].length > 0"
+              >
                 <div class="riga-riepilogo-hls">
                   <span>Totale file</span>
-                  <strong>{{ files['pacchetto_hls'].length }}</strong>
+                  <strong>{{ files["pacchetto_hls"].length }}</strong>
+                </div>
+
+                <div class="riga-riepilogo-hls">
+                  <span>Peso totale</span>
+                  <strong>{{ pesoTotaleHls() }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
                   <span>master.m3u8</span>
-                  <strong>{{ testoRiepilogoFileHls('master.m3u8') }}</strong>
+                  <strong>{{ testoRiepilogoFileHls("master.m3u8") }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
                   <span>360p.m3u8</span>
-                  <strong>{{ testoRiepilogoFileHls('360/360p.m3u8') }}</strong>
+                  <strong>{{ testoRiepilogoFileHls("360/360p.m3u8") }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
                   <span>720p.m3u8</span>
-                  <strong>{{ testoRiepilogoFileHls('720/720p.m3u8') }}</strong>
+                  <strong>{{ testoRiepilogoFileHls("720/720p.m3u8") }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
                   <span>1080p.m3u8</span>
-                  <strong>{{ testoRiepilogoFileHls('1080/1080p.m3u8') }}</strong>
+                  <strong>{{
+                    testoRiepilogoFileHls("1080/1080p.m3u8")
+                  }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
                   <span>audio_it.m3u8</span>
-                  <strong>{{ testoRiepilogoFileHls('it/audio_it.m3u8') }}</strong>
+                  <strong>{{
+                    testoRiepilogoFileHls("it/audio_it.m3u8")
+                  }}</strong>
                 </div>
 
                 <div class="riga-riepilogo-hls">
                   <span>audio_en.m3u8</span>
-                  <strong>{{ testoRiepilogoFileHls('en/audio_en.m3u8') }}</strong>
+                  <strong>{{
+                    testoRiepilogoFileHls("en/audio_en.m3u8")
+                  }}</strong>
                 </div>
 
-                <button type="button" class="btn-svuota-hls" aria-label="Svuota pacchetto" (click)="svuotaPacchettoHls($event)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <button
+                  type="button"
+                  class="btn-svuota-hls"
+                  aria-label="Svuota pacchetto"
+                  (click)="svuotaPacchettoHls($event)"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                  >
                     <path d="M3 6h18" />
                     <path d="M8 6V4h8v2" />
                     <path d="M6 6l1 14h10l1-14" />
@@ -712,9 +2058,24 @@
                 </button>
               </div>
             </div>
+            <div class="campo-url-diretto" *ngIf="modalitaCaricamento['pacchetto_hls'] === 'url'">
+              <input
+                type="text"
+                placeholder="URL cartella streaming su CloudFront"
+                [(ngModel)]="urlDiretti['pacchetto_hls']"
+                name="url_pacchetto_hls"
+              />
+            </div>
             <div class="errori-stack-media">
-              <p class="errore-campo-media" *ngIf="formInviato && files['pacchetto_hls'].length === 0 && !errorePacchettoHls()">Il pacchetto HLS è obbligatorio.</p>
-              <p class="errore-campo-media" *ngIf="errorePacchettoHls()">{{ errorePacchettoHls() }}</p>
+              <p
+                class="errore-campo-media"
+                *ngIf="formInviato && !pacchettoHlsCaricato()"
+              >
+                Il pacchetto HLS è obbligatorio.
+              </p>
+              <p class="errore-campo-media" *ngIf="errorePacchettoHls()">
+                {{ errorePacchettoHls() }}
+              </p>
             </div>
           </div>
         </div>
@@ -725,17 +2086,26 @@
 
         <div class="radio-novita">
           <label>
-            <input type="radio" name="novita" [value]="true" [(ngModel)]="novita" />
+            <input
+              type="radio"
+              name="novita"
+              [value]="true"
+              [(ngModel)]="novita"
+            />
             Sì
           </label>
 
           <label>
-            <input type="radio" name="novita" [value]="false" [(ngModel)]="novita" />
+            <input
+              type="radio"
+              name="novita"
+              [value]="false"
+              [(ngModel)]="novita"
+            />
             No
           </label>
         </div>
       </div>
-
     </div>
 
     <div class="form-media-footer">
@@ -757,7 +2127,7 @@
         <button
           type="button"
           class="btn-annulla-media"
-          [disabled]="salvataggioInCorso"
+          [disabled]="controlloUploadAttivo"
           (click)="onAnnulla()"
         >
           Annulla
@@ -774,6 +2144,5 @@
         </button>
       </div>
     </div>
-
   </div>
 </div>

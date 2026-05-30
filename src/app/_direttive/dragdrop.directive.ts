@@ -3,6 +3,7 @@ import { Directive, EventEmitter, HostBinding, HostListener, Output } from '@ang
 @Directive({ selector: '[dragdrop]' })
 export class DragdropDirective {
   @Output() alRilascio = new EventEmitter<File[]>();
+  @Output() inizioLettura = new EventEmitter<void>();
   @HostBinding('class.drag-over') dragOver = false;
 
   @HostListener('dragover', ['$event']) onDragOver(e: DragEvent): void {
@@ -23,6 +24,8 @@ export class DragdropDirective {
     this.dragOver = false;
 
     if (!e.dataTransfer) return;
+
+    this.inizioLettura.emit();
 
     const files = await this.leggiElementiTrascinati(e.dataTransfer);
     this.alRilascio.emit(files);

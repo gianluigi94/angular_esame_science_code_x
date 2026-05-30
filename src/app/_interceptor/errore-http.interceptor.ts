@@ -42,8 +42,12 @@ export class ErroreHttpInterceptor implements HttpInterceptor {
     return next.handle(req).pipe(
       // inoltro la richiesta e aggancio la gestione degli errori alla risposta
       catchError((err: HttpErrorResponse) => {
-        // catturo eventuali errori HTTP generati dalla chiamata
-        if (req.url.includes('/accedi') || req.url.includes('/logout')) {
+  // catturo eventuali errori HTTP generati dalla chiamata
+  if (req.headers.get('X-No-Global-Error') === '1') {
+    return throwError(() => err);
+  }
+
+  if (req.url.includes('/accedi') || req.url.includes('/logout')) {
           // evito di intervenire sulle chiamate di accesso e uscita
           return throwError(() => err); // rilancio l'errore senza modificarlo
         }

@@ -60,6 +60,12 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
   autoScrollSessioneEseguito = false; // flag che mi dice se l'autoscroll iniziale da sessionStorage e' gia' stato eseguito
   cinqueElementi = Array(5).fill(0); // preparo un array fisso di cinque elementi utile al template
 
+  private onMediaAggiornato = () => {
+    this.cacheCatalogo.svuota();
+    this.schedaCache.svuota();
+    this.caricaPrimeRigheDaApi(0, false);
+  };
+
   locandinaDemo = 'assets/locandine_it/locandina_it_abbraccia_il_vento.webp'; // il path della locandina demo da usare come fallback
   locandineDemo: {
     src: string;
@@ -150,6 +156,8 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns void
    */
   ngOnInit(): void {
+    window.addEventListener('media-aggiornato', this.onMediaAggiornato);
+
     try {
       const da404 = sessionStorage.getItem('transizione_404_catalogo') === '1'; // provo a leggere il flag di ingresso da transizione 404
       // lo lascio solo se mi serve immediatamente in questo ingresso
@@ -219,6 +227,7 @@ export class CatalogoComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns void
    */
   ngOnDestroy(): void {
+    window.removeEventListener('media-aggiornato', this.onMediaAggiornato);
     this.cacheCatalogo.righeDemo = this.righeDemo.slice(); // salvo in cache una copia delle righe correnti
     this.cacheCatalogo.offsetRighe = this.offsetRighe; // salvo in cache l'offset corrente
     this.cacheCatalogo.haAltreRighe = this.haAltreRighe; // salvo in cache il flag che indica se ci sono altre righe

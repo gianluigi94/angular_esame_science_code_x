@@ -115,4 +115,22 @@ export class SchedaProntaService {
   impostaHeaderNascosto(v: boolean): void {
     this._headerNascosto$.next(v); // pubblico il nuovo stato dell'header
   }
+
+  private _infoMediaCorrente$ = new BehaviorSubject<InfoMediaCorrente | null>(null);
+  infoMediaCorrente$ = this._infoMediaCorrente$.asObservable();
+
+  impostaInfoMedia(info: InfoMediaCorrente): void {
+    this._infoMediaCorrente$.next(info);
+  }
+
+  pulisciInfoMedia(): void {
+    this._infoMediaCorrente$.next(null);
+  }
+}
+
+export interface InfoMediaCorrente {
+  id: number;
+  tipo: 'film' | 'serie';
+  slug: string;
+  titolo: string;
 }

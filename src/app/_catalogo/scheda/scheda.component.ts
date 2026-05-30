@@ -543,6 +543,7 @@ onRiproduci(): void {
    * @returns void
    */
   ngOnDestroy(): void {
+    this.schedaPronta.pulisciInfoMedia();
     this.ctx.distrutto = true; // segno il contesto come distrutto
     if (this.ctx.tipoContenuto && this.ctx.idContenuto) {
       const lingua = this.cambioLingua.leggiCodiceLingua(); // leggo la lingua corrente della cache
@@ -674,6 +675,7 @@ onRiproduci(): void {
             ([nuovaDesc, nuovoTitoloScheda]) => {
               this.titoloScheda = nuovoTitoloScheda; // applico il nuovo titolo testuale
               this.labelsHelper.aggiornaAltSfondo(); // riallineo alt e title della scheda
+              this.emettiInfoMedia();
 
               const preP = this._preloadTitoloPromise ?? Promise.resolve(); // recupero la promise di preload del titolo grafico
               const urlTit = this._nuovoTitoloPrecaricato || nuovoTitolo; // ricavo l'URL finale del titolo grafico
@@ -1055,6 +1057,7 @@ onRiproduci(): void {
       this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni
       if (this.ctx.slugCorrente && !this._paramRiproduzioneInAttesa)
         this.trailerHelper.programmaInserimento(); // se posso programmo il trailer della scheda
+      this.emettiInfoMedia();
     });
   }
 
@@ -1078,6 +1081,7 @@ onRiproduci(): void {
    * @returns void
    */
 private resetStatoScheda(): void {
+    this.schedaPronta.pulisciInfoMedia();
     this.startAnim = this.startAnimTitolo = this.startAnimDescrizione = false; // spengo tutte le animazioni iniziali
     this.ctx.avvioTrailerSchedaRichiesto = false; // annullo eventuali richieste di avvio trailer
     this.ctx.trailerInRiproduzione = true; // riporto il trailer allo stato iniziale
@@ -1119,6 +1123,8 @@ private resetStatoScheda(): void {
       this._descPronta &&
       this._tabellaPronta; // verifico se tutti i prerequisiti visivi sono pronti
     if (!tuttoPronto) return; // esco se manca ancora qualcosa
+
+    this.emettiInfoMedia();
 
     const _param = this._paramRiproduzioneInAttesa; // mi salvo l'eventuale parametro play in attesa
     this._paramRiproduzioneInAttesa = null; // consumo il parametro di riproduzione pendente
@@ -1178,6 +1184,17 @@ private resetStatoScheda(): void {
     this._loaderNascosto = true; // segno il loader globale come nascosto
     this.verificaEAvviaAnimazioni(); // provo ad avviare le animazioni dopo il loader
   };
+
+  private emettiInfoMedia(): void {
+    if (this.ctx.idContenuto && this.ctx.tipoContenuto && this.ctx.slugCorrente && this.titoloScheda) {
+      this.schedaPronta.impostaInfoMedia({
+        id: this.ctx.idContenuto,
+        tipo: this.ctx.tipoContenuto,
+        slug: this.ctx.slugCorrente,
+        titolo: this.titoloScheda,
+      });
+    }
+  }
 
   // Getter che mi restituisce questo valore in modo comodo nel template.
   private get _tabellaPronto(): boolean {

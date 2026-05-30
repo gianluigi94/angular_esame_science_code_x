@@ -39,6 +39,10 @@ export class AuthInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     // intercetto ogni richiesta in uscita e restituisco un flusso di eventi HTTP
 
+    if (req.url.includes('amazonaws.com')) {
+      return next.handle(req);
+    }
+
     let reqDaUsare = req; // parto dalla richiesta originale e preparo una variabile che eventualmente modificherò
 
     // niente bearer sulle chiamate /accedi e /traduzioni-lingua
