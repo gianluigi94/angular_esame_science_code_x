@@ -391,6 +391,37 @@
     <p class="modale-messaggio">
       Sei sicuro di voler eliminare: <strong>{{ infoMediaCorrente?.titolo }}</strong>?
     </p>
+    <p class="modale-sottomessaggio">Vuoi eliminare anche i seguenti file da AWS?</p>
+    <div class="modale-checkbox-lista">
+      <label class="modale-checkbox-voce">
+        <input type="checkbox" [(ngModel)]="categorieFileEliminazione['immagine_sfondo']" />
+        <span>Immagine di sfondo</span>
+      </label>
+      <label class="modale-checkbox-voce">
+        <input type="checkbox" [(ngModel)]="categorieFileEliminazione['locandine']" />
+        <span>Locandine</span>
+      </label>
+      <label class="modale-checkbox-voce">
+        <input type="checkbox" [(ngModel)]="categorieFileEliminazione['immagini_titoli']" />
+        <span>Immagini titoli</span>
+      </label>
+      <label class="modale-checkbox-voce">
+        <input type="checkbox" [(ngModel)]="categorieFileEliminazione['trailer']" />
+        <span>Trailer</span>
+      </label>
+      <label class="modale-checkbox-voce">
+        <input type="checkbox" [(ngModel)]="categorieFileEliminazione['sottotitoli']" />
+        <span>Sottotitoli</span>
+      </label>
+      <label class="modale-checkbox-voce" *ngIf="infoMediaCorrente?.tipo === 'serie'">
+        <input type="checkbox" [(ngModel)]="categorieFileEliminazione['anteprime_episodi']" />
+        <span>Anteprime episodi</span>
+      </label>
+      <label class="modale-checkbox-voce">
+        <input type="checkbox" [(ngModel)]="categorieFileEliminazione['cartella_hls']" />
+        <span>Cartella file HLS</span>
+      </label>
+    </div>
     <div class="modale-bottoni">
       <button type="button" class="btn-annulla" (click)="chiudiModaleEliminaMedia()" [disabled]="eliminazioneInCorso">
         Annulla

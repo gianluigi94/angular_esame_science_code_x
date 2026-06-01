@@ -69,6 +69,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   infoMediaCorrente: InfoMediaCorrente | null = null;
   eliminazioneInCorso = false;
   mostraModaleElimina = false;
+  categorieFileEliminazione: Record<string, boolean> = {};
 
   spinnerScroll$!: Observable<boolean>; // espongo lo stato dello spinner di scroll
   iconaLingua$!: Observable<string>; // espongo l'icona della lingua corrente
@@ -487,6 +488,15 @@ onCambiaPianoClick(): void {
   onEliminaMedia(): void {
     if (this.eliminazioneInCorso || !this.infoMediaCorrente) return;
     if (!this.authCorrente?.abilita?.includes(6)) return;
+    this.categorieFileEliminazione = {
+      immagine_sfondo: true,
+      locandine: true,
+      immagini_titoli: true,
+      trailer: true,
+      sottotitoli: true,
+      anteprime_episodi: true,
+      cartella_hls: true,
+    };
     this.mostraModaleElimina = true;
   }
 
@@ -501,7 +511,7 @@ onCambiaPianoClick(): void {
     this.eliminazioneInCorso = true;
     const { tipo, id, titolo } = this.infoMediaCorrente;
 
-    this.api.eliminaMedia(tipo, id).pipe(take(1)).subscribe({
+    this.api.eliminaMedia(tipo, id, this.categorieFileEliminazione).pipe(take(1)).subscribe({
       next: () => {
         this.mostraModaleElimina = false;
         this.eliminazioneInCorso = false;

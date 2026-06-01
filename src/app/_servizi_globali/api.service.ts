@@ -704,9 +704,11 @@ public correggiPagamento(): Observable<IRispostaServer> {
     return this.richiestaGenerica(['verifica-pagamento'], 'GET');
   }
 
-  public eliminaMedia(tipo: 'film' | 'serie', id: number): Observable<IRispostaServer> {
+  public eliminaMedia(tipo: 'film' | 'serie', id: number, categorieFile: Record<string, boolean> = {}): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['media', tipo, id]);
-    return this.http.delete<IRispostaServer>(url);
+    return this.http.delete<IRispostaServer>(url, {
+      body: { categorie_file: categorieFile },
+    });
   }
 
   public getPresignedUrls(idUploadMediaJob: number, files: any[], urlDiretti: any[] = []): Observable<IRispostaServer> {

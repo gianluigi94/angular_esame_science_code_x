@@ -740,3 +740,38 @@ app-bottone-aggiungi{
   &:not(:disabled):hover { transform: scale(1.06); box-shadow: 0 0 14px rgba(185, 28, 28, 0.5); }
   &:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: auto; }
 }
+.modale-sottomessaggio {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  color: rgba(231, 156, 80, 0.85);
+  margin: 12px 0 8px;
+  text-align: center;
+}
+
+.modale-checkbox-lista {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 0 8px;
+}
+
+.modale-checkbox-voce {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Quantico", serif;
+  font-size: 13px;
+  color: aliceblue;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    accent-color: #e79c50;
+    width: 15px;
+  pointer-events: auto;
+    height: 15px;
+    cursor: pointer;
+  }
+}
