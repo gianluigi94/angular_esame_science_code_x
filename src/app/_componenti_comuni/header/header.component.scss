@@ -775,3 +775,27 @@ app-bottone-aggiungi{
     cursor: pointer;
   }
 }
+.btn-modifica-header {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  margin-left: 6px;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.icona-modifica {
+  width: 20px;
+  height: 20px;
+  color: #e79c50;
+}
+

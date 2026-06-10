@@ -20,11 +20,15 @@ import { PianoCardComponent } from './piano-card/piano-card.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BottoneAggiungiComponent } from './bottone-aggiungi/bottone-aggiungi.component';
 import { DragdropDirective } from '../_direttive/dragdrop.directive';
+import { RiordinaItemDirective } from '../_direttive/riordina-item.directive';
 import { FormAggiungiMediaComponent } from '../_catalogo/form-aggiungi-media/form-aggiungi-media.component';
+import { RiordinaEpisodiComponent } from './riordina-episodi/riordina-episodi.component';
 @NgModule({
   declarations: [
     DragdropDirective,
+    RiordinaItemDirective,
     FormAggiungiMediaComponent,
+    RiordinaEpisodiComponent,
     BottoneAggiungiComponent,
     SfondoComponent,
     TitlesMainComponent,
@@ -51,6 +55,7 @@ import { FormAggiungiMediaComponent } from '../_catalogo/form-aggiungi-media/for
   exports: [
     DragdropDirective,
     FormAggiungiMediaComponent,
+    RiordinaEpisodiComponent,
     BottoneAggiungiComponent,
     SfondoComponent,
     TitlesMainComponent,

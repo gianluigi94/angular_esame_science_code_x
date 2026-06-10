@@ -828,3 +828,92 @@
     }
   }
 }
+.modale-overlay-s3 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modaleApriS3 0.2s ease;
+}
+
+@keyframes modaleApriS3 {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modale-contenuto-s3 {
+  background: rgba(20, 17, 10, 0.95);
+  border: 1px solid rgba(231, 156, 80, 0.3);
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  animation: modaleScalaS3 0.25s ease;
+}
+
+@keyframes modaleScalaS3 {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modale-messaggio-s3 {
+  font-family: "Quantico", serif;
+  font-size: 18px;
+  color: aliceblue;
+  text-align: center;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.modale-sottomessaggio-s3 {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  color: rgba(231, 156, 80, 0.85);
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+.modale-bottoni-s3 {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.btn-no-s3 {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+
+  &:hover { border-color: rgba(255, 255, 255, 0.5); color: #ffffff; }
+}
+
+.btn-si-s3 {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+  border: none;
+  color: white;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
+  &:hover { transform: scale(1.06); box-shadow: 0 0 14px rgba(185, 28, 28, 0.5); }
+}

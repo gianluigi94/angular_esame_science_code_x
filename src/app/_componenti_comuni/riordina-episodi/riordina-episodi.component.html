@@ -1,0 +1,50 @@
+<div class="riordina-overlay" *ngIf="visibile" (click)="chiudi()">
+  <div class="riordina-contenuto" (click)="$event.stopPropagation()">
+    <h3 class="riordina-titolo">{{ isIt ? 'Riordina episodi' : 'Reorder episodes' }}</h3>
+
+    <div class="riordina-caricamento" *ngIf="caricamento">
+      <app-spinner></app-spinner>
+    </div>
+
+    <div class="riordina-stagioni" *ngIf="!caricamento">
+      <div
+        class="riordina-stagione"
+        *ngFor="let stagione of stagioni; let si = index"
+        riordinaItem
+        [indiceStagione]="si"
+        [indiceEpisodio]="-1"
+        (rilascio)="onRilascio($event)"
+      >
+        <p class="riordina-stagione-titolo">{{ (isIt ? 'Stagione ' : 'Season ') + (si + 1) }}</p>
+
+        <div
+          class="riordina-episodio"
+          *ngFor="let episodio of stagione.episodi; let ei = index"
+          draggable="true"
+          riordinaItem
+          [indiceStagione]="si"
+          [indiceEpisodio]="ei"
+          (inizioTrascinamento)="onInizioTrascinamento($event)"
+          (rilascio)="onRilascio($event)"
+        >
+          <span class="riordina-numero">{{ ei + 1 }}</span>
+          <span class="riordina-nome">{{ episodio.titolo || (isIt ? 'Episodio senza titolo' : 'Untitled episode') }}</span>
+        </div>
+
+        <p class="riordina-vuota" *ngIf="!stagione.episodi.length">
+          {{ isIt ? 'Trascina qui un episodio' : 'Drag an episode here' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="riordina-bottoni" *ngIf="!caricamento">
+      <button type="button" class="riordina-btn-annulla" (click)="chiudi()" [disabled]="salvataggioInCorso">
+        {{ isIt ? 'Annulla' : 'Cancel' }}
+      </button>
+      <button type="button" class="riordina-btn-salva" (click)="salva()" [disabled]="salvataggioInCorso">
+        <ng-container *ngIf="!salvataggioInCorso">{{ isIt ? 'Salva' : 'Save' }}</ng-container>
+        <app-spinner *ngIf="salvataggioInCorso"></app-spinner>
+      </button>
+    </div>
+  </div>
+</div>

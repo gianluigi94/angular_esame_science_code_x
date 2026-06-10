@@ -81,6 +81,8 @@ export class AppComponent implements OnInit {
 spinnerProfiloVisibile = false;
 formAggiungiMediaVisibile = false;
 idCategoriaFormAggiungiMedia = '';
+mediaDaModificareApp: { tipo: 'film' | 'serie'; id: number } | null = null;
+nuovaStagioneApp: { idSerie: number; numeroStagione: number } | null = null;
 private appLoader: AppLoaderService;
  private onApriPannelloPiano = () => {
     this.pannelloPianoVisibile = true;
@@ -186,7 +188,49 @@ private appLoader: AppLoaderService;
     window.addEventListener('apri-form-aggiungi-media', (evento: Event) => {
       const dettaglio = (evento as CustomEvent).detail;
 
+      this.mediaDaModificareApp = null;
+      this.nuovaStagioneApp = null;
       this.idCategoriaFormAggiungiMedia = dettaglio?.idCategoria || '';
+      this.formAggiungiMediaVisibile = true;
+      this.cdr.detectChanges();
+      requestAnimationFrame(() => {
+        const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+        if (!pannello) return;
+        gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+        gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
+      });
+    });
+
+    window.addEventListener('apri-form-modifica-media', (evento: Event) => {
+      const dettaglio = (evento as CustomEvent).detail;
+      if (!dettaglio?.tipo || !dettaglio?.id) return;
+
+      this.idCategoriaFormAggiungiMedia = '';
+      this.mediaDaModificareApp = {
+        tipo: dettaglio.tipo,
+        id: Number(dettaglio.id),
+      };
+      this.nuovaStagioneApp = null;
+      this.formAggiungiMediaVisibile = true;
+      this.cdr.detectChanges();
+      requestAnimationFrame(() => {
+        const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+        if (!pannello) return;
+        gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+        gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
+      });
+    });
+
+    window.addEventListener('apri-form-nuova-stagione', (evento: Event) => {
+      const dettaglio = (evento as CustomEvent).detail;
+      if (!dettaglio?.idSerie) return;
+
+      this.idCategoriaFormAggiungiMedia = '';
+      this.mediaDaModificareApp = null;
+      this.nuovaStagioneApp = {
+        idSerie: Number(dettaglio.idSerie),
+        numeroStagione: Number(dettaglio.numeroStagione),
+      };
       this.formAggiungiMediaVisibile = true;
       this.cdr.detectChanges();
       requestAnimationFrame(() => {
@@ -543,6 +587,8 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
     if (!pannello) {
       this.formAggiungiMediaVisibile = false;
       this.idCategoriaFormAggiungiMedia = '';
+      this.mediaDaModificareApp = null;
+      this.nuovaStagioneApp = null;
       return;
     }
     gsap.to(pannello, {
@@ -554,6 +600,8 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
       onComplete: () => {
         this.formAggiungiMediaVisibile = false;
         this.idCategoriaFormAggiungiMedia = '';
+        this.mediaDaModificareApp = null;
+        this.nuovaStagioneApp = null;
         this.cdr.detectChanges();
       },
     });

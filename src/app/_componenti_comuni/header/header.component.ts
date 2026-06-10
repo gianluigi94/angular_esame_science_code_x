@@ -485,6 +485,15 @@ onCambiaPianoClick(): void {
     window.dispatchEvent(new CustomEvent('apri-form-aggiungi-media'));
   }
 
+  onModificaMedia(): void {
+    if (this.authVisuale?.idRuolo !== 4 && this.authVisuale?.idRuolo !== 7) return;
+    if (!this.infoMediaCorrente) return;
+    const { tipo, id } = this.infoMediaCorrente;
+    window.dispatchEvent(
+      new CustomEvent('apri-form-modifica-media', { detail: { tipo, id } }),
+    );
+  }
+
   onEliminaMedia(): void {
     if (this.eliminazioneInCorso || !this.infoMediaCorrente) return;
     if (!this.authCorrente?.abilita?.includes(6)) return;
@@ -541,4 +550,5 @@ onCambiaPianoClick(): void {
     this.paginaRicevute = /^\/(it\/ricevute|en\/receipts)(\/|$)/.test(url);
     this.paginaProfilo = /^\/(it\/profilo|en\/profile)(\/|$)/.test(url);
   }
+
 }

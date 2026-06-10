@@ -126,6 +126,16 @@
       ></app-bottone-aggiungi>
       <button
         *ngIf="(authVisuale?.idRuolo === 4 || authVisuale?.idRuolo === 7) && paginaScheda() && infoMediaCorrente"
+        class="btn-modifica-header"
+        [title]="(isIt ? 'Modifica: ' : 'Edit: ') + infoMediaCorrente.titolo"
+        (click)="onModificaMedia()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icona icona-modifica">
+          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+        </svg>
+      </button>
+      <button
+        *ngIf="(authVisuale?.idRuolo === 4 || authVisuale?.idRuolo === 7) && paginaScheda() && infoMediaCorrente"
         class="btn-elimina-header"
         [title]="'Elimina: ' + infoMediaCorrente.titolo"
         [disabled]="eliminazioneInCorso"
@@ -138,6 +148,7 @@
           <line x1="14" y1="11" x2="14" y2="17"></line>
         </svg>
       </button>
+
     </div>
   </div>
 
@@ -146,7 +157,7 @@
 
   <div class="destra" *ngIf="!playerAperto">
 
-    <ng-container *ngIf="authVisuale?.tk; else vistaNonLoggato">
+    <ng-container *ngIf="authVisuale && authVisuale.tk; else vistaNonLoggato">
       <!-- Ricerca, al passassagio del mause l'input si apre-->
       <div
         class="contenitore-ricerca"
@@ -265,9 +276,9 @@
             <circle cx="12" cy="8" r="4" fill="currentColor" />
             <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="currentColor" />
           </svg>
-          <span class="nome-utente">{{ authVisuale?.nome || "" }}</span>
+          <span class="nome-utente">{{ authVisuale.nome || "" }}</span>
           <span
-            *ngIf="authVisuale?.preavvisoPsw"
+            *ngIf="authVisuale.preavvisoPsw"
             class="icona-preavviso-password icona-preavviso-utente"
             title="Password in scadenza"
           >!</span>
@@ -290,7 +301,7 @@
               <span class="testo-profilo-preavviso">
                 <span [innerHTML]="'ui.profilo.titolo' | translate"></span>
                 <span
-                  *ngIf="authVisuale?.preavvisoPsw"
+                  *ngIf="authVisuale.preavvisoPsw"
                   class="icona-preavviso-password icona-preavviso-profilo"
                   title="Password in scadenza"
                 >!</span>
@@ -305,8 +316,8 @@
             <li
               *ngIf="chiaveRuolo"
               class="voce-tendina vocina"
-              [class.piano-non-cliccabile]="authVisuale?.idRuolo !== 2 && authVisuale?.idRuolo !== 3"
-              (click)="(authVisuale?.idRuolo === 2 || authVisuale?.idRuolo === 3) && onCambiaPianoClick()"
+              [class.piano-non-cliccabile]="authVisuale.idRuolo !== 2 && authVisuale.idRuolo !== 3"
+              (click)="(authVisuale.idRuolo === 2 || authVisuale.idRuolo === 3) && onCambiaPianoClick()"
             >{{ chiaveRuolo | translate }}</li>
             <li
               class="voce-tendina"

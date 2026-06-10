@@ -90,21 +90,17 @@ export class SchedaStagioniHelper {
           mapTrad[t.id_episodio] = { titolo: t.titolo || '', descrizione: t.descrizione || '' }; // salvo titolo e descrizione tradotti per ogni episodio
         });
 
-        const offset = this.ctx.stagioni
-          .filter((s) => s.numero_stagione < Number(numeroStagione))
-          .reduce((acc, s) => acc + s.numero_episodi, 0); // calcolo l'offset progressivo delle stagioni precedenti
-
-        const stagObj: Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }> = {}; // preparo l'oggetto finale della stagione
+        const stagObj: Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string; chiaveArchivio: string }> = {}; // preparo l'oggetto finale della stagione
         episodi.forEach((ep) => {
-          const numProgressivo = offset + ep.numero_episodio; // ricavo il numero progressivo assoluto dell'episodio
-          const numPadded = String(numProgressivo).padStart(2, '0'); // formatto il numero progressivo a due cifre
-          const anteprima = slug ? `assets/screen/${slug}/${numPadded}.webp` : ''; // costruisco l'URL dell'anteprima episodio
+          const chiave = String(ep.chiave_archivio ?? '');
+          const anteprima = slug && chiave ? `assets/screen/${slug}/${chiave}.webp` : '';
           const trad = mapTrad[ep.id_episodio] || { titolo: '', descrizione: '' }; // recupero la traduzione dell'episodio o fallback vuoto
           stagObj[`ep${ep.id_episodio}`] = {
             titolo: trad.titolo,
             descrizione: trad.descrizione,
             anteprima,
             durata: secondiInLeggibile(ep.durata),
+            chiaveArchivio: chiave,
           }; // salvo i dati finali dell'episodio dentro l'oggetto stagione
         });
 

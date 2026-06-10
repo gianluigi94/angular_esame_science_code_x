@@ -41,8 +41,12 @@
 <app-form-aggiungi-media
   *ngIf="formAggiungiMediaVisibile"
   [idCategoria]="idCategoriaFormAggiungiMedia"
+  [mediaDaModificare]="mediaDaModificareApp"
+  [nuovaStagione]="nuovaStagioneApp"
   (chiudi)="chiudiFormAggiungiMedia()"
 ></app-form-aggiungi-media>
+
+<app-riordina-episodi></app-riordina-episodi>
 
 <!-- importo i toast che possono comparire ovunque  -->
 <div *ngIf="spinnerRicevuteVisibile" class="spinner-ricevute-globale">

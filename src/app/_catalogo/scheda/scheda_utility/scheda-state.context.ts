@@ -28,7 +28,7 @@ export class SchedaStateContext {
 
   stagioneSelezionata: string | null = null; // la stagione selezionata
   stagioni: Array<{ id_stagione: number; numero_stagione: number; numero_episodi: number }> = []; // la lista delle stagioni
-  serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string }>> = {}; // i dati episodi raggruppati per stagione
+  serieData: Record<string, Record<string, { titolo: string; descrizione: string; anteprima: string; durata: string; chiaveArchivio: string }>> = {}; // i dati episodi raggruppati per stagione
   stagioneCachata = new Set<string>(); // l'elenco delle stagioni gia' caricate
 
   distrutto = false; // segno se il contesto e' stato distrutto

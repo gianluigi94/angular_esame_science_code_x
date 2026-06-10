@@ -4,6 +4,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, Hos
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Subscription, forkJoin } from 'rxjs';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { take } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
@@ -39,6 +40,7 @@ export interface Episodio {
   descrizione: string;
   anteprima: string;
   durata: string;
+  chiaveArchivio: string;
 }
 
 @Component({
@@ -208,6 +210,7 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private location: Location,
     private api: ApiService,
+    private authService: Authservice,
     private translate: TranslateService,
     private schedaCache: SchedaCacheService,
     private cambioLingua: CambioLinguaService,
@@ -386,8 +389,33 @@ onRiproduci(): void {
    * @param n Numero stagione da selezionare.
    * @returns Promise<void> Promise risolta al termine della selezione.
    */
-  async selezionaStagione(n: string): Promise<void> {
+   async selezionaStagione(n: string): Promise<void> {
     await this.stagioniHelper.selezionaStagione(n); // delego all'helper il cambio stagione
+  }
+
+  get puoRiordinareEpisodi(): boolean {
+    const ruolo = this.authService.leggiObsAuth().value?.idRuolo;
+    return ruolo === 4 || ruolo === 7;
+  }
+
+  onRiordinaEpisodi(): void {
+    if (!this.puoRiordinareEpisodi) return;
+    if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
+    window.dispatchEvent(
+      new CustomEvent('apri-riordina-episodi', { detail: { id: this.ctx.idContenuto } }),
+    );
+  }
+
+  onAggiungiStagione(): void {
+    if (!this.puoRiordinareEpisodi) return;
+    if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
+    const numeroStagione =
+      this.ctx.stagioni.reduce((max, s) => Math.max(max, Number(s.numero_stagione)), 0) + 1;
+    window.dispatchEvent(
+      new CustomEvent('apri-form-nuova-stagione', {
+        detail: { idSerie: this.ctx.idContenuto, numeroStagione },
+      }),
+    );
   }
 
   tracciaRigaCorrelata = (_i: number, riga: { idCategoria: string }): string =>
@@ -813,8 +841,46 @@ onRiproduci(): void {
     if (this.pagamentoFallito) return;
     if (!this.ctx.slugCorrente) return;
 
-    this.eseguiTransizionePlayer(episodio);
+    if (this.ctx.tipoContenuto === 'serie' && episodio != null) {
+      const stagione = this.ctx.stagioneSelezionata ?? '1';
+      const chiavePronta = this.chiaveEpisodioDaNumero(stagione, episodio);
 
+      if (chiavePronta) {
+        this.eseguiTransizionePlayer(episodio, chiavePronta);
+        this.verificaPagamentoEChiudiSeFallito();
+        return;
+      }
+
+      const st = this.ctx.stagioni.find(
+        (s) => String(s.numero_stagione) === stagione,
+      );
+      if (!st) return;
+
+      this.stagioniHelper
+        .caricaEpisodiStagione(st.id_stagione, stagione)
+        .then(() => {
+          const chiave = this.chiaveEpisodioDaNumero(stagione, episodio);
+          if (!chiave) return;
+          this.eseguiTransizionePlayer(episodio, chiave);
+          this.verificaPagamentoEChiudiSeFallito();
+        });
+      return;
+    }
+
+    this.eseguiTransizionePlayer(episodio);
+    this.verificaPagamentoEChiudiSeFallito();
+  }
+
+  private chiaveEpisodioDaNumero(stagione: string, episodio: number): string | null {
+    const episodiStagione = this.ctx.serieData[stagione];
+    if (!episodiStagione) return null;
+    const chiavi = Object.keys(episodiStagione);
+    const chiaveOggetto = chiavi[episodio - 1];
+    if (!chiaveOggetto) return null;
+    return episodiStagione[chiaveOggetto].chiaveArchivio || null;
+  }
+
+  private verificaPagamentoEChiudiSeFallito(): void {
     this.api.verificaPagamento().pipe(take(1)).subscribe({
       next: (ris) => {
         if (!ris.data?.pagamento_ok) {
@@ -835,7 +901,7 @@ onRiproduci(): void {
     });
   }
 
-  private eseguiTransizionePlayer(episodio?: number): void {
+  private eseguiTransizionePlayer(episodio?: number, chiaveEpisodio?: string): void {
     const BASE = 'https://d2kd3i5q9rl184.cloudfront.net/streaming';
     const slug = this.ctx.slugCorrente; // mi salvo lo slug del contenuto
 
@@ -850,13 +916,13 @@ onRiproduci(): void {
         en: `assets/sottotitoli/en/film/${slug}.vtt`,
         it: `assets/sottotitoli/it/film/${slug}.vtt`,
       }; // preparo i sottotitoli del film
-    } else if (this.ctx.tipoContenuto === 'serie' && episodio != null) {
+    } else if (this.ctx.tipoContenuto === 'serie' && episodio != null && chiaveEpisodio) {
       const stagione = this.ctx.stagioneSelezionata ?? '1'; // ricavo la stagione da usare per lo stream episodio
       this.risorsePLayerVideo = {
-        auto: `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/master.m3u8`,
-        '1080': `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/1080/with-audio.m3u8`,
-        '720': `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/720/with-audio.m3u8`,
-        '360': `${BASE}/serie/${slug}/stagione_${stagione}/e${episodio}/360/with-audio.m3u8`,
+        auto: `${BASE}/serie/${slug}/${chiaveEpisodio}/master.m3u8`,
+        '1080': `${BASE}/serie/${slug}/${chiaveEpisodio}/1080/with-audio.m3u8`,
+        '720': `${BASE}/serie/${slug}/${chiaveEpisodio}/720/with-audio.m3u8`,
+        '360': `${BASE}/serie/${slug}/${chiaveEpisodio}/360/with-audio.m3u8`,
       }; // preparo le risorse HLS dell'episodio serie
       this.sottotitoliPlayerVideo = {
         en: `assets/sottotitoli/en/serie/${slug}.vtt`,
