@@ -366,6 +366,7 @@ export class SaturnoService {
               this.animateService.fadeOutSaturnoESfondo(1.25, () => {
                 // faccio partire il fade out di Saturno e sfondo
                 this.animateService.enablePageScroll(); // riabilito lo scroll al termine del fade
+                this.saturnoPosizioniService.applicaPoseAScena(this.scene!, 'CATALOGO_NASCOSTO');
               });
             });
           } else {
@@ -457,13 +458,14 @@ export class SaturnoService {
                   this.animateService.fadeOutSaturnoESfondo(1.25, () => {
                     // faccio partire il fade out di Saturno e sfondo
                     this.animateService.enablePageScroll(); // riabilito lo scroll al termine del fade
+                    this.saturnoPosizioniService.applicaPoseAScena(this.scene!, 'CATALOGO_NASCOSTO');
                   });
                 },
                 durataCatalogo * 1000 - anticipoMs,
               );
               this.saturnoRouteAnimazioniService.animaVerso(
                 this.scene!,
-                'CATALOGO_NASCOSTO',
+                'CATALOGO_NASCOSTO_DUE',
                 durataCatalogo,
                 this.directionalLight || undefined,
                 () => {
@@ -495,6 +497,7 @@ export class SaturnoService {
                   this.animateService.fadeOutSaturnoESfondo(1.25, () => {
                     // faccio partire il fade out di Saturno e sfondo
                     this.animateService.enablePageScroll(); // riabilito lo scroll al termine del fade
+                    this.saturnoPosizioniService.applicaPoseAScena(this.scene!, 'CATALOGO_NASCOSTO');
                   });
                   this.animateService.enablePageScroll(); // abilito comunque lo scroll
                   this.animateService.fadeOutSaturnoESfondo(1.25); // rilancio anche il fade out come nel codice originale
@@ -503,7 +506,7 @@ export class SaturnoService {
               );
               this.saturnoRouteAnimazioniService.animaVerso(
                 this.scene!,
-                'CATALOGO_NASCOSTO',
+                'CATALOGO_NASCOSTO_DUE',
                 durataCatalogo,
                 this.directionalLight || undefined,
                 () => {
@@ -831,14 +834,16 @@ export class SaturnoService {
                   setTimeout(
                     () => {
                       // preparo il fade out in anticipo rispetto alla fine della transizione catalogo
-                      this.animateService.fadeOutSaturnoESfondo(1.2); // faccio partire il fade out di Saturno e sfondo
+                      this.animateService.fadeOutSaturnoESfondo(1.2, () => {
+                        this.saturnoPosizioniService.applicaPoseAScena(scene, 'CATALOGO_NASCOSTO');
+                      }); // faccio partire il fade out di Saturno e sfondo
                       this.animateService.enablePageScroll(); // riabilito lo scroll pagina
                     },
                     durataCatalogo * 1000 - anticipoMs,
                   );
                   this.saturnoRouteAnimazioniService.animaVerso(
                     scene,
-                    'CATALOGO_NASCOSTO',
+                    'CATALOGO_NASCOSTO_DUE',
                     durataCatalogo,
                     this.directionalLight || undefined,
                     () => {

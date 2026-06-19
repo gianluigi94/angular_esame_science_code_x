@@ -103,7 +103,7 @@ export class PianoUscitaGuard implements CanDeactivate<PianoComponent> {
 
       if (scene) {
         this.saturnoRouteAnimazioniService.animaVerso(
-          scene, 'CATALOGO_NASCOSTO', 1.2, light || undefined, // animo Saturno verso l'assetto nascosto del catalogo
+          scene, 'CATALOGO_NASCOSTO_DUE', 1.2, light || undefined, // animo Saturno verso l'assetto nascosto del catalogo
           () => {
             this.saturnoService.spegniSaturno(); // spengo Saturno al termine della transizione
             this.animateService.pauseClearcoat(); // metto in pausa l'effetto clearcoat

@@ -58,7 +58,7 @@ export class SaturnoRouteAnimazioniService {
         },
       });
 
-      if (stato === 'CATALOGO_NASCOSTO') {
+      if (stato === 'CATALOGO_NASCOSTO' || stato === 'CATALOGO_NASCOSTO_DUE') {
         // controllo se devo usare la traiettoria curva verso il catalogo nascosto
         const startPos = {
           x: scene.position.x,
@@ -172,7 +172,7 @@ export class SaturnoRouteAnimazioniService {
         } else if (stato === 'LOGIN_LATERALE') {
           // controllo se il target e' il login laterale
           lightZ = 0.1001; // imposto la profondita' luce dedicata al login laterale
-        } else if (stato === 'CATALOGO_NASCOSTO') {
+        } else if (stato === 'CATALOGO_NASCOSTO' || stato === 'CATALOGO_NASCOSTO_DUE') {
           // controllo se il target e' il catalogo nascosto
           lightZ = 0.1001; // imposto la profondita' luce dedicata al catalogo nascosto
         }

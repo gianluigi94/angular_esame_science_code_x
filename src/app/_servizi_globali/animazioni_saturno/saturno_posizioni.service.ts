@@ -61,7 +61,7 @@ export class SaturnoPosizioniService {
     },
 
     CATALOGO_NASCOSTO_DUE: {
-      position: { x: 7.9, y: -7.5, z: 3.25 }, // imposto la posizione della posa catalogo nascosto
+      position: { x: 7.9, y: -7.8, z: 3.25 }, // imposto la posizione della posa catalogo nascosto
       scale: { x: 3.8, y: 3.8, z: 3.8 },
       rotation: {
 
