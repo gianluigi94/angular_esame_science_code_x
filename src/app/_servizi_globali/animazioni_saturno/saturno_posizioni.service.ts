@@ -8,6 +8,7 @@ export type SaturnoStatoChiave =
   | 'WELCOME_BASSO'
   | 'REGISTRAZIONE_BASSO'
   | 'CATALOGO_NASCOSTO'
+  | 'CATALOGO_NASCOSTO_DUE'
   | 'LOGIN_LATERALE';
 
 export interface SaturnoPoseConfig {
@@ -59,6 +60,16 @@ export class SaturnoPosizioniService {
       },
     },
 
+    CATALOGO_NASCOSTO_DUE: {
+      position: { x: 7.9, y: -7.5, z: 3.25 }, // imposto la posizione della posa catalogo nascosto
+      scale: { x: 3.8, y: 3.8, z: 3.8 },
+      rotation: {
+
+         x: THREE.MathUtils.degToRad(10), // imposto la rotazione x della posa alta convertendo i gradi in radianti
+        y: THREE.MathUtils.degToRad(-300), // imposto la rotazione y della posa alta convertendo i gradi in radianti
+        z: THREE.MathUtils.degToRad(-5), // imposto la rotazione z della posa alta convertendo i gradi in radianti
+      },
+    },
     CATALOGO_NASCOSTO: {
       position: { x: 3, y: -2, z: 0.25 }, // imposto la posizione della posa catalogo nascosto
       scale: { x: 0.01, y: 0.01, z: 0.01 }, // imposto la scala quasi nulla della posa catalogo nascosto

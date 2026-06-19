@@ -36,23 +36,52 @@ interface FileUploadMedia {
   styleUrls: ['./form-aggiungi-media.component.scss'],
 })
 export class FormAggiungiMediaComponent implements OnInit {
-  @Input() idCategoria = '';
-  @Input() mediaDaModificare: { tipo: 'film' | 'serie'; id: number } | null = null;
-  @Input() nuovaStagione: { idSerie: number; numeroStagione: number } | null = null;
-  @Output() chiudi = new EventEmitter<void>();
+ @Input() idCategoria = '';
+@Input() mediaDaModificare: { tipo: 'film' | 'serie'; id: number } | null = null;
+@Input() nuovaStagione: { idSerie: number; numeroStagione: number } | null = null;
+@Input() nuovoEpisodio: {
+  idSerie: number;
+  idStagione: number;
+  numeroStagione: number;
+  numeroEpisodio: number;
+} | null = null;
+@Input() episodioDaModificare: {
+  idSerie: number;
+  idStagione: number;
+  numeroStagione: number;
+  numeroEpisodio: number;
+  chiaveArchivio: string;
+} | null = null;
+@Output() chiudi = new EventEmitter<void>();
 
-  get modalitaModifica(): boolean {
-    return !!this.mediaDaModificare;
-  }
+get modalitaModifica(): boolean {
+  return !!this.mediaDaModificare;
+}
 
-  get modalitaNuovaStagione(): boolean {
-    return !!this.nuovaStagione;
-  }
+get modalitaNuovaStagione(): boolean {
+  return !!this.nuovaStagione;
+}
 
-  numeroStagioneVisuale(indice: number): number {
-    if (this.nuovaStagione) return this.nuovaStagione.numeroStagione + indice;
-    return indice + 1;
-  }
+get modalitaNuovoEpisodio(): boolean {
+  return !!this.nuovoEpisodio;
+}
+
+get modalitaModificaEpisodio(): boolean {
+  return !!this.episodioDaModificare;
+}
+
+numeroStagioneVisuale(indice: number): number {
+  if (this.episodioDaModificare) return this.episodioDaModificare.numeroStagione;
+  if (this.nuovoEpisodio) return this.nuovoEpisodio.numeroStagione;
+  if (this.nuovaStagione) return this.nuovaStagione.numeroStagione + indice;
+  return indice + 1;
+}
+
+numeroEpisodioVisuale(indice: number): number {
+  if (this.episodioDaModificare) return this.episodioDaModificare.numeroEpisodio;
+  if (this.nuovoEpisodio) return this.nuovoEpisodio.numeroEpisodio + indice;
+  return indice + 1;
+}
 
   urlEsistentiModifica: Record<string, string> = {};
 
@@ -203,21 +232,57 @@ export class FormAggiungiMediaComponent implements OnInit {
   }[] = [];
 
   ngOnInit(): void {
-    if (this.mediaDaModificare) {
-      this.tipoMedia = this.mediaDaModificare.tipo;
-    }
-    if (this.nuovaStagione) {
-      this.tipoMedia = 'serie';
-      this.stagioniSerie = [
-        {
-          aperta: true,
-          idStagione: null,
-          episodi: [],
-        },
-      ];
-    }
-    this.caricaCategorieItaliane();
+  if (this.mediaDaModificare) {
+    this.tipoMedia = this.mediaDaModificare.tipo;
   }
+  if (this.nuovaStagione) {
+    this.tipoMedia = 'serie';
+    this.stagioniSerie = [
+      {
+        aperta: true,
+        idStagione: null,
+        episodi: [],
+      },
+    ];
+  }
+  if (this.nuovoEpisodio) {
+    this.tipoMedia = 'serie';
+    this.stagioniSerie = [
+      {
+        aperta: true,
+        idStagione: this.nuovoEpisodio.idStagione,
+        episodi: [],
+      },
+    ];
+    this.aggiungiEpisodio(0);
+  }
+  if (this.episodioDaModificare) {
+    this.tipoMedia = 'serie';
+    this.stagioniSerie = [
+      {
+        aperta: true,
+        idStagione: this.episodioDaModificare.idStagione,
+        episodi: [
+          {
+            aperto: true,
+            chiaveArchivio: this.episodioDaModificare.chiaveArchivio,
+            titoloIt: '',
+            titoloEn: '',
+            descrizioneIt: '',
+            descrizioneEn: '',
+            anteprima: [],
+            erroreAnteprima: '',
+            modalitaAnteprima: 'url' as 'file' | 'url',
+            urlAnteprima: '',
+          },
+        ],
+      },
+    ];
+    this.caricaEpisodioDaModificare();
+    return;
+  }
+  this.caricaCategorieItaliane();
+}
 
   caricaCategorieItaliane(): void {
     forkJoin([
@@ -397,7 +462,62 @@ precompilaStagioniEpisodi(idSerie: number): void {
         },
       });
   }
+caricaEpisodioDaModificare(): void {
+    if (!this.episodioDaModificare) return;
 
+    const { idStagione, chiaveArchivio } = this.episodioDaModificare;
+
+    forkJoin([
+      this.api.getEpisodi(idStagione).pipe(take(1)),
+      this.api.getEpisodiTraduzioni(idStagione, 'it').pipe(take(1)),
+      this.api.getEpisodiTraduzioni(idStagione, 'en').pipe(take(1)),
+    ]).subscribe({
+      next: ([resEpisodi, resTradIt, resTradEn]) => {
+        const episodi: any[] = Array.isArray((resEpisodi as any)?.data)
+          ? (resEpisodi as any).data
+          : [];
+        const tradIt: any[] = Array.isArray((resTradIt as any)?.data)
+          ? (resTradIt as any).data
+          : [];
+        const tradEn: any[] = Array.isArray((resTradEn as any)?.data)
+          ? (resTradEn as any).data
+          : [];
+
+        const episodio = episodi.find(
+          (ep) => String(ep.chiave_archivio) === String(chiaveArchivio),
+        );
+
+        if (!episodio) {
+          this.toastService.errore(
+            "ERRORE: impossibile caricare l'episodio da modificare.",
+          );
+          return;
+        }
+
+        const mappaIt: Record<number, any> = {};
+        const mappaEn: Record<number, any> = {};
+        tradIt.forEach((t) => (mappaIt[t.id_episodio] = t));
+        tradEn.forEach((t) => (mappaEn[t.id_episodio] = t));
+
+        const target = this.stagioniSerie[0]?.episodi[0];
+        if (!target) return;
+
+        const base = 'https://d2kd3i5q9rl184.cloudfront.net/';
+
+        target.titoloIt = String(mappaIt[episodio.id_episodio]?.titolo ?? '');
+        target.titoloEn = String(mappaEn[episodio.id_episodio]?.titolo ?? '');
+        target.descrizioneIt = String(mappaIt[episodio.id_episodio]?.descrizione ?? '');
+        target.descrizioneEn = String(mappaEn[episodio.id_episodio]?.descrizione ?? '');
+        target.modalitaAnteprima = 'url';
+        target.urlAnteprima = episodio.img_anteprima ? base + episodio.img_anteprima : '';
+      },
+      error: () => {
+        this.toastService.errore(
+          "ERRORE: impossibile caricare l'episodio da modificare.",
+        );
+      },
+    });
+  }
   costruisciStagioneDaRisposte(
     stag: any,
     resEpisodi: any,
@@ -1211,6 +1331,16 @@ precompilaStagioniEpisodi(idSerie: number): void {
   aggiornaErrorePacchettoHls(): void {
     if (this.files['pacchetto_hls'].length === 0) return;
 
+    if (this.modalitaModificaEpisodio) {
+      this.erroriFiles['pacchetto_hls'] = this.messaggioErroreHlsModificaEpisodio();
+      return;
+    }
+
+    if (this.modalitaNuovoEpisodio) {
+      this.erroriFiles['pacchetto_hls'] = this.messaggioErroreHlsNuovoEpisodio();
+      return;
+    }
+
     if (this.modalitaNuovaStagione) {
       this.erroriFiles['pacchetto_hls'] = this.messaggioErroreHlsNuovaStagione();
       return;
@@ -1223,6 +1353,8 @@ precompilaStagioniEpisodi(idSerie: number): void {
 
   errorePacchettoHls(): string {
     if (this.files['pacchetto_hls'].length === 0) return '';
+    if (this.modalitaModificaEpisodio) return this.messaggioErroreHlsModificaEpisodio();
+    if (this.modalitaNuovoEpisodio) return this.messaggioErroreHlsNuovoEpisodio();
     if (this.modalitaNuovaStagione) return this.messaggioErroreHlsNuovaStagione();
     if (this.tipoMedia === 'serie') return this.messaggioErroreHlsSerie();
 
@@ -1316,6 +1448,20 @@ precompilaStagioniEpisodi(idSerie: number): void {
 
     return [...new Set(numeri)].sort((a, b) => a - b);
   }
+  messaggioErroreHlsNuovoEpisodio(): string {
+    if (this.files['pacchetto_hls'].length === 0) return '';
+
+    const percorsi = this.files['pacchetto_hls'].map((file) =>
+      this.percorsoFile(file).toLowerCase(),
+    );
+
+    if (!this.strutturaHlsSingoloEpisodioValida(percorsi)) {
+      return "La struttura HLS dell'episodio è incompleta.";
+    }
+
+    return '';
+  }
+
 messaggioErroreHlsNuovaStagione(): string {
     if (this.files['pacchetto_hls'].length === 0) return '';
 
@@ -1354,6 +1500,33 @@ messaggioErroreHlsNuovaStagione(): string {
       .map((numero) => Number(numero));
 
     return [...new Set(numeri)].sort((a, b) => a - b);
+  }
+
+  strutturaHlsSingoloEpisodioValida(percorsi: string[]): boolean {
+    const contiene = (pezzo: string) =>
+      percorsi.some((percorso) => percorso.endsWith(`/${pezzo}`) || percorso.endsWith(pezzo));
+    const contieneTsInCartella = (cartella: string) =>
+      percorsi.some(
+        (percorso) =>
+          percorso.includes(`/${cartella}/`) && percorso.endsWith('.ts'),
+      );
+
+    return (
+      contiene('master.m3u8') &&
+      contiene('360/360p.m3u8') &&
+      contiene('720/720p.m3u8') &&
+      contiene('1080/1080p.m3u8') &&
+      contiene('360/with-audio.m3u8') &&
+      contiene('720/with-audio.m3u8') &&
+      contiene('1080/with-audio.m3u8') &&
+      contiene('it/audio_it.m3u8') &&
+      contiene('en/audio_en.m3u8') &&
+      contieneTsInCartella('360') &&
+      contieneTsInCartella('720') &&
+      contieneTsInCartella('1080') &&
+      contieneTsInCartella('it') &&
+      contieneTsInCartella('en')
+    );
   }
 
   strutturaHlsEpisodioValidaNuovaStagione(percorsi: string[], numeroEpisodio: number): boolean {
@@ -1461,7 +1634,7 @@ messaggioErroreHlsNuovaStagione(): string {
   }
 
   episodioSerieValido(episodio: any): boolean {
-    const anteprimaOk = this.modalitaModifica
+    const anteprimaOk = (this.modalitaModifica || this.modalitaModificaEpisodio)
       ? !episodio.erroreAnteprima
       : episodio.modalitaAnteprima === 'url'
         ? episodio.urlAnteprima?.trim().length > 0
@@ -1496,19 +1669,22 @@ messaggioErroreHlsNuovaStagione(): string {
   }
 
   formValido(): boolean {
-    if (this.modalitaNuovaStagione) {
-      return this.serieValida() && this.pacchettoHlsCaricato();
-    }
-    return (
-      this.informazioniValide() &&
-      this.immaginiValide() &&
-      this.trailerValide() &&
-      this.sottotitoliValidi() &&
-      this.jsonValido() &&
-      this.serieValida() &&
-      this.pacchettoHlsCaricato()
-    );
+  if (this.modalitaModificaEpisodio) {
+    return this.serieValida() && !this.errorePacchettoHls();
   }
+  if (this.modalitaNuovaStagione || this.modalitaNuovoEpisodio) {
+    return this.serieValida() && this.pacchettoHlsCaricato();
+  }
+  return (
+    this.informazioniValide() &&
+    this.immaginiValide() &&
+    this.trailerValide() &&
+    this.sottotitoliValidi() &&
+    this.jsonValido() &&
+    this.serieValida() &&
+    this.pacchettoHlsCaricato()
+  );
+}
 utentePuoModificareMedia(): boolean {
     const abilita = Authservice.auth?.abilita ?? [];
 
@@ -1533,30 +1709,38 @@ utentePuoModificareMedia(): boolean {
     return Math.min(100, 80 + Math.round(percentualeBackend * 0.2));
   }
   creaDatiJobMedia(): any {
-    return {
-      tipoMedia: this.tipoMedia,
-      idMediaModifica: this.modalitaNuovaStagione
-        ? this.nuovaStagione!.idSerie
-        : this.modalitaModifica
-          ? this.mediaDaModificare!.id
-          : null,
-      modalitaNuovaStagione: this.modalitaNuovaStagione ? '1' : '0',
-      idCategoria: this.idCategoriaSelezionata,
-      idCategoriaSecondaria: this.idCategoriaSecondariaSelezionata || null,
-      anno: this.anno,
-      regista: this.regista.trim(),
-      novita: this.novita ? '1' : '0',
-      titoloIt: this.titoloIt.trim(),
-      titoloEn: this.titoloEn.trim(),
-      sottotitoloIt: this.sottotitoloIt.trim(),
-      sottotitoloEn: this.sottotitoloEn.trim(),
-      descrizioneIt: this.descrizioneIt.trim(),
-      descrizioneEn: this.descrizioneEn.trim(),
-      stagioni:
-        this.tipoMedia === 'serie' ? JSON.stringify(this.stagioniSerie) : null,
-      chiaviPreservaS3: JSON.stringify(this.chiaviPreservaS3),
-    };
-  }
+  return {
+    tipoMedia: this.tipoMedia,
+    idMediaModifica: this.modalitaNuovaStagione
+      ? this.nuovaStagione!.idSerie
+      : this.modalitaNuovoEpisodio
+        ? this.nuovoEpisodio!.idSerie
+        : this.modalitaModificaEpisodio
+          ? this.episodioDaModificare!.idSerie
+          : this.modalitaModifica
+            ? this.mediaDaModificare!.id
+            : null,
+    modalitaNuovaStagione: this.modalitaNuovaStagione ? '1' : '0',
+    modalitaNuovoEpisodio: this.modalitaNuovoEpisodio ? '1' : '0',
+    modalitaModificaEpisodio: this.modalitaModificaEpisodio ? '1' : '0',
+    idStagioneNuovoEpisodio: this.nuovoEpisodio?.idStagione ?? null,
+    numeroStagioneNuovoEpisodio: this.nuovoEpisodio?.numeroStagione ?? null,
+    idCategoria: this.idCategoriaSelezionata,
+    idCategoriaSecondaria: this.idCategoriaSecondariaSelezionata || null,
+    anno: this.anno,
+    regista: this.regista.trim(),
+    novita: this.novita ? '1' : '0',
+    titoloIt: this.titoloIt.trim(),
+    titoloEn: this.titoloEn.trim(),
+    sottotitoloIt: this.sottotitoloIt.trim(),
+    sottotitoloEn: this.sottotitoloEn.trim(),
+    descrizioneIt: this.descrizioneIt.trim(),
+    descrizioneEn: this.descrizioneEn.trim(),
+    stagioni:
+      this.tipoMedia === 'serie' ? JSON.stringify(this.stagioniSerie) : null,
+    chiaviPreservaS3: JSON.stringify(this.chiaviPreservaS3),
+  };
+}
 
   listaFileUploadMedia(): FileUploadMedia[] {
     const lista: FileUploadMedia[] = [];
@@ -1702,7 +1886,7 @@ utentePuoModificareMedia(): boolean {
 
     if (!this.formValido() || this.salvataggioInCorso) return;
 
-    if (this.modalitaModifica || this.modalitaNuovaStagione) {
+    if (this.modalitaModifica || this.modalitaNuovaStagione || this.modalitaNuovoEpisodio || this.modalitaModificaEpisodio) {
       if (!this.utentePuoModificareMedia()) {
         this.toastService.errore(
           "ERRORE: non hai l'abilità per modificare media.",
@@ -1905,11 +2089,11 @@ utentePuoModificareMedia(): boolean {
         this.cacheCatalogo.svuota();
         this.cacheScheda.svuota();
         window.dispatchEvent(new CustomEvent('media-aggiornato'));
-        if (this.modalitaModifica) {
-            this.chiudi.emit();
-            setTimeout(() => { window.location.href = window.location.href; }, 500);
-            return;
-        }
+        if (this.modalitaModifica || this.modalitaNuovaStagione || this.modalitaNuovoEpisodio || this.modalitaModificaEpisodio) {
+    this.chiudi.emit();
+    setTimeout(() => { window.location.href = window.location.href; }, 500);
+    return;
+}
         const url = (this.router.url || '').split('?')[0];
         const suCatalogo = /^\/(it|en)\/(catalogo|catalog)(\/|$)/.test(url);
         if (!suCatalogo) {
@@ -2118,5 +2302,19 @@ utentePuoModificareMedia(): boolean {
     return this.categorie.filter(
       (cat) => cat.label !== this.categoriaSelezionata,
     );
+  }
+
+  messaggioErroreHlsModificaEpisodio(): string {
+    if (this.files['pacchetto_hls'].length === 0) return '';
+
+    const percorsi = this.files['pacchetto_hls'].map((file) =>
+      this.percorsoFile(file).toLowerCase(),
+    );
+
+    if (!this.strutturaHlsSingoloEpisodioValida(percorsi)) {
+      return "La struttura HLS dell'episodio è incompleta.";
+    }
+
+    return '';
   }
 }

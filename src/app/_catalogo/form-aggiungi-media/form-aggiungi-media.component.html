@@ -1,9 +1,11 @@
 <div class="form-media-overlay" (click)="onClickFuori()">
   <div class="form-media-pannello" (click)="$event.stopPropagation()">
-    <h2 class="form-media-titolo">{{ modalitaNuovaStagione ? 'Aggiungi stagione' : (modalitaModifica ? 'Modifica media' : 'Aggiungi nuovo media') }}</h2>
+    <h2 class="form-media-titolo">
+      {{ modalitaModificaEpisodio ? 'Modifica episodio ' + episodioDaModificare?.numeroEpisodio : (modalitaNuovoEpisodio ? 'Aggiungi episodio' : (modalitaNuovaStagione ? 'Aggiungi stagione' : (modalitaModifica ? 'Modifica media' : 'Aggiungi nuovo media'))) }}
+    </h2>
 
     <div class="form-media-scroll">
-      <div class="sezione-form" *ngIf="!modalitaModifica && !modalitaNuovaStagione">
+      <div class="sezione-form" *ngIf="!modalitaModifica && !modalitaNuovaStagione && !modalitaNuovoEpisodio && !modalitaModificaEpisodio">
         <h3 class="sezione-label">Tipologia</h3>
 
         <div class="radio-novita radio-tipologia-media">
@@ -29,7 +31,7 @@
         </div>
       </div>
 
-      <div class="sezione-form" *ngIf="!modalitaModifica && !modalitaNuovaStagione">
+      <div class="sezione-form" *ngIf="!modalitaModifica && !modalitaNuovaStagione && !modalitaNuovoEpisodio && !modalitaModificaEpisodio">
         <h3 class="sezione-label">
           Scorciatoia testi
           <span class="formati-permessi-media"
@@ -85,7 +87,7 @@
         </div>
       </div>
 
-      <div class="sezione-form" *ngIf="!modalitaNuovaStagione">
+      <div class="sezione-form" *ngIf="!modalitaNuovaStagione && !modalitaNuovoEpisodio && !modalitaModificaEpisodio">
         <h3 class="sezione-label">Informazioni</h3>
 
         <div class="riga-due">
@@ -679,7 +681,7 @@
         </div>
       </div>
 
-      <div class="sezione-form" *ngIf="!modalitaNuovaStagione">
+      <div class="sezione-form" *ngIf="!modalitaNuovaStagione && !modalitaNuovoEpisodio && !modalitaModificaEpisodio">
         <h3 class="sezione-label">
           Immagini
           <span class="formati-permessi-media"
@@ -1099,7 +1101,7 @@
         </div>
       </div>
 
-      <div class="sezione-form" *ngIf="!modalitaNuovaStagione">
+      <div class="sezione-form" *ngIf="!modalitaNuovaStagione && !modalitaNuovoEpisodio && !modalitaModificaEpisodio">
         <h3 class="sezione-label">
           Trailer
           <span class="formati-permessi-media">MP4, WEBM, MOV - max 30 MB</span>
@@ -1251,7 +1253,7 @@
           </div>
         </div>
       </div>
-      <div class="sezione-form" *ngIf="!modalitaNuovaStagione">
+      <div class="sezione-form" *ngIf="!modalitaNuovaStagione && !modalitaNuovoEpisodio && !modalitaModificaEpisodio">
         <h3 class="sezione-label">
           Sottotitoli <span class="formati-permessi-media">VTT - max 2 MB</span>
         </h3>
@@ -1421,7 +1423,9 @@
         </div>
       </div>
       <div class="sezione-form" *ngIf="tipoMedia === 'serie'">
-        <h3 class="sezione-label">Stagioni</h3>
+        <h3 class="sezione-label">
+          {{ modalitaModificaEpisodio ? 'Modifica episodio' : (modalitaNuovoEpisodio ? 'Episodi stagione ' + nuovoEpisodio?.numeroStagione : 'Stagioni') }}
+        </h3>
 
         <div class="blocco-serie">
           <div
@@ -1436,6 +1440,7 @@
 
               <div class="stagione-azioni">
                 <button
+                  *ngIf="!modalitaNuovoEpisodio && !modalitaModificaEpisodio"
                   type="button"
                   class="btn-rimuovi-stagione"
                   (click)="
@@ -1481,10 +1486,11 @@
                   class="episodio-header"
                   (click)="episodio.aperto = !episodio.aperto"
                 >
-                  <span>Episodio {{ indiceEpisodio + 1 }}</span>
+                  <span>Episodio {{ numeroEpisodioVisuale(indiceEpisodio) }}</span>
 
                   <div class="stagione-azioni">
                     <button
+                      *ngIf="!modalitaModificaEpisodio"
                       type="button"
                       class="btn-rimuovi-stagione"
                       (click)="
@@ -1900,6 +1906,7 @@
               </div>
 
               <button
+                *ngIf="!modalitaModificaEpisodio"
                 type="button"
                 class="btn-aggiungi-episodio"
                 (click)="aggiungiEpisodio(indiceStagione)"
@@ -1911,6 +1918,7 @@
           </div>
 
           <button
+            *ngIf="!modalitaNuovoEpisodio && !modalitaModificaEpisodio"
             type="button"
             class="btn-aggiungi-stagione"
             (click)="aggiungiStagione()"
@@ -1932,9 +1940,11 @@
         <h3 class="sezione-label">
           Pacchetto HLS
           <span class="formati-permessi-media">{{
-            tipoMedia === "film"
-              ? "cartella completa film"
-              : "cartella completa serie"
+            modalitaModificaEpisodio
+              ? "cartella del singolo episodio"
+              : (tipoMedia === "film"
+                ? "cartella completa film"
+                : "cartella completa serie")
           }}</span>
         </h3>
 
@@ -2069,7 +2079,7 @@
             <div class="errori-stack-media">
               <p
                 class="errore-campo-media"
-                *ngIf="formInviato && !pacchettoHlsCaricato()"
+                *ngIf="formInviato && !pacchettoHlsCaricato() && !modalitaModificaEpisodio"
               >
                 Il pacchetto HLS è obbligatorio.
               </p>
@@ -2081,7 +2091,7 @@
         </div>
       </div>
 
-      <div class="sezione-form" *ngIf="!modalitaNuovaStagione">
+      <div class="sezione-form" *ngIf="!modalitaNuovaStagione && !modalitaNuovoEpisodio && !modalitaModificaEpisodio">
         <h3 class="sezione-label">Novità?</h3>
 
         <div class="radio-novita">

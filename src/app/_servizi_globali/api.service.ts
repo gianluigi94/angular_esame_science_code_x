@@ -20,10 +20,10 @@ export class ApiService {
    */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    // const server: string = 'http://127.0.0.1:8000/api';
+    const server: string = 'http://127.0.0.1:8000/api';
     // const server: string = 'http://localhost/science_codex/public/api';
     // const server: string = 'http://192.168.1.38/science_codex/public/api';
-    const server: string = 'https://api.sciencecodex.net/api';
+    // const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
 
     const segments = [server, versione, ...risorsa.map(String)]; // Unisco server, versione e parametri della risorsa in un array
@@ -707,6 +707,20 @@ public correggiPagamento(): Observable<IRispostaServer> {
 
   public eliminaMedia(tipo: 'film' | 'serie', id: number, categorieFile: Record<string, boolean> = {}): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['media', tipo, id]);
+    return this.http.delete<IRispostaServer>(url, {
+      body: { categorie_file: categorieFile },
+    });
+  }
+
+  public eliminaStagioneSerie(idSerie: number, idStagione: number, categorieFile: Record<string, boolean> = {}): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['serie', idSerie, 'stagioni', idStagione]);
+    return this.http.delete<IRispostaServer>(url, {
+      body: { categorie_file: categorieFile },
+    });
+  }
+
+  public eliminaEpisodioSerie(idSerie: number, chiaveArchivio: string, categorieFile: Record<string, boolean> = {}): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['serie', idSerie, 'episodi', chiaveArchivio]);
     return this.http.delete<IRispostaServer>(url, {
       body: { categorie_file: categorieFile },
     });

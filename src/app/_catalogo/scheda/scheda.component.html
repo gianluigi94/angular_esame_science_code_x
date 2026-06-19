@@ -176,9 +176,33 @@
       [attr.aria-busy]="caricamentoStagioneInCorso"
     >
       <!-- indico che stagione sto vedendo -->
-      <h3 class="titolo-stagione-corrente">
-        {{ labelStagione }} {{ stagioneSelezionata }}
-      </h3>
+      <div class="testata-stagione-corrente">
+  <h3 class="titolo-stagione-corrente">
+    {{ labelStagione }} {{ stagioneSelezionata }}
+  </h3>
+
+  <app-bottone-aggiungi
+    *ngIf="puoRiordinareEpisodi"
+    titolo="Aggiungi episodio"
+    (azione)="onAggiungiEpisodio()"
+    class="btn-aggiungi-episodio-scheda"
+  ></app-bottone-aggiungi>
+
+  <button
+    type="button"
+    class="btn-elimina-stagione-scheda"
+    *ngIf="puoRiordinareEpisodi"
+    title="Elimina stagione"
+    (click)="onEliminaStagione()"
+  >
+    <svg viewBox="0 0 24 24" class="icona-cestino-scheda" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      <line x1="10" y1="11" x2="10" y2="17"></line>
+      <line x1="14" y1="11" x2="14" y2="17"></line>
+    </svg>
+  </button>
+</div>
 
       <ul
         class="placeholder"
@@ -259,6 +283,32 @@
               ].durata
             }}</span>
           </div>
+
+          <div class="azioni-episodio" *ngIf="puoRiordinareEpisodi" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="btn-modifica-episodio"
+              title="Modifica episodio"
+              (click)="onModificaEpisodio(i + 1, serieData[stagioneSelezionata || getChiavi(serieData)[0]][episodio].chiaveArchivio)"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="btn-elimina-episodio"
+              title="Elimina episodio"
+              (click)="onEliminaEpisodio(i + 1, serieData[stagioneSelezionata || getChiavi(serieData)[0]][episodio].chiaveArchivio)"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+          </div>
         </li>
       </ul>
 
@@ -315,6 +365,92 @@
       ></app-riga-categoria>
     </ng-container>
   </div>
+<div class="modale-overlay-stagione" *ngIf="mostraModaleEliminaStagione" (click)="chiudiModaleEliminaStagione()">
+  <div class="modale-contenuto-stagione" (click)="$event.stopPropagation()">
+    <p class="modale-messaggio-stagione">
+      Sei sicuro di voler eliminare la stagione {{ stagioneDaEliminare?.numeroStagione }}?
+    </p>
+
+    <p class="modale-sottomessaggio-stagione">
+      Vuoi eliminare anche i seguenti file da AWS?
+    </p>
+
+    <div class="modale-checkbox-lista-stagione">
+      <label class="modale-checkbox-voce-stagione">
+        <input
+          type="checkbox"
+          [checked]="categorieFileEliminazioneStagione['anteprime_episodi']"
+          (change)="categorieFileEliminazioneStagione['anteprime_episodi'] = $any($event.target).checked"
+        />
+        <span>Anteprime episodi</span>
+      </label>
+
+      <label class="modale-checkbox-voce-stagione">
+        <input
+          type="checkbox"
+          [checked]="categorieFileEliminazioneStagione['cartella_hls']"
+          (change)="categorieFileEliminazioneStagione['cartella_hls'] = $any($event.target).checked"
+        />
+        <span>Cartella file HLS</span>
+      </label>
+    </div>
+
+    <div class="modale-bottoni-stagione">
+      <button type="button" class="btn-annulla-stagione" (click)="chiudiModaleEliminaStagione()" [disabled]="eliminazioneStagioneInCorso">
+        Annulla
+      </button>
+
+      <button type="button" class="btn-elimina-stagione-conferma" (click)="confermaEliminaStagione()" [disabled]="eliminazioneStagioneInCorso">
+        <ng-container *ngIf="!eliminazioneStagioneInCorso">Confermo</ng-container>
+        <app-spinner *ngIf="eliminazioneStagioneInCorso"></app-spinner>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modale-overlay-stagione" *ngIf="mostraModaleEliminaEpisodio" (click)="chiudiModaleEliminaEpisodio()">
+  <div class="modale-contenuto-stagione" (click)="$event.stopPropagation()">
+    <p class="modale-messaggio-stagione">
+      Sei sicuro di voler eliminare l'episodio {{ episodioDaEliminare?.numeroEpisodio }}?
+    </p>
+
+    <p class="modale-sottomessaggio-stagione">
+      Vuoi eliminare anche i seguenti file da AWS?
+    </p>
+
+    <div class="modale-checkbox-lista-stagione">
+      <label class="modale-checkbox-voce-stagione">
+        <input
+          type="checkbox"
+          [checked]="categorieFileEliminazioneEpisodio['anteprime_episodi']"
+          (change)="categorieFileEliminazioneEpisodio['anteprime_episodi'] = $any($event.target).checked"
+        />
+        <span>Anteprima episodio</span>
+      </label>
+
+      <label class="modale-checkbox-voce-stagione">
+        <input
+          type="checkbox"
+          [checked]="categorieFileEliminazioneEpisodio['cartella_hls']"
+          (change)="categorieFileEliminazioneEpisodio['cartella_hls'] = $any($event.target).checked"
+        />
+        <span>Cartella file HLS</span>
+      </label>
+    </div>
+
+    <div class="modale-bottoni-stagione">
+      <button type="button" class="btn-annulla-stagione" (click)="chiudiModaleEliminaEpisodio()" [disabled]="eliminazioneEpisodioInCorso">
+        Annulla
+      </button>
+
+      <button type="button" class="btn-elimina-stagione-conferma" (click)="confermaEliminaEpisodio()" [disabled]="eliminazioneEpisodioInCorso">
+        <ng-container *ngIf="!eliminazioneEpisodioInCorso">Confermo</ng-container>
+        <app-spinner *ngIf="eliminazioneEpisodioInCorso"></app-spinner>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- richiamo il footer -->
   <app-footer></app-footer>
 </div>

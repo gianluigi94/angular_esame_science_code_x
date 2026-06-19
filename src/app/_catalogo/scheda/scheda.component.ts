@@ -90,6 +90,23 @@ export class SchedaComponent implements OnInit, OnDestroy, AfterViewInit {
   } | null = null; // le risorse HLS del player principale
   sottotitoliPlayerVideo: { en: string; it: string } | null = null; // i sottotitoli del player principale
   infoEpisodioPlayer: { stagione: number; episodio: number } | null = null; // le info episodio del player serie
+  mostraModaleEliminaStagione = false;
+  eliminazioneStagioneInCorso = false;
+  categorieFileEliminazioneStagione: Record<string, boolean> = {};
+  stagioneDaEliminare: {
+    idSerie: number;
+    idStagione: number;
+    numeroStagione: number;
+  } | null = null;
+
+  mostraModaleEliminaEpisodio = false;
+  eliminazioneEpisodioInCorso = false;
+  categorieFileEliminazioneEpisodio: Record<string, boolean> = {};
+  episodioDaEliminare: {
+    idSerie: number;
+    chiaveArchivio: string;
+    numeroEpisodio: number;
+  } | null = null;
 
   // Getter che mi restituisce questo valore in modo comodo nel template.
   get mostraVideoScheda(): boolean {
@@ -407,16 +424,113 @@ onRiproduci(): void {
   }
 
   onAggiungiStagione(): void {
-    if (!this.puoRiordinareEpisodi) return;
-    if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
-    const numeroStagione =
-      this.ctx.stagioni.reduce((max, s) => Math.max(max, Number(s.numero_stagione)), 0) + 1;
-    window.dispatchEvent(
-      new CustomEvent('apri-form-nuova-stagione', {
-        detail: { idSerie: this.ctx.idContenuto, numeroStagione },
-      }),
-    );
+  if (!this.puoRiordinareEpisodi) return;
+  if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
+  const numeroStagione =
+    this.ctx.stagioni.reduce((max, s) => Math.max(max, Number(s.numero_stagione)), 0) + 1;
+  window.dispatchEvent(
+    new CustomEvent('apri-form-nuova-stagione', {
+      detail: { idSerie: this.ctx.idContenuto, numeroStagione },
+    }),
+  );
+}
+
+onAggiungiEpisodio(): void {
+  if (!this.puoRiordinareEpisodi) return;
+  if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
+  if (!this.ctx.stagioneSelezionata) return;
+
+  const stagioneCorrente = this.ctx.stagioni.find(
+    (s) => String(s.numero_stagione) === String(this.ctx.stagioneSelezionata),
+  );
+
+  if (!stagioneCorrente) return;
+
+  window.dispatchEvent(
+    new CustomEvent('apri-form-nuovo-episodio', {
+      detail: {
+        idSerie: this.ctx.idContenuto,
+        idStagione: stagioneCorrente.id_stagione,
+        numeroStagione: Number(stagioneCorrente.numero_stagione),
+        numeroEpisodio: Number(stagioneCorrente.numero_episodi) + 1,
+      },
+    }),
+  );
+}
+
+onEliminaStagione(): void {
+  if (!this.puoRiordinareEpisodi) return;
+  if (!this.utentePuoEliminareMedia()) {
+    this.toastService.errore("ERRORE: non hai l'abilità per eliminare media.");
+    return;
   }
+  if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
+  if (!this.ctx.stagioneSelezionata) return;
+
+  const stagioneCorrente = this.ctx.stagioni.find(
+    (s) => String(s.numero_stagione) === String(this.ctx.stagioneSelezionata),
+  );
+
+  if (!stagioneCorrente?.id_stagione) return;
+
+  this.categorieFileEliminazioneStagione = {
+    anteprime_episodi: true,
+    cartella_hls: true,
+  };
+
+  this.stagioneDaEliminare = {
+    idSerie: this.ctx.idContenuto,
+    idStagione: Number(stagioneCorrente.id_stagione),
+    numeroStagione: Number(stagioneCorrente.numero_stagione),
+  };
+
+  this.mostraModaleEliminaStagione = true;
+}
+
+chiudiModaleEliminaStagione(): void {
+  if (this.eliminazioneStagioneInCorso) return;
+  this.mostraModaleEliminaStagione = false;
+}
+
+confermaEliminaStagione(): void {
+  if (this.eliminazioneStagioneInCorso || !this.stagioneDaEliminare) return;
+  if (!this.utentePuoEliminareMedia()) {
+    this.toastService.errore("ERRORE: non hai l'abilità per eliminare media.");
+    return;
+  }
+
+  this.eliminazioneStagioneInCorso = true;
+
+  this.api.eliminaStagioneSerie(
+    this.stagioneDaEliminare.idSerie,
+    this.stagioneDaEliminare.idStagione,
+    this.categorieFileEliminazioneStagione,
+  ).pipe(take(1)).subscribe({
+    next: () => {
+      this.mostraModaleEliminaStagione = false;
+      this.eliminazioneStagioneInCorso = false;
+      this.schedaCache.svuota();
+      this.toastService.successo('Stagione eliminata con SUCCESSO.');
+      setTimeout(() => {
+        const pathSchedaSerie = window.location.pathname.replace(/\/(stagione|season)\/\d+$/, '');
+        window.location.href = pathSchedaSerie;
+      }, 500);
+    },
+    error: () => {
+      this.mostraModaleEliminaStagione = false;
+      this.eliminazioneStagioneInCorso = false;
+      this.toastService.errore("Errore durante l'eliminazione della stagione.");
+    },
+  });
+}
+
+utentePuoEliminareMedia(): boolean {
+  return !!this.authService.leggiObsAuth().value?.abilita?.includes(6);
+}
+
+utentePuoModificareMedia(): boolean {
+  return !!this.authService.leggiObsAuth().value?.abilita?.includes(5);
+}
 
   tracciaRigaCorrelata = (_i: number, riga: { idCategoria: string }): string =>
     this.correlateHelper.tracciaRigaCorrelata(_i, riga); // delego la chiave trackBy delle correlate
@@ -1270,4 +1384,91 @@ private resetStatoScheda(): void {
   private set _tabellaPronto(v: boolean) {
     this._tabellaPronta = v;
   } // aggiorno il flag tabella pronta tramite setter interno
+
+  onEliminaEpisodio(numeroEpisodio: number, chiaveArchivio: string): void {
+    if (!this.puoRiordinareEpisodi) return;
+    if (!this.utentePuoEliminareMedia()) {
+      this.toastService.errore("ERRORE: non hai l'abilità per eliminare media.");
+      return;
+    }
+    if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
+    if (!chiaveArchivio) return;
+
+    this.categorieFileEliminazioneEpisodio = {
+      anteprime_episodi: true,
+      cartella_hls: true,
+    };
+
+    this.episodioDaEliminare = {
+      idSerie: this.ctx.idContenuto,
+      chiaveArchivio,
+      numeroEpisodio,
+    };
+
+    this.mostraModaleEliminaEpisodio = true;
+  }
+
+  chiudiModaleEliminaEpisodio(): void {
+    if (this.eliminazioneEpisodioInCorso) return;
+    this.mostraModaleEliminaEpisodio = false;
+  }
+
+  confermaEliminaEpisodio(): void {
+    if (this.eliminazioneEpisodioInCorso || !this.episodioDaEliminare) return;
+    if (!this.utentePuoEliminareMedia()) {
+      this.toastService.errore("ERRORE: non hai l'abilità per eliminare media.");
+      return;
+    }
+
+    this.eliminazioneEpisodioInCorso = true;
+
+    this.api.eliminaEpisodioSerie(
+      this.episodioDaEliminare.idSerie,
+      this.episodioDaEliminare.chiaveArchivio,
+      this.categorieFileEliminazioneEpisodio,
+    ).pipe(take(1)).subscribe({
+      next: () => {
+        this.mostraModaleEliminaEpisodio = false;
+        this.eliminazioneEpisodioInCorso = false;
+        this.schedaCache.svuota();
+        this.toastService.successo('Episodio eliminato con SUCCESSO.');
+        setTimeout(() => {
+          window.location.href = window.location.href;
+        }, 500);
+      },
+      error: () => {
+        this.mostraModaleEliminaEpisodio = false;
+        this.eliminazioneEpisodioInCorso = false;
+        this.toastService.errore("Errore durante l'eliminazione dell'episodio.");
+      },
+    });
+  }
+
+  onModificaEpisodio(numeroEpisodio: number, chiaveArchivio: string): void {
+    if (!this.puoRiordinareEpisodi) return;
+    if (!this.utentePuoModificareMedia()) {
+      this.toastService.errore("ERRORE: non hai l'abilità per modificare media.");
+      return;
+    }
+    if (this.ctx.tipoContenuto !== 'serie' || !this.ctx.idContenuto) return;
+    if (!chiaveArchivio || !this.ctx.stagioneSelezionata) return;
+
+    const stagioneCorrente = this.ctx.stagioni.find(
+      (s) => String(s.numero_stagione) === String(this.ctx.stagioneSelezionata),
+    );
+
+    if (!stagioneCorrente) return;
+
+    window.dispatchEvent(
+      new CustomEvent('apri-form-modifica-episodio', {
+        detail: {
+          idSerie: this.ctx.idContenuto,
+          idStagione: stagioneCorrente.id_stagione,
+          numeroStagione: Number(stagioneCorrente.numero_stagione),
+          numeroEpisodio,
+          chiaveArchivio,
+        },
+      }),
+    );
+  }
 }

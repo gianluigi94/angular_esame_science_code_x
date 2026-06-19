@@ -92,11 +92,11 @@ export class ContattiNavigazioneService {
       if (sfondoEl) { // controllo se l'elemento DOM dello sfondo esiste
         gsap.killTweensOf(sfondoEl); // fermo eventuali tween attivi sullo sfondo
         sfondoEl.style.opacity = '0'; // imposto subito lo sfondo a invisibile prima del fade-in
-        tl.fromTo(sfondoEl, { opacity: 0 }, { opacity: 1, duration: 1.05, ease: 'power2.out' }, 0); // animo lo sfondo da trasparente a visibile
+        tl.fromTo(sfondoEl, { opacity: 0 }, { opacity: 1, duration: 1.25, ease: 'power2.out' }, 0); // animo lo sfondo da trasparente a visibile
       }
 
       if (scena) { // controllo se la scena e' disponibile
-        saturnoRouteAnimazioniService.animaVerso(scena, 'LOGIN_LATERALE', 0.75, luce || undefined); // animo Saturno verso la posa laterale di login
+        saturnoRouteAnimazioniService.animaVerso(scena, 'LOGIN_LATERALE', 1.15, luce || undefined); // animo Saturno verso la posa laterale di login
       }
 
     } else { // entro qui se Saturno e sfondo sono gia' visibili

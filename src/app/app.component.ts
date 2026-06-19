@@ -1,6 +1,12 @@
 // Componente root che coordina avvio app, loader globali, lingua, titolo pagina, toast, sessione e reazioni alle navigazioni.
 
-import { Component, OnInit, Inject, NgZone, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Inject,
+  NgZone,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CambioLinguaService } from './_servizi_globali/cambio-lingua.service';
 import { CambioRicevuteAnimazioneService } from './_servizi_globali/cambio-ricevute-animazione.service';
 import { CambioProfiloAnimazioneService } from './_servizi_globali/cambio-profilo-animazione.service';
@@ -21,8 +27,24 @@ import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.servic
 import { TitoloPaginaService } from './_servizi_globali/titolo-pagina.service';
 import { SaturnoStatoService } from './_servizi_globali/animazioni_saturno/saturno-stato.service';
 import { SchedaProntaService } from './_catalogo/scheda/scheda_service/scheda-pronta.service';
-import { isFirefox, pulisciUrl, isCatalogoHome, isAreaCatalogo, leggiPathDaSessionStorage, salvaPathInSessionStorage, impostaLangHtml }from './_helpers_globali/helpers';
-import { isRottaLogin, isRotta404, isRottaContatti, isRottaCatalogo, isRottaPiano, isRottaRicevute, isRottaProfilo } from './_helpers_globali/app-routes.utils';
+import {
+  isFirefox,
+  pulisciUrl,
+  isCatalogoHome,
+  isAreaCatalogo,
+  leggiPathDaSessionStorage,
+  salvaPathInSessionStorage,
+  impostaLangHtml,
+} from './_helpers_globali/helpers';
+import {
+  isRottaLogin,
+  isRotta404,
+  isRottaContatti,
+  isRottaCatalogo,
+  isRottaPiano,
+  isRottaRicevute,
+  isRottaProfilo,
+} from './_helpers_globali/app-routes.utils';
 import { AppToastService } from './_servizi_globali/app-toast.service';
 import { AppLoaderService } from './_servizi_globali/app-loader.service';
 import { ApiService } from './_servizi_globali/api.service';
@@ -78,73 +100,112 @@ export class AppComponent implements OnInit {
   prezzoPianoPermium = '';
   confermaPianoInCorso = false;
   spinnerRicevuteVisibile = false;
-spinnerProfiloVisibile = false;
-formAggiungiMediaVisibile = false;
-idCategoriaFormAggiungiMedia = '';
-mediaDaModificareApp: { tipo: 'film' | 'serie'; id: number } | null = null;
-nuovaStagioneApp: { idSerie: number; numeroStagione: number } | null = null;
-private appLoader: AppLoaderService;
- private onApriPannelloPiano = () => {
+  spinnerProfiloVisibile = false;
+  formAggiungiMediaVisibile = false;
+  idCategoriaFormAggiungiMedia = '';
+  mediaDaModificareApp: { tipo: 'film' | 'serie'; id: number } | null = null;
+  nuovaStagioneApp: { idSerie: number; numeroStagione: number } | null = null;
+  nuovoEpisodioApp: {
+    idSerie: number;
+    idStagione: number;
+    numeroStagione: number;
+    numeroEpisodio: number;
+  } | null = null;
+  episodioDaModificareApp: {
+    idSerie: number;
+    idStagione: number;
+    numeroStagione: number;
+    numeroEpisodio: number;
+    chiaveArchivio: string;
+  } | null = null;
+  private appLoader: AppLoaderService;
+  private onApriPannelloPiano = () => {
     this.pannelloPianoVisibile = true;
     const auth = this.authService.leggiObsAuth().value;
     const idRuolo = auth?.idRuolo;
     const iso = auth?.isoNazione ?? 'IT';
-    this.pianoSelezionatoApp = idRuolo === 2 ? 'base' : idRuolo === 3 ? 'pro' : null;
+    this.pianoSelezionatoApp =
+      idRuolo === 2 ? 'base' : idRuolo === 3 ? 'pro' : null;
     this.apiService.getPrezziNazione(iso).subscribe({
       next: (rit) => {
         const d = rit.data;
         if (!d || !d.tasso || parseFloat(d.tasso) <= 0) {
-          this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€';
+          this.prezzoPianoBase = '5€';
+          this.prezzoPianoPermium = '10€';
         } else {
           const tasso = parseFloat(d.tasso);
           const aliquota = d.aliquota ? parseFloat(d.aliquota) / 100 : 0;
           const simbolo = d.valuta_simbolo ?? '€';
-          const prezzoBase    = d.prezzo_base_mensile    ? parseFloat(d.prezzo_base_mensile)    : 5;
-          const prezzoPremium = d.prezzo_premium_mensile ? parseFloat(d.prezzo_premium_mensile) : 10;
-          this.prezzoPianoBase    = `${(prezzoBase    * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+          const prezzoBase = d.prezzo_base_mensile
+            ? parseFloat(d.prezzo_base_mensile)
+            : 5;
+          const prezzoPremium = d.prezzo_premium_mensile
+            ? parseFloat(d.prezzo_premium_mensile)
+            : 10;
+          this.prezzoPianoBase = `${(prezzoBase * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
           this.prezzoPianoPermium = `${(prezzoPremium * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
         }
       },
-      error: () => { this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€'; },
+      error: () => {
+        this.prezzoPianoBase = '5€';
+        this.prezzoPianoPermium = '10€';
+      },
     });
     requestAnimationFrame(() => {
       import('gsap').then(({ default: gsap }) => {
         const card = document.querySelector('app-piano-card');
         if (!card) return;
-        gsap.set(card, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-        const bottoni = document.querySelector('.piano-bottoni') as HTMLElement | null;
+        gsap.set(card, {
+          opacity: 0,
+          scaleX: 0,
+          transformOrigin: 'center center',
+        });
+        const bottoni = document.querySelector(
+          '.piano-bottoni',
+        ) as HTMLElement | null;
         if (bottoni) gsap.set(bottoni, { opacity: 0 });
         setTimeout(() => {
-          gsap.to(card, { opacity: 1, scaleX: 1, duration: 0.9, ease: 'power2.out' });
-          if (bottoni) gsap.to(bottoni, { opacity: 1, duration: 0.6, delay: 0.5, ease: 'power2.out' });
+          gsap.to(card, {
+            opacity: 1,
+            scaleX: 1,
+            duration: 0.9,
+            ease: 'power2.out',
+          });
+          if (bottoni)
+            gsap.to(bottoni, {
+              opacity: 1,
+              duration: 0.6,
+              delay: 0.5,
+              ease: 'power2.out',
+            });
         }, 500);
       });
     });
   };
 
   constructor(
-  private ngZone: NgZone,
-  private cdr: ChangeDetectorRef,
-  private cambioLinguaService: CambioLinguaService,
-  private traduzioniService: TraduzioniService,
-  private erroreGlobaleService: ErroreGlobaleService,
-  private toastService: ToastService,
-  private animateService: AnimateService,
-  private statoSessioneClient: StatoSessioneClientService,
-  private translate: TranslateService,
-  private saturnoStatoService: SaturnoStatoService,
-  private router: Router,
-  private schedaProntaService: SchedaProntaService,
-  private caricamentoCaroselloService: CaricamentoCaroselloService,
-  private titoloPaginaService: TitoloPaginaService,
-  private performanceService: PerformanceService,
-  private authService: Authservice,
-  private appToast: AppToastService,
-  private apiService: ApiService,
-  private cambioRicevuteAnimazione: CambioRicevuteAnimazioneService,
-  private cambioProfiloAnimazione: CambioProfiloAnimazioneService,
-  @Inject(DOCUMENT) private documento: Document,
-) {
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
+    private cambioLinguaService: CambioLinguaService,
+    private traduzioniService: TraduzioniService,
+    private erroreGlobaleService: ErroreGlobaleService,
+    private toastService: ToastService,
+    private animateService: AnimateService,
+    private statoSessioneClient: StatoSessioneClientService,
+    private translate: TranslateService,
+    private saturnoStatoService: SaturnoStatoService,
+    private router: Router,
+    private schedaProntaService: SchedaProntaService,
+    private caricamentoCaroselloService: CaricamentoCaroselloService,
+    private titoloPaginaService: TitoloPaginaService,
+    private performanceService: PerformanceService,
+    private authService: Authservice,
+    private appToast: AppToastService,
+    private apiService: ApiService,
+    private cambioRicevuteAnimazione: CambioRicevuteAnimazioneService,
+    private cambioProfiloAnimazione: CambioProfiloAnimazioneService,
+    @Inject(DOCUMENT) private documento: Document,
+  ) {
     this.appLoader = new AppLoaderService( // costruisco manualmente il service loader usando le dipendenze necessarie
       erroreGlobaleService, // passo il service degli errori globali
       traduzioniService, // passo il service delle traduzioni
@@ -190,14 +251,26 @@ private appLoader: AppLoaderService;
 
       this.mediaDaModificareApp = null;
       this.nuovaStagioneApp = null;
+      this.nuovoEpisodioApp = null;
       this.idCategoriaFormAggiungiMedia = dettaglio?.idCategoria || '';
       this.formAggiungiMediaVisibile = true;
       this.cdr.detectChanges();
       requestAnimationFrame(() => {
-        const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+        const pannello = document.querySelector(
+          '.form-media-pannello',
+        ) as HTMLElement;
         if (!pannello) return;
-        gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-        gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
+        gsap.set(pannello, {
+          opacity: 0,
+          scaleX: 0,
+          transformOrigin: 'center center',
+        });
+        gsap.to(pannello, {
+          opacity: 1,
+          scaleX: 1,
+          duration: 0.5,
+          ease: 'power2.out',
+        });
       });
     });
 
@@ -211,13 +284,25 @@ private appLoader: AppLoaderService;
         id: Number(dettaglio.id),
       };
       this.nuovaStagioneApp = null;
+      this.nuovoEpisodioApp = null;
       this.formAggiungiMediaVisibile = true;
       this.cdr.detectChanges();
       requestAnimationFrame(() => {
-        const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+        const pannello = document.querySelector(
+          '.form-media-pannello',
+        ) as HTMLElement;
         if (!pannello) return;
-        gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-        gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
+        gsap.set(pannello, {
+          opacity: 0,
+          scaleX: 0,
+          transformOrigin: 'center center',
+        });
+        gsap.to(pannello, {
+          opacity: 1,
+          scaleX: 1,
+          duration: 0.5,
+          ease: 'power2.out',
+        });
       });
     });
 
@@ -227,9 +312,67 @@ private appLoader: AppLoaderService;
 
       this.idCategoriaFormAggiungiMedia = '';
       this.mediaDaModificareApp = null;
+      this.nuovoEpisodioApp = null;
       this.nuovaStagioneApp = {
         idSerie: Number(dettaglio.idSerie),
         numeroStagione: Number(dettaglio.numeroStagione),
+      };
+      this.formAggiungiMediaVisibile = true;
+      this.cdr.detectChanges();
+      requestAnimationFrame(() => {
+        const pannello = document.querySelector(
+          '.form-media-pannello',
+        ) as HTMLElement;
+        if (!pannello) return;
+        gsap.set(pannello, {
+          opacity: 0,
+          scaleX: 0,
+          transformOrigin: 'center center',
+        });
+        gsap.to(pannello, {
+          opacity: 1,
+          scaleX: 1,
+          duration: 0.5,
+          ease: 'power2.out',
+        });
+      });
+    });
+    window.addEventListener('apri-form-nuovo-episodio', (evento: Event) => {
+  const dettaglio = (evento as CustomEvent).detail;
+  if (!dettaglio?.idSerie || !dettaglio?.idStagione) return;
+
+  this.idCategoriaFormAggiungiMedia = '';
+  this.mediaDaModificareApp = null;
+  this.nuovaStagioneApp = null;
+  this.nuovoEpisodioApp = {
+    idSerie: Number(dettaglio.idSerie),
+    idStagione: Number(dettaglio.idStagione),
+    numeroStagione: Number(dettaglio.numeroStagione),
+    numeroEpisodio: Number(dettaglio.numeroEpisodio),
+  };
+  this.formAggiungiMediaVisibile = true;
+  this.cdr.detectChanges();
+  requestAnimationFrame(() => {
+    const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+    if (!pannello) return;
+    gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+    gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
+  });
+});
+    window.addEventListener('apri-form-modifica-episodio', (evento: Event) => {
+      const dettaglio = (evento as CustomEvent).detail;
+      if (!dettaglio?.idSerie || !dettaglio?.idStagione || !dettaglio?.chiaveArchivio) return;
+
+      this.idCategoriaFormAggiungiMedia = '';
+      this.mediaDaModificareApp = null;
+      this.nuovaStagioneApp = null;
+      this.nuovoEpisodioApp = null;
+      this.episodioDaModificareApp = {
+        idSerie: Number(dettaglio.idSerie),
+        idStagione: Number(dettaglio.idStagione),
+        numeroStagione: Number(dettaglio.numeroStagione),
+        numeroEpisodio: Number(dettaglio.numeroEpisodio),
+        chiaveArchivio: String(dettaglio.chiaveArchivio),
       };
       this.formAggiungiMediaVisibile = true;
       this.cdr.detectChanges();
@@ -240,29 +383,37 @@ private appLoader: AppLoaderService;
         gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
       });
     });
-
     window.addEventListener('loader-hidden', () => {
       if (!isRottaPiano(this.router.url)) return;
       const auth = this.authService.leggiObsAuth().value;
       const idRuolo = auth?.idRuolo;
       const iso = auth?.isoNazione ?? 'IT';
-      this.pianoSelezionatoApp = idRuolo === 2 ? 'base' : idRuolo === 3 ? 'pro' : null;
+      this.pianoSelezionatoApp =
+        idRuolo === 2 ? 'base' : idRuolo === 3 ? 'pro' : null;
       this.apiService.getPrezziNazione(iso).subscribe({
         next: (rit) => {
           const d = rit.data;
           if (!d || !d.tasso || parseFloat(d.tasso) <= 0) {
-            this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€';
+            this.prezzoPianoBase = '5€';
+            this.prezzoPianoPermium = '10€';
           } else {
             const tasso = parseFloat(d.tasso);
             const aliquota = d.aliquota ? parseFloat(d.aliquota) / 100 : 0;
             const simbolo = d.valuta_simbolo ?? '€';
-            const prezzoBase    = d.prezzo_base_mensile    ? parseFloat(d.prezzo_base_mensile)    : 5;
-          const prezzoPremium = d.prezzo_premium_mensile ? parseFloat(d.prezzo_premium_mensile) : 10;
-          this.prezzoPianoBase    = `${(prezzoBase    * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
-          this.prezzoPianoPermium = `${(prezzoPremium * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+            const prezzoBase = d.prezzo_base_mensile
+              ? parseFloat(d.prezzo_base_mensile)
+              : 5;
+            const prezzoPremium = d.prezzo_premium_mensile
+              ? parseFloat(d.prezzo_premium_mensile)
+              : 10;
+            this.prezzoPianoBase = `${(prezzoBase * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
+            this.prezzoPianoPermium = `${(prezzoPremium * tasso * (1 + aliquota)).toFixed(2)}${simbolo}`;
           }
         },
-        error: () => { this.prezzoPianoBase = '5€'; this.prezzoPianoPermium = '10€'; },
+        error: () => {
+          this.prezzoPianoBase = '5€';
+          this.prezzoPianoPermium = '10€';
+        },
       });
       this.pannelloPianoVisibile = true;
       this.cdr.detectChanges();
@@ -270,12 +421,29 @@ private appLoader: AppLoaderService;
         import('gsap').then(({ default: gsap }) => {
           const card = document.querySelector('app-piano-card');
           if (!card) return;
-          gsap.set(card, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-          const bottoni = document.querySelector('.piano-bottoni') as HTMLElement | null;
+          gsap.set(card, {
+            opacity: 0,
+            scaleX: 0,
+            transformOrigin: 'center center',
+          });
+          const bottoni = document.querySelector(
+            '.piano-bottoni',
+          ) as HTMLElement | null;
           if (bottoni) gsap.set(bottoni, { opacity: 0 });
           setTimeout(() => {
-            gsap.to(card, { opacity: 1, scaleX: 1, duration: 0.9, ease: 'power2.out' });
-            if (bottoni) gsap.to(bottoni, { opacity: 1, duration: 0.6, delay: 0.5, ease: 'power2.out' });
+            gsap.to(card, {
+              opacity: 1,
+              scaleX: 1,
+              duration: 0.9,
+              ease: 'power2.out',
+            });
+            if (bottoni)
+              gsap.to(bottoni, {
+                opacity: 1,
+                duration: 0.6,
+                delay: 0.5,
+                ease: 'power2.out',
+              });
           }, 500);
         });
       });
@@ -283,16 +451,24 @@ private appLoader: AppLoaderService;
     window.addEventListener('chiudi-pannello-piano', () => {
       import('gsap').then(({ default: gsap }) => {
         const card = document.querySelector('app-piano-card');
-        const bottoni = document.querySelector('.piano-bottoni') as HTMLElement | null;
-        if (!card) { this.pannelloPianoVisibile = false; return; }
-        if (bottoni) gsap.to(bottoni, { opacity: 0, duration: 0.2, ease: 'power2.in' });
+        const bottoni = document.querySelector(
+          '.piano-bottoni',
+        ) as HTMLElement | null;
+        if (!card) {
+          this.pannelloPianoVisibile = false;
+          return;
+        }
+        if (bottoni)
+          gsap.to(bottoni, { opacity: 0, duration: 0.2, ease: 'power2.in' });
         gsap.to(card, {
           opacity: 0,
           scaleX: 0,
           duration: 0.4,
           ease: 'power2.in',
           transformOrigin: 'center center',
-          onComplete: () => { this.pannelloPianoVisibile = false; }
+          onComplete: () => {
+            this.pannelloPianoVisibile = false;
+          },
         });
       });
     });
@@ -300,16 +476,18 @@ private appLoader: AppLoaderService;
 
     const params = new URLSearchParams(window.location.search);
     const verifica = params.get('verifica');
-   const codiceV = this.cambioLinguaService.leggiCodiceLingua();
+    const codiceV = this.cambioLinguaService.leggiCodiceLingua();
     if (verifica === 'ok') {
-      const testo = codiceV === 'it'
-        ? "L'email è stata verificata CORRETTAMENTE.\nOra puoi accedere alla piattaforma."
-        : "Your email has been verified SUCCESSFULLY.\nYou can now access the platform.";
+      const testo =
+        codiceV === 'it'
+          ? "L'email è stata verificata CORRETTAMENTE.\nOra puoi accedere alla piattaforma."
+          : 'Your email has been verified SUCCESSFULLY.\nYou can now access the platform.';
       this.toastService.successo(testo);
     } else if (verifica === 'scaduto' || verifica === 'errore') {
-      const testo = codiceV === 'it'
-        ? 'Qualcosa è andato storto durante la verifica della tua email, probabilmente è passato troppo tempo. Riprova più tardi e se il problema persiste manda un messaggio in assistenza.'
-        : 'Something went wrong during your email verification, the link may have expired. Please try again later and if the problem persists contact our support team.';
+      const testo =
+        codiceV === 'it'
+          ? 'Qualcosa è andato storto durante la verifica della tua email, probabilmente è passato troppo tempo. Riprova più tardi e se il problema persiste manda un messaggio in assistenza.'
+          : 'Something went wrong during your email verification, the link may have expired. Please try again later and if the problem persists contact our support team.';
       this.toastService.errore(testo);
     }
     if (verifica) {
@@ -318,11 +496,12 @@ private appLoader: AppLoaderService;
 
     const resetParam = params.get('reset');
     const rid = params.get('rid');
-     if (resetParam === 'scaduto') {
+    if (resetParam === 'scaduto') {
       sessionStorage.removeItem('reset_pw_rid');
-      const testo = codiceV === 'it'
-        ? 'Il link per il reset della password è scaduto. Richiedine uno nuovo.'
-        : 'The password reset link has expired. Please request a new one.';
+      const testo =
+        codiceV === 'it'
+          ? 'Il link per il reset della password è scaduto. Richiedine uno nuovo.'
+          : 'The password reset link has expired. Please request a new one.';
       this.toastService.errore(testo);
     }
     if (resetParam === 'ok' && rid) {
@@ -349,21 +528,29 @@ private appLoader: AppLoaderService;
     } else if (cambioPending === 'errore') {
       localStorage.removeItem('cambio_email_pending');
       localStorage.removeItem('toast_benvenuto');
-      const testo = codiceV === 'it'
-        ? 'Qualcosa è andato storto, probabilmente è passato troppo tempo. Riprova più tardi e se il problema persiste manda un messaggio in assistenza.'
-        : 'Something went wrong, the link may have expired. Please try again later and if the problem persists contact our support team.';
+      const testo =
+        codiceV === 'it'
+          ? 'Qualcosa è andato storto, probabilmente è passato troppo tempo. Riprova più tardi e se il problema persiste manda un messaggio in assistenza.'
+          : 'Something went wrong, the link may have expired. Please try again later and if the problem persists contact our support team.';
       this.toastService.errore(testo);
       setTimeout(() => {
         localStorage.removeItem('link_email');
       }, 500);
     }
 
-    const stoPerRicaricare = !!cambioEmail && (!!localStorage.getItem('auth') || !!sessionStorage.getItem('auth'));
-    if (localStorage.getItem('link_email') === '1' && cambioPending !== 'errore' && !stoPerRicaricare) {
+    const stoPerRicaricare =
+      !!cambioEmail &&
+      (!!localStorage.getItem('auth') || !!sessionStorage.getItem('auth'));
+    if (
+      localStorage.getItem('link_email') === '1' &&
+      cambioPending !== 'errore' &&
+      !stoPerRicaricare
+    ) {
       localStorage.removeItem('toast_benvenuto');
-      const testo = codiceV === 'it'
-        ? 'Il cambio email è avvenuto con SUCCESSO.'
-        : 'The email change was SUCCESSFUL.';
+      const testo =
+        codiceV === 'it'
+          ? 'Il cambio email è avvenuto con SUCCESSO.'
+          : 'The email change was SUCCESSFUL.';
       this.toastService.successo(testo);
       setTimeout(() => {
         localStorage.removeItem('link_email');
@@ -489,12 +676,12 @@ private appLoader: AppLoaderService;
       });
 
     this.cambioRicevuteAnimazione.spinnerVisibile$.subscribe((v) => {
-  this.spinnerRicevuteVisibile = v;
-});
+      this.spinnerRicevuteVisibile = v;
+    });
 
-this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
-  this.spinnerProfiloVisibile = v;
-});
+    this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
+      this.spinnerProfiloVisibile = v;
+    });
 
     this.appToast.gestisciToastBenvenuto(); // avvio la logica globale del toast benvenuto
     this.appToast.gestisciErroriFatali(); // avvio la logica globale dei toast di errore fatale
@@ -583,13 +770,17 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
   }
 
   chiudiFormAggiungiMedia(): void {
-    const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+    const pannello = document.querySelector(
+      '.form-media-pannello',
+    ) as HTMLElement;
     if (!pannello) {
       this.formAggiungiMediaVisibile = false;
-      this.idCategoriaFormAggiungiMedia = '';
-      this.mediaDaModificareApp = null;
-      this.nuovaStagioneApp = null;
-      return;
+this.idCategoriaFormAggiungiMedia = '';
+this.mediaDaModificareApp = null;
+this.nuovaStagioneApp = null;
+this.nuovoEpisodioApp = null;
+this.episodioDaModificareApp = null;
+return;
     }
     gsap.to(pannello, {
       opacity: 0,
@@ -599,10 +790,12 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
       transformOrigin: 'center center',
       onComplete: () => {
         this.formAggiungiMediaVisibile = false;
-        this.idCategoriaFormAggiungiMedia = '';
-        this.mediaDaModificareApp = null;
-        this.nuovaStagioneApp = null;
-        this.cdr.detectChanges();
+this.idCategoriaFormAggiungiMedia = '';
+this.mediaDaModificareApp = null;
+this.nuovaStagioneApp = null;
+this.nuovoEpisodioApp = null;
+this.episodioDaModificareApp = null;
+this.cdr.detectChanges();
       },
     });
   }
@@ -613,7 +806,10 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
     this.apiService.cambiaPiano(this.pianoSelezionatoApp).subscribe({
       next: (rit: any) => {
         const nuovoTk = rit.tk ?? rit.data?.tk;
-        if (!nuovoTk) { this.confermaPianoInCorso = false; return; }
+        if (!nuovoTk) {
+          this.confermaPianoInCorso = false;
+          return;
+        }
         const p = UtilityService.leggiToken(nuovoTk)?.data || {};
         const authCorrente = this.authService.leggiObsAuth().value;
         const restaCollegato = !!localStorage.getItem('auth');
@@ -623,22 +819,28 @@ this.cambioProfiloAnimazione.spinnerVisibile$.subscribe((v) => {
           idRuolo: p.id_ruolo ?? authCorrente.idRuolo,
           abilita: Array.isArray(p.abilita) ? p.abilita : authCorrente.abilita,
           preavvisoPsw: p.preavviso_psw ?? authCorrente.preavvisoPsw,
-          giorniScadenzaPsw: p.giorni_scadenza_psw ?? authCorrente.giorniScadenzaPsw,
+          giorniScadenzaPsw:
+            p.giorni_scadenza_psw ?? authCorrente.giorniScadenzaPsw,
         };
         this.authService.settaObsAuth(nuovaAuth);
         this.authService.scriviAuthSuStorage(nuovaAuth, restaCollegato);
         this.confermaPianoInCorso = false;
-        this.translate.get('ui.piano.toast.successo').pipe(take(1)).subscribe(t => this.toastService.successo(t));
+        this.translate
+          .get('ui.piano.toast.successo')
+          .pipe(take(1))
+          .subscribe((t) => this.toastService.successo(t));
         window.history.back();
       },
       error: (err: any) => {
         this.confermaPianoInCorso = false;
         if (err?.status === 429) {
           this.pianoSelezionatoApp = this.pianoCorrente;
-          this.translate.get('ui.toast.limite.cambio_piano').pipe(take(1)).subscribe(t => this.toastService.allarm(t));
+          this.translate
+            .get('ui.toast.limite.cambio_piano')
+            .pipe(take(1))
+            .subscribe((t) => this.toastService.allarm(t));
         }
       },
     });
   }
-
 }

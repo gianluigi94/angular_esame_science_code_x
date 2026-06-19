@@ -279,9 +279,21 @@ font-size: 19px;
     }
   }
 
+  .testata-stagione-corrente {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
   .titolo-stagione-corrente {
     padding-top: 18px;
     width: fit-content;
+  }
+
+  .btn-aggiungi-episodio-scheda {
+    display: inline-flex;
+    align-items: center;
+    transform: scale(0.7);
   }
 
  li {
@@ -601,5 +613,192 @@ app-player-video {
   .icona-aggiungi-stagione-scheda {
     width: 20px;
     height: 20px;
+  }
+}
+.btn-elimina-stagione-scheda {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  .icona-cestino-scheda {
+    width: 22px;
+    height: 22px;
+    color: #e04040;
+  }
+}
+
+.modale-overlay-stagione {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 5, 27, 0.55);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.modale-contenuto-stagione {
+  width: min(92vw, 460px);
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(231, 156, 80, 0.25);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.65);
+  font-family: "Quantico", serif;
+  color: aliceblue;
+}
+
+.modale-messaggio-stagione {
+  margin: 0 0 12px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.modale-sottomessaggio-stagione {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: #e79c50;
+  text-align: center;
+}
+
+.modale-checkbox-lista-stagione {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.modale-checkbox-voce-stagione {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    accent-color: #e79c50;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+  }
+}
+
+.modale-bottoni-stagione {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.btn-annulla-stagione,
+.btn-elimina-stagione-conferma {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-annulla-stagione {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+  }
+}
+
+.btn-elimina-stagione-conferma {
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+  border: none;
+  color: white;
+  font-weight: 600;
+  min-width: 100px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:not(:disabled):hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 14px rgba(185, 28, 28, 0.5);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: auto;
+  }
+}
+.lista-episodi li {
+  position: relative;
+}
+
+.azioni-episodio {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 3;
+}
+
+.lista-episodi li:hover .azioni-episodio {
+  opacity: 1;
+}
+
+.btn-elimina-episodio {
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    color: #e04040;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.75);
+  }
+}
+.btn-modifica-episodio {
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    color: #e79c50;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.75);
   }
 }
