@@ -705,6 +705,10 @@ public correggiPagamento(): Observable<IRispostaServer> {
     return this.richiestaGenerica(['verifica-pagamento'], 'GET');
   }
 
+  public getAccessiUtenti(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'accessi'], 'GET');
+  }
+
   public eliminaMedia(tipo: 'film' | 'serie', id: number, categorieFile: Record<string, boolean> = {}): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['media', tipo, id]);
     return this.http.delete<IRispostaServer>(url, {

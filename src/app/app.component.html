@@ -50,6 +50,11 @@
 
 <app-riordina-episodi></app-riordina-episodi>
 
+<app-gestione-utenti
+  *ngIf="gestioneUtentiVisibile"
+  (chiudi)="chiudiGestioneUtenti()"
+></app-gestione-utenti>
+
 <!-- importo i toast che possono comparire ovunque  -->
 <div *ngIf="spinnerRicevuteVisibile" class="spinner-ricevute-globale">
   <app-spinner></app-spinner>

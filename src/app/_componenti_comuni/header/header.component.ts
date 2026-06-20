@@ -452,6 +452,14 @@ onCambiaPianoClick(): void {
     if (this.auth.logoutInCorso) return;
     this.cambioProfiloAnimazione.apriProfilo();
   }
+
+
+
+  onGestisciUtentiClick(): void {
+    if (this.auth.logoutInCorso) return;
+    if (this.authCorrente?.idRuolo !== 7 && this.authCorrente?.idRuolo !== 8) return;
+    window.dispatchEvent(new CustomEvent('apri-gestione-utenti'));
+  }
   /**
    * Gestisce il ritorno al catalogo dalla scheda o dal player.
    *

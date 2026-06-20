@@ -1,0 +1,61 @@
+<span class="gu-sfocatura"></span>
+
+<section class="gestione-utenti-contenuto">
+  <div class="gu-blocco">
+    <div class="gu-box">
+      <nav class="gu-menu">
+        <button
+          type="button"
+          class="azione-btn"
+          [class.selezionato]="vistaCorrente === 'accessi'"
+          (click)="cambiaVista('accessi')"
+        >
+          Accessi
+        </button>
+
+        <button type="button" class="gu-chiudi-btn" (click)="chiudiPannello()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Chiudi
+        </button>
+      </nav>
+
+      <div class="gu-pannello">
+        <h2 class="gu-titolo">Accessi</h2>
+
+        <div *ngIf="vistaCorrente === 'accessi'" class="accessi-contenuto gu-campo-animato">
+          <div *ngIf="caricamentoAccessi" class="gu-spinner">
+            <app-spinner></app-spinner>
+          </div>
+
+          <div *ngIf="!caricamentoAccessi && accessiUtenti.length === 0" class="gu-vuoto">
+            Nessun accesso registrato
+          </div>
+
+          <div class="accessi-lista" *ngIf="!caricamentoAccessi && accessiUtenti.length > 0">
+            <div
+              class="accessi-utente"
+              *ngFor="let utente of accessiUtenti"
+              [class.aperta]="utenteEspanso === utente.id_contatto"
+            >
+              <div class="accessi-utente-header" (click)="toggleUtente(utente.id_contatto)">
+                <span class="accessi-nome">{{ utente.nome }} {{ utente.cognome }}</span>
+                <span class="accessi-conteggio">{{ utente.accessi.length }}</span>
+                <svg class="accessi-freccia" viewBox="0 0 24 24">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+              </div>
+
+              <div class="accessi-date" *ngIf="utenteEspanso === utente.id_contatto">
+                <span class="accessi-data" *ngFor="let data of utente.accessi">
+                  {{ data | date: 'dd/MM/yyyy HH:mm' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

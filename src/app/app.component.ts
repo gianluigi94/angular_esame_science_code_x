@@ -101,6 +101,7 @@ export class AppComponent implements OnInit {
   confermaPianoInCorso = false;
   spinnerRicevuteVisibile = false;
   spinnerProfiloVisibile = false;
+  gestioneUtentiVisibile = false;
   formAggiungiMediaVisibile = false;
   idCategoriaFormAggiungiMedia = '';
   mediaDaModificareApp: { tipo: 'film' | 'serie'; id: number } | null = null;
@@ -245,6 +246,11 @@ export class AppComponent implements OnInit {
     if (isRotta404(urlIniziale)) this.appToast.mostraToast404Persistente(); // mostro il toast persistente se parto in 404
 
     window.addEventListener('apri-pannello-piano', this.onApriPannelloPiano);
+
+    window.addEventListener('apri-gestione-utenti', () => {
+      this.gestioneUtentiVisibile = true;
+      this.cdr.detectChanges();
+    });
 
     window.addEventListener('apri-form-aggiungi-media', (evento: Event) => {
       const dettaglio = (evento as CustomEvent).detail;
@@ -767,6 +773,10 @@ export class AppComponent implements OnInit {
 
   onIndietroPiano(): void {
     window.history.back();
+  }
+
+  chiudiGestioneUtenti(): void {
+    this.gestioneUtentiVisibile = false;
   }
 
   chiudiFormAggiungiMedia(): void {

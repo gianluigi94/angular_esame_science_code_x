@@ -325,6 +325,11 @@
               [innerHTML]="'ui.menu_utente.ricevute.label' | translate"
             ></li>
             <li
+              *ngIf="authVisuale.idRuolo === 7 || authVisuale.idRuolo === 8"
+              class="voce-tendina"
+              (click)="onGestisciUtentiClick()"
+            >Gestisci utenti</li>
+            <li
               class="separatore-tendina"
               role="separator"
               aria-hidden="true"
