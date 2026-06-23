@@ -162,33 +162,26 @@
             <app-spinner></app-spinner>
           </div>
 
-          <ng-container *ngIf="!caricamentoProfili && utenteProfiloSelezionato === null">
+          <ng-container *ngIf="!caricamentoProfili">
             <div *ngIf="profiliUtenti.length === 0" class="gu-vuoto">
               Nessun utente
             </div>
 
             <div class="accessi-lista" *ngIf="profiliUtenti.length > 0">
-              <div class="accessi-utente" *ngFor="let utente of profiliUtenti">
+              <div class="accessi-utente" *ngFor="let utente of profiliUtenti" [class.aperta]="utenteProfiloSelezionato === utente.id_contatto">
                 <div class="accessi-utente-header" (click)="selezionaUtenteProfilo(utente.id_contatto)">
                   <span class="accessi-nome">{{ utente.nome }} {{ utente.cognome }}</span>
                   <svg class="accessi-freccia" viewBox="0 0 24 24">
-                    <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" />
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" />
                   </svg>
+                </div>
+
+                <div class="profilo-espanso" *ngIf="utenteProfiloSelezionato === utente.id_contatto">
+                  <app-gestione-utente-profilo [idContatto]="utente.id_contatto"></app-gestione-utente-profilo>
                 </div>
               </div>
             </div>
           </ng-container>
-
-          <div *ngIf="!caricamentoProfili && utenteProfiloSelezionato !== null" class="profilo-dettaglio">
-            <button type="button" class="gu-torna-btn" (click)="tornaListaProfili()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              Torna alla lista
-            </button>
-
-            <app-gestione-utente-profilo [idContatto]="utenteProfiloSelezionato"></app-gestione-utente-profilo>
-          </div>
         </div>
       </div>
     </div>

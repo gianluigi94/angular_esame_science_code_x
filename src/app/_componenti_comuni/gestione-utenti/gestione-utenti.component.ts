@@ -166,11 +166,7 @@ export class GestioneUtentiComponent implements OnInit {
   }
 
   selezionaUtenteProfilo(idContatto: number): void {
-    this.utenteProfiloSelezionato = idContatto;
-  }
-
-  tornaListaProfili(): void {
-    this.utenteProfiloSelezionato = null;
+    this.utenteProfiloSelezionato = this.utenteProfiloSelezionato === idContatto ? null : idContatto;
   }
 
   private caricaFatture(): void {

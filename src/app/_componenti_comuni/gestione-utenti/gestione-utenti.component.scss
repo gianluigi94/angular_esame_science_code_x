@@ -469,30 +469,8 @@
   transform-origin: center center;
 }
 
-.profilo-dettaglio {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-}
 
-.gu-torna-btn {
-  align-self: flex-start;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  color: #c4c4c4;
-  font-family: "Quantico", serif;
-  font-size: 15px;
-  cursor: pointer;
-  padding: 8px 4px;
-  text-decoration: underline;
-  transition: color 0.2s ease;
-}
-
-.gu-torna-btn:hover {
-  color: #c7ae80;
+.profilo-espanso {
+  padding: 18px 14px;
+  animation: guApriDate 0.25s ease;
 }

@@ -1,44 +1,58 @@
 <!-- importo header, dentro si trova anche il tag semantico header, la header cambia dinamicamente nella parte di app in cui sono  -->
-<!-- <app-header></app-header> -->
+<app-header></app-header>
 
 <!-- importo lo sfondo che mi servirà su tutte le zone dell'app  -->
-<!-- <app-sfondo></app-sfondo> -->
+<app-sfondo></app-sfondo>
 
 <!-- importo titoli/logo che sono presenti in tutta l'app, nella versione semplice o 'animata' -->
-<!-- <app-titles-main></app-titles-main> -->
+<app-titles-main></app-titles-main>
 
 <!-- pagina gestita da angular, main e sopprattutto il footer cambiano a seconda della rotta in cui mi trovo e sono gesti diversamente-->
 <router-outlet></router-outlet>
-<!-- <app-dati-personali></app-dati-personali> -->
+<app-dati-personali></app-dati-personali>
 <div *ngIf="pannelloPianoVisibile" class="piano-pannello">
-  <!-- <app-piano-card
+  <app-piano-card
     [pianoSelezionato]="pianoSelezionatoApp"
     [prezzoBase]="prezzoPianoBase"
     [prezzoPremium]="prezzoPianoPermium"
     (pianoScelto)="pianoSelezionatoApp = $event"
-  ></app-piano-card> -->
+  ></app-piano-card>
   <div class="piano-bottoni">
-    <button type="button" class="piano-indietro-btn" (click)="onIndietroPiano()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
-        <path d="M15 18l-6-6 6-6"/>
+    <button
+      type="button"
+      class="piano-indietro-btn"
+      (click)="onIndietroPiano()"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="#c4c4c4"
+      >
+        <path d="M15 18l-6-6 6-6" />
       </svg>
-      {{ 'ui.registrazione.bottone.indietro' | translate }}
+      {{ "ui.registrazione.bottone.indietro" | translate }}
     </button>
     <button
       type="button"
       class="piano-conferma-btn"
-      [disabled]="!pianoSelezionatoApp || pianoSelezionatoApp === pianoCorrente || confermaPianoInCorso"
+      [disabled]="
+        !pianoSelezionatoApp ||
+        pianoSelezionatoApp === pianoCorrente ||
+        confermaPianoInCorso
+      "
       (click)="onConfermaPiano()"
     >
       <ng-container *ngIf="!confermaPianoInCorso">
-        {{ 'ui.piano.conferma' | translate }}
+        {{ "ui.piano.conferma" | translate }}
       </ng-container>
-      <!-- <app-spinner *ngIf="confermaPianoInCorso"></app-spinner> -->
+      <app-spinner *ngIf="confermaPianoInCorso"></app-spinner>
     </button>
   </div>
 </div>
 
-<!-- <app-form-aggiungi-media
+<app-form-aggiungi-media
   *ngIf="formAggiungiMediaVisibile"
   [idCategoria]="idCategoriaFormAggiungiMedia"
   [mediaDaModificare]="mediaDaModificareApp"
@@ -46,30 +60,30 @@
   [nuovoEpisodio]="nuovoEpisodioApp"
   [episodioDaModificare]="episodioDaModificareApp"
   (chiudi)="chiudiFormAggiungiMedia()"
-></app-form-aggiungi-media> -->
+></app-form-aggiungi-media>
 
-<!-- <app-riordina-episodi></app-riordina-episodi> -->
+<app-riordina-episodi></app-riordina-episodi>
 
-<!-- <app-gestione-utenti
+<app-gestione-utenti
   *ngIf="gestioneUtentiVisibile"
   (chiudi)="chiudiGestioneUtenti()"
-></app-gestione-utenti> -->
+></app-gestione-utenti>
 
 <!-- importo i toast che possono comparire ovunque  -->
 <div *ngIf="spinnerRicevuteVisibile" class="spinner-ricevute-globale">
-  <!-- <app-spinner></app-spinner> -->
+  <app-spinner></app-spinner>
 </div>
 
 <div *ngIf="spinnerProfiloVisibile" class="spinner-ricevute-globale">
-  <!-- <app-spinner></app-spinner> -->
+  <app-spinner></app-spinner>
 </div>
 
-<!-- <app-toast-container></app-toast-container> -->
+<app-toast-container></app-toast-container>
 
 <!-- la pagina di bloccante che si visualizza nel caricamento, o quando c'è un errore: impedisce la navigazione quando cade una sessione, fa da sfondo all errore fatale, deve caricare scena 3d e traduzioni e deve aspettare che se vado in /catalogo, il carosello sia pronto   -->
- <!-- esiste una versione per firefox 'senza sfondo' perche quest'ultimo appariva qualche ms di ritardo  -->
-  <!-- esiste una versione più semplice senza sfondo, senza spinner e con z-index sotto all'header, per quando ricarico /catalogo e voglio una visuale più snella -->
-<!-- <app-pagina-caricamento
+<!-- esiste una versione per firefox 'senza sfondo' perche quest'ultimo appariva qualche ms di ritardo  -->
+<!-- esiste una versione più semplice senza sfondo, senza spinner e con z-index sotto all'header, per quando ricarico /catalogo e voglio una visuale più snella -->
+<app-pagina-caricamento
   *ngIf="(erroreFatale$ | async) || (!caricamentoDisabilitato && (
          forzaLoaderExtra
          || !(traduzioniPronte$ | async)
@@ -81,4 +95,4 @@
   [mostraSpinner]="!(erroreFatale$ | async) && !loaderAvvioCatalogo"
   [stileAvvioCatalogo]="loaderAvvioCatalogo && !(erroreFatale$ | async)"
   [isFirefox]="isFirefox">
-</app-pagina-caricamento> -->
+</app-pagina-caricamento>
