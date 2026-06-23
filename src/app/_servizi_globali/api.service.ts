@@ -709,6 +709,98 @@ public correggiPagamento(): Observable<IRispostaServer> {
     return this.richiestaGenerica(['gestione-utenti', 'accessi'], 'GET');
   }
 
+  public getFattureUtenti(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'fatture'], 'GET');
+  }
+
+  public getFatturaDettagli(idRicevuta: number | string): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'fatture', idRicevuta, 'dettagli'], 'GET');
+  }
+
+  public getUtentiProfili(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'utenti'], 'GET');
+  }
+
+  public getUtenteAnagrafica(idContatto: number | string): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'utente', idContatto, 'anagrafica'], 'GET');
+  }
+
+  public getUtenteIndirizzi(idContatto: number | string): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'utente', idContatto, 'indirizzi'], 'GET');
+  }
+
+  public getUtenteRecapiti(idContatto: number | string): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'utente', idContatto, 'recapiti'], 'GET');
+  }
+
+  public aggiornaUtenteAnagrafica(idContatto: number | string, dati: {
+    nome:             string;
+    cognome:          string;
+    sesso:            string;
+    data_nascita:     string;
+    codice_fiscale:   string;
+    iso_nascita:      string;
+    comune_nascita:   string | null;
+    citta_nascita:    string | null;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'anagrafica']);
+    return this.http.put<IRispostaServer>(url, dati);
+  }
+
+  public creaUtenteIndirizzo(idContatto: number | string, dati: {
+    id_tipo_indirizzo: number;
+    id_nazione: number;
+    id_comune: number | null;
+    citta: string | null;
+    cap: string | null;
+    indirizzo: string | null;
+    civico: string | null;
+    dettagli: string | null;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'indirizzi']);
+    return this.http.post<IRispostaServer>(url, dati);
+  }
+
+  public updateUtenteIndirizzo(idContatto: number | string, idIndirizzo: number, dati: {
+    id_tipo_indirizzo: number;
+    id_nazione: number;
+    id_comune: number | null;
+    citta: string | null;
+    cap: string | null;
+    indirizzo: string | null;
+    civico: string | null;
+    dettagli: string | null;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'indirizzi', idIndirizzo]);
+    return this.http.put<IRispostaServer>(url, dati);
+  }
+
+  public eliminaUtenteIndirizzo(idContatto: number | string, idIndirizzo: number): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'indirizzi', idIndirizzo]);
+    return this.http.delete<IRispostaServer>(url);
+  }
+
+  public creaUtenteRecapito(idContatto: number | string, dati: {
+    id_tipo_recapito: number;
+    recapito: string;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'recapiti']);
+    return this.http.post<IRispostaServer>(url, dati);
+  }
+
+  public updateUtenteRecapito(idContatto: number | string, idRecapito: number, dati: {
+    id_tipo_recapito: number;
+    recapito: string;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'recapiti', idRecapito]);
+    return this.http.put<IRispostaServer>(url, dati);
+  }
+
+  public eliminaUtenteRecapito(idContatto: number | string, idRecapito: number): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'recapiti', idRecapito]);
+    return this.http.delete<IRispostaServer>(url);
+  }
+
   public eliminaMedia(tipo: 'film' | 'serie', id: number, categorieFile: Record<string, boolean> = {}): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['media', tipo, id]);
     return this.http.delete<IRispostaServer>(url, {

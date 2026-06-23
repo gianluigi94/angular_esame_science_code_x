@@ -24,6 +24,7 @@ import { RiordinaItemDirective } from '../_direttive/riordina-item.directive';
 import { FormAggiungiMediaComponent } from '../_catalogo/form-aggiungi-media/form-aggiungi-media.component';
 import { RiordinaEpisodiComponent } from './riordina-episodi/riordina-episodi.component';
 import { GestioneUtentiComponent } from './gestione-utenti/gestione-utenti.component';
+import { GestioneUtenteProfiloComponent } from './gestione-utente-profilo/gestione-utente-profilo.component';
 @NgModule({
   declarations: [
     DragdropDirective,
@@ -31,6 +32,7 @@ import { GestioneUtentiComponent } from './gestione-utenti/gestione-utenti.compo
     FormAggiungiMediaComponent,
     RiordinaEpisodiComponent,
     GestioneUtentiComponent,
+    GestioneUtenteProfiloComponent,
     BottoneAggiungiComponent,
     SfondoComponent,
     TitlesMainComponent,

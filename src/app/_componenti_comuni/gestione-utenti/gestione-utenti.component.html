@@ -13,6 +13,24 @@
           Accessi
         </button>
 
+        <button
+          type="button"
+          class="azione-btn"
+          [class.selezionato]="vistaCorrente === 'fatture'"
+          (click)="cambiaVista('fatture')"
+        >
+          Fatture
+        </button>
+
+        <button
+          type="button"
+          class="azione-btn"
+          [class.selezionato]="vistaCorrente === 'profili'"
+          (click)="cambiaVista('profili')"
+        >
+          Profili
+        </button>
+
         <button type="button" class="gu-chiudi-btn" (click)="chiudiPannello()">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
             <path d="M15 18l-6-6 6-6" />
@@ -22,7 +40,7 @@
       </nav>
 
       <div class="gu-pannello">
-        <h2 class="gu-titolo">Accessi</h2>
+        <h2 class="gu-titolo">{{ vistaCorrente === 'accessi' ? 'Accessi' : vistaCorrente === 'fatture' ? 'Fatture' : 'Profili' }}</h2>
 
         <div *ngIf="vistaCorrente === 'accessi'" class="accessi-contenuto gu-campo-animato">
           <div *ngIf="caricamentoAccessi" class="gu-spinner">
@@ -53,6 +71,123 @@
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div *ngIf="vistaCorrente === 'fatture'" class="fatture-contenuto gu-campo-animato">
+          <div *ngIf="caricamentoFatture" class="gu-spinner">
+            <app-spinner></app-spinner>
+          </div>
+
+          <div *ngIf="!caricamentoFatture && fattureUtenti.length === 0" class="gu-vuoto">
+            Nessuna fattura registrata
+          </div>
+
+          <div class="accessi-lista" *ngIf="!caricamentoFatture && fattureUtenti.length > 0">
+            <div
+              class="accessi-utente"
+              *ngFor="let utente of fattureUtenti"
+              [class.aperta]="utente.aperta"
+            >
+              <div class="accessi-utente-header" (click)="toggleUtenteFatture(utente)">
+                <span class="accessi-nome">{{ utente.nome }} {{ utente.cognome }}</span>
+                <span class="accessi-conteggio">{{ utente.fatture.length }}</span>
+                <svg class="accessi-freccia" viewBox="0 0 24 24">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+              </div>
+
+              <div class="fatture-tabella" *ngIf="utente.aperta">
+                <div *ngIf="utente.fatture.length === 0" class="nessuna-fattura">
+                  Nessuna fattura
+                </div>
+
+                <div
+                  class="riga-mese"
+                  *ngFor="let fattura of utente.fatture"
+                  [class.aperta]="fattura.aperta"
+                  [class.corrente]="fattura.stato === 'corrente'"
+                >
+                  <div class="riga-mese-header" (click)="toggleDettagliFattura(fattura)">
+                    <span class="col-mese">
+                      <span class="expand-icon" [class.ruotato]="fattura.aperta">▶</span>
+                      <ng-container *ngIf="fattura.stato === 'saldato' || fattura.stato === 'rifiutato'">
+                        {{ fattura.giornoEmissione }} {{ fattura.mese }} {{ fattura.anno }}
+                      </ng-container>
+                      <span *ngIf="fattura.stato === 'corrente'" class="badge-corrente">In corso</span>
+                    </span>
+
+                    <span class="col-totale">{{ fattura.totale.toFixed(2) }} {{ fattura.valuta }}</span>
+
+                    <span class="col-sconto">100%</span>
+
+                    <span class="col-stato">
+                      <span class="pallino" [class.saldato]="fattura.stato === 'saldato'" [class.corrente]="fattura.stato === 'corrente'" [class.rifiutato]="fattura.stato === 'rifiutato'"></span>
+                      {{ fattura.stato === 'saldato' ? 'Saldato' : fattura.stato === 'rifiutato' ? 'Rifiutato' : 'In corso' }}
+                    </span>
+                  </div>
+
+                  <div class="riga-dettagli" *ngIf="fattura.aperta">
+                    <div class="dettagli-header">
+                      <span>Giorno</span>
+                      <span>Piano</span>
+                      <span>Imposte</span>
+                      <span>Totale</span>
+                    </div>
+
+                    <div *ngIf="fattura.caricamentoGiorni" class="caricamento-dettagli">
+                      <div class="spinner-col"><app-spinner></app-spinner></div>
+                      <div class="spinner-col"><app-spinner></app-spinner></div>
+                      <div class="spinner-col"><app-spinner></app-spinner></div>
+                      <div class="spinner-col"><app-spinner></app-spinner></div>
+                    </div>
+
+                    <ng-container *ngIf="!fattura.caricamentoGiorni">
+                      <div class="dettaglio-giorno" *ngFor="let g of fattura.giorni">
+                        <span>{{ g.giorno }} {{ g.mese }} {{ g.anno }}</span>
+                        <span><span class="tag-piano" [class.premium]="g.piano === 'premium'">{{ g.piano }}</span></span>
+                        <span class="col-imposte">{{ g.imposte.toFixed(2) }} {{ g.valuta }}</span>
+                        <span>{{ g.importo.toFixed(2) }} {{ g.valuta }}</span>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="vistaCorrente === 'profili'" class="profili-contenuto gu-campo-animato">
+          <div *ngIf="caricamentoProfili" class="gu-spinner">
+            <app-spinner></app-spinner>
+          </div>
+
+          <ng-container *ngIf="!caricamentoProfili && utenteProfiloSelezionato === null">
+            <div *ngIf="profiliUtenti.length === 0" class="gu-vuoto">
+              Nessun utente
+            </div>
+
+            <div class="accessi-lista" *ngIf="profiliUtenti.length > 0">
+              <div class="accessi-utente" *ngFor="let utente of profiliUtenti">
+                <div class="accessi-utente-header" (click)="selezionaUtenteProfilo(utente.id_contatto)">
+                  <span class="accessi-nome">{{ utente.nome }} {{ utente.cognome }}</span>
+                  <svg class="accessi-freccia" viewBox="0 0 24 24">
+                    <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <div *ngIf="!caricamentoProfili && utenteProfiloSelezionato !== null" class="profilo-dettaglio">
+            <button type="button" class="gu-torna-btn" (click)="tornaListaProfili()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Torna alla lista
+            </button>
+
+            <app-gestione-utente-profilo [idContatto]="utenteProfiloSelezionato"></app-gestione-utente-profilo>
           </div>
         </div>
       </div>
