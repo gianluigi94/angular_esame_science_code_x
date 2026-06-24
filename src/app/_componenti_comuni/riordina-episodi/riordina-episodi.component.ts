@@ -40,11 +40,11 @@ export class RiordinaEpisodiComponent implements OnDestroy {
     private cambioLingua: CambioLinguaService,
     private toast: ToastService,
   ) {
-    window.addEventListener('apri-riordina-episodi', this.onApri);
+    window.addEventListener('apri-riordina-episodi-lazy', this.onApri);
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('apri-riordina-episodi', this.onApri);
+    window.removeEventListener('apri-riordina-episodi-lazy', this.onApri);
   }
 
   get isIt(): boolean {

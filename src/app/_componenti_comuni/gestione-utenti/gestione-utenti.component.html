@@ -177,7 +177,7 @@
                 </div>
 
                 <div class="profilo-espanso" *ngIf="utenteProfiloSelezionato === utente.id_contatto">
-                  <app-gestione-utente-profilo [idContatto]="utente.id_contatto"></app-gestione-utente-profilo>
+                  <app-gestione-utente-profilo [idContatto]="utente.id_contatto" (anagraficaAggiornata)="aggiornaProfiloNome(utente, $event)"></app-gestione-utente-profilo>
                 </div>
               </div>
             </div>

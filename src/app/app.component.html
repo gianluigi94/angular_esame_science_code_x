@@ -52,22 +52,11 @@
   </div>
 </div>
 
-<app-form-aggiungi-media
-  *ngIf="formAggiungiMediaVisibile"
-  [idCategoria]="idCategoriaFormAggiungiMedia"
-  [mediaDaModificare]="mediaDaModificareApp"
-  [nuovaStagione]="nuovaStagioneApp"
-  [nuovoEpisodio]="nuovoEpisodioApp"
-  [episodioDaModificare]="episodioDaModificareApp"
-  (chiudi)="chiudiFormAggiungiMedia()"
-></app-form-aggiungi-media>
+<ng-container #contenitoreFormAggiungiMedia></ng-container>
 
-<app-riordina-episodi></app-riordina-episodi>
+<ng-container #contenitoreRiordinaEpisodi></ng-container>
 
-<app-gestione-utenti
-  *ngIf="gestioneUtentiVisibile"
-  (chiudi)="chiudiGestioneUtenti()"
-></app-gestione-utenti>
+<ng-container #contenitoreGestioneUtenti></ng-container>
 
 <!-- importo i toast che possono comparire ovunque  -->
 <div *ngIf="spinnerRicevuteVisibile" class="spinner-ricevute-globale">

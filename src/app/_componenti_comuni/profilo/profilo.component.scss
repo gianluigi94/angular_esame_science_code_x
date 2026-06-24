@@ -57,7 +57,7 @@
 .profilo-pannello {
   width: 820px;
   max-height: 76vh;
-  overflow-y: visible;
+  overflow-y: auto;
   padding-right: 6px;
   box-sizing: border-box;
 
@@ -413,6 +413,7 @@
   opacity: 0;
   transform: scaleX(0);
   transform-origin: center center;
+  margin-bottom: 15px;
 }
 
 .indirizzi-tabella {
@@ -1061,6 +1062,8 @@ input:-webkit-autofill:active {
   opacity: 0;
   transform: scaleX(0);
   transform-origin: center center;
+  margin-bottom: 15px;
+
 }
 
 .col-recapito-contatto {
@@ -1108,6 +1111,20 @@ input:-webkit-autofill:active {
 }
 
 .contatti-contenuto {
+  .riga-form,
+  .form-nuovo {
+    .select-custom-profilo {
+      .select-dropdown-profilo {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-top: 4px;
+        z-index: 300;
+      }
+    }
+  }
+}
+.indirizzi-contenuto {
   .riga-form,
   .form-nuovo {
     .select-custom-profilo {

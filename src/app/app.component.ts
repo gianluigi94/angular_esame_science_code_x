@@ -6,6 +6,12 @@ import {
   Inject,
   NgZone,
   ChangeDetectorRef,
+  ViewChild,
+  ViewContainerRef,
+  Injector,
+  ComponentRef,
+  NgModuleRef,
+  createNgModule,
 } from '@angular/core';
 import { CambioLinguaService } from './_servizi_globali/cambio-lingua.service';
 import { CambioRicevuteAnimazioneService } from './_servizi_globali/cambio-ricevute-animazione.service';
@@ -17,6 +23,7 @@ import { StatoSessioneClientService } from './_servizi_globali/stato-sessione-cl
 import { TranslateService } from '@ngx-translate/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { PerformanceService } from './_servizi_globali/performance.service';
+import { Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
 import { CaricamentoCaroselloService } from './_catalogo/carosello-novita/carosello_services/caricamento-carosello.service';
 import { AnimateService } from './_servizi_globali/animazioni_saturno/animate.service';
@@ -58,6 +65,38 @@ import { Auth } from './_type/auth.type';
 })
 export class AppComponent implements OnInit {
   private pathPrecedenteSessioneAllAvvio = ''; // conservo il path precedente letto dalla sessione all'avvio
+
+  @ViewChild('contenitoreGestioneUtenti', {
+    read: ViewContainerRef,
+    static: true,
+  })
+  contenitoreGestioneUtenti!: ViewContainerRef;
+
+  @ViewChild('contenitoreFormAggiungiMedia', {
+    read: ViewContainerRef,
+    static: true,
+  })
+  contenitoreFormAggiungiMedia!: ViewContainerRef;
+
+  @ViewChild('contenitoreRiordinaEpisodi', {
+    read: ViewContainerRef,
+    static: true,
+  })
+  contenitoreRiordinaEpisodi!: ViewContainerRef;
+
+  componenteGestioneUtentiRef: ComponentRef<any> | null = null;
+  moduloGestioneUtentiRef: NgModuleRef<any> | null = null;
+  sottoscrizioneChiudiGestioneUtenti: Subscription | null = null;
+  gestioneUtentiCaricamento = false;
+
+  componenteFormAggiungiMediaRef: ComponentRef<any> | null = null;
+  moduloFormAggiungiMediaRef: NgModuleRef<any> | null = null;
+  sottoscrizioneChiudiFormAggiungiMedia: Subscription | null = null;
+  formAggiungiMediaCaricamento = false;
+
+  componenteRiordinaEpisodiRef: ComponentRef<any> | null = null;
+  moduloRiordinaEpisodiRef: NgModuleRef<any> | null = null;
+  riordinaEpisodiCaricamento = false;
 
   traduzioniPronte$ = this.traduzioniService.traduzioniInizialiCaricate$; // espongo lo stream che indica quando le traduzioni iniziali sono pronte
   erroreFatale$ = this.erroreGlobaleService.erroreFatale$; // espongo lo stream dell'errore fatale globale
@@ -187,6 +226,7 @@ export class AppComponent implements OnInit {
   constructor(
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
+    private injector: Injector,
     private cambioLinguaService: CambioLinguaService,
     private traduzioniService: TraduzioniService,
     private erroreGlobaleService: ErroreGlobaleService,
@@ -248,8 +288,11 @@ export class AppComponent implements OnInit {
     window.addEventListener('apri-pannello-piano', this.onApriPannelloPiano);
 
     window.addEventListener('apri-gestione-utenti', () => {
-      this.gestioneUtentiVisibile = true;
-      this.cdr.detectChanges();
+      void this.apriGestioneUtentiLazy();
+    });
+
+    window.addEventListener('apri-riordina-episodi', (evento: Event) => {
+      void this.apriRiordinaEpisodiLazy(evento as CustomEvent);
     });
 
     window.addEventListener('apri-form-aggiungi-media', (evento: Event) => {
@@ -258,26 +301,9 @@ export class AppComponent implements OnInit {
       this.mediaDaModificareApp = null;
       this.nuovaStagioneApp = null;
       this.nuovoEpisodioApp = null;
+      this.episodioDaModificareApp = null;
       this.idCategoriaFormAggiungiMedia = dettaglio?.idCategoria || '';
-      this.formAggiungiMediaVisibile = true;
-      this.cdr.detectChanges();
-      requestAnimationFrame(() => {
-        const pannello = document.querySelector(
-          '.form-media-pannello',
-        ) as HTMLElement;
-        if (!pannello) return;
-        gsap.set(pannello, {
-          opacity: 0,
-          scaleX: 0,
-          transformOrigin: 'center center',
-        });
-        gsap.to(pannello, {
-          opacity: 1,
-          scaleX: 1,
-          duration: 0.5,
-          ease: 'power2.out',
-        });
-      });
+      void this.apriFormAggiungiMediaLazy();
     });
 
     window.addEventListener('apri-form-modifica-media', (evento: Event) => {
@@ -291,25 +317,8 @@ export class AppComponent implements OnInit {
       };
       this.nuovaStagioneApp = null;
       this.nuovoEpisodioApp = null;
-      this.formAggiungiMediaVisibile = true;
-      this.cdr.detectChanges();
-      requestAnimationFrame(() => {
-        const pannello = document.querySelector(
-          '.form-media-pannello',
-        ) as HTMLElement;
-        if (!pannello) return;
-        gsap.set(pannello, {
-          opacity: 0,
-          scaleX: 0,
-          transformOrigin: 'center center',
-        });
-        gsap.to(pannello, {
-          opacity: 1,
-          scaleX: 1,
-          duration: 0.5,
-          ease: 'power2.out',
-        });
-      });
+      this.episodioDaModificareApp = null;
+      void this.apriFormAggiungiMediaLazy();
     });
 
     window.addEventListener('apri-form-nuova-stagione', (evento: Event) => {
@@ -319,29 +328,12 @@ export class AppComponent implements OnInit {
       this.idCategoriaFormAggiungiMedia = '';
       this.mediaDaModificareApp = null;
       this.nuovoEpisodioApp = null;
+      this.episodioDaModificareApp = null;
       this.nuovaStagioneApp = {
         idSerie: Number(dettaglio.idSerie),
         numeroStagione: Number(dettaglio.numeroStagione),
       };
-      this.formAggiungiMediaVisibile = true;
-      this.cdr.detectChanges();
-      requestAnimationFrame(() => {
-        const pannello = document.querySelector(
-          '.form-media-pannello',
-        ) as HTMLElement;
-        if (!pannello) return;
-        gsap.set(pannello, {
-          opacity: 0,
-          scaleX: 0,
-          transformOrigin: 'center center',
-        });
-        gsap.to(pannello, {
-          opacity: 1,
-          scaleX: 1,
-          duration: 0.5,
-          ease: 'power2.out',
-        });
-      });
+      void this.apriFormAggiungiMediaLazy();
     });
     window.addEventListener('apri-form-nuovo-episodio', (evento: Event) => {
   const dettaglio = (evento as CustomEvent).detail;
@@ -350,20 +342,14 @@ export class AppComponent implements OnInit {
   this.idCategoriaFormAggiungiMedia = '';
   this.mediaDaModificareApp = null;
   this.nuovaStagioneApp = null;
+  this.episodioDaModificareApp = null;
   this.nuovoEpisodioApp = {
     idSerie: Number(dettaglio.idSerie),
     idStagione: Number(dettaglio.idStagione),
     numeroStagione: Number(dettaglio.numeroStagione),
     numeroEpisodio: Number(dettaglio.numeroEpisodio),
   };
-  this.formAggiungiMediaVisibile = true;
-  this.cdr.detectChanges();
-  requestAnimationFrame(() => {
-    const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
-    if (!pannello) return;
-    gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-    gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
-  });
+  void this.apriFormAggiungiMediaLazy();
 });
     window.addEventListener('apri-form-modifica-episodio', (evento: Event) => {
       const dettaglio = (evento as CustomEvent).detail;
@@ -380,14 +366,7 @@ export class AppComponent implements OnInit {
         numeroEpisodio: Number(dettaglio.numeroEpisodio),
         chiaveArchivio: String(dettaglio.chiaveArchivio),
       };
-      this.formAggiungiMediaVisibile = true;
-      this.cdr.detectChanges();
-      requestAnimationFrame(() => {
-        const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
-        if (!pannello) return;
-        gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
-        gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
-      });
+      void this.apriFormAggiungiMediaLazy();
     });
     window.addEventListener('loader-hidden', () => {
       if (!isRottaPiano(this.router.url)) return;
@@ -775,8 +754,147 @@ export class AppComponent implements OnInit {
     window.history.back();
   }
 
+  async apriGestioneUtentiLazy(): Promise<void> {
+    if (this.componenteGestioneUtentiRef || this.gestioneUtentiCaricamento) return;
+
+    this.gestioneUtentiCaricamento = true;
+
+    const { GestioneUtentiLazyModule, GestioneUtentiComponent } = await import(
+      './_componenti_comuni/gestione-utenti/gestione-utenti-lazy.module'
+    );
+
+    if (!this.moduloGestioneUtentiRef) {
+      this.moduloGestioneUtentiRef = createNgModule(
+        GestioneUtentiLazyModule,
+        this.injector,
+      );
+    }
+
+    this.contenitoreGestioneUtenti.clear();
+
+    this.componenteGestioneUtentiRef =
+      this.contenitoreGestioneUtenti.createComponent(GestioneUtentiComponent, {
+        ngModuleRef: this.moduloGestioneUtentiRef,
+      });
+
+    this.sottoscrizioneChiudiGestioneUtenti =
+      this.componenteGestioneUtentiRef.instance.chiudi.subscribe(() => {
+        this.chiudiGestioneUtenti();
+      });
+
+    this.gestioneUtentiVisibile = true;
+    this.gestioneUtentiCaricamento = false;
+    this.cdr.detectChanges();
+  }
+
   chiudiGestioneUtenti(): void {
     this.gestioneUtentiVisibile = false;
+
+    this.sottoscrizioneChiudiGestioneUtenti?.unsubscribe();
+    this.sottoscrizioneChiudiGestioneUtenti = null;
+
+    this.componenteGestioneUtentiRef?.destroy();
+    this.componenteGestioneUtentiRef = null;
+
+    this.contenitoreGestioneUtenti.clear();
+    this.cdr.detectChanges();
+  }
+
+  async apriFormAggiungiMediaLazy(): Promise<void> {
+    if (this.componenteFormAggiungiMediaRef || this.formAggiungiMediaCaricamento) return;
+
+    this.formAggiungiMediaCaricamento = true;
+
+    const { FormAggiungiMediaLazyModule, FormAggiungiMediaComponent } = await import(
+      './_catalogo/form-aggiungi-media/form-aggiungi-media-lazy.module'
+    );
+
+    if (!this.moduloFormAggiungiMediaRef) {
+      this.moduloFormAggiungiMediaRef = createNgModule(
+        FormAggiungiMediaLazyModule,
+        this.injector,
+      );
+    }
+
+    this.contenitoreFormAggiungiMedia.clear();
+
+    this.componenteFormAggiungiMediaRef =
+      this.contenitoreFormAggiungiMedia.createComponent(FormAggiungiMediaComponent, {
+        ngModuleRef: this.moduloFormAggiungiMediaRef,
+      });
+
+    this.componenteFormAggiungiMediaRef.instance.idCategoria =
+      this.idCategoriaFormAggiungiMedia;
+    this.componenteFormAggiungiMediaRef.instance.mediaDaModificare =
+      this.mediaDaModificareApp;
+    this.componenteFormAggiungiMediaRef.instance.nuovaStagione =
+      this.nuovaStagioneApp;
+    this.componenteFormAggiungiMediaRef.instance.nuovoEpisodio =
+      this.nuovoEpisodioApp;
+    this.componenteFormAggiungiMediaRef.instance.episodioDaModificare =
+      this.episodioDaModificareApp;
+
+    this.sottoscrizioneChiudiFormAggiungiMedia =
+      this.componenteFormAggiungiMediaRef.instance.chiudi.subscribe(() => {
+        this.chiudiFormAggiungiMedia();
+      });
+
+    this.formAggiungiMediaVisibile = true;
+    this.formAggiungiMediaCaricamento = false;
+    this.cdr.detectChanges();
+    this.componenteFormAggiungiMediaRef.changeDetectorRef.detectChanges();
+
+    requestAnimationFrame(() => {
+      const pannello = document.querySelector('.form-media-pannello') as HTMLElement;
+      if (!pannello) return;
+      gsap.set(pannello, { opacity: 0, scaleX: 0, transformOrigin: 'center center' });
+      gsap.to(pannello, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power2.out' });
+    });
+  }
+
+  async apriRiordinaEpisodiLazy(eventoOriginale?: CustomEvent): Promise<void> {
+    if (this.componenteRiordinaEpisodiRef) {
+      window.dispatchEvent(
+        new CustomEvent('apri-riordina-episodi-lazy', {
+          detail: eventoOriginale?.detail,
+        }),
+      );
+      return;
+    }
+
+    if (this.riordinaEpisodiCaricamento) return;
+
+    this.riordinaEpisodiCaricamento = true;
+
+    const { RiordinaEpisodiLazyModule, RiordinaEpisodiComponent } = await import(
+      './_componenti_comuni/riordina-episodi/riordina-episodi-lazy.module'
+    );
+
+    if (!this.moduloRiordinaEpisodiRef) {
+      this.moduloRiordinaEpisodiRef = createNgModule(
+        RiordinaEpisodiLazyModule,
+        this.injector,
+      );
+    }
+
+    this.contenitoreRiordinaEpisodi.clear();
+
+    this.componenteRiordinaEpisodiRef =
+      this.contenitoreRiordinaEpisodi.createComponent(RiordinaEpisodiComponent, {
+        ngModuleRef: this.moduloRiordinaEpisodiRef,
+      });
+
+    this.riordinaEpisodiCaricamento = false;
+    this.cdr.detectChanges();
+    this.componenteRiordinaEpisodiRef.changeDetectorRef.detectChanges();
+
+    setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent('apri-riordina-episodi-lazy', {
+          detail: eventoOriginale?.detail,
+        }),
+      );
+    }, 0);
   }
 
   chiudiFormAggiungiMedia(): void {
@@ -785,6 +903,11 @@ export class AppComponent implements OnInit {
     ) as HTMLElement;
     if (!pannello) {
       this.formAggiungiMediaVisibile = false;
+      this.sottoscrizioneChiudiFormAggiungiMedia?.unsubscribe();
+      this.sottoscrizioneChiudiFormAggiungiMedia = null;
+      this.componenteFormAggiungiMediaRef?.destroy();
+      this.componenteFormAggiungiMediaRef = null;
+      this.contenitoreFormAggiungiMedia.clear();
 this.idCategoriaFormAggiungiMedia = '';
 this.mediaDaModificareApp = null;
 this.nuovaStagioneApp = null;
@@ -800,6 +923,11 @@ return;
       transformOrigin: 'center center',
       onComplete: () => {
         this.formAggiungiMediaVisibile = false;
+        this.sottoscrizioneChiudiFormAggiungiMedia?.unsubscribe();
+        this.sottoscrizioneChiudiFormAggiungiMedia = null;
+        this.componenteFormAggiungiMediaRef?.destroy();
+        this.componenteFormAggiungiMediaRef = null;
+        this.contenitoreFormAggiungiMedia.clear();
 this.idCategoriaFormAggiungiMedia = '';
 this.mediaDaModificareApp = null;
 this.nuovaStagioneApp = null;

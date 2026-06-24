@@ -200,7 +200,7 @@
         <div class="riga-indirizzo-header">
           <span class="col-tipo">
             <span class="tag-tipo" [class.fatturazione]="ind.tipo === 'fatturazione'" [class.domicilio]="ind.tipo === 'domicilio'">
-              {{ ind.tipo === 'domicilio' ? 'Domicilio' : ind.tipo === 'fatturazione' ? 'Fatturazione' : '' }}
+              {{ selectTipiIndirizziService.label(ind.tipo) }}
             </span>
           </span>
           <span class="col-paese">{{ labelPaese(ind.iso) }}</span>
@@ -236,14 +236,14 @@
                   [ngClass]="{ 'is-invalid': formsModifica[i]!.controls['idTipoIndirizzo'].invalid && formsModifica[i]!.controls['idTipoIndirizzo'].touched }">
                   <span class="select-label-piccola">Tipo</span>
                   <span [class.placeholder]="!statoTipoModifica(i).tipo">
-                    {{ statoTipoModifica(i).tipo === 'fatturazione' ? 'Fatturazione' : statoTipoModifica(i).tipo === 'domicilio' ? 'Domicilio' : 'Seleziona tipo' }}
+                    {{ statoTipoModifica(i).tipo ? selectTipiIndirizziService.labelStato(statoTipoModifica(i)) : 'Seleziona tipo' }}
                   </span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z"/></svg>
                 </div>
                 <div class="select-dropdown-profilo" *ngIf="statoTipoModifica(i).aperto">
                   <div class="select-opzione" *ngFor="let tipo of tipiFiltrati(i); let ix = index"
                     [class.attivo]="ix === statoTipoModifica(i).indice" (mousedown)="$event.preventDefault()" (click)="selezionaTipoModifica(i, tipo)">
-                    {{ tipo.tipo === 'fatturazione' ? 'Fatturazione' : tipo.tipo === 'domicilio' ? 'Domicilio' : tipo.tipo }}
+                    {{ selectTipiIndirizziService.label(tipo.tipo) }}
                   </div>
                 </div>
               </div>
@@ -428,6 +428,7 @@
             </div>
           </div>
 
+          <div class="riga-dettagli-profilo">
           <div class="campo-wrapper campo-dettagli-profilo">
             <p class="label-sopra">Dettagli <span class="opzionale">(opzionale)</span></p>
             <div class="campo-form">
@@ -439,6 +440,7 @@
               <p class="errore-campo" *ngIf="formsModifica[i]!.controls['dettagli'].touched && formsModifica[i]!.controls['dettagli'].errors?.['minlength']">Minimo 3 caratteri.</p>
               <p class="errore-campo" *ngIf="formsModifica[i]!.controls['dettagli'].touched && formsModifica[i]!.controls['dettagli'].errors?.['maxlength']">Troppo lungo.</p>
             </div>
+          </div>
           </div>
 
           <p class="errore-campo" *ngIf="erroriCoerenzaModifica[i]" style="text-align: center;">Provincia o CAP non coerenti col comune.</p>
@@ -471,14 +473,14 @@
               [ngClass]="{ 'is-invalid': formNuovoIndirizzo.controls['idTipoIndirizzo'].invalid && formNuovoIndirizzo.controls['idTipoIndirizzo'].touched }">
               <span class="select-label-piccola">Tipo</span>
               <span [class.placeholder]="!statoTipoNuovo.tipo">
-                {{ statoTipoNuovo.tipo === 'fatturazione' ? 'Fatturazione' : statoTipoNuovo.tipo === 'domicilio' ? 'Domicilio' : 'Seleziona tipo' }}
+                {{ statoTipoNuovo.tipo ? selectTipiIndirizziService.labelStato(statoTipoNuovo) : 'Seleziona tipo' }}
               </span>
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z"/></svg>
             </div>
             <div class="select-dropdown-profilo" *ngIf="statoTipoNuovo.aperto">
               <div class="select-opzione" *ngFor="let tipo of tipiFiltrati(); let ix = index"
                 [class.attivo]="ix === statoTipoNuovo.indice" (mousedown)="$event.preventDefault()" (click)="selezionaTipoNuovo(tipo)">
-                {{ tipo.tipo === 'fatturazione' ? 'Fatturazione' : tipo.tipo === 'domicilio' ? 'Domicilio' : tipo.tipo }}
+                {{ selectTipiIndirizziService.label(tipo.tipo) }}
               </div>
             </div>
           </div>
@@ -652,6 +654,7 @@
         </div>
       </div>
 
+      <div class="riga-dettagli-profilo">
       <div class="campo-wrapper campo-dettagli-profilo">
         <p class="label-sopra">Dettagli <span class="opzionale">(opzionale)</span></p>
         <div class="campo-form">
@@ -663,6 +666,7 @@
           <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['dettagli'].touched && formNuovoIndirizzo.controls['dettagli'].errors?.['minlength']">Minimo 3 caratteri.</p>
           <p class="errore-campo" *ngIf="formNuovoIndirizzo.controls['dettagli'].touched && formNuovoIndirizzo.controls['dettagli'].errors?.['maxlength']">Troppo lungo.</p>
         </div>
+      </div>
       </div>
 
       <p class="errore-campo" *ngIf="erroreCoerenzaNuovo" style="text-align: center;">Provincia o CAP non coerenti col comune.</p>

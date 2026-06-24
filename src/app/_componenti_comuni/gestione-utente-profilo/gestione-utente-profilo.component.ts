@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { take } from 'rxjs';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
@@ -23,6 +23,7 @@ import {
 })
 export class GestioneUtenteProfiloComponent implements OnInit {
   @Input() idContatto!: number;
+  @Output() anagraficaAggiornata = new EventEmitter<{ nome: string; cognome: string }>();
 
   formAnagrafica: FormGroup;
   statoNazioneAnagrafica!: StatoSelectNazioni;
@@ -330,6 +331,7 @@ export class GestioneUtenteProfiloComponent implements OnInit {
       next: () => {
         this.salvataggioAnagInCorso = false;
         this.toastService.successo('Dati anagrafici aggiornati.');
+        this.anagraficaAggiornata.emit({ nome: f.nome, cognome: f.cognome });
       },
       error: () => {
         this.salvataggioAnagInCorso = false;

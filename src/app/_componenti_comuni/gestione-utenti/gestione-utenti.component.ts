@@ -169,6 +169,11 @@ export class GestioneUtentiComponent implements OnInit {
     this.utenteProfiloSelezionato = this.utenteProfiloSelezionato === idContatto ? null : idContatto;
   }
 
+  aggiornaProfiloNome(utente: { nome: string; cognome: string }, evento: { nome: string; cognome: string }): void {
+    utente.nome = evento.nome;
+    utente.cognome = evento.cognome;
+  }
+
   private caricaFatture(): void {
     if (this.fattureCaricate || this.caricamentoFatture) return;
     this.caricamentoFatture = true;

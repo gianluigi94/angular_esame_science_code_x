@@ -21,18 +21,11 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BottoneAggiungiComponent } from './bottone-aggiungi/bottone-aggiungi.component';
 import { DragdropDirective } from '../_direttive/dragdrop.directive';
 import { RiordinaItemDirective } from '../_direttive/riordina-item.directive';
-import { FormAggiungiMediaComponent } from '../_catalogo/form-aggiungi-media/form-aggiungi-media.component';
-import { RiordinaEpisodiComponent } from './riordina-episodi/riordina-episodi.component';
-import { GestioneUtentiComponent } from './gestione-utenti/gestione-utenti.component';
-import { GestioneUtenteProfiloComponent } from './gestione-utente-profilo/gestione-utente-profilo.component';
+
 @NgModule({
   declarations: [
     DragdropDirective,
     RiordinaItemDirective,
-    FormAggiungiMediaComponent,
-    RiordinaEpisodiComponent,
-    GestioneUtentiComponent,
-    GestioneUtenteProfiloComponent,
     BottoneAggiungiComponent,
     SfondoComponent,
     TitlesMainComponent,
@@ -58,9 +51,7 @@ import { GestioneUtenteProfiloComponent } from './gestione-utente-profilo/gestio
   ],
   exports: [
     DragdropDirective,
-    FormAggiungiMediaComponent,
-    RiordinaEpisodiComponent,
-    GestioneUtentiComponent,
+    RiordinaItemDirective,
     BottoneAggiungiComponent,
     SfondoComponent,
     TitlesMainComponent,
@@ -77,6 +68,6 @@ import { GestioneUtenteProfiloComponent } from './gestione-utente-profilo/gestio
     BarraAvanzamentoComponent,
     PianoCardComponent,
   ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class ComponentiComuniModule {}

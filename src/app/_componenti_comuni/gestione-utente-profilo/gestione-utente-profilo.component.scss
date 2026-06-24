@@ -350,17 +350,26 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
+  justify-content: center;
   gap: 24px;
+  width: 100%;
   margin-top: 16px;
+  margin-bottom: 16px;
 
   .via-profilo-input { width: 340px !important; }
   .civico-profilo-input { width: 150px !important; }
 }
 
-.campo-dettagli-profilo {
+.riga-dettagli-profilo {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
   margin-top: 16px;
+}
 
-  .dettagli-profilo-input { width: 360px !important; }
+.campo-dettagli-profilo {
+  .dettagli-profilo-input { width: 514px !important; }
 }
 
 .campo-profilo-medio { width: 260px !important; }
@@ -540,8 +549,19 @@
 
 .riga-form,
 .form-nuovo {
-  .campo-form input[type="text"] { background: #261e18b1; }
-  .select-custom-profilo .select-header { background: #261e18b1; }
+  .campo-form input[type="text"] {
+    background: #261e18b1;
+    box-shadow: none;
+
+    &:focus { box-shadow: 0 0 4px orange !important; }
+  }
+
+  .select-custom-profilo .select-header {
+    background: #261e18b1;
+    box-shadow: none;
+
+    &.aperto { box-shadow: 0 0 4px orange; }
+  }
 
   .campo-form label,
   .select-custom-profilo .select-header .select-label-piccola,
@@ -550,6 +570,23 @@
 
     &.is-invalid { color: red !important; }
   }
+
+  .campo-form label {
+    font-size: 15px;
+    font-weight: normal;
+  }
+
+  .label-sopra { font-size: 16px; }
+
+  .select-custom-profilo .select-header {
+    font-size: 15px;
+
+    .select-input-testo { font-size: 15px !important; }
+  }
+
+  .select-custom-profilo .select-opzione { font-size: 15px; }
+
+  .cap-placeholder-fake { font-size: 15px; }
 }
 
 .invia_btn {
