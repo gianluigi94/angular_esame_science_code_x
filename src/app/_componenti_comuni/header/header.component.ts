@@ -460,6 +460,18 @@ onCambiaPianoClick(): void {
     if (this.authCorrente?.idRuolo !== 7 && this.authCorrente?.idRuolo !== 8) return;
     window.dispatchEvent(new CustomEvent('apri-gestione-utenti'));
   }
+
+  onGestisciPubblicitaClick(): void {
+    if (this.auth.logoutInCorso) return;
+    if (this.authCorrente?.idRuolo !== 5 && this.authCorrente?.idRuolo !== 7) return;
+    window.dispatchEvent(new CustomEvent('apri-gestione-pubblicita'));
+  }
+
+  onConfigurazioniClick(): void {
+    if (this.auth.logoutInCorso) return;
+    if (this.authCorrente?.idRuolo !== 7) return;
+    window.dispatchEvent(new CustomEvent('apri-configurazioni'));
+  }
   /**
    * Gestisce il ritorno al catalogo dalla scheda o dal player.
    *

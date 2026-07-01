@@ -478,3 +478,266 @@
   padding: 18px 14px;
   animation: guApriDate 0.25s ease;
 }
+
+.modera-contenuto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: center center;
+}
+
+.modera-utente-riga {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  font-family: "Quantico", serif;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.modera-sessioni {
+  min-width: 95px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: right;
+}
+
+.modera-stato-btn {
+  min-width: 105px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  font-family: "Quantico", serif;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.modera-stato-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.modera-stato-btn.attivo {
+  background: #4caf7d;
+  box-shadow: 0 0 8px #4caf7d88;
+}
+
+.modera-stato-btn.bannato {
+  background: #b64040;
+  box-shadow: 0 0 8px #b6404088;
+}
+
+.modera-stato-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modale-overlay-moderazione {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 5, 27, 0.55);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.modale-contenuto-moderazione {
+  width: min(92vw, 460px);
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(231, 156, 80, 0.25);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.65);
+  font-family: "Quantico", serif;
+  color: aliceblue;
+}
+
+.modale-messaggio-moderazione {
+  margin: 0 0 12px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.modale-sottomessaggio-moderazione {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: #e79c50;
+  text-align: center;
+}
+
+.modale-bottoni-moderazione {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.btn-annulla-moderazione,
+.btn-conferma-moderazione {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-annulla-moderazione {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-annulla-moderazione:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+
+.btn-conferma-moderazione {
+  background: linear-gradient(135deg, #4caf7d, #2f7d58);
+  border: none;
+  color: white;
+  font-weight: 600;
+  min-width: 100px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-conferma-moderazione.banna {
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+}
+
+.btn-conferma-moderazione.ruolo {
+  background: linear-gradient(135deg, #e79c50, #c97a2b);
+}
+
+.btn-conferma-moderazione.ruolo:not(:disabled):hover {
+  box-shadow: 0 0 14px #e79c5088;
+}
+
+.btn-conferma-moderazione:not(:disabled):hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 14px rgba(185, 28, 28, 0.5);
+}
+
+.btn-annulla-moderazione:disabled,
+.btn-conferma-moderazione:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.ruoli-contenuto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: center center;
+}
+
+.ruoli-utente-riga {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  font-family: "Quantico", serif;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.ruoli-badge {
+  min-width: 170px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+.ruoli-badge.principale {
+  color: #e79c50;
+}
+
+.ruoli-cambia-btn {
+  min-width: 120px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  font-family: "Quantico", serif;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  background: linear-gradient(135deg, #e79c50, #c97a2b);
+  box-shadow: 0 0 8px #999da0;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ruoli-cambia-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+  box-shadow: 0 0 14px #e79c5088;
+}
+
+.ruoli-cambia-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #555;
+  box-shadow: none;
+}
+
+.ruoli-scelta-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 16px;
+}
+
+.ruoli-scelta-voce {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid rgba(231, 156, 80, 0.25);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ruoli-scelta-voce:hover:not(:disabled) {
+  border-color: rgba(231, 156, 80, 0.6);
+  color: #ffffff;
+}
+
+.ruoli-scelta-voce.scelto {
+  background: linear-gradient(135deg, #e79c50, #c97a2b);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 0 12px #e79c5088;
+}
+
+.ruoli-scelta-voce:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ruoli-avviso-sessioni {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #e79c50;
+  text-align: center;
+}
+.modera-contenuto .accessi-lista {
+  max-width: 520px;
+}

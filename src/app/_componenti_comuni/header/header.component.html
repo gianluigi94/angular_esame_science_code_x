@@ -330,6 +330,16 @@
               (click)="onGestisciUtentiClick()"
             >Gestisci utenti</li>
             <li
+              *ngIf="authVisuale.idRuolo === 5 || authVisuale.idRuolo === 7"
+              class="voce-tendina"
+              (click)="onGestisciPubblicitaClick()"
+            >Gestisci pubblicità</li>
+            <li
+              *ngIf="authVisuale?.idRuolo === 7"
+              class="voce-tendina"
+              (click)="onConfigurazioniClick()"
+            >Configurazioni</li>
+            <li
               class="separatore-tendina"
               role="separator"
               aria-hidden="true"

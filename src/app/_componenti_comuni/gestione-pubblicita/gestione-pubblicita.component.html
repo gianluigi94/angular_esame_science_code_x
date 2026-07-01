@@ -1,0 +1,318 @@
+<span class="gp-sfocatura"></span>
+
+<section class="gestione-pubblicita-contenuto">
+  <div class="gp-blocco">
+    <div class="gp-box">
+      <div class="gp-pannello">
+        <h2 class="gp-titolo">Gestione Pubblicità</h2>
+
+        <div class="gp-contenuto gp-campo-animato">
+          <div *ngIf="caricamento" class="gp-spinner">
+            <app-spinner></app-spinner>
+          </div>
+
+          <ng-container *ngIf="!caricamento">
+            <div *ngIf="pubblicita.length === 0 && !mostraFormNuova" class="gp-vuoto">
+              Nessuna pubblicità
+            </div>
+
+            <div class="gp-lista" *ngIf="pubblicita.length > 0">
+              <div class="gp-item" *ngFor="let p of pubblicita" [class.aperta]="p.aperta">
+                <div class="gp-item-header" (click)="toggleItem(p)">
+                  <div class="gp-item-riga1">
+                    <span class="gp-item-id">#{{ p.id_pubblicita }}</span>
+                    <span class="gp-item-descrizione">{{ p.descrizione }}</span>
+                    <svg class="gp-freccia" viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" />
+                    </svg>
+                  </div>
+                  <div class="gp-item-riga2">
+                    <span class="gp-item-stato-badge" [class.attiva]="p.campagna_attiva" [class.disattiva]="!p.campagna_attiva">
+                      {{ p.campagna_attiva ? 'Attiva' : 'Disattiva' }}
+                    </span>
+                    <span class="gp-item-peso">Peso: {{ p.peso }}</span>
+                    <span class="gp-item-views">{{ p.visualizzazioni_count }} views</span>
+                    <button type="button" class="gp-btn-play" (click)="$event.stopPropagation(); apriPlayer(p, 'it')" title="Anteprima IT">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                      <span class="gp-play-lingua">IT</span>
+                    </button>
+                    <button type="button" class="gp-btn-play" (click)="$event.stopPropagation(); apriPlayer(p, 'en')" title="Anteprima EN">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                      <span class="gp-play-lingua">EN</span>
+                    </button>
+                    <button type="button" class="gp-btn-cestino" (click)="$event.stopPropagation(); apriModaleElimina(p)" title="Elimina pubblicità">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="gp-item-dettagli" *ngIf="p.aperta">
+                  <div class="gp-form-riga">
+                    <label>Descrizione</label>
+                    <input type="text" [(ngModel)]="datiModifica[p.id_pubblicita].descrizione" maxlength="255" />
+                  </div>
+                  <div class="gp-form-riga">
+                    <label>Inizio campagna</label>
+                    <input type="date" [(ngModel)]="datiModifica[p.id_pubblicita].inizio_campagna" />
+                  </div>
+                  <div class="gp-form-riga">
+                    <label>Fine campagna</label>
+                    <input type="date" [(ngModel)]="datiModifica[p.id_pubblicita].fine_campagna" />
+                  </div>
+                  <div class="gp-form-riga">
+                    <label>Peso</label>
+                    <input type="number" [(ngModel)]="datiModifica[p.id_pubblicita].peso" min="1" />
+                  </div>
+                  <div class="gp-form-riga">
+                    <label class="gp-checkbox-label">
+                      <input type="checkbox" [(ngModel)]="datiModifica[p.id_pubblicita].campagna_attiva" />
+                      Campagna attiva
+                    </label>
+                  </div>
+
+                  <div class="gp-form-riga">
+                    <label>Video IT (.mp4)</label>
+                    <div class="select-modalita-upload">
+                      <div
+                        class="select-header-modalita"
+                        [class.aperto]="dropdownModalitaAperta === 'mod_it_' + p.id_pubblicita"
+                        (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'mod_it_' + p.id_pubblicita ? '' : 'mod_it_' + p.id_pubblicita"
+                      >
+                        <span>{{ (p.modalitaIt || 'url') === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+                      </div>
+                      <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'mod_it_' + p.id_pubblicita">
+                        <div class="select-opzione-modalita" [class.attivo]="(p.modalitaIt || 'url') === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaMod(p, 'it', 'file')">Da PC</div>
+                        <div class="select-opzione-modalita" [class.attivo]="(p.modalitaIt || 'url') === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaMod(p, 'it', 'url')">URL diretto</div>
+                      </div>
+                    </div>
+                    <div
+                      class="zona-drop"
+                      *ngIf="(p.modalitaIt || 'url') === 'file'"
+                      dragdrop
+                      (alRilascio)="onDropFile($event, 'it', p)"
+                      (click)="inputModIt.click()"
+                    >
+                      <input type="file" #inputModIt accept="video/mp4" (change)="onFileChange($event, 'it', p)" />
+                      <svg *ngIf="!p.fileIt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" /></svg>
+                      <span *ngIf="!p.fileIt" class="drop-testo">Trascina o clicca (file singolo)</span>
+                      <span *ngIf="p.fileIt" class="drop-nome">{{ p.fileIt.name }}</span>
+                      <button *ngIf="p.fileIt" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); p.fileIt = null">✕</button>
+                    </div>
+                    <div class="campo-url-diretto" *ngIf="(p.modalitaIt || 'url') === 'url'">
+                      <input type="text" [placeholder]="'https://d2kd3i5q9rl184.cloudfront.net/media/med_' + p.id_pubblicita + '_it.mp4'" [(ngModel)]="p.urlIt" />
+                    </div>
+                  </div>
+
+                  <div class="gp-form-riga">
+                    <label>Video EN (.mp4)</label>
+                    <div class="select-modalita-upload">
+                      <div
+                        class="select-header-modalita"
+                        [class.aperto]="dropdownModalitaAperta === 'mod_en_' + p.id_pubblicita"
+                        (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'mod_en_' + p.id_pubblicita ? '' : 'mod_en_' + p.id_pubblicita"
+                      >
+                        <span>{{ (p.modalitaEn || 'url') === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+                      </div>
+                      <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'mod_en_' + p.id_pubblicita">
+                        <div class="select-opzione-modalita" [class.attivo]="(p.modalitaEn || 'url') === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaMod(p, 'en', 'file')">Da PC</div>
+                        <div class="select-opzione-modalita" [class.attivo]="(p.modalitaEn || 'url') === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaMod(p, 'en', 'url')">URL diretto</div>
+                      </div>
+                    </div>
+                    <div
+                      class="zona-drop"
+                      *ngIf="(p.modalitaEn || 'url') === 'file'"
+                      dragdrop
+                      (alRilascio)="onDropFile($event, 'en', p)"
+                      (click)="inputModEn.click()"
+                    >
+                      <input type="file" #inputModEn accept="video/mp4" (change)="onFileChange($event, 'en', p)" />
+                      <svg *ngIf="!p.fileEn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" /></svg>
+                      <span *ngIf="!p.fileEn" class="drop-testo">Trascina o clicca (file singolo)</span>
+                      <span *ngIf="p.fileEn" class="drop-nome">{{ p.fileEn.name }}</span>
+                      <button *ngIf="p.fileEn" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); p.fileEn = null">✕</button>
+                    </div>
+                    <div class="campo-url-diretto" *ngIf="(p.modalitaEn || 'url') === 'url'">
+                      <input type="text" [placeholder]="'https://d2kd3i5q9rl184.cloudfront.net/media/med_' + p.id_pubblicita + '_en.mp4'" [(ngModel)]="p.urlEn" />
+                    </div>
+                  </div>
+
+                  <button type="button" class="gp-salva-btn" (click)="salvaPubblicita(p)" [disabled]="p.salvataggioInCorso">
+                    <ng-container *ngIf="!p.salvataggioInCorso">Salva modifiche</ng-container>
+                    <app-spinner *ngIf="p.salvataggioInCorso"></app-spinner>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <app-bottone-aggiungi
+              titolo="Aggiungi pubblicità"
+              (azione)="toggleFormNuova()"
+            ></app-bottone-aggiungi>
+
+            <div *ngIf="mostraFormNuova" class="gp-form-nuova">
+              <div class="gp-form-riga">
+                <label>Descrizione</label>
+                <input type="text" [(ngModel)]="nuovaDescrizione" maxlength="255" />
+              </div>
+              <div class="gp-form-riga">
+                <label>Inizio campagna</label>
+                <input type="date" [(ngModel)]="nuovoInizio" />
+              </div>
+              <div class="gp-form-riga">
+                <label>Fine campagna</label>
+                <input type="date" [(ngModel)]="nuovoFine" />
+              </div>
+              <div class="gp-form-riga">
+                <label>Peso</label>
+                <input type="number" [(ngModel)]="nuovoPeso" min="1" />
+              </div>
+              <div class="gp-form-riga">
+                <label class="gp-checkbox-label">
+                  <input type="checkbox" [(ngModel)]="nuovaCampagnaAttiva" />
+                  Campagna attiva
+                </label>
+              </div>
+
+              <div class="gp-form-riga">
+                <label>Video IT (.mp4)</label>
+                <div class="select-modalita-upload">
+                  <div
+                    class="select-header-modalita"
+                    [class.aperto]="dropdownModalitaAperta === 'nuovo_it'"
+                    (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'nuovo_it' ? '' : 'nuovo_it'"
+                  >
+                    <span>{{ modalitaNuovoIt === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+                  </div>
+                  <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'nuovo_it'">
+                    <div class="select-opzione-modalita" [class.attivo]="modalitaNuovoIt === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaNuovo('it', 'file')">Da PC</div>
+                    <div class="select-opzione-modalita" [class.attivo]="modalitaNuovoIt === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaNuovo('it', 'url')">URL diretto</div>
+                  </div>
+                </div>
+                <div
+                  class="zona-drop"
+                  *ngIf="modalitaNuovoIt === 'file'"
+                  dragdrop
+                  (alRilascio)="onDropFile($event, 'it')"
+                  (click)="inputNuovoIt.click()"
+                >
+                  <input type="file" #inputNuovoIt accept="video/mp4" (change)="onFileChange($event, 'it')" />
+                  <svg *ngIf="!nuovoFileIt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" /></svg>
+                  <span *ngIf="!nuovoFileIt" class="drop-testo">Trascina o clicca (file singolo)</span>
+                  <span *ngIf="nuovoFileIt" class="drop-nome">{{ nuovoFileIt.name }}</span>
+                  <button *ngIf="nuovoFileIt" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); nuovoFileIt = null">✕</button>
+                </div>
+                <div class="campo-url-diretto" *ngIf="modalitaNuovoIt === 'url'">
+                  <input type="text" placeholder="URL del video IT su CloudFront" [(ngModel)]="urlNuovoIt" />
+                </div>
+              </div>
+
+              <div class="gp-form-riga">
+                <label>Video EN (.mp4)</label>
+                <div class="select-modalita-upload">
+                  <div
+                    class="select-header-modalita"
+                    [class.aperto]="dropdownModalitaAperta === 'nuovo_en'"
+                    (click)="dropdownModalitaAperta = dropdownModalitaAperta === 'nuovo_en' ? '' : 'nuovo_en'"
+                  >
+                    <span>{{ modalitaNuovoEn === 'file' ? 'Da PC' : 'URL diretto' }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 12 12"><path fill="#c4c4c4" d="M6 8L1 3h10z" /></svg>
+                  </div>
+                  <div class="select-dropdown-modalita" *ngIf="dropdownModalitaAperta === 'nuovo_en'">
+                    <div class="select-opzione-modalita" [class.attivo]="modalitaNuovoEn === 'file'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaNuovo('en', 'file')">Da PC</div>
+                    <div class="select-opzione-modalita" [class.attivo]="modalitaNuovoEn === 'url'" (mousedown)="$event.preventDefault()" (click)="cambiaModalitaNuovo('en', 'url')">URL diretto</div>
+                  </div>
+                </div>
+                <div
+                  class="zona-drop"
+                  *ngIf="modalitaNuovoEn === 'file'"
+                  dragdrop
+                  (alRilascio)="onDropFile($event, 'en')"
+                  (click)="inputNuovoEn.click()"
+                >
+                  <input type="file" #inputNuovoEn accept="video/mp4" (change)="onFileChange($event, 'en')" />
+                  <svg *ngIf="!nuovoFileEn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" /></svg>
+                  <span *ngIf="!nuovoFileEn" class="drop-testo">Trascina o clicca (file singolo)</span>
+                  <span *ngIf="nuovoFileEn" class="drop-nome">{{ nuovoFileEn.name }}</span>
+                  <button *ngIf="nuovoFileEn" type="button" class="btn-rimuovi-file" (click)="$event.stopPropagation(); nuovoFileEn = null">✕</button>
+                </div>
+                <div class="campo-url-diretto" *ngIf="modalitaNuovoEn === 'url'">
+                  <input type="text" placeholder="URL del video EN su CloudFront" [(ngModel)]="urlNuovoEn" />
+                </div>
+              </div>
+
+              <div class="gp-form-bottoni">
+                <button type="button" class="gp-annulla-btn" (click)="toggleFormNuova()">Annulla</button>
+                <button type="button" class="gp-salva-btn" (click)="creaPubblicita()" [disabled]="creazioneInCorso || !nuovoInizio || !nuovoFine">
+                  <ng-container *ngIf="!creazioneInCorso">Crea</ng-container>
+                  <app-spinner *ngIf="creazioneInCorso"></app-spinner>
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <button type="button" class="gp-chiudi-btn" (click)="chiudiPannello()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Chiudi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modale-overlay-pubblicita" *ngIf="pubblicitaDaEliminare" (click)="chiudiModaleElimina()">
+    <div class="modale-contenuto-pubblicita" (click)="$event.stopPropagation()">
+      <p class="modale-messaggio-pubblicita">
+        Sei sicuro di voler eliminare la pubblicità #{{ pubblicitaDaEliminare!.id_pubblicita }}?
+      </p>
+
+      <p class="modale-sottomessaggio-pubblicita">
+        Vuoi eliminare anche i seguenti file da AWS?
+      </p>
+
+      <div class="modale-checkbox-lista-pubblicita">
+        <label class="modale-checkbox-voce-pubblicita">
+          <input type="checkbox" [(ngModel)]="categorieFileEliminazione['video_it']" />
+          <span>Video IT</span>
+        </label>
+        <label class="modale-checkbox-voce-pubblicita">
+          <input type="checkbox" [(ngModel)]="categorieFileEliminazione['video_en']" />
+          <span>Video EN</span>
+        </label>
+      </div>
+
+      <div class="modale-bottoni-pubblicita">
+        <button type="button" class="btn-annulla-pubblicita" (click)="chiudiModaleElimina()" [disabled]="eliminazioneInCorso">
+          Annulla
+        </button>
+        <button type="button" class="btn-conferma-pubblicita" (click)="confermaElimina()" [disabled]="eliminazioneInCorso">
+          <ng-container *ngIf="!eliminazioneInCorso">Confermo</ng-container>
+          <app-spinner *ngIf="eliminazioneInCorso"></app-spinner>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modale-overlay-player" *ngIf="playerUrl" (click)="chiudiPlayer()">
+    <div class="modale-contenuto-player" (click)="$event.stopPropagation()">
+      <div class="player-header">
+        <span class="player-titolo">{{ playerTitolo }}</span>
+        <button type="button" class="player-chiudi" (click)="chiudiPlayer()">✕</button>
+      </div>
+      <video [src]="playerUrl" controls autoplay class="player-video"></video>
+    </div>
+  </div>
+</section>

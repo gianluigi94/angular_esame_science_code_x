@@ -20,10 +20,10 @@ export class ApiService {
    */
   protected calcolaRisorsa(risorsa: (string | number)[]): string {
     // funzione che costruisce l'URL di una chiamata API
-    const server: string = 'http://127.0.0.1:8000/api';
+    // const server: string = 'http://127.0.0.1:8000/api';
     // const server: string = 'http://localhost/science_codex/public/api';
     // const server: string = 'http://192.168.1.38/science_codex/public/api';
-    // const server: string = 'https://api.sciencecodex.net/api';
+    const server: string = 'https://api.sciencecodex.net/api';
     const versione: string = 'v1'; // Definisco la versione dell'API da usare
 
     const segments = [server, versione, ...risorsa.map(String)]; // Unisco server, versione e parametri della risorsa in un array
@@ -721,6 +721,15 @@ public correggiPagamento(): Observable<IRispostaServer> {
     return this.richiestaGenerica(['gestione-utenti', 'utenti'], 'GET');
   }
 
+  public getUtentiModerazione(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'modera-utenti'], 'GET');
+  }
+
+  public cambiaStatoUtente(idContatto: number | string): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'stato']);
+    return this.http.put<IRispostaServer>(url, {});
+  }
+
   public getUtenteAnagrafica(idContatto: number | string): Observable<IRispostaServer> {
     return this.richiestaGenerica(['gestione-utenti', 'utente', idContatto, 'anagrafica'], 'GET');
   }
@@ -840,5 +849,66 @@ public correggiPagamento(): Observable<IRispostaServer> {
   public riordinaEpisodi(idSerie: number, stagioni: { idStagione: number; episodi: string[] }[]): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['serie', idSerie, 'riordina-episodi']);
     return this.http.put<IRispostaServer>(url, { stagioni });
+  }
+
+  public getConfigurazioni(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['configurazioni'], 'GET');
+  }
+
+  public creaConfigurazione(dati: { chiave: string; valore: number }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['configurazioni']);
+    return this.http.post<IRispostaServer>(url, dati);
+  }
+
+  public aggiornaConfigurazione(idConfigurazione: number, valore: number): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['configurazioni', idConfigurazione]);
+    return this.http.put<IRispostaServer>(url, { valore });
+  }
+
+  public getPubblicitaGestione(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-pubblicita'], 'GET');
+  }
+
+  public creaPubblicita(dati: {
+    descrizione: string;
+    inizio_campagna: string;
+    fine_campagna: string;
+    peso: number;
+    campagna_attiva: boolean;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-pubblicita']);
+    return this.http.post<IRispostaServer>(url, dati);
+  }
+
+  public aggiornaPubblicita(id: number, dati: {
+    descrizione: string;
+    inizio_campagna: string;
+    fine_campagna: string;
+    peso: number;
+    campagna_attiva: boolean;
+  }): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-pubblicita', id]);
+    return this.http.put<IRispostaServer>(url, dati);
+  }
+
+  public eliminaPubblicita(id: number, categorieFile: Record<string, boolean> = {}): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-pubblicita', id]);
+    return this.http.delete<IRispostaServer>(url, {
+      body: { categorie_file: categorieFile },
+    });
+  }
+
+  public getPresignedUrlsPubblicita(id: number, files: any[], urlDiretti: any[] = []): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-pubblicita', id, 'presigned-urls']);
+    return this.http.post<IRispostaServer>(url, { files, url_diretti: urlDiretti });
+  }
+
+  public getGestioneRuoli(): Observable<IRispostaServer> {
+    return this.richiestaGenerica(['gestione-utenti', 'ruoli'], 'GET');
+  }
+
+  public cambiaRuoloUtente(idContatto: number | string, idRuolo: number): Observable<IRispostaServer> {
+    const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'ruolo']);
+    return this.http.put<IRispostaServer>(url, { id_ruolo: idRuolo });
   }
 }

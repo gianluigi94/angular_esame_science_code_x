@@ -2,6 +2,7 @@ import { Component, OnInit, EventEmitter, Output, ChangeDetectorRef, NgZone } fr
 import { take } from 'rxjs';
 import gsap from 'gsap';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
+import { ToastService } from 'src/app/_servizi_globali/toast.service';
 
 interface AccessoUtente {
   id_contatto: number;
@@ -43,6 +44,25 @@ interface UtenteFatture {
   fatture: FatturaUtente[];
   aperta: boolean;
 }
+interface UtenteRuolo {
+  id_contatto: number;
+  nome: string;
+  cognome: string;
+  id_ruolo: number | null;
+  ruolo: string | null;
+}
+
+interface RuoloAssegnabile {
+  id_ruolo: number;
+  ruolo: string;
+}
+interface UtenteModerazione {
+  id_contatto: number;
+  nome: string;
+  cognome: string;
+  id_stato_utente: number;
+  stato: string;
+}
 
 @Component({
   selector: 'app-gestione-utenti',
@@ -52,7 +72,7 @@ interface UtenteFatture {
 export class GestioneUtentiComponent implements OnInit {
   @Output() chiudi = new EventEmitter<void>();
 
-  vistaCorrente: 'accessi' | 'fatture' | 'profili' = 'accessi';
+  vistaCorrente: 'accessi' | 'fatture' | 'profili' | 'modera' | 'ruoli' = 'accessi';
   animazioneInCorso = false;
 
   accessiUtenti: AccessoUtente[] = [];
@@ -68,15 +88,34 @@ export class GestioneUtentiComponent implements OnInit {
   profiliCaricati = false;
   utenteProfiloSelezionato: number | null = null;
 
+  utentiModerazione: UtenteModerazione[] = [];
+  caricamentoModerazione = false;
+  moderazioneCaricata = false;
+  utenteModerazioneSelezionato: UtenteModerazione | null = null;
+  salvataggioModerazione = false;
+
+  puoGestireRuoli = false;
+  mioIdContatto: number | null = null;
+  utentiRuoli: UtenteRuolo[] = [];
+  ruoliAssegnabili: RuoloAssegnabile[] = [];
+  caricamentoRuoli = false;
+  ruoliCaricati = false;
+  utenteRuoloSelezionato: UtenteRuolo | null = null;
+  ruoloScelto: number | null = null;
+  salvataggioRuolo = false;
+
   private mesiIt = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
   constructor(
     private api: ApiService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
+    private toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
+    this.puoGestireRuoli = this.haAbilitaGestireRuoli();
+    this.mioIdContatto = this.leggiMioIdContatto();
     this.caricaAccessi();
     setTimeout(() => this.avviaAnimazioniIngresso(), 0);
   }
@@ -95,7 +134,7 @@ export class GestioneUtentiComponent implements OnInit {
     });
   }
 
-  cambiaVista(vista: 'accessi' | 'fatture' | 'profili'): void {
+  cambiaVista(vista: 'accessi' | 'fatture' | 'profili' | 'modera' | 'ruoli'): void {
     if (this.animazioneInCorso || this.vistaCorrente === vista) return;
     this.animazioneInCorso = true;
 
@@ -119,6 +158,14 @@ export class GestioneUtentiComponent implements OnInit {
 
           if (vista === 'profili' && !this.profiliCaricati) {
             this.caricaProfili();
+          }
+
+          if (vista === 'modera' && !this.moderazioneCaricata) {
+            this.caricaModerazione();
+          }
+
+          if (vista === 'ruoli' && !this.ruoliCaricati) {
+            this.caricaRuoli();
           }
 
           this.cdr.detectChanges();
@@ -172,6 +219,173 @@ export class GestioneUtentiComponent implements OnInit {
   aggiornaProfiloNome(utente: { nome: string; cognome: string }, evento: { nome: string; cognome: string }): void {
     utente.nome = evento.nome;
     utente.cognome = evento.cognome;
+  }
+  private caricaRuoli(): void {
+    if (this.ruoliCaricati || this.caricamentoRuoli) return;
+    this.caricamentoRuoli = true;
+
+    this.api.getGestioneRuoli().pipe(take(1)).subscribe({
+      next: (rit) => {
+        this.utentiRuoli = rit.data?.utenti ?? [];
+        this.ruoliAssegnabili = rit.data?.ruoli_assegnabili ?? [];
+        this.ruoliCaricati = true;
+        this.caricamentoRuoli = false;
+      },
+      error: () => {
+        this.utentiRuoli = [];
+        this.ruoliAssegnabili = [];
+        this.caricamentoRuoli = false;
+      },
+    });
+  }
+  private caricaModerazione(): void {
+    if (this.moderazioneCaricata || this.caricamentoModerazione) return;
+    this.caricamentoModerazione = true;
+
+    this.api.getUtentiModerazione().pipe(take(1)).subscribe({
+      next: (rit) => {
+        this.utentiModerazione = rit.data ?? [];
+        this.moderazioneCaricata = true;
+        this.caricamentoModerazione = false;
+      },
+      error: () => {
+        this.utentiModerazione = [];
+        this.caricamentoModerazione = false;
+      },
+    });
+  }
+
+  apriModaleModerazione(utente: UtenteModerazione): void {
+    if (this.salvataggioModerazione) return;
+    this.utenteModerazioneSelezionato = utente;
+  }
+
+  chiudiModaleModerazione(): void {
+    if (this.salvataggioModerazione) return;
+    this.utenteModerazioneSelezionato = null;
+  }
+
+  private leggiPayloadToken(): any | null {
+    const archivi = [localStorage, sessionStorage];
+
+    for (const archivio of archivi) {
+      for (let i = 0; i < archivio.length; i++) {
+        const chiave = archivio.key(i);
+        if (!chiave) continue;
+
+        const valore = archivio.getItem(chiave);
+        if (!valore || valore.split('.').length !== 3) continue;
+
+        try {
+          const payloadBase64 = valore.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+          return JSON.parse(decodeURIComponent(escape(atob(payloadBase64))));
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private haAbilitaModeratore(): boolean {
+    const payload = this.leggiPayloadToken();
+    const abilita = payload?.data?.abilita ?? [];
+
+    return Array.isArray(abilita) && abilita.map(Number).includes(14);
+  }
+private haAbilitaGestireRuoli(): boolean {
+    const payload = this.leggiPayloadToken();
+    const abilita = payload?.data?.abilita ?? [];
+
+    return Array.isArray(abilita) && abilita.map(Number).includes(13);
+  }
+
+  private leggiMioIdContatto(): number | null {
+    const payload = this.leggiPayloadToken();
+    const id = payload?.data?.id_contatto;
+    return id != null ? Number(id) : null;
+  }
+
+  apriModaleRuolo(utente: UtenteRuolo): void {
+    if (this.salvataggioRuolo) return;
+    this.utenteRuoloSelezionato = utente;
+    this.ruoloScelto = null;
+  }
+
+  chiudiModaleRuolo(): void {
+    if (this.salvataggioRuolo) return;
+    this.utenteRuoloSelezionato = null;
+    this.ruoloScelto = null;
+  }
+
+  confermaCambioRuolo(): void {
+    if (!this.utenteRuoloSelezionato || this.ruoloScelto === null || this.salvataggioRuolo) return;
+
+    if (!this.haAbilitaGestireRuoli()) {
+      alert("ATTENZIONE: ti manca l'abilità necessaria (gestire_admin).");
+      return;
+    }
+
+    this.salvataggioRuolo = true;
+
+    this.api.cambiaRuoloUtente(this.utenteRuoloSelezionato.id_contatto, this.ruoloScelto).pipe(take(1)).subscribe({
+      next: (rit) => {
+        const aggiornato = rit.data;
+
+        this.utentiRuoli = this.utentiRuoli.map((utente) => {
+          if (utente.id_contatto !== aggiornato.id_contatto) return utente;
+
+          return {
+            ...utente,
+            id_ruolo: aggiornato.id_ruolo,
+            ruolo: aggiornato.ruolo,
+          };
+        });
+
+        this.toastService.successo(`Ruolo di ${aggiornato.nome} ${aggiornato.cognome} aggiornato a ${aggiornato.ruolo}.`);
+
+        this.utenteRuoloSelezionato = null;
+        this.ruoloScelto = null;
+        this.salvataggioRuolo = false;
+      },
+      error: () => {
+        this.salvataggioRuolo = false;
+        this.toastService.errore('Errore durante il cambio ruolo.');
+      },
+    });
+  }
+
+  confermaModerazione(): void {
+    if (!this.utenteModerazioneSelezionato || this.salvataggioModerazione) return;
+
+    if (!this.haAbilitaModeratore()) {
+      alert("ATTENZIONE: ti manca l'abilità necessaria (moderatore).");
+      return;
+    }
+
+    this.salvataggioModerazione = true;
+
+    this.api.cambiaStatoUtente(this.utenteModerazioneSelezionato.id_contatto).pipe(take(1)).subscribe({
+      next: (rit) => {
+        const utenteAggiornato = rit.data;
+
+        this.utentiModerazione = this.utentiModerazione.map((utente) => {
+          if (utente.id_contatto !== utenteAggiornato.id_contatto) return utente;
+
+          return {
+            ...utente,
+            ...utenteAggiornato,
+          };
+        });
+
+        this.utenteModerazioneSelezionato = null;
+        this.salvataggioModerazione = false;
+      },
+      error: () => {
+        this.salvataggioModerazione = false;
+      },
+    });
   }
 
   private caricaFatture(): void {

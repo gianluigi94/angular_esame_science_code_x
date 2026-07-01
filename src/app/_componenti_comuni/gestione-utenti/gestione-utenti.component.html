@@ -31,6 +31,25 @@
           Profili
         </button>
 
+        <button
+          type="button"
+          class="azione-btn"
+          [class.selezionato]="vistaCorrente === 'modera'"
+          (click)="cambiaVista('modera')"
+        >
+          Modera utenti
+        </button>
+
+        <button
+          *ngIf="puoGestireRuoli"
+          type="button"
+          class="azione-btn"
+          [class.selezionato]="vistaCorrente === 'ruoli'"
+          (click)="cambiaVista('ruoli')"
+        >
+          Ruoli
+        </button>
+
         <button type="button" class="gu-chiudi-btn" (click)="chiudiPannello()">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
             <path d="M15 18l-6-6 6-6" />
@@ -40,7 +59,7 @@
       </nav>
 
       <div class="gu-pannello">
-        <h2 class="gu-titolo">{{ vistaCorrente === 'accessi' ? 'Accessi' : vistaCorrente === 'fatture' ? 'Fatture' : 'Profili' }}</h2>
+        <h2 class="gu-titolo">{{ vistaCorrente === 'accessi' ? 'Accessi' : vistaCorrente === 'fatture' ? 'Fatture' : vistaCorrente === 'profili' ? 'Profili' : vistaCorrente === 'modera' ? 'Modera utenti' : 'Ruoli' }}</h2>
 
         <div *ngIf="vistaCorrente === 'accessi'" class="accessi-contenuto gu-campo-animato">
           <div *ngIf="caricamentoAccessi" class="gu-spinner">
@@ -183,6 +202,136 @@
             </div>
           </ng-container>
         </div>
+
+        <div *ngIf="vistaCorrente === 'modera'" class="modera-contenuto gu-campo-animato">
+          <div *ngIf="caricamentoModerazione" class="gu-spinner">
+            <app-spinner></app-spinner>
+          </div>
+
+          <ng-container *ngIf="!caricamentoModerazione">
+            <div *ngIf="utentiModerazione.length === 0" class="gu-vuoto">
+              Nessun utente
+            </div>
+
+            <div class="accessi-lista" *ngIf="utentiModerazione.length > 0">
+              <div class="accessi-utente" *ngFor="let utente of utentiModerazione">
+                <div class="modera-utente-riga">
+                  <span class="accessi-nome">{{ utente.nome }} {{ utente.cognome }}</span>
+
+                  <button
+                    type="button"
+                    class="modera-stato-btn"
+                    [class.attivo]="utente.id_stato_utente === 1"
+                    [class.bannato]="utente.id_stato_utente === 2"
+                    [disabled]="salvataggioModerazione"
+                    (click)="apriModaleModerazione(utente)"
+                  >
+                    {{ utente.id_stato_utente === 1 ? 'Attivo' : 'Bannato' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <div *ngIf="vistaCorrente === 'ruoli'" class="ruoli-contenuto gu-campo-animato">
+          <div *ngIf="caricamentoRuoli" class="gu-spinner">
+            <app-spinner></app-spinner>
+          </div>
+
+          <ng-container *ngIf="!caricamentoRuoli">
+            <div *ngIf="utentiRuoli.length === 0" class="gu-vuoto">
+              Nessun utente
+            </div>
+
+            <div class="accessi-lista" *ngIf="utentiRuoli.length > 0">
+              <div class="accessi-utente" *ngFor="let utente of utentiRuoli">
+                <div class="ruoli-utente-riga">
+                  <span class="accessi-nome">{{ utente.nome }} {{ utente.cognome }}</span>
+
+                  <span class="ruoli-badge" [class.principale]="utente.id_ruolo === 7">{{ utente.ruolo || 'nessun ruolo' }}</span>
+
+                  <button
+                    type="button"
+                    class="ruoli-cambia-btn"
+                    [disabled]="utente.id_ruolo === 7 || utente.id_contatto === mioIdContatto || salvataggioRuolo"
+                    (click)="apriModaleRuolo(utente)"
+                  >
+                    {{ utente.id_ruolo === 7 ? 'Bloccato' : utente.id_contatto === mioIdContatto ? 'Tu' : 'Cambia ruolo' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modale-overlay-moderazione" *ngIf="utenteModerazioneSelezionato" (click)="chiudiModaleModerazione()">
+    <div class="modale-contenuto-moderazione" (click)="$event.stopPropagation()">
+      <p class="modale-messaggio-moderazione">
+        Sei sicuro di voler {{ utenteModerazioneSelezionato.id_stato_utente === 1 ? 'bannare' : 'riabilitare' }}
+        {{ utenteModerazioneSelezionato.nome }} {{ utenteModerazioneSelezionato.cognome }}?
+      </p>
+
+      <p class="modale-sottomessaggio-moderazione" *ngIf="utenteModerazioneSelezionato.id_stato_utente === 1">
+        L'utente verrà scollegato da tutte le sessioni attive.
+      </p>
+
+      <p class="modale-sottomessaggio-moderazione" *ngIf="utenteModerazioneSelezionato.id_stato_utente === 2">
+        L'utente potrà effettuare nuovamente il login.
+      </p>
+
+      <div class="modale-bottoni-moderazione">
+        <button type="button" class="btn-annulla-moderazione" (click)="chiudiModaleModerazione()" [disabled]="salvataggioModerazione">
+          Annulla
+        </button>
+
+        <button type="button" class="btn-conferma-moderazione" [class.banna]="utenteModerazioneSelezionato.id_stato_utente === 1" (click)="confermaModerazione()" [disabled]="salvataggioModerazione">
+          <ng-container *ngIf="!salvataggioModerazione">Confermo</ng-container>
+          <app-spinner *ngIf="salvataggioModerazione"></app-spinner>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modale-overlay-moderazione" *ngIf="utenteRuoloSelezionato" (click)="chiudiModaleRuolo()">
+    <div class="modale-contenuto-moderazione" (click)="$event.stopPropagation()">
+      <p class="modale-messaggio-moderazione">
+        Cambia ruolo di {{ utenteRuoloSelezionato.nome }} {{ utenteRuoloSelezionato.cognome }}
+      </p>
+
+      <p class="modale-sottomessaggio-moderazione">
+        Ruolo attuale: {{ utenteRuoloSelezionato.ruolo || 'nessun ruolo' }}
+      </p>
+
+      <div class="ruoli-scelta-lista">
+        <button
+          type="button"
+          class="ruoli-scelta-voce"
+          *ngFor="let r of ruoliAssegnabili"
+          [class.scelto]="ruoloScelto === r.id_ruolo"
+          [disabled]="salvataggioRuolo"
+          (click)="ruoloScelto = r.id_ruolo"
+        >
+          {{ r.ruolo }}
+        </button>
+      </div>
+
+      <p class="ruoli-avviso-sessioni">
+        L'utente verrà scollegato da tutte le sessioni attive.
+      </p>
+
+      <div class="modale-bottoni-moderazione">
+        <button type="button" class="btn-annulla-moderazione" (click)="chiudiModaleRuolo()" [disabled]="salvataggioRuolo">
+          Annulla
+        </button>
+
+        <button type="button" class="btn-conferma-moderazione ruolo" (click)="confermaCambioRuolo()" [disabled]="ruoloScelto === null || salvataggioRuolo">
+          <ng-container *ngIf="!salvataggioRuolo">Conferma</ng-container>
+          <app-spinner *ngIf="salvataggioRuolo"></app-spinner>
+        </button>
       </div>
     </div>
   </div>

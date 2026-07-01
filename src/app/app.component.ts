@@ -72,6 +72,18 @@ export class AppComponent implements OnInit {
   })
   contenitoreGestioneUtenti!: ViewContainerRef;
 
+  @ViewChild('contenitoreGestionePubblicita', {
+    read: ViewContainerRef,
+    static: true,
+  })
+  contenitoreGestionePubblicita!: ViewContainerRef;
+
+  @ViewChild('contenitoreConfigurazioni', {
+    read: ViewContainerRef,
+    static: true,
+  })
+  contenitoreConfigurazioni!: ViewContainerRef;
+
   @ViewChild('contenitoreFormAggiungiMedia', {
     read: ViewContainerRef,
     static: true,
@@ -88,6 +100,17 @@ export class AppComponent implements OnInit {
   moduloGestioneUtentiRef: NgModuleRef<any> | null = null;
   sottoscrizioneChiudiGestioneUtenti: Subscription | null = null;
   gestioneUtentiCaricamento = false;
+
+  componenteGestionePubblicitaRef: ComponentRef<any> | null = null;
+  moduloGestionePubblicitaRef: NgModuleRef<any> | null = null;
+  sottoscrizioneChiudiGestionePubblicita: Subscription | null = null;
+  gestionePubblicitaCaricamento = false;
+
+  componenteConfigurazioniRef: ComponentRef<any> | null = null;
+  moduloConfigurazioniRef: NgModuleRef<any> | null = null;
+  sottoscrizioneChiudiConfigurazioni: Subscription | null = null;
+  configurazioniCaricamento = false;
+  configurazioniVisibile = false;
 
   componenteFormAggiungiMediaRef: ComponentRef<any> | null = null;
   moduloFormAggiungiMediaRef: NgModuleRef<any> | null = null;
@@ -289,6 +312,14 @@ export class AppComponent implements OnInit {
 
     window.addEventListener('apri-gestione-utenti', () => {
       void this.apriGestioneUtentiLazy();
+    });
+
+    window.addEventListener('apri-gestione-pubblicita', () => {
+      void this.apriGestionePubblicitaLazy();
+    });
+
+    window.addEventListener('apri-configurazioni', () => {
+      void this.apriConfigurazioniLazy();
     });
 
     window.addEventListener('apri-riordina-episodi', (evento: Event) => {
@@ -797,6 +828,95 @@ export class AppComponent implements OnInit {
     this.componenteGestioneUtentiRef = null;
 
     this.contenitoreGestioneUtenti.clear();
+    this.cdr.detectChanges();
+  }
+
+  async apriGestionePubblicitaLazy(): Promise<void> {
+    if (this.componenteGestionePubblicitaRef || this.gestionePubblicitaCaricamento) return;
+
+    this.gestionePubblicitaCaricamento = true;
+
+    const { GestionePubblicitaLazyModule, GestionePubblicitaComponent } = await import(
+      './_componenti_comuni/gestione-pubblicita/gestione-pubblicita-lazy.module'
+    );
+
+    if (!this.moduloGestionePubblicitaRef) {
+      this.moduloGestionePubblicitaRef = createNgModule(
+        GestionePubblicitaLazyModule,
+        this.injector,
+      );
+    }
+
+    this.contenitoreGestionePubblicita.clear();
+
+    this.componenteGestionePubblicitaRef =
+      this.contenitoreGestionePubblicita.createComponent(GestionePubblicitaComponent, {
+        ngModuleRef: this.moduloGestionePubblicitaRef,
+      });
+
+    this.sottoscrizioneChiudiGestionePubblicita =
+      this.componenteGestionePubblicitaRef.instance.chiudi.subscribe(() => {
+        this.chiudiGestionePubblicita();
+      });
+
+    this.gestionePubblicitaCaricamento = false;
+    this.cdr.detectChanges();
+  }
+
+  chiudiGestionePubblicita(): void {
+    this.sottoscrizioneChiudiGestionePubblicita?.unsubscribe();
+    this.sottoscrizioneChiudiGestionePubblicita = null;
+
+    this.componenteGestionePubblicitaRef?.destroy();
+    this.componenteGestionePubblicitaRef = null;
+
+    this.contenitoreGestionePubblicita.clear();
+    this.cdr.detectChanges();
+  }
+
+  async apriConfigurazioniLazy(): Promise<void> {
+    if (this.componenteConfigurazioniRef || this.configurazioniCaricamento) return;
+
+    this.configurazioniCaricamento = true;
+
+    const { ConfigurazioniLazyModule, ConfigurazioniComponent } = await import(
+      './_componenti_comuni/configurazioni/configurazioni-lazy.module'
+    );
+
+    if (!this.moduloConfigurazioniRef) {
+      this.moduloConfigurazioniRef = createNgModule(
+        ConfigurazioniLazyModule,
+        this.injector,
+      );
+    }
+
+    this.contenitoreConfigurazioni.clear();
+
+    this.componenteConfigurazioniRef =
+      this.contenitoreConfigurazioni.createComponent(ConfigurazioniComponent, {
+        ngModuleRef: this.moduloConfigurazioniRef,
+      });
+
+    this.sottoscrizioneChiudiConfigurazioni =
+      this.componenteConfigurazioniRef.instance.chiudi.subscribe(() => {
+        this.chiudiConfigurazioni();
+      });
+
+    this.configurazioniVisibile = true;
+    this.configurazioniCaricamento = false;
+    this.cdr.detectChanges();
+  }
+
+  chiudiConfigurazioni(): void {
+    this.configurazioniVisibile = false;
+
+    this.sottoscrizioneChiudiConfigurazioni?.unsubscribe();
+    this.sottoscrizioneChiudiConfigurazioni = null;
+
+    this.componenteConfigurazioniRef?.destroy();
+    this.componenteConfigurazioniRef = null;
+
+    this.contenitoreConfigurazioni.clear();
     this.cdr.detectChanges();
   }
 

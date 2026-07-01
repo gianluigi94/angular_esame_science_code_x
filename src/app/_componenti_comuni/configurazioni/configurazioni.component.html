@@ -1,0 +1,87 @@
+<span class="gu-sfocatura"></span>
+
+<section class="gestione-utenti-contenuto">
+  <div class="gu-blocco">
+    <div class="gu-box gu-box-singolo">
+      <div class="gu-pannello gu-pannello-largo">
+        <h2 class="gu-titolo">Configurazioni</h2>
+
+        <div class="config-contenuto gu-campo-animato">
+          <div *ngIf="caricamento" class="gu-spinner">
+            <app-spinner></app-spinner>
+          </div>
+
+          <ng-container *ngIf="!caricamento">
+            <div *ngIf="configurazioni.length === 0" class="gu-vuoto">
+              Nessuna configurazione
+            </div>
+
+            <div class="config-lista" *ngIf="configurazioni.length > 0">
+              <div class="config-riga" *ngFor="let config of configurazioni">
+                <span class="config-chiave">{{ config.chiave }}</span>
+
+                <span class="config-leggibile" *ngIf="config.leggibile">{{ config.leggibile }}</span>
+                <span class="config-leggibile config-leggibile-vuota" *ngIf="!config.leggibile"></span>
+
+                <input
+                  class="config-input"
+                  type="text"
+                  inputmode="numeric"
+                  [(ngModel)]="config.valoreModifica"
+                  [disabled]="config.salvataggio"
+                />
+
+                <button
+                  type="button"
+                  class="config-salva-btn"
+                  [disabled]="config.salvataggio || config.valoreModifica === '' || config.valoreModifica === (config.valore + '')"
+                  (click)="salvaConfigurazione(config)"
+                >
+                  <ng-container *ngIf="!config.salvataggio">Salva</ng-container>
+                  <app-spinner *ngIf="config.salvataggio"></app-spinner>
+                </button>
+              </div>
+            </div>
+
+            <app-bottone-aggiungi
+              titolo="Aggiungi configurazione"
+              (azione)="apriFormNuova()"
+            ></app-bottone-aggiungi>
+
+            <div class="config-form-nuova" *ngIf="formNuovaAperta">
+              <input
+                class="config-input config-input-chiave"
+                type="text"
+                placeholder="chiave"
+                [(ngModel)]="nuovaChiave"
+                [disabled]="salvataggioNuova"
+              />
+              <input
+                class="config-input"
+                type="text"
+                inputmode="numeric"
+                placeholder="valore"
+                [(ngModel)]="nuovoValore"
+                [disabled]="salvataggioNuova"
+              />
+              <div class="config-form-bottoni">
+                <button type="button" class="config-annulla-btn" [disabled]="salvataggioNuova" (click)="chiudiFormNuova()">Annulla</button>
+                <button type="button" class="config-salva-btn" [disabled]="salvataggioNuova" (click)="salvaNuova()">
+                  <ng-container *ngIf="!salvataggioNuova">Aggiungi</ng-container>
+                  <app-spinner *ngIf="salvataggioNuova"></app-spinner>
+                </button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <button type="button" class="gu-chiudi-btn" (click)="chiudiPannello()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#c4c4c4">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Chiudi
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
