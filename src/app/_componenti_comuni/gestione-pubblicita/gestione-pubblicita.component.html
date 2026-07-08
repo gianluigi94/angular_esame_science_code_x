@@ -67,10 +67,16 @@
                   <div class="gp-form-riga">
                     <label>Fine campagna</label>
                     <input type="date" [(ngModel)]="datiModifica[p.id_pubblicita].fine_campagna" />
+                    <p class="gp-errore" *ngIf="datiModifica[p.id_pubblicita].inizio_campagna && datiModifica[p.id_pubblicita].fine_campagna && dateIncoerenti(datiModifica[p.id_pubblicita].inizio_campagna, datiModifica[p.id_pubblicita].fine_campagna)">
+                      La data di fine non può precedere quella di inizio.
+                    </p>
                   </div>
                   <div class="gp-form-riga">
                     <label>Peso</label>
                     <input type="number" [(ngModel)]="datiModifica[p.id_pubblicita].peso" min="1" />
+                    <p class="gp-errore" *ngIf="pesoNonValido(datiModifica[p.id_pubblicita].peso)">
+                      Il peso deve essere un intero maggiore o uguale a 1.
+                    </p>
                   </div>
                   <div class="gp-form-riga">
                     <label class="gp-checkbox-label">
@@ -147,7 +153,7 @@
                     </div>
                   </div>
 
-                  <button type="button" class="gp-salva-btn" (click)="salvaPubblicita(p)" [disabled]="p.salvataggioInCorso">
+                  <button type="button" class="gp-salva-btn" (click)="salvaPubblicita(p)" [disabled]="p.salvataggioInCorso || !datiModifica[p.id_pubblicita].inizio_campagna || !datiModifica[p.id_pubblicita].fine_campagna || dateIncoerenti(datiModifica[p.id_pubblicita].inizio_campagna, datiModifica[p.id_pubblicita].fine_campagna) || pesoNonValido(datiModifica[p.id_pubblicita].peso)">
                     <ng-container *ngIf="!p.salvataggioInCorso">Salva modifiche</ng-container>
                     <app-spinner *ngIf="p.salvataggioInCorso"></app-spinner>
                   </button>
@@ -172,10 +178,16 @@
               <div class="gp-form-riga">
                 <label>Fine campagna</label>
                 <input type="date" [(ngModel)]="nuovoFine" />
+                <p class="gp-errore" *ngIf="nuovoInizio && nuovoFine && dateIncoerenti(nuovoInizio, nuovoFine)">
+                  La data di fine non può precedere quella di inizio.
+                </p>
               </div>
               <div class="gp-form-riga">
                 <label>Peso</label>
                 <input type="number" [(ngModel)]="nuovoPeso" min="1" />
+                <p class="gp-errore" *ngIf="pesoNonValido(nuovoPeso)">
+                  Il peso deve essere un intero maggiore o uguale a 1.
+                </p>
               </div>
               <div class="gp-form-riga">
                 <label class="gp-checkbox-label">
@@ -254,7 +266,7 @@
 
               <div class="gp-form-bottoni">
                 <button type="button" class="gp-annulla-btn" (click)="toggleFormNuova()">Annulla</button>
-                <button type="button" class="gp-salva-btn" (click)="creaPubblicita()" [disabled]="creazioneInCorso || !nuovoInizio || !nuovoFine">
+                <button type="button" class="gp-salva-btn" (click)="creaPubblicita()" [disabled]="creazioneInCorso || !nuovoInizio || !nuovoFine || dateIncoerenti(nuovoInizio, nuovoFine) || pesoNonValido(nuovoPeso)">
                   <ng-container *ngIf="!creazioneInCorso">Crea</ng-container>
                   <app-spinner *ngIf="creazioneInCorso"></app-spinner>
                 </button>

@@ -235,3 +235,22 @@
   flex-direction: column;
   align-items: center;
 }
+
+.config-riga {
+  flex-wrap: wrap;
+}
+
+.errore-campo {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: #b41414;
+  text-shadow: 1px 1px 3px #14110a;
+  font-family: "Quantico", serif;
+  font-weight: bolder;
+  width: fit-content;
+  text-align: center;
+}
+
+.config-form-nuova {
+  flex-wrap: wrap;
+}

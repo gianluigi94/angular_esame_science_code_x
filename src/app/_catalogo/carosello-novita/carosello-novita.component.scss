@@ -339,3 +339,31 @@ video-js {
 }
 
 
+.btn-gestione-novita {
+  position: absolute;
+  top: 110px;
+  right: 40px;
+  z-index: 25;
+  pointer-events: auto;
+  background: rgba(59, 59, 59, 0.34);
+  border: 1px solid #ec820a;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.icona-gestione-novita {
+  width: 22px;
+  height: 22px;
+  color: #ec820a;
+}
+
+

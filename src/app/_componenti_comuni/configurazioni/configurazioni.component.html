@@ -17,7 +17,7 @@
             </div>
 
             <div class="config-lista" *ngIf="configurazioni.length > 0">
-              <div class="config-riga" *ngFor="let config of configurazioni">
+              <div class="config-riga" *ngFor="let config of configurazioni; let i = index" [formGroup]="formsConfig[i]">
                 <span class="config-chiave">{{ config.chiave }}</span>
 
                 <span class="config-leggibile" *ngIf="config.leggibile">{{ config.leggibile }}</span>
@@ -27,19 +27,22 @@
                   class="config-input"
                   type="text"
                   inputmode="numeric"
-                  [(ngModel)]="config.valoreModifica"
-                  [disabled]="config.salvataggio"
+                  formControlName="valore"
+                  [readonly]="config.salvataggio"
                 />
 
                 <button
                   type="button"
                   class="config-salva-btn"
-                  [disabled]="config.salvataggio || config.valoreModifica === '' || config.valoreModifica === (config.valore + '')"
-                  (click)="salvaConfigurazione(config)"
+                  [disabled]="config.salvataggio || formsConfig[i].invalid || formsConfig[i].get('valore')?.value === (config.valore + '')"
+                  (click)="salvaConfigurazione(config, i)"
                 >
                   <ng-container *ngIf="!config.salvataggio">Salva</ng-container>
                   <app-spinner *ngIf="config.salvataggio"></app-spinner>
                 </button>
+
+                <p class="errore-campo" *ngIf="formsConfig[i].get('valore')?.touched && formsConfig[i].get('valore')?.errors?.['required']">Il valore è obbligatorio.</p>
+                <p class="errore-campo" *ngIf="formsConfig[i].get('valore')?.touched && formsConfig[i].get('valore')?.errors?.['pattern']">Deve essere un numero intero maggiore o uguale a zero.</p>
               </div>
             </div>
 
@@ -48,25 +51,31 @@
               (azione)="apriFormNuova()"
             ></app-bottone-aggiungi>
 
-            <div class="config-form-nuova" *ngIf="formNuovaAperta">
+            <div class="config-form-nuova" *ngIf="formNuovaAperta" [formGroup]="formNuova">
               <input
                 class="config-input config-input-chiave"
                 type="text"
                 placeholder="chiave"
-                [(ngModel)]="nuovaChiave"
-                [disabled]="salvataggioNuova"
+                formControlName="chiave"
+                [readonly]="salvataggioNuova"
               />
+              <p class="errore-campo" *ngIf="formNuova.get('chiave')?.touched && formNuova.get('chiave')?.errors?.['required']">La chiave è obbligatoria.</p>
+              <p class="errore-campo" *ngIf="formNuova.get('chiave')?.touched && formNuova.get('chiave')?.errors?.['pattern']">La chiave non può essere vuota.</p>
+
               <input
                 class="config-input"
                 type="text"
                 inputmode="numeric"
                 placeholder="valore"
-                [(ngModel)]="nuovoValore"
-                [disabled]="salvataggioNuova"
+                formControlName="valore"
+                [readonly]="salvataggioNuova"
               />
+              <p class="errore-campo" *ngIf="formNuova.get('valore')?.touched && formNuova.get('valore')?.errors?.['required']">Il valore è obbligatorio.</p>
+              <p class="errore-campo" *ngIf="formNuova.get('valore')?.touched && formNuova.get('valore')?.errors?.['pattern']">Deve essere un numero intero maggiore o uguale a zero.</p>
+
               <div class="config-form-bottoni">
                 <button type="button" class="config-annulla-btn" [disabled]="salvataggioNuova" (click)="chiudiFormNuova()">Annulla</button>
-                <button type="button" class="config-salva-btn" [disabled]="salvataggioNuova" (click)="salvaNuova()">
+                <button type="button" class="config-salva-btn" [disabled]="salvataggioNuova || formNuova.invalid" (click)="salvaNuova()">
                   <ng-container *ngIf="!salvataggioNuova">Aggiungi</ng-container>
                   <app-spinner *ngIf="salvataggioNuova"></app-spinner>
                 </button>

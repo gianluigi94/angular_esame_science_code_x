@@ -911,4 +911,9 @@ public correggiPagamento(): Observable<IRispostaServer> {
     const url = this.calcolaRisorsa(['gestione-utenti', 'utente', idContatto, 'ruolo']);
     return this.http.put<IRispostaServer>(url, { id_ruolo: idRuolo });
   }
+
+  public impostaNovitaMedia(tipo: 'film' | 'serie', id: number, novita: boolean): Observable<IRispostaServer> {
+  const url = this.calcolaRisorsa(['media', tipo, id, 'novita']);
+  return this.http.put<IRispostaServer>(url, { novita });
+}
 }

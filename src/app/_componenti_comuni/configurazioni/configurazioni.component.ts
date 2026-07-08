@@ -1,4 +1,5 @@
 import { Component, OnInit, EventEmitter, Output, ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { take } from 'rxjs';
 import gsap from 'gsap';
 import { ApiService } from 'src/app/_servizi_globali/api.service';
@@ -8,7 +9,6 @@ interface Configurazione {
   id_configurazione: number;
   chiave: string;
   valore: number;
-  valoreModifica: string;
   salvataggio: boolean;
   leggibile: string | null;
 }
@@ -22,47 +22,34 @@ export class ConfigurazioniComponent implements OnInit {
   @Output() chiudi = new EventEmitter<void>();
 
   configurazioni: Configurazione[] = [];
+  formsConfig: FormGroup[] = [];
   caricamento = false;
 
   formNuovaAperta = false;
-  nuovaChiave = '';
-  nuovoValore = '';
+  formNuova: FormGroup;
   salvataggioNuova = false;
 
   constructor(
+    private fb: FormBuilder,
     private api: ApiService,
     private cdr: ChangeDetectorRef,
     private toastService: ToastService,
-  ) {}
+  ) {
+    this.formNuova = this.fb.group({
+      chiave: ['', [Validators.required, Validators.pattern(/\S/)]],
+      valore: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+    });
+  }
 
   ngOnInit(): void {
     this.caricaConfigurazioni();
     setTimeout(() => this.avviaAnimazioniIngresso(), 0);
   }
 
-  private haAbilitaSistemista(): boolean {
-    const archivi = [localStorage, sessionStorage];
-    for (const archivio of archivi) {
-      for (let i = 0; i < archivio.length; i++) {
-        const chiave = archivio.key(i);
-        if (!chiave) continue;
-        const valore = archivio.getItem(chiave);
-        if (!valore || valore.split('.').length !== 3) continue;
-        try {
-          const payloadBase64 = valore.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-          const payload = JSON.parse(decodeURIComponent(escape(atob(payloadBase64))));
-          const abilita = payload?.data?.abilita ?? [];
-          return Array.isArray(abilita) && abilita.map(Number).includes(15);
-        } catch {
-          continue;
-        }
-      }
-    }
-    return false;
-  }
 
-  private eChiaveTempo(chiave: string): boolean {
-    return /durata|termina|blocco/.test(chiave);
+
+   private eChiaveTempo(chiave: string): boolean {
+    return /durata|termina|blocco|preavviso|attesa/.test(chiave);
   }
 
   private formattaSecondi(secondi: number): string {
@@ -70,13 +57,17 @@ export class ConfigurazioniComponent implements OnInit {
     const minuti = secondi / 60;
     if (minuti < 60) return `≈ ${this.arrotonda(minuti)} min`;
     const ore = minuti / 60;
-    if (ore < 24) return `≈ ${this.arrotonda(ore)} ore`;
+    if (ore < 24) return `≈ ${this.arrotonda(ore)} ${this.plurale(this.arrotonda(ore), 'ora', 'ore')}`;
     const giorni = ore / 24;
-    if (giorni < 30) return `≈ ${this.arrotonda(giorni)} giorni`;
+    if (giorni < 30) return `≈ ${this.arrotonda(giorni)} ${this.plurale(this.arrotonda(giorni), 'giorno', 'giorni')}`;
     const mesi = giorni / 30;
-    if (mesi < 12) return `≈ ${this.arrotonda(mesi)} mesi`;
+    if (mesi < 12) return `≈ ${this.arrotonda(mesi)} ${this.plurale(this.arrotonda(mesi), 'mese', 'mesi')}`;
     const anni = giorni / 365;
-    return `≈ ${this.arrotonda(anni)} anni`;
+    return `≈ ${this.arrotonda(anni)} ${this.plurale(this.arrotonda(anni), 'anno', 'anni')}`;
+  }
+
+  private plurale(valore: number, sing: string, plur: string): string {
+    return valore === 1 ? sing : plur;
   }
 
   private arrotonda(n: number): number {
@@ -95,39 +86,38 @@ export class ConfigurazioniComponent implements OnInit {
           id_configurazione: c.id_configurazione,
           chiave: c.chiave,
           valore: c.valore,
-          valoreModifica: String(c.valore),
           salvataggio: false,
           leggibile: this.calcolaLeggibile(c.chiave, c.valore),
         }));
+        this.formsConfig = this.configurazioni.map((c) =>
+          this.fb.group({
+            valore: [String(c.valore), [Validators.required, Validators.pattern(/^\d+$/)]],
+          }),
+        );
         this.caricamento = false;
       },
       error: () => {
         this.configurazioni = [];
+        this.formsConfig = [];
         this.caricamento = false;
       },
     });
   }
 
-  salvaConfigurazione(config: Configurazione): void {
+  salvaConfigurazione(config: Configurazione, i: number): void {
     if (config.salvataggio) return;
 
-    const nuovoValore = Number(config.valoreModifica);
-    if (!Number.isInteger(nuovoValore) || nuovoValore < 0) {
-      alert('Il valore deve essere un intero maggiore o uguale a zero.');
-      return;
-    }
+    const form = this.formsConfig[i];
+    if (!form || form.invalid) return;
 
-    if (!this.haAbilitaSistemista()) {
-      alert("ATTENZIONE: ti manca l'abilità necessaria (sistemista).");
-      return;
-    }
+    const nuovoValore = Number(form.get('valore')!.value);
 
     config.salvataggio = true;
     this.api.aggiornaConfigurazione(config.id_configurazione, nuovoValore).pipe(take(1)).subscribe({
       next: (rit) => {
         const aggiornata = rit.data;
         config.valore = aggiornata.valore;
-        config.valoreModifica = String(aggiornata.valore);
+        form.get('valore')!.setValue(String(aggiornata.valore));
         config.leggibile = this.calcolaLeggibile(config.chiave, aggiornata.valore);
         config.salvataggio = false;
         this.toastService.successo(`Configurazione "${config.chiave}" aggiornata.`);
@@ -142,8 +132,7 @@ export class ConfigurazioniComponent implements OnInit {
   apriFormNuova(): void {
     this.formNuovaAperta = !this.formNuovaAperta;
     if (this.formNuovaAperta) {
-      this.nuovaChiave = '';
-      this.nuovoValore = '';
+      this.formNuova.reset({ chiave: '', valore: '' });
     }
   }
 
@@ -154,22 +143,10 @@ export class ConfigurazioniComponent implements OnInit {
   salvaNuova(): void {
     if (this.salvataggioNuova) return;
 
-    const chiave = this.nuovaChiave.trim();
-    const valore = Number(this.nuovoValore);
+    if (this.formNuova.invalid) return;
 
-    if (!chiave) {
-      alert('La chiave è obbligatoria.');
-      return;
-    }
-    if (!Number.isInteger(valore) || valore < 0) {
-      alert('Il valore deve essere un intero maggiore o uguale a zero.');
-      return;
-    }
-
-    if (!this.haAbilitaSistemista()) {
-      alert("ATTENZIONE: ti manca l'abilità necessaria (sistemista).");
-      return;
-    }
+    const chiave = this.formNuova.get('chiave')!.value.trim();
+    const valore = Number(this.formNuova.get('valore')!.value);
 
     this.salvataggioNuova = true;
     this.api.creaConfigurazione({ chiave, valore }).pipe(take(1)).subscribe({
@@ -179,10 +156,12 @@ export class ConfigurazioniComponent implements OnInit {
           id_configurazione: creata.id_configurazione,
           chiave: creata.chiave,
           valore: creata.valore,
-          valoreModifica: String(creata.valore),
           salvataggio: false,
           leggibile: this.calcolaLeggibile(creata.chiave, creata.valore),
         }];
+        this.formsConfig = [...this.formsConfig, this.fb.group({
+          valore: [String(creata.valore), [Validators.required, Validators.pattern(/^\d+$/)]],
+        })];
         this.formNuovaAperta = false;
         this.salvataggioNuova = false;
         this.toastService.successo(`Configurazione "${creata.chiave}" aggiunta.`);

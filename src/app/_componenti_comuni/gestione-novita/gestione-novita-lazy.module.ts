@@ -1,24 +1,24 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 
 import { ComponentiComuniModule } from '../componenti-comuni.module';
-import { ConfigurazioniComponent } from './configurazioni.component';
+import { GestioneNovitaComponent } from './gestione-novita.component';
 
 @NgModule({
   declarations: [
-    ConfigurazioniComponent,
+    GestioneNovitaComponent,
   ],
   imports: [
     CommonModule,
-    ReactiveFormsModule,
+    FormsModule,
     ComponentiComuniModule,
   ],
   exports: [
-    ConfigurazioniComponent,
+    GestioneNovitaComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class ConfigurazioniLazyModule {}
+export class GestioneNovitaLazyModule {}
 
-export { ConfigurazioniComponent };
+export { GestioneNovitaComponent };

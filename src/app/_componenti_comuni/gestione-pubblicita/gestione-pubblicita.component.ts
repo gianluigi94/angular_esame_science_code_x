@@ -195,12 +195,22 @@ export class GestionePubblicitaComponent implements OnInit {
     this.playerTitolo = '';
   }
 
+  dateIncoerenti(inizio: string, fine: string): boolean {
+    return !!inizio && !!fine && fine < inizio;
+  }
+
+  pesoNonValido(peso: number): boolean {
+    return peso === null || peso === undefined || !Number.isInteger(Number(peso)) || Number(peso) < 1;
+  }
+
   creaPubblicita(): void {
     if (this.creazioneInCorso) return;
     if (!this.nuovoInizio || !this.nuovoFine) return;
+    if (this.dateIncoerenti(this.nuovoInizio, this.nuovoFine)) return;
+    if (this.pesoNonValido(this.nuovoPeso)) return;
 
     if (!this.haAbilita(7)) {
-      alert("ATTENZIONE: ti manca l'abilità necessaria (aggiungere_pubblicita).");
+      this.toastService.errore("ATTENZIONE: ti manca l'abilità necessaria (aggiungere_pubblicita).");
       return;
     }
 
@@ -250,13 +260,16 @@ export class GestionePubblicitaComponent implements OnInit {
   salvaPubblicita(p: PubblicitaItem): void {
     if (p.salvataggioInCorso) return;
 
-    if (!this.haAbilita(8)) {
-      alert("ATTENZIONE: ti manca l'abilità necessaria (modificare_pubblicita).");
-      return;
-    }
-
     const dati = this.datiModifica[p.id_pubblicita];
     if (!dati) return;
+    if (!dati.inizio_campagna || !dati.fine_campagna) return;
+    if (this.dateIncoerenti(dati.inizio_campagna, dati.fine_campagna)) return;
+    if (this.pesoNonValido(dati.peso)) return;
+
+    if (!this.haAbilita(8)) {
+      this.toastService.errore("ATTENZIONE: ti manca l'abilità necessaria (modificare_pubblicita).");
+      return;
+    }
 
     p.salvataggioInCorso = true;
 
@@ -345,7 +358,7 @@ export class GestionePubblicitaComponent implements OnInit {
     if (!this.pubblicitaDaEliminare || this.eliminazioneInCorso) return;
 
     if (!this.haAbilita(9)) {
-      alert("ATTENZIONE: ti manca l'abilità necessaria (eliminare_pubblicita).");
+      this.toastService.errore("ATTENZIONE: ti manca l'abilità necessaria (eliminare_pubblicita).");
       return;
     }
 

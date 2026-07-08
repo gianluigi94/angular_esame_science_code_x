@@ -1,0 +1,153 @@
+.modale-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modaleApri 0.2s ease;
+}
+
+@keyframes modaleApri {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modale-contenuto {
+  background: rgba(20, 17, 10, 0.95);
+  border: 1px solid rgba(231, 156, 80, 0.3);
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  animation: modaleScala 0.25s ease;
+}
+
+@keyframes modaleScala {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modale-messaggio {
+  font-family: "Quantico", serif;
+  font-size: 18px;
+  color: aliceblue;
+  text-align: center;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+
+  strong {
+    color: #e79c50;
+  }
+}
+
+.modale-sottomessaggio {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  color: rgba(231, 156, 80, 0.85);
+  margin: 12px 0 8px;
+  text-align: center;
+}
+
+.modale-checkbox-lista {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 0 8px;
+}
+
+.modale-checkbox-voce {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Quantico", serif;
+  font-size: 13px;
+  color: aliceblue;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    accent-color: #e79c50;
+    width: 15px;
+    pointer-events: auto;
+    height: 15px;
+    cursor: pointer;
+  }
+}
+
+.modale-bottoni {
+  pointer-events: auto;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.btn-annulla {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+
+  &:hover { border-color: rgba(255, 255, 255, 0.5); color: #ffffff; }
+}
+
+.btn-salva-novita {
+  font-family: "Quantico", serif;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #e79c50, #c97a2b);
+  border: none;
+  color: white;
+  font-weight: 600;
+  min-width: 100px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:not(:disabled):hover { transform: scale(1.06); box-shadow: 0 0 14px rgba(231, 156, 80, 0.5); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: auto; }
+}
+
+.modale-novita {
+  max-width: 720px;
+
+  .modale-novita-colonne {
+    display: flex;
+    gap: 24px;
+  }
+
+  .modale-novita-colonna {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .modale-checkbox-lista {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+}
+
+.modale-novita-caricamento {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}

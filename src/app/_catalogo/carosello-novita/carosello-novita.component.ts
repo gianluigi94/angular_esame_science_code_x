@@ -8,7 +8,8 @@ import { CaroselloNovitaService } from './carosello_services/carosello-novita.se
 import { CaroselloHoverTrailerUtility } from './carosello_utility/carosello-hover-trailer.utility';
 import { NovitaInfo } from 'src/app/_interfacce/Inovita-info.interface';
 import { CaricamentoCaroselloService } from './carosello_services/caricamento-carosello.service';
-import { Subscription } from 'rxjs';
+ import { Subscription } from 'rxjs';
+import { Authservice } from 'src/app/_benvenuto/login/_login_service/auth.service';
 import { StopVideoGlobaleService } from '../riga-categoria/categoria_services/stop-video-globale.service';
 import { CaroselloScrollUtility } from './carosello_utility/carosello-scroll.utility';
 import { CaroselloDatiUtility } from './carosello_utility/carosello-dati.utility';
@@ -26,7 +27,6 @@ import { AudioGlobaleService } from 'src/app/_servizi_globali/audio-globale.serv
 import { CaroselloStopUtility } from './carosello_utility/carosello-stop.utility';
 import { CaroselloNavigazioneUtility } from './carosello_utility/carosello-navigazione.utility';
 import { Router } from '@angular/router';
-import { ApiService } from 'src/app/_servizi_globali/api.service';
 import { BarraAvanzamentoService } from 'src/app/_componenti_comuni/barra-avanzamento/barra-avanzamento.service';
 @Component({
   selector: 'app-carosello-novita',
@@ -146,6 +146,8 @@ sottotitoloVisibile = true; // flag che mi dice se il sottotitolo overlay deve e
   private idCambioLinguaVideo = 0; // Uso un token incrementale per distinguere i cambi lingua video
   private promessaStopCambioLingua: Promise<void> | null = null; // Mi salvo la promise dello stop/fade legata al cambio lingua
 
+
+
  constructor(
   private caroselloNovitaService: CaroselloNovitaService,
   private cambioLinguaService: CambioLinguaService,
@@ -156,7 +158,7 @@ sottotitoloVisibile = true; // flag che mi dice se il sottotitolo overlay deve e
   private audioGlobaleService: AudioGlobaleService,
   private stopVideoGlobale: StopVideoGlobaleService,
   private router: Router,
-  private api: ApiService,
+  private authService: Authservice,
 ) {}
 
 
@@ -1136,5 +1138,14 @@ stopDolceImmediato(durataMs: number): Promise<void> {
  */
 vaiAllaSchedaCorrente(): Promise<void> {
   return CaroselloNavigazioneUtility.vaiAllaSchedaCorrente(this); // delego alla utility la navigazione verso la scheda del contenuto corrente
+}
+
+ get isAmministratore(): boolean {
+  const id = this.authService.leggiObsAuth().value?.idRuolo;
+  return id === 4 || id === 7;
+}
+
+apriGestioneNovita(): void {
+  window.dispatchEvent(new CustomEvent('apri-gestione-novita'));
 }
 }

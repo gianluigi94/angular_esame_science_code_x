@@ -78,6 +78,12 @@ export class AppComponent implements OnInit {
   })
   contenitoreGestionePubblicita!: ViewContainerRef;
 
+  @ViewChild('contenitoreGestioneNovita', {
+    read: ViewContainerRef,
+    static: true,
+  })
+  contenitoreGestioneNovita!: ViewContainerRef;
+
   @ViewChild('contenitoreConfigurazioni', {
     read: ViewContainerRef,
     static: true,
@@ -105,6 +111,11 @@ export class AppComponent implements OnInit {
   moduloGestionePubblicitaRef: NgModuleRef<any> | null = null;
   sottoscrizioneChiudiGestionePubblicita: Subscription | null = null;
   gestionePubblicitaCaricamento = false;
+
+  componenteGestioneNovitaRef: ComponentRef<any> | null = null;
+  moduloGestioneNovitaRef: NgModuleRef<any> | null = null;
+  sottoscrizioneChiudiGestioneNovita: Subscription | null = null;
+  gestioneNovitaCaricamento = false;
 
   componenteConfigurazioniRef: ComponentRef<any> | null = null;
   moduloConfigurazioniRef: NgModuleRef<any> | null = null;
@@ -316,6 +327,10 @@ export class AppComponent implements OnInit {
 
     window.addEventListener('apri-gestione-pubblicita', () => {
       void this.apriGestionePubblicitaLazy();
+    });
+
+    window.addEventListener('apri-gestione-novita', () => {
+      void this.apriGestioneNovitaLazy();
     });
 
     window.addEventListener('apri-configurazioni', () => {
@@ -871,6 +886,49 @@ export class AppComponent implements OnInit {
     this.componenteGestionePubblicitaRef = null;
 
     this.contenitoreGestionePubblicita.clear();
+    this.cdr.detectChanges();
+  }
+
+  async apriGestioneNovitaLazy(): Promise<void> {
+    if (this.componenteGestioneNovitaRef || this.gestioneNovitaCaricamento) return;
+
+    this.gestioneNovitaCaricamento = true;
+
+    const { GestioneNovitaLazyModule, GestioneNovitaComponent } = await import(
+      './_componenti_comuni/gestione-novita/gestione-novita-lazy.module'
+    );
+
+    if (!this.moduloGestioneNovitaRef) {
+      this.moduloGestioneNovitaRef = createNgModule(
+        GestioneNovitaLazyModule,
+        this.injector,
+      );
+    }
+
+    this.contenitoreGestioneNovita.clear();
+
+    this.componenteGestioneNovitaRef =
+      this.contenitoreGestioneNovita.createComponent(GestioneNovitaComponent, {
+        ngModuleRef: this.moduloGestioneNovitaRef,
+      });
+
+    this.sottoscrizioneChiudiGestioneNovita =
+      this.componenteGestioneNovitaRef.instance.chiudi.subscribe(() => {
+        this.chiudiGestioneNovita();
+      });
+
+    this.gestioneNovitaCaricamento = false;
+    this.cdr.detectChanges();
+  }
+
+  chiudiGestioneNovita(): void {
+    this.sottoscrizioneChiudiGestioneNovita?.unsubscribe();
+    this.sottoscrizioneChiudiGestioneNovita = null;
+
+    this.componenteGestioneNovitaRef?.destroy();
+    this.componenteGestioneNovitaRef = null;
+
+    this.contenitoreGestioneNovita.clear();
     this.cdr.detectChanges();
   }
 

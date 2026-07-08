@@ -1,0 +1,51 @@
+<div class="modale-overlay" (click)="chiudiModale()">
+  <div class="modale-contenuto modale-novita" (click)="$event.stopPropagation()">
+    <p class="modale-messaggio">Gestisci novità</p>
+
+    <div *ngIf="caricamento" class="modale-novita-caricamento">
+      <app-spinner></app-spinner>
+    </div>
+
+    <ng-container *ngIf="!caricamento">
+      <div class="modale-novita-colonne">
+        <div class="modale-novita-colonna">
+          <p class="modale-sottomessaggio">Film</p>
+          <div class="modale-checkbox-lista">
+            <label class="modale-checkbox-voce" *ngFor="let f of listaFilm">
+              <input
+                type="checkbox"
+                [checked]="f.novita"
+                (change)="f.novita = $any($event.target).checked"
+              />
+              <span>{{ f.nome }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modale-novita-colonna">
+          <p class="modale-sottomessaggio">Serie</p>
+          <div class="modale-checkbox-lista">
+            <label class="modale-checkbox-voce" *ngFor="let s of listaSerie">
+              <input
+                type="checkbox"
+                [checked]="s.novita"
+                (change)="s.novita = $any($event.target).checked"
+              />
+              <span>{{ s.nome }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modale-bottoni">
+        <button type="button" class="btn-annulla" (click)="chiudiModale()" [disabled]="salvataggioNovitaInCorso">
+          Annulla
+        </button>
+        <button type="button" class="btn-salva-novita" (click)="salvaNovita()" [disabled]="salvataggioNovitaInCorso">
+          <ng-container *ngIf="!salvataggioNovitaInCorso">Salva</ng-container>
+          <app-spinner *ngIf="salvataggioNovitaInCorso"></app-spinner>
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>
